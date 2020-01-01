@@ -1,4 +1,6 @@
 venv
 README.MD
 .idea/*
-.pyc
+du.conf
+*.pyc
+.DS_Store
