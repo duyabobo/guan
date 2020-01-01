@@ -50,6 +50,27 @@ SHARE_TYPE_SINA = 5  # 分享到sina博客
 SHARE_TYPE_MOBILE = 6  # 短信分享给通讯录好友  # 这个很有用，基本都是亲戚（帮助成家立业）、闺蜜或兄弟（防止惦记自己的对象）之间传播
 SHARE_TYPE_NEARBY = 7  # 展示二维码给附近的人
 
+# USER_STATUS
+USER_STATUS_ANONYMOUS = 0  # 匿名访客
+USER_STATUS_REGISTERED = 1  # 注册用户（只完善了基础信息）
+USER_STATUS_REGULAR = 2  # 正常用户（完善了详细信息）
+USER_STATUS_AUTHENTICATION = 3  # 认证用户（已经认证的用户）
+USER_STATUS_WITH_BAIL = 4  # 认证用户再次被投诉，交了保证金继续使用
+USER_STATUS_CANCELLATION = 100  # 注销用户（换手机号或者其他原因注销，100以上都是不正常用户）
+USER_STATUS_COMPLAINED = 101  # 被投诉用户
+USER_STATUS_COMPLAINED_AFTER_AUTHENTICATION = 102  # 认证后仍然被投诉
+USER_STATUS_COMPLAINED_AFTER_BAIL = 103  # 保释金后仍然被投诉，扣除保证金，销户处理
+
+# DEGREE_DICT
+DEGREE_PRIMARY_SCHOOL = 1  # 小学
+DEGREE_MIDDLE_SCHOOL = 2  # 初中
+DEGREE_HIGHT_SCHOOL = 3  # 高中
+DEGREE_JUNIOR_SCHOOL = 4  # 专科
+DEGREE_COLLEGE_SCHOOL = 5  # 本科
+DEGREE_GRADUATE_SCHOOL = 6  # 研究生
+DEGREE_DOCTOR_SCHOOL = 7  # 博士
+DEGREE_POST_DOCTOR_SCHOOL = 8  # 博士后
+
 # register
 # REGISTER_TYPE_DICT
 EGISTER_TYPE_SHARE = 1  # 分享注册

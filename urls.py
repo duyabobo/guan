@@ -3,7 +3,9 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from api import example
+from api import login
 
 handlers = [
     (r'/$', example.ExampleHandler),
+    (r'/login$', login.LoginHandler),
 ]
