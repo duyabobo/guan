@@ -144,7 +144,40 @@ class BaseHandler(RequestHandler):
             self.db_session.rollback()
         self.db_session.close()
 
+    def data_received(self, chunk):
+        return
+
+    @run_on_executor
+    @super_monitor
+    def head(self, *args, **kwargs):
+        return
+
     @run_on_executor
     @super_monitor
     def get(self, *args, **kwargs):
+        return
+
+    @run_on_executor
+    @super_monitor
+    def post(self, *args, **kwargs):
+        return
+
+    @run_on_executor
+    @super_monitor
+    def delete(self, *args, **kwargs):
+        return
+
+    @run_on_executor
+    @super_monitor
+    def patch(self, *args, **kwargs):
+        return
+
+    @run_on_executor
+    @super_monitor
+    def put(self, *args, **kwargs):
+        return
+
+    @run_on_executor
+    @super_monitor
+    def options(self, *args, **kwargs):
         return
