@@ -4,7 +4,7 @@
 # __created_at__ = '2020/1/1'
 from models import User
 
-from util.const import USER_STATUS_CANCELLATION
+from util.const import USER_STATUS_GOOD_BOUNDARY
 
 
 def add_user_info_by_openid(db_session, openid):
@@ -34,5 +34,5 @@ def get_user_info_by_openid(db_session, openid):
     return db_session.query(User). \
         filter(
         User.openid == openid,
-        User.user_status < USER_STATUS_CANCELLATION
+        User.user_status < USER_STATUS_GOOD_BOUNDARY
     ).first()
