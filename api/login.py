@@ -7,16 +7,19 @@ import urllib
 from datetime import datetime
 
 import requests
+from tornado.concurrent import run_on_executor
 
 import util.config
-from api.basehandler import *
+from api.basehandler import BaseHandler
 from dal.user import add_user_info_by_openid
 from dal.user import get_user_info_by_openid
 from dal.user_info import add_user_info
 from dal.user_info import get_user_info_by_uid
 from ral.user import del_current_user_info
 from ral.user import put_current_user_info
+from util.const import RESP_NEED_LOGIN
 from util.encode import generate_access_token
+from util.monitor import super_monitor
 
 
 class LoginHandler(BaseHandler):

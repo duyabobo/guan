@@ -9,5 +9,5 @@ from api import user_info
 handlers = [
     (r'/$', example.ExampleHandler),
     (r'/login$', login.LoginHandler),
-    (r'/male_user$', user_info.UserInfoHandler),
+    (r'/user_info$', user_info.UserInfoHandler),
 ]

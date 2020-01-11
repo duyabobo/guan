@@ -14,7 +14,9 @@ from tornado.web import RequestHandler
 
 import util.config
 from ral import user
-from util.const import *
+from util.const import EXCHANGE_NAME
+from util.const import MOBILE_SECRET
+from util.const import RESP_OK
 from util.encode import jwt_decode
 from util.monitor import super_monitor
 

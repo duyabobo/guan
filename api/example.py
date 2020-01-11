@@ -4,7 +4,10 @@
 # __created_at__ = '2020/1/1'
 import time
 
-from api.basehandler import *
+from tornado.concurrent import run_on_executor
+
+from api.basehandler import BaseHandler
+from util.monitor import super_monitor
 
 
 class ExampleHandler(BaseHandler):
