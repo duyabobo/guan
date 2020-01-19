@@ -11,8 +11,17 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+class GuanGuan(Base):
+    """关关问答封面数据"""
+    __tablename__ = 'guanguan'
+    id = Column(Integer, primary_key=True)  # 自增
+    name = Column(String)  # 问答名字
+    guan_type = Column(String)  # 问答类型
+    guan_point = Column(Integer)  # 积分
+    updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
+    created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
-# -------------------------- 华丽丽的分界线（下面是支撑体系）-------------------------------------------
+
 class User(Base):
     """用户基础数据，用户第一次进入产品需要完善一级(或基础)信息：昵称、头像、性别、是否是学生。
     其中昵称和头像随机自动生成（并可以自主修改），性别、是否是学生是必须自主完善的。
