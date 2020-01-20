@@ -15,9 +15,7 @@ from tornado.web import RequestHandler
 import util.config
 from ral import user
 from util.const import EXCHANGE_NAME
-from util.const import MOBILE_SECRET
 from util.const import RESP_OK
-from util.encode import jwt_decode
 from util.monitor import super_monitor
 
 
@@ -87,9 +85,7 @@ class BaseHandler(RequestHandler):
         if hasattr(self, '_current_user') and self._current_user:
             return self._current_user
         self._current_user = user.get_current_user_info(self.redis, self.access_token)
-        _mobile = self._current_user.get('mobile', '')
-        if _mobile:
-            self._current_user['mobile'] = jwt_decode(_mobile, MOBILE_SECRET).get('mobile', '')
+        self._current_user['mobile'] = self._current_user.get('mobile', '')
         return self._current_user
 
     def put_offline_job_to_rabbitmq(self, routing_key, body_json):
