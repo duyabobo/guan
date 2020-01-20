@@ -34,7 +34,6 @@ class User(Base):
     user_status = Column(Integer, default=0)  # 用户状态：见 USER_STATUS  -- index --
     nickname = Column(String, default='')  # 昵称
     profile_photo = Column(String, default='')  # 头像url
-    user_info_fill_count = Column(Integer, default=0)  # 详细信息完善进度（条目数量）
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 

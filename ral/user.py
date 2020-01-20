@@ -54,8 +54,7 @@ def put_current_user_info(redis, access_token, current_user_info):
     current_user_info_json = {
         k: current_user_info_json[k]
         for k in current_user_info_json
-        if k in ['id', 'user_status', 'max_love_status', 'nickname',
-                 'profile_photo', 'sex', 'is_student', 'birth_year', 'is_faithful']
+        if k in ['id', 'mobile']
     }
     redis.hmset(get_login_key(access_token), current_user_info_json)
     return current_user_info_json
