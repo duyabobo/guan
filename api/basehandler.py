@@ -108,11 +108,12 @@ class BaseHandler(RequestHandler):
             )
         )
 
-    def get_request_parameter(self, para_name, default=None):
+    def get_request_parameter(self, para_name, default=None, para_type=str):
         """
         获取请求体中的参数，获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
         :param para_name:
         :param default:
+        :param para_type:
         :return:
         """
         def __get_parameter_from_body():
@@ -121,7 +122,10 @@ class BaseHandler(RequestHandler):
         request_parameter = self.get_argument(para_name, default=default)
         if request_parameter is None:
             request_parameter = __get_parameter_from_body()
-        return request_parameter
+        try:
+            return para_type(request_parameter)
+        except:
+            return default
 
     def response(self, resp_json=None, resp_normal=RESP_OK):
         self.finish_db_operation(resp_normal)

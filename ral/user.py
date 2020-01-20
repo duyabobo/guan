@@ -6,7 +6,7 @@
 
 def get_login_key(access_token):
     """
-    返回登录查询redis的key
+    返回登录查询 redis 的 key
     :return:
     """
     return 'access_token:' + access_token
@@ -14,7 +14,7 @@ def get_login_key(access_token):
 
 def get_access_token_key(user_id):
     """
-    返回ac查询的key
+    返回 ac 查询的 key
     :param user_id:
     :return:
     """

@@ -17,7 +17,7 @@ class GuanGuanHandler(BaseHandler):
     @super_monitor
     def get(self, *args, **kwargs):
         """
-        获取用户信息
+        获取 guanguan 信息
         :param args:
         :param kwargs:
         :return:
