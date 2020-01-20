@@ -30,7 +30,7 @@ class GuanGuanHandler(BaseHandler):
                 'guan_type': guanguan.guan_type,
                 'guan_point': str(guanguan.guan_point) + '个积分',
                 'answers': '10个参与',  # todo
-                'url': '/page/guan_info/guan_info?guan_id=%s&step=1' % guanguan.id,
+                'step': 1,
             } for guanguan in guanguan_list
         ]
         return self.response(
