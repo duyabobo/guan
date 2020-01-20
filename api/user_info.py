@@ -23,15 +23,21 @@ class UserInfoHandler(BaseHandler):
     def post(self, *args, **kwargs):
         """用户详细信息完善。
         """
-        sex = self.get_request_parameter('sex')
-        age = self.get_request_parameter('age')
-        height = self.get_request_parameter('height')
-        degree = self.get_request_parameter('degree')
+        step = self.get_request_parameter('step', para_type=int)
+        value = self.get_request_parameter('value', para_type=int)
         user_id = self.current_user['id']
-
         user_info = get_user_info_by_uid(self.db_session, user_id)
         if not user_info:
             return self.response(resp_normal=RESP_USER_IS_UNKNOWN)
+        sex, age, height, degree = None, None, None, None
+        if step == 1:
+            sex = value
+        elif step == 2:
+            degree = value
+        elif step == 3:
+            height = value
+        elif step == 4:
+            age = value
         update_user_info(
             self.db_session,
             user_info,
@@ -56,9 +62,11 @@ class UserInfoHandler(BaseHandler):
         user_info = get_user_info_by_uid(self.db_session, user_id)
         return self.response(
             resp_json={
+                'sex_int': user_info.sex,
                 'sex': SEX_DICT.get(user_info.sex, '未知'),
                 'age': datetime.now().year - user_info.year_of_birth,
                 'degree': DEGREE_DICT.get(user_info.degree, '未知'),
-                'height': user_info.height
+                'height': user_info.height,
+                'mobile': self.current_user['mobile']
             }
         )

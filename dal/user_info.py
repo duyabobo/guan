@@ -33,10 +33,10 @@ def get_user_info_by_uid(db_session, user_id):
 def update_user_info(
         db_session,
         user_info,
-        sex,
-        age,
-        height,
-        degree
+        sex=None,
+        age=None,
+        height=None,
+        degree=None
 ):
     """
     更新用户基本信息
