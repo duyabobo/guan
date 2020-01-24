@@ -2,7 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/20'
-# 维护 json 数据
+# guan_id = 1，用户基本信息问答的 json 数据
 
 USER_INFO_DICT = {
     'step': 1,
@@ -192,8 +192,4 @@ USER_INFO_DICT = {
         },
       ]
     }
-}
-
-GUAN_INFO_DICT = {
-    1: USER_INFO_DICT
 }

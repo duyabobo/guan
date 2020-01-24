@@ -3,7 +3,11 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/20'
 import json
-from guan_info_util import GUAN_INFO_DICT
+from ral.guan_info_utils.user_info import USER_INFO_DICT
+
+GUAN_INFO_DICT = {
+    1: USER_INFO_DICT
+}
 
 
 def get_guan_info_key(guan_id):

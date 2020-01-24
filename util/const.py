@@ -48,7 +48,7 @@ DEGREE_DICT = {
     5: '国外'
 }
 
-#GUAN_TYPE
+# GUAN_TYPE
 GUAN_TYPE_DICT = {
     0: '基本信息完善'
 }
