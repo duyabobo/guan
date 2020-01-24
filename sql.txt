@@ -1,7 +1,7 @@
 create table guanguan (
     id int unsigned not null AUTO_INCREMENT,
     name varchar(100) not null default '' comment '问答内容',
-    guan_type varchar(100) not null default '' comment '类别',  # 问题类型，一个分类对应一类数据，问答结果要存储在一个table中
+    guan_type smallint not null default -1 comment '类别',  # 问题类型，一个分类对应一类数据，问答结果要存储在一个table中
     guan_point smallint not null default -1 comment '积分',  # 积分：正为获取，负为支付
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
