@@ -24,7 +24,6 @@ create table answers (
     id int unsigned not null AUTO_INCREMENT,
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
     answer_key varchar(128) not null default '' comment '答案对应的可读展示内容',
-    answer_value smallint not null default -1 comment '答案对应的入库数据内容',
     answer_evaluation varchar(128) not null default '' comment '答案对应的测评结果',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -59,16 +58,3 @@ create table user (
     index idx_openid (openid, user_status),
     index idx_mobile_password_status (mobile, password, user_status)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户表';
-
-create table user_info (
-    id int unsigned not null AUTO_INCREMENT,
-    user_id int unsigned not null default 0 comment '用户id',
-    sex tinyint not null default -1 comment '性别，参考 USER_SEX',
-    year_of_birth smallint unsigned not null default 0 comment '出生年份',
-    height smallint unsigned not null default 0 comment '身高，单位cm',
-    degree tinyint unsigned not null default 0 comment '学历，参考 DEGREE',
-    updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    index idx_user_id (user_id)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户基本信息表';
