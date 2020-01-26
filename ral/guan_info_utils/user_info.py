@@ -2,9 +2,9 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/20'
-# guan_id = 1，用户基本信息问答的 json 数据，这里只是为了方便同步到 redis，其实新增或修改的时候不需要改代码的
+# guan_id = 1，用户基本信息问答的 json 数据，这里是为了方便同步到 redis。
 
-USER_INFO_DICT = {
+USER_INFO_DICT = {  # 假数据，实际环境中，这里的数据需要从db计算得来
     'step': 1,
     'total_step': 4,
     'service_url': '/user_info',

@@ -1,6 +1,6 @@
 create table guanguan (
     id int unsigned not null AUTO_INCREMENT,
-    name varchar(100) not null default '' comment '问答内容',
+    name varchar(100) not null default '' comment '标题',
     guan_type smallint not null default -1 comment '类别',  # 问题类型，一个分类对应一类数据，问答结果要存储在一个table中
     guan_point smallint not null default -1 comment '积分',  # 积分：正为获取，负为支付
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -8,12 +8,49 @@ create table guanguan (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关基本数据表';
 
+create table guan_info (
+    id int unsigned not null AUTO_INCREMENT,
+    guan_id int unsigned not null default 0 comment 'guanguan id',
+    question varchar(100) not null default '' comment '问答内容',
+    // 答案数据可以加缓存
+    sequence tinyint unsigned not null default 0 comment '问答顺序',
+    updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    index idx_guan_id (guan_id),
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关问题数据表';
+
+create table answers (
+    id int unsigned not null AUTO_INCREMENT,
+    guan_info_id int unsigned not null default 0 comment 'guan_info id',
+    answer_key varchar(128) not null default '' comment '答案对应的可读展示内容',
+    answer_value smallint not null default -1 comment '答案对应的入库数据内容',
+    answer_evaluation varchar(128) not null default '' comment '答案对应的测评结果',
+    updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    index idx_guan_info_id (guan_info_id),
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关答案数据表';
+
+create table guan_answers (
+    id int unsigned not null AUTO_INCREMENT,
+    guan_info_id int unsigned not null default 0 comment 'guan_info id',
+    user_id int unsigned not null default 0 comment '用户 id',
+    answer_id int unsigned not null default 0 comment '答案的 id',
+    updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    index idx_guan_info_id (user_id, guan_info_id),
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关回答数据表';
+
+
 create table user (
     id int unsigned not null AUTO_INCREMENT,
     mobile varchar(20) not null default '' comment '手机号',
     openid varchar(30) not null default '' comment '微信openid',
     password varchar(60) not null default '' comment 'md5加密后的密码',
     user_status tinyint not null default 0 comment '用户状态：见 USER_STATUS',
+    guan_point smallint not null default 0 comment '用户当前可用积分',
     nickname varchar(20) not null default '' comment '昵称',
     profile_photo varchar(20) not null default '' comment '头像url的key',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
