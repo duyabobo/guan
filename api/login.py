@@ -4,7 +4,6 @@
 # __created_at__ = '2020/1/1'
 
 import urllib
-from datetime import datetime
 
 import requests
 from tornado.concurrent import run_on_executor
@@ -13,8 +12,6 @@ import util.config
 from api.basehandler import BaseHandler
 from dal.user import add_user_info_by_openid
 from dal.user import get_user_info_by_openid
-from dal.user_info import add_user_info
-from dal.user_info import get_user_info_by_uid
 from ral.user import del_current_user_info
 from ral.user import put_current_user_info
 from util.const import RESP_NEED_LOGIN
@@ -51,17 +48,8 @@ class LoginHandler(BaseHandler):
         current_user_info = get_user_info_by_openid(self.db_session, openid)
         if not current_user_info:
             current_user_info = add_user_info_by_openid(self.db_session, openid)
-            user_info = add_user_info(self.db_session, current_user_info.id)
-        else:
-            user_info = get_user_info_by_uid(self.db_session, current_user_info.id)
         access_token = generate_access_token(current_user_info)
         current_user_info_json = put_current_user_info(self.redis, access_token, current_user_info)
-        current_user_info_json.update({
-            'sex': user_info.sex,
-            'age': datetime.now().year - user_info.year_of_birth,
-            'degree': user_info.degree,
-            'height': user_info.height
-        })
         return self.response(
             resp_json={'access_token': access_token, 'current_user_info': current_user_info_json}
         )
