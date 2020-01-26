@@ -4,10 +4,10 @@
 # __created_at__ = '2020/1/20'
 # guan_id = 1，用户基本信息问答的 json 数据，这里是为了方便同步到 redis。
 
-USER_INFO_DICT = {  # 假数据，实际环境中，这里的数据需要从db计算得来
+USER_INFO_DICT = {
     'step': 1,
     'total_step': 4,
-    'service_url': '/user_info',
+    'service_url': '/answer',  # todo 统一化关关问答接口
     'question_dict': {
       1: '你的性别 1/4',
       2: '你的学校 2/4',

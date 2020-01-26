@@ -30,8 +30,7 @@ def set_evaluation_result(redis, user_id, guan_type):
     :param guan_type:
     :return:
     """
-    old_evaluation = get_evaluation_result(redis, guan_type, user_id)
-    old_evaluation = GUAN_EVALUATION_RESULT_DICT.get(guan_type, [])  # todo: 这里以后要异步计算的
+    old_evaluation = GUAN_EVALUATION_RESULT_DICT.get(guan_type, [])  # todo: 这里从 db 计算的
     guan_evaluation_key = get_guan_evaluation_key(guan_type, user_id)
     new_evaluation = json.dumps(old_evaluation)
     return redis.set(guan_evaluation_key, new_evaluation)

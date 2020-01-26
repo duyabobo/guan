@@ -41,7 +41,7 @@ def set_guan_info(redis, guan_id):
     :return:
     """
     guan_info_key = get_guan_info_key(guan_id)
-    if guan_id not in GUAN_INFO_DICT:  # todo
+    if guan_id not in GUAN_INFO_DICT:  # todo 这里需要从 db 计算的
         return -1
     guan_info = GUAN_INFO_DICT[guan_id]
     try:
