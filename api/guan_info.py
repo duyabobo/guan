@@ -32,7 +32,7 @@ class GuanInfoHandler(BaseHandler):
     @super_monitor
     def post(self, *args, **kwargs):
         """
-        保存 guan_info 信息
+        保存 guan_info 信息，这只是个便捷接口，正常情况下可以直接修改 redis 数据进行维护
         :param args:
         :param kwargs:
         :return:

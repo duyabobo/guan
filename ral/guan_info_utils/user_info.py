@@ -2,7 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/20'
-# guan_id = 1，用户基本信息问答的 json 数据
+# guan_id = 1，用户基本信息问答的 json 数据，这里只是为了方便同步到 redis，其实新增或修改的时候不需要改代码的
 
 USER_INFO_DICT = {
     'step': 1,
