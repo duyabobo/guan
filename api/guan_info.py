@@ -6,7 +6,6 @@ from tornado.concurrent import run_on_executor
 
 from api.basehandler import BaseHandler
 from ral.guan_info import get_guan_info
-from ral.guan_info import set_guan_info
 from util.monitor import super_monitor
 
 
@@ -23,22 +22,7 @@ class GuanInfoHandler(BaseHandler):
         :return:
         """
         guan_id = self.get_request_parameter('guan_id', para_type=int)
-        guan_info = get_guan_info(self.redis, guan_id)
+        guan_info = get_guan_info(self.redis, self.db_session, guan_id)
         return self.response(
             resp_json=guan_info
-        )
-
-    @run_on_executor
-    @super_monitor
-    def post(self, *args, **kwargs):
-        """
-        保存 guan_info 信息，这只是个便捷接口，正常情况下可以直接修改 redis 数据进行维护
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        guan_id = self.get_request_parameter('guan_id', para_type=int)
-        ret = set_guan_info(self.redis, guan_id)
-        return self.response(
-            resp_json={'ret': ret}
         )

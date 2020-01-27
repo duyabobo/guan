@@ -3,11 +3,8 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/20'
 import json
-from ral.guan_info_utils.user_info import USER_INFO_DICT
 
-GUAN_INFO_DICT = {
-    1: USER_INFO_DICT
-}
+from guan_info_util import get_guan_info_dict
 
 
 def get_guan_info_key(guan_id):
@@ -19,10 +16,11 @@ def get_guan_info_key(guan_id):
     return 'guan_id:' + str(guan_id)
 
 
-def get_guan_info(redis, guan_id):
+def get_guan_info(redis, db_session, guan_id):
     """
     获取 guan_info
     :param redis:
+    :param db_session:
     :param guan_id:
     :return:
     """
@@ -30,21 +28,21 @@ def get_guan_info(redis, guan_id):
     try:
         return json.loads(redis.get(guan_info_key))
     except:
-        return {}
+        guan_info_dict = get_guan_info_dict(db_session, guan_id)
+        set_guan_info(redis, guan_id, guan_info_dict)
+        return guan_info_dict
 
 
-def set_guan_info(redis, guan_id):
+def set_guan_info(redis, guan_id, guan_info_dict):
     """
     存储 guan_info
     :param redis:
     :param guan_id:
+    :param guan_info_dict: json
     :return:
     """
     guan_info_key = get_guan_info_key(guan_id)
-    if guan_id not in GUAN_INFO_DICT:  # todo 这里需要从 db 计算的
-        return -1
-    guan_info = GUAN_INFO_DICT[guan_id]
     try:
-        return redis.set(guan_info_key, json.dumps(guan_info))
+        return redis.set(guan_info_key, json.dumps(guan_info_dict))
     except:
         return -1

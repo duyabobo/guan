@@ -13,7 +13,6 @@ create table guan_info (
     guan_id int unsigned not null default 0 comment 'guanguan id',
     question varchar(100) not null default '' comment '问答内容',
     // 答案数据可以加缓存
-    sequence tinyint unsigned not null default 0 comment '问答顺序',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     index idx_guan_id (guan_id),
