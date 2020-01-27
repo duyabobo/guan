@@ -7,9 +7,15 @@ from dal.answers import get_answers
 
 
 def get_guan_info_dict(db_session, guan_id):
-    step = 1
+    """
+    从 db 计算 guan_info
+    :param db_session:
+    :param guan_id:
+    :return:
+    """
+    step = 0  # todo 这里以后不一定每次都是0
     guan_infoes = get_guan_infoes(db_session, guan_id)
-    total_step = len(guan_infoes)
+    total_step = len(guan_infoes) - 1
     question_dict = {index: guan_info.question for index, guan_info in enumerate(guan_infoes)}
     answer_dict = {}
     for index, guan_info in enumerate(guan_infoes):
