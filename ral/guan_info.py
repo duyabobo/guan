@@ -32,7 +32,7 @@ def get_guan_info(redis, db_session, guan_id):
         if not guan_info_dict:
             guan_info_dict = get_guan_info_dict(db_session, guan_id)
             set_guan_info(redis, guan_id, guan_info_dict)
-            return guan_info_dict
+    return guan_info_dict
 
 
 def set_guan_info(redis, guan_id, guan_info_dict):
