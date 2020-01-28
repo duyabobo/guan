@@ -18,13 +18,13 @@ def get_answer_infoes(db_session, guan_info_id):
         all()
 
 
-def get_answer_info(db_session, answer_id):
+def get_answer_info(db_session, answer_info_id):
     """
     查询一个 answer_info
     :param db_session:
-    :param answer_id:
+    :param answer_info_id:
     :return:
     """
     return db_session.query(AnswerInfo).\
-        filter(AnswerInfo.id == answer_id).\
+        filter(AnswerInfo.id == answer_info_id).\
         first()

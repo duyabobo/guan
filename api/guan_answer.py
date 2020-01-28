@@ -6,6 +6,7 @@ from tornado.concurrent import run_on_executor
 
 from api.basehandler import BaseHandler
 from dal.answer_info import get_answer_info
+from dal.answer_info import get_answer_infoes
 from dal.guan_answer import add_guan_answer
 from util.monitor import super_monitor
 
@@ -29,4 +30,25 @@ class GuanAnswerHandler(BaseHandler):
         ret = add_guan_answer(self.db_session, user_id, answer_info.guan_info_id, answer_info_id)
         return self.response(
             resp_json={'ret': ret.id}
+        )
+
+    @run_on_executor
+    @super_monitor
+    def get(self, *args, **kwargs):
+        """
+        获取关关问答
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        guan_info_id = self.get_request_parameter('guan_info_id', para_type=int)
+
+        answer_infoes = get_answer_infoes(self.db_session, guan_info_id)
+        answer_info_list = []
+        for answer_info in answer_infoes:
+            answer_info_list.append(answer_info.__dict__)
+        return self.response(
+            resp_json={
+                'answer_info_list': answer_info_list
+            }
         )
