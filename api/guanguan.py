@@ -6,8 +6,8 @@
 from tornado.concurrent import run_on_executor
 
 from api.basehandler import BaseHandler
+from dal.guan_type import get_guan_types
 from dal.guanguan import get_guanguan_list
-from util.const import GUAN_TYPE_DICT
 from util.monitor import super_monitor
 
 
@@ -18,17 +18,19 @@ class GuanGuanHandler(BaseHandler):
     @super_monitor
     def get(self, *args, **kwargs):
         """
-        获取 guanguan 信息
+        获取 guanguan 信息  # todo 已回答过的不需要显示
         :param args:
         :param kwargs:
         :return:
         """
         guanguan_list = get_guanguan_list(self.db_session)
+        guan_types = get_guan_types(self.db_session)
+        guan_type_dict = {guan_type.id: guan_type.name for guan_type in guan_types}
         guanguan_list = [
             {
                 'id': guanguan.id,
                 'name': guanguan.name,
-                'guan_type': GUAN_TYPE_DICT.get(guanguan.guan_type, '未知'),
+                'guan_type': guan_type_dict.get(guanguan.guan_type_id, '未知'),
                 'guan_point': str(guanguan.guan_point) + '个积分',
                 'answers': '10个参与',  # todo
                 'step': 1,

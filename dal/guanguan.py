@@ -14,13 +14,13 @@ def get_guanguan_list(db_session):
     return db_session.query(GuanGuan).all()
 
 
-def get_guanguan_by_guan_type(db_session, guan_type):
+def get_guanguan_by_guan_type(db_session, guan_type_id):
     """
     获取关关列表
     :param db_session:
-    :param guan_type:
+    :param guan_type_id:
     :return:
     """
     return db_session.query(GuanGuan).\
-        filter(GuanGuan.guan_type == guan_type).\
+        filter(GuanGuan.guan_type_id == guan_type_id).\
         all()

@@ -8,8 +8,8 @@ from dal.guan_info import get_guan_infoes
 from dal.guanguan import get_guanguan_by_guan_type
 
 
-def get_evaluation_result_list(db_session, user_id, guan_type):
-    guanguan = get_guanguan_by_guan_type(db_session, guan_type)
+def get_evaluation_result_list(db_session, user_id, guan_type_id):
+    guanguan = get_guanguan_by_guan_type(db_session, guan_type_id)
     guan_ids = [guan.id for guan in guanguan]
     guan_infoes = []
     for guan_id in guan_ids:

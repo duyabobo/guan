@@ -12,12 +12,21 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
+class GuanType(Base):
+    """关关类型"""
+    __tablename__ = 'guan_type'
+    id = Column(Integer, primary_key=True)  # 自增
+    name = Column(String)  # 问答名字
+    updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
+    created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
+
+
 class GuanGuan(Base):
     """关关问答封面数据"""
     __tablename__ = 'guanguan'
     id = Column(Integer, primary_key=True)  # 自增
     name = Column(String)  # 问答名字
-    guan_type = Column(Integer)  # 问答类型
+    guan_type_id = Column(Integer)  # 问答类型
     guan_point = Column(Integer)  # 积分
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间

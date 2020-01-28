@@ -19,6 +19,7 @@ def get_guan_info_key(guan_id):
 def get_guan_info(redis, db_session, guan_id):
     """
     获取 guan_info，先读 redis，每次读都要到 db 去算，并把计算结果覆盖 redis
+     todo: 加一个定时脚本维护数据
     :param redis:
     :param db_session:
     :param guan_id:
