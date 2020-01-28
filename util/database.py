@@ -21,3 +21,11 @@ mysql_offline_session = sessionmaker(bind=engine_offline)()
 
 redis_offline_session = StrictRedis(util.config.get('redis', 'host'),
                                     util.config.get('redis', 'port'))
+
+
+def object_to_json(obj):
+    json_data = obj.__dict__
+    json_data.pop('_sa_instance_state')
+    json_data.pop('updated_time')
+    json_data.pop('created_time')
+    return json_data

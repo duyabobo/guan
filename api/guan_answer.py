@@ -8,6 +8,7 @@ from api.basehandler import BaseHandler
 from dal.answer_info import get_answer_info
 from dal.answer_info import get_answer_infoes
 from dal.guan_answer import add_guan_answer
+from util.database import object_to_json
 from util.monitor import super_monitor
 
 
@@ -44,11 +45,9 @@ class GuanAnswerHandler(BaseHandler):
         guan_info_id = self.get_request_parameter('guan_info_id', para_type=int)
 
         answer_infoes = get_answer_infoes(self.db_session, guan_info_id)
-        answer_info_list = []
-        for answer_info in answer_infoes:
-            answer_info_list.append(answer_info.__dict__)
+        resp_json = {
+            'answer_infoes': [object_to_json(answer_info) for answer_info in answer_infoes]
+        }
         return self.response(
-            resp_json={
-                'answer_info_list': answer_info_list
-            }
+            resp_json=resp_json
         )

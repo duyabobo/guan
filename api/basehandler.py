@@ -124,14 +124,14 @@ class BaseHandler(RequestHandler):
             return default
 
     def response(self, resp_json=None, resp_normal=RESP_OK):
-        self.finish_db_operation(resp_normal)
-        if self._mq_connection:
-            self._mq_connection.close()
         if not resp_json:
             resp_json = {}
         resp_json.update(resp_normal)
         resp = json.dumps(resp_json)
         self.write(resp)
+        self.finish_db_operation(resp_normal)
+        if self._mq_connection:
+            self._mq_connection.close()
         return resp
 
     def finish_db_operation(self, resp_normal):
