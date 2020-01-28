@@ -28,3 +28,16 @@ def get_answer_info(db_session, answer_info_id):
     return db_session.query(AnswerInfo).\
         filter(AnswerInfo.id == answer_info_id).\
         first()
+
+
+def get_answer_infoes_by_ids(db_session, answer_info_ids):
+    """
+    查询一批 answer_info
+    :param db_session:
+    :param answer_info_ids:
+    :return:
+    """
+    return db_session.query(AnswerInfo).\
+        filter(AnswerInfo.id.in_(answer_info_ids)).\
+        order_by(AnswerInfo.id).\
+        all()

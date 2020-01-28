@@ -12,3 +12,15 @@ def get_guanguan_list(db_session):
     :return:
     """
     return db_session.query(GuanGuan).all()
+
+
+def get_guanguan_by_guan_type(db_session, guan_type):
+    """
+    获取关关列表
+    :param db_session:
+    :param guan_type:
+    :return:
+    """
+    return db_session.query(GuanGuan).\
+        filter(GuanGuan.guan_type == guan_type).\
+        all()
