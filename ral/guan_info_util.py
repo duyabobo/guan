@@ -2,8 +2,8 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/27'
+from dal.answer_info import get_answer_info
 from dal.guan_info import get_guan_infoes
-from dal.answers import get_answers
 
 
 def get_guan_info_dict(db_session, guan_id):
@@ -20,7 +20,7 @@ def get_guan_info_dict(db_session, guan_id):
     answer_dict = {}
     for index, guan_info in enumerate(guan_infoes):
         answer_dict[index] = []
-        answers = get_answers(db_session, guan_info.id)
+        answers = get_answer_info(db_session, guan_info.id)
         for answer in answers:
             answer_dict[index].append({
                 'answer_key': answer.answer_key,

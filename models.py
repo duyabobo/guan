@@ -33,9 +33,9 @@ class GuanInfo(Base):
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
 
-class Answers(Base):
+class AnswerInfo(Base):
     """关关答案数据表"""
-    __tablename__ = 'answers'
+    __tablename__ = 'answer_info'
     id = Column(Integer, primary_key=True)  # 自增
     guan_info_id = Column(Integer)  # guan info id
     answer_key = Column(String)  # 展示的答案内容
@@ -44,13 +44,12 @@ class Answers(Base):
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
 
-class GuanAnswers(Base):
+class GuanAnswer(Base):
     """关关回答数据表"""
-    __tablename__ = 'guan_answers'
+    __tablename__ = 'guan_answer'
     id = Column(Integer, primary_key=True)  # 自增
-    guan_info_id = Column(Integer)  # guan info id
     user_id = Column(Integer)  # user_id
-    answer_id = Column(Integer)  # Answers id
+    answer_id = Column(Integer)  # answer_info id
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 

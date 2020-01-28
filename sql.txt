@@ -19,7 +19,7 @@ create table guan_info (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关问题数据表';
 
-create table answers (
+create table answer_info (
     id int unsigned not null AUTO_INCREMENT,
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
     answer_key varchar(128) not null default '' comment '答案对应的可读展示内容',
@@ -30,14 +30,13 @@ create table answers (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关答案数据表';
 
-create table guan_answers (
+create table guan_answer (
     id int unsigned not null AUTO_INCREMENT,
-    guan_info_id int unsigned not null default 0 comment 'guan_info id',
     user_id int unsigned not null default 0 comment '用户 id',
     answer_id int unsigned not null default 0 comment '答案的 id',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    index idx_guan_info_id (user_id, guan_info_id),
+    unique uniq_guan_info_id (user_id, guan_info_id),
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关回答数据表';
 

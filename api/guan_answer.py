@@ -5,7 +5,7 @@
 from tornado.concurrent import run_on_executor
 
 from api.basehandler import BaseHandler
-from ral.guan_evaluation import set_evaluation_result
+from dal.guan_answer import add_guan_answer
 from util.monitor import super_monitor
 
 
@@ -24,7 +24,7 @@ class GuanAnswerHandler(BaseHandler):
         user_id = self.current_user['id']
         answer_id = self.get_request_parameter('answer_id', para_type=int)
 
-        ret = set_evaluation_result(self.redis, user_id, answer_id)  # todo 回答关关问题
+        ret = add_guan_answer(self.db_session, user_id, answer_id)
         return self.response(
-            resp_json={'ret': ret}
+            resp_json={'ret': ret.id}
         )
