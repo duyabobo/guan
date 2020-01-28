@@ -22,3 +22,17 @@ def add_guan_answer(db_session, user_id, guan_info_id, answer_info_id):
     db_session.add(guan_answer)
     db_session.flush()
     return guan_answer
+
+
+def get_guan_answer(db_session, user_id, guan_info_id):
+    """
+    获取关关问答数据
+    :param db_session:
+    :param user_id:
+    :param guan_info_id:
+    :return:
+    """
+    return db_session.query(GuanAnswer).\
+        filter(GuanAnswer.user_id == user_id).\
+        filter(GuanAnswer.guan_info_id == guan_info_id).\
+        first()
