@@ -5,7 +5,7 @@
 from models import AnswerInfo
 
 
-def get_answer_info(db_session, guan_info_id):
+def get_answer_infoes(db_session, guan_info_id):
     """
     获取某个 guan_info 的答案列表
     :param db_session:
@@ -16,3 +16,15 @@ def get_answer_info(db_session, guan_info_id):
         filter(AnswerInfo.guan_info_id == guan_info_id).\
         order_by(AnswerInfo.id).\
         all()
+
+
+def get_answer_info(db_session, answer_id):
+    """
+    查询一个 answer_info
+    :param db_session:
+    :param answer_id:
+    :return:
+    """
+    return db_session.query(AnswerInfo).\
+        filter(AnswerInfo.id == answer_id).\
+        first()

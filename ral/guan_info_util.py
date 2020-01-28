@@ -2,7 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/27'
-from dal.answer_info import get_answer_info
+from dal.answer_info import get_answer_infoes
 from dal.guan_info import get_guan_infoes
 
 
@@ -20,11 +20,11 @@ def get_guan_info_dict(db_session, guan_id):
     answer_dict = {}
     for index, guan_info in enumerate(guan_infoes):
         answer_dict[index] = []
-        answers = get_answer_info(db_session, guan_info.id)
-        for answer in answers:
+        answer_infoes = get_answer_infoes(db_session, guan_info.id)
+        for answer_info in answer_infoes:
             answer_dict[index].append({
-                'answer_key': answer.answer_key,
-                'answer_id': answer.id
+                'answer_key': answer_info.answer_key,
+                'answer_info_id': answer_info.id
             })
     return {
         'step': step,

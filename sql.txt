@@ -33,10 +33,11 @@ create table answer_info (
 create table guan_answer (
     id int unsigned not null AUTO_INCREMENT,
     user_id int unsigned not null default 0 comment '用户 id',
-    answer_id int unsigned not null default 0 comment '答案的 id',
+    guan_info_id int unsigned not null default 0 comment 'guan_info id',
+    answer_info_id int unsigned not null default 0 comment '答案的 id',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    unique uniq_guan_info_id (user_id, guan_info_id),
+    unique uniq_user_id_guan_info_id (user_id, guan_info_id),
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关回答数据表';
 

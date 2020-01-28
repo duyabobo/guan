@@ -5,17 +5,19 @@
 from models import GuanAnswer
 
 
-def add_guan_answer(db_session, user_id, answer_id):
+def add_guan_answer(db_session, user_id, guan_info_id, answer_info_id):
     """
     关关问答回答数据
     :param db_session:
     :param user_id:
-    :param answer_id:
+    :param guan_info_id:
+    :param answer_info_id:
     :return:
     """
     guan_answer = GuanAnswer(
         user_id=user_id,
-        answer_id=answer_id,
+        guan_info_id=guan_info_id,
+        answer_info_id=answer_info_id,
     )
     db_session.add(guan_answer)
     db_session.flush()
