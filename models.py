@@ -58,6 +58,7 @@ class GuanAnswer(Base):
     __tablename__ = 'guan_answer'
     id = Column(Integer, primary_key=True)  # 自增
     user_id = Column(Integer)  # user_id
+    guan_id = Column(Integer)  # guanguan id
     guan_info_id = Column(Integer)  # guan_info id
     answer_info_id = Column(Integer)  # answer_info id
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间

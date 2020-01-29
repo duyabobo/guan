@@ -41,6 +41,7 @@ create table answer_info (
 create table guan_answer (
     id int unsigned not null AUTO_INCREMENT,
     user_id int unsigned not null default 0 comment '用户 id',
+    guan_id int unsigned not null default 0 comment 'guanguan id，如果是分享的话，这里是0就行了',
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
     answer_info_id int unsigned not null default 0 comment '答案的 id',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

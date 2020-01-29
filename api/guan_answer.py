@@ -28,9 +28,11 @@ class GuanAnswerHandler(BaseHandler):
         answer_info_id = self.get_request_parameter('answer_info_id', para_type=int)
 
         answer_info = get_answer_info(self.db_session, answer_info_id)
-        ret = add_guan_answer(self.db_session, user_id, answer_info.guan_info_id, answer_info_id)
+        guan_answer = add_guan_answer(self.db_session, user_id, answer_info.guan_info_id, answer_info_id)
         return self.response(
-            resp_json={'ret': ret.id}
+            resp_json={
+                'guan_answer_id': guan_answer.id
+            }
         )
 
     @run_on_executor
