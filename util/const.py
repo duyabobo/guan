@@ -15,6 +15,7 @@ RESP_MOBILE_ALREADY_USED = {'code': 1006, 'errmsg': u'手机号码已经注册'}
 RESP_SEX_IS_UNKNOWN = {'code': 1007, 'errmsg': u'性别未知'}
 RESP_USER_IS_UNKNOWN = {'code': 1008, 'errmsg': u'用户不可达'}
 RESP_SEX_OF_USER_IS_FALSE = {'code': 1009, 'errmsg': u'用户性别不支持当前操作'}
+RESP_GUAN_POINT_NOT_ENOUGH = {'code': 1010, 'errmsg': u'用户积分不足'}
 
 # normal
 YES = 1

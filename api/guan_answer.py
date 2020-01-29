@@ -9,6 +9,9 @@ from dal.answer_info import get_answer_info
 from dal.guan_answer import add_guan_answer
 from dal.guan_answer import get_guan_answer
 from dal.guan_answer import update_guan_answer
+from dal.guanguan import get_guanguan
+from dal.user import get_user_by_user_id
+from util.const import RESP_GUAN_POINT_NOT_ENOUGH
 from util.database import object_to_json
 from util.monitor import super_monitor
 
@@ -28,6 +31,16 @@ class GuanAnswerHandler(BaseHandler):
         user_id = self.current_user['id']
         answer_info_id = self.get_request_parameter('answer_info_id', para_type=int)
         guan_id = self.get_request_parameter('guan_id', para_type=int)
+
+        user = get_user_by_user_id(self.db_session, user_id)
+        guanguan = get_guanguan(self.db_session, guan_id)
+        if user.guan_point + guanguan.guan_point < 0:
+            return self.response(
+                resp_json={
+                    'guan_answer_id': 0
+                },
+                resp_normal=RESP_GUAN_POINT_NOT_ENOUGH
+            )
 
         answer_info = get_answer_info(self.db_session, answer_info_id)
         guan_info_id = answer_info.guan_info_id
