@@ -49,6 +49,16 @@ create table guan_answer (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关回答数据表';
 
+create table guan_point (
+    id int unsigned not null AUTO_INCREMENT,
+    user_id int unsigned not null default 0 comment '用户 id',
+    guan_id int unsigned not null default 0 comment 'guanguan id，如果是分享的话，这里是0就行了',
+    guan_point smallint not null default -1 comment '积分',  # 积分：正为获取，负为支付
+    created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    index idx_user_id (user_id),
+    index idx_guan_id (guan_id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关积分详情表';
 
 create table user (
     id int unsigned not null AUTO_INCREMENT,
