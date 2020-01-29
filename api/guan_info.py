@@ -6,6 +6,7 @@ from tornado.concurrent import run_on_executor
 
 from api.basehandler import BaseHandler
 from ral.guan_info import get_guan_info
+from dal.guanguan import get_guanguan
 from util.monitor import super_monitor
 
 
@@ -22,7 +23,10 @@ class GuanInfoHandler(BaseHandler):
         :return:
         """
         guan_id = self.get_request_parameter('guan_id', para_type=int)
+        guanguan = get_guanguan(self.db_session, guan_id)
         guan_info = get_guan_info(self.redis, self.db_session, guan_id)
+        guan_info.update({'guan_id': guanguan.id, 'guan_point': guanguan.guan_point})
+
         return self.response(
             resp_json=guan_info
         )

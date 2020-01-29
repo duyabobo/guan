@@ -5,6 +5,17 @@
 from models import GuanGuan
 
 
+def get_guanguan(db_session, guan_id):
+    """
+    获取一条记录
+    :param db_session:
+    :param guan_id:
+    :return:
+    """
+    return db_session.query(GuanGuan).\
+        filter(GuanGuan.id == guan_id).first()
+
+
 def get_guanguan_list(db_session):
     """
     获取关关列表
