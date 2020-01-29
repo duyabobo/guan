@@ -18,7 +18,7 @@ class GuanGuanHandler(BaseHandler):
     @super_monitor
     def get(self, *args, **kwargs):
         """
-        获取 guanguan 信息  # todo 已回答过的不需要显示
+        获取 guanguan 信息  # todo 已回答过的不需要显示，分享赚取积分也是一个关关，并且可以多次操作
         :param args:
         :param kwargs:
         :return:
