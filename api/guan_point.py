@@ -8,7 +8,6 @@ from tornado.concurrent import run_on_executor
 from api.basehandler import BaseHandler
 from dal.guan_point import add_guan_point
 from dal.guanguan import get_guanguan
-from dal.user import get_user_by_user_id
 from dal.user import update_guan_point_of_user_info
 from util.monitor import super_monitor
 
@@ -34,23 +33,5 @@ class GuanPointHandler(BaseHandler):
         return self.response(
             resp_json={
                 'guan_point_id': guan_point.id
-            }
-        )
-
-    @run_on_executor
-    @super_monitor
-    def get(self, *args, **kwargs):
-        """
-        查询用户的积分
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        user_id = self.current_user['id']
-
-        user = get_user_by_user_id(self.db_session, user_id)
-        return self.response(
-            resp_json={
-                'guan_point': user.guan_point
             }
         )
