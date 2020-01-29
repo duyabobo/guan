@@ -8,6 +8,7 @@ from tornado.concurrent import run_on_executor
 from api.basehandler import BaseHandler
 from dal.guan_type import get_guan_types
 from dal.guanguan import get_guanguan_list
+from ral.guan_point import get_answers_dict
 from util.monitor import super_monitor
 
 
@@ -26,14 +27,14 @@ class GuanGuanHandler(BaseHandler):
         guanguan_list = get_guanguan_list(self.db_session)
         guan_types = get_guan_types(self.db_session)
         guan_type_dict = {guan_type.id: guan_type.name for guan_type in guan_types}
+        answers_dict = get_answers_dict(self.redis, self.db_session)
         guanguan_list = [
             {
                 'id': guanguan.id,
                 'name': guanguan.name,
                 'guan_type': guan_type_dict.get(guanguan.guan_type_id, '未知'),
                 'guan_point': str(guanguan.guan_point) + '个积分',
-                'answers': '10个参与',  # todo
-                'step': 1,
+                'answers': '%s个参与' % answers_dict.get(str(guanguan.id), 0)
             } for guanguan in guanguan_list
         ]
         return self.response(
