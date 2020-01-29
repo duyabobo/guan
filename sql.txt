@@ -55,6 +55,7 @@ create table guan_point (
     user_id int unsigned not null default 0 comment '用户 id',
     guan_id int unsigned not null default 0 comment 'guanguan id，如果是分享的话，这里是0就行了',
     guan_point smallint not null default -1 comment '积分',  # 积分：正为获取，负为支付
+    updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
     index idx_user_id (user_id),

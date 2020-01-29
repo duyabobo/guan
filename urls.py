@@ -6,6 +6,7 @@ from api import example
 from api import guan_answer
 from api import guan_evaluation
 from api import guan_info
+from api import guan_point
 from api import guanguan
 from api import login
 
@@ -16,4 +17,5 @@ handlers = [
     (r'/guan_info$', guan_info.GuanInfoHandler),
     (r'/guan_evaluation$', guan_evaluation.GuanEvaluationHandler),
     (r'/guan_answer$', guan_answer.GuanAnswerHandler),
+    (r'/guan_point$', guan_point.GuanPointHandler),
 ]
