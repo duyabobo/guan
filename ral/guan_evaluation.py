@@ -20,7 +20,7 @@ def get_guan_evaluation_key(guan_type, user_id):
 
 def set_evaluation_result(redis, user_id, guan_type, evaluation_result):
     """
-    设置(更新)关关问答的测评结果，无法删减，这里其实以后是用作定时脚本的逻辑实现
+    设置(更新)关关问答的测评结果
     :param redis:
     :param user_id:
     :param guan_type:
@@ -34,7 +34,7 @@ def set_evaluation_result(redis, user_id, guan_type, evaluation_result):
 
 def get_evaluation_result(redis, db_session, user_id, guan_type_id):
     """
-    获取关关问答的测评结果  todo: 加一个定时脚本维护数据
+    获取关关问答的测评结果
     :param redis:
     :param db_session:
     :param user_id:
