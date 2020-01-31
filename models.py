@@ -28,6 +28,7 @@ class GuanGuan(Base):
     name = Column(String)  # 问答名字
     guan_type_id = Column(Integer)  # 问答类型
     guan_point = Column(Integer)  # 积分
+    status = Column(Integer)  # 状态
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 

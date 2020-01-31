@@ -11,6 +11,7 @@ create table guanguan (
     name varchar(100) not null default '' comment '标题',
     guan_type_id smallint not null default -1 comment '类别',
     guan_point smallint not null default -1 comment '积分',  # 积分：正为获取，负为支付
+    status tinyint unsigned not null default 1 comment '关关 状态: 1在线，2下线',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`)
