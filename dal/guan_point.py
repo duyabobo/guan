@@ -3,7 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/29'
 from sqlalchemy import func
-
+from sqlalchemy import distinct
 from models import GuanPoint
 
 
@@ -36,11 +36,23 @@ def get_guan_points_by_uid(db_session, user_id):
     return db_session.query(GuanPoint).filter(GuanPoint.user_id == user_id).all()
 
 
-def get_answers_data(db_session):
+def get_answer_user_cnt(db_session):
     """
     统计参与人数
     :param db_session:
     :return:
     """
-    return db_session.query(GuanPoint.guan_id, func.count('*').label('c')).\
+    return db_session.query(GuanPoint.guan_id, func.count(distinct(GuanPoint.user_id)).label('c')).\
         group_by(GuanPoint.guan_id)
+
+
+def get_answer_user_cnt_by_guan_id(db_session, guan_id):
+    """
+    统计参与人数
+    :param db_session:
+    :param guan_id:
+    :return:
+    """
+    return db_session.query(GuanPoint.guan_id, func.count(distinct(GuanPoint.user_id)).label('c')).\
+        filter(GuanPoint.guan_id == guan_id).\
+        first()

@@ -9,7 +9,7 @@ from api.basehandler import BaseHandler
 from dal.guan_point import get_guan_points_by_uid
 from dal.guan_type import get_guan_types
 from dal.guanguan import get_guanguan_list
-from ral.guan_point import get_answers_dict
+from ral.guan_point import get_answer_user_cnt_dict
 from util.const import GUAN_TYPE_ID_MEET
 from util.monitor import super_monitor
 
@@ -31,7 +31,7 @@ class GuanGuanHandler(BaseHandler):
         guanguan_list = get_guanguan_list(self.db_session)
         guan_types = get_guan_types(self.db_session)
         guan_type_dict = {guan_type.id: guan_type.name for guan_type in guan_types}
-        answers_dict = get_answers_dict(self.redis, self.db_session)
+        answers_dict = get_answer_user_cnt_dict(self.redis, self.db_session)
         guan_points = get_guan_points_by_uid(self.db_session, user_id)
         guan_id_set = set([guan_point.guan_id for guan_point in guan_points])
         guanguan_list = [
