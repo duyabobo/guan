@@ -26,6 +26,7 @@ class GuanAnswerHandler(BaseHandler):
     def post(self, *args, **kwargs):
         """
         回答关关问答
+        todo: 如果是线下见面类关关，需要检查一下回答是否符合要求（性别检测，重复选中检测）
         :param args:
         :param kwargs:
         :return:
