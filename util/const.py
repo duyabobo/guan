@@ -56,5 +56,8 @@ DEGREE_DICT = {
 # GUAN_TYPE_ID
 GUAN_TYPE_ID_MEET = 2
 
+# GUAN_INFO_ID
+GUAN_INFO_ID_USER_INFO = 1
+
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

@@ -13,7 +13,10 @@ from dal.guanguan import get_guanguan
 from dal.user import get_user_by_user_id
 from ral.guan_evaluation import set_evaluation_result
 from ral.guan_evaluation_util import get_evaluation_result_list
+from util.const import GUAN_INFO_ID_USER_INFO
+from util.const import GUAN_TYPE_ID_MEET
 from util.const import RESP_GUAN_POINT_NOT_ENOUGH
+from util.const import RESP_SEX_IS_UNKNOWN
 from util.database import object_to_json
 from util.monitor import super_monitor
 
@@ -26,7 +29,6 @@ class GuanAnswerHandler(BaseHandler):
     def post(self, *args, **kwargs):
         """
         回答关关问答
-        todo: 如果是线下见面类关关，需要检查一下回答是否符合要求（性别检测，重复选中检测）
         :param args:
         :param kwargs:
         :return:
@@ -44,6 +46,16 @@ class GuanAnswerHandler(BaseHandler):
                 },
                 resp_normal=RESP_GUAN_POINT_NOT_ENOUGH
             )
+        guan_type_id = guanguan.guan_type_id
+        if guan_type_id == GUAN_TYPE_ID_MEET:
+            guan_answer = get_guan_answer(self.db_session, user_id, GUAN_INFO_ID_USER_INFO)
+            if not guan_answer:
+                return self.response(
+                    resp_json={
+                        'guan_answer_id': 0
+                    },
+                    resp_normal=RESP_SEX_IS_UNKNOWN
+                )
 
         answer_info = get_answer_info(self.db_session, answer_info_id)
         guan_info_id = answer_info.guan_info_id
@@ -54,7 +66,6 @@ class GuanAnswerHandler(BaseHandler):
             guan_answer = add_guan_answer(
                 self.db_session, user_id, guan_id, guan_info_id, answer_info_id
             )
-        guan_type_id = guanguan.guan_type_id
         evaluation_result = get_evaluation_result_list(self.db_session, user_id, guan_type_id)
         set_evaluation_result(self.redis, user_id, guan_type_id, evaluation_result)
         return self.response(
