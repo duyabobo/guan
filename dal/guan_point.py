@@ -36,6 +36,18 @@ def get_guan_points_by_uid(db_session, user_id):
     return db_session.query(GuanPoint).filter(GuanPoint.user_id == user_id).all()
 
 
+def get_guan_point_by_uid_and_guan_id(db_session, user_id, guan_id):
+    """
+    获取一个人已经参与的某一个关关记录
+    :param db_session:
+    :param user_id:
+    :param guan_id:
+    :return:
+    """
+    return db_session.query(GuanPoint).\
+        filter(GuanPoint.user_id == user_id, GuanPoint.guan_id == guan_id).first()
+
+
 def get_answer_user_cnt(db_session):
     """
     统计参与人数
