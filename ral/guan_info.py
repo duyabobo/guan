@@ -19,7 +19,6 @@ def get_guan_info_key(guan_id):
 def get_guan_info(redis, db_session, guan_id):
     """
     获取 guan_info，先读 redis，每次读都要到 db 去算，并把计算结果覆盖 redis
-    todo: 如果是线下见面类关关，返回需要增加这些数据：哪个选项已经被选中了，哪个是自己选中的，哪些是可以选择的
     :param redis:
     :param db_session:
     :param guan_id:

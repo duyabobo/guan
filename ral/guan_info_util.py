@@ -10,6 +10,7 @@ from dal.guanguan import get_guanguan
 def get_guan_info_dict(db_session, guan_id):
     """
     从 db 计算 guan_info
+    todo: 如果是线下见面类关关，返回需要增加这些数据：哪个选项已经被选中了，哪个是自己选中的，哪些是可以选择的
     :param db_session:
     :param guan_id:
     :return:
