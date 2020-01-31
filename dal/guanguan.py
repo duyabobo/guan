@@ -22,7 +22,7 @@ def get_guanguan_list(db_session):
     :param db_session:
     :return:
     """
-    return db_session.query(GuanGuan).all()
+    return db_session.query(GuanGuan).order_by(GuanGuan.guan_type_id).all()
 
 
 def get_guanguan_by_guan_type(db_session, guan_type_id):
