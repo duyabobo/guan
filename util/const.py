@@ -49,5 +49,8 @@ DEGREE_DICT = {
     5: '国外'
 }
 
+# GUAN_TYPE_ID
+GUAN_TYPE_ID_MEET = 2
+
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

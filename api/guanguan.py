@@ -10,6 +10,7 @@ from dal.guan_point import get_guan_points_by_uid
 from dal.guan_type import get_guan_types
 from dal.guanguan import get_guanguan_list
 from ral.guan_point import get_answers_dict
+from util.const import GUAN_TYPE_ID_MEET
 from util.monitor import super_monitor
 
 
@@ -40,7 +41,8 @@ class GuanGuanHandler(BaseHandler):
                 'guan_type': guan_type_dict.get(guanguan.guan_type_id, '未知'),
                 'guan_point': str(guanguan.guan_point) + '个积分',
                 'answers': '%s个参与' % answers_dict.get(str(guanguan.id), 0)
-            } for guanguan in guanguan_list if guanguan.id not in guan_id_set
+            } for guanguan in guanguan_list
+            if guanguan.id not in guan_id_set or guanguan.guan_type_id == GUAN_TYPE_ID_MEET
         ]
         return self.response(
             resp_json={
