@@ -21,12 +21,12 @@ RESP_GUAN_POINT_NOT_ENOUGH = {'code': 1010, 'errmsg': u'用户积分不足'}
 YES = 1
 NO = 0
 
-# USER_SEX
-FEMALE = 0
-MALE = 1
+# ANSWER_INFO_ID
+ANSWER_INFO_ID_FEMALE = 1
+ANSWER_INFO_ID_MALE = 2
 SEX_DICT = {
-    FEMALE: '女',
-    MALE: '男'
+    ANSWER_INFO_ID_FEMALE: '女',
+    ANSWER_INFO_ID_MALE: '男'
 }
 
 # USER_STATUS

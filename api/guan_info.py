@@ -22,9 +22,11 @@ class GuanInfoHandler(BaseHandler):
         :param kwargs:
         :return:
         """
+        user_id = self.current_user['id']
+
         guan_id = self.get_request_parameter('guan_id', para_type=int)
         guanguan = get_guanguan(self.db_session, guan_id)
-        guan_info = get_guan_info(self.redis, self.db_session, guan_id)
+        guan_info = get_guan_info(self.redis, self.db_session, user_id, guan_id)
         guan_info.update({'guan_id': guanguan.id, 'guan_point': guanguan.guan_point})
 
         return self.response(
