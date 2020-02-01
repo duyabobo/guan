@@ -57,13 +57,13 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
         for index in guan_info_dict['answer_dict']:
             answers = guan_info_dict['answer_dict'][index]
             for answer in answers:
-                could_answer = 1
+                could_answer = 0
                 answer_user_id = 0
                 self_answer = 0
                 answer_key = answer['answer_key']
                 answer_info_id = answer['answer_info_id']
                 if sex in answer_key:
-                    could_answer = 0
+                    could_answer = 1
                 guan_answers = get_guan_answers_by_answer_info_id(db_session, answer_info_id)
                 if guan_answers:
                     answer_user_id = guan_answers[0].user_id

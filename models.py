@@ -104,8 +104,9 @@ class Suggestion(Base):
 
 class OfflineMeeting(Base):
     """线下见面活动数据"""
-    __tablename__ = 'ofline_meeting'
+    __tablename__ = 'offline_meeting'
     id = Column(Integer, primary_key=True)  # 自增
+    guan_id = Column(Integer)  # guan id
     guan_info_id = Column(Integer)  # guan info id
     time = Column(TIMESTAMP)  # 时间
     address = Column(String)  # 地址

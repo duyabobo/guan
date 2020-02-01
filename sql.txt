@@ -90,8 +90,9 @@ create table suggestion (
     index idx_user_id (user_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户意见表';
 
-create table ofline_meeting (
+create table offline_meeting (
     id int unsigned not null AUTO_INCREMENT,
+    guan_id int unsigned not null default 0 comment 'guanguan id',
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
     time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
     address varchar(64) not null default '' comment '地址',
