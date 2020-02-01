@@ -9,6 +9,7 @@ from api.basehandler import BaseHandler
 from dal.guan_point import get_guan_points_by_uid
 from dal.guan_type import get_guan_types
 from dal.guanguan import get_guanguan_list
+from dal.offline_meeting import get_offline_meetings_by_guan_ids
 from ral.guan_point import get_answer_user_cnt_dict
 from util.const import GUAN_TYPE_ID_MEET
 from util.monitor import super_monitor
@@ -34,10 +35,15 @@ class GuanGuanHandler(BaseHandler):
         answers_dict = get_answer_user_cnt_dict(self.redis, self.db_session)
         guan_points = get_guan_points_by_uid(self.db_session, user_id)
         guan_id_set = set([guan_point.guan_id for guan_point in guan_points])
+        all_guan_ids = [guanguan.id for guanguan in guanguan_list]
+        offline_meetings = get_offline_meetings_by_guan_ids(self.db_session, all_guan_ids)
+        offline_meeting_data_dict = {
+            o.guan_id: str(o.time) + '，' + o.address + '：' for o in offline_meetings
+        }
         guanguan_list = [
             {
                 'id': guanguan.id,
-                'name': guanguan.name,
+                'name': offline_meeting_data_dict.get(guanguan.id, '') + guanguan.name,
                 'guan_type': guan_type_dict.get(guanguan.guan_type_id, '未知'),
                 'guan_point': str(guanguan.guan_point) + '个积分',
                 'answers': '%s个参与' % answers_dict.get(str(guanguan.id), 0)
