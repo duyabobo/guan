@@ -90,3 +90,13 @@ class User(Base):
     profile_photo = Column(String, default='')  # 头像url
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
+
+
+class Suggestion(Base):
+    """用户意见"""
+    __tablename__ = 'suggestion'
+    id = Column(Integer, primary_key=True)  # 自增
+    user_id = Column(Integer)  # user_id
+    suggestion_content = Column(Integer)  # 意见内容
+    updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
+    created_time = Column(TIMESTAMP, default=func.now())  # 创建时间

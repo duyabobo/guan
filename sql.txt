@@ -1,6 +1,6 @@
 create table guan_type (
     id int unsigned not null AUTO_INCREMENT,
-    name varchar(100) not null default '' comment '关关类型',
+    name varchar(8) not null default '' comment '关关类型',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`)
@@ -8,7 +8,7 @@ create table guan_type (
 
 create table guanguan (
     id int unsigned not null AUTO_INCREMENT,
-    name varchar(100) not null default '' comment '标题',
+    name varchar(64) not null default '' comment '标题',
     guan_type_id smallint not null default -1 comment '类别',
     guan_point smallint not null default -1 comment '积分',  # 积分：正为获取，负为支付
     status tinyint unsigned not null default 1 comment '关关 状态: 1在线，2下线',
@@ -20,7 +20,7 @@ create table guanguan (
 create table guan_info (
     id int unsigned not null AUTO_INCREMENT,
     guan_id int unsigned not null default 0 comment 'guanguan id',
-    question varchar(100) not null default '' comment '问答内容',
+    question varchar(64) not null default '' comment '问答内容',
     // 答案数据可以加缓存
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -31,8 +31,8 @@ create table guan_info (
 create table answer_info (
     id int unsigned not null AUTO_INCREMENT,
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
-    answer_key varchar(128) not null default '' comment '答案对应的可读展示内容',
-    answer_evaluation varchar(128) not null default '' comment '答案对应的测评结果',
+    answer_key varchar(6) not null default '' comment '答案对应的可读展示内容',
+    answer_evaluation varchar(64) not null default '' comment '答案对应的测评结果',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     index idx_guan_info_id (guan_info_id),
@@ -78,3 +78,13 @@ create table user (
     index idx_openid (openid, user_status),
     index idx_mobile_password_status (mobile, password, user_status)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户表';
+
+create table suggestion (
+    id int unsigned not null AUTO_INCREMENT,
+    user_id int unsigned not null default 0 comment '用户 id',
+    suggestion_content varchar(255) not null default '' comment '意见内容',
+    updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    index idx_user_id (user_id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户意见表';
