@@ -24,6 +24,9 @@ class GuanEvaluationHandler(BaseHandler):
         :return:
         """
         user_id = self.current_user['id']
+        answer_user_id = self.get_request_parameter('answer_user_id', para_type=int)
+        if answer_user_id:
+            user_id = answer_user_id
 
         guan_evaluations = []
         guan_types = get_guan_types(self.db_session)
