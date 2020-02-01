@@ -47,6 +47,7 @@ class AnswerInfo(Base):
     """关关答案数据表"""
     __tablename__ = 'answer_info'
     id = Column(Integer, primary_key=True)  # 自增
+    guan_id = Column(Integer)  # guanguan id
     guan_info_id = Column(Integer)  # guan info id
     answer_key = Column(String)  # 展示的答案内容
     answer_evaluation = Column(String)  # 问答对应的测评内容
