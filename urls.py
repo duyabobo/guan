@@ -9,6 +9,7 @@ from api import guan_info
 from api import guan_point
 from api import guanguan
 from api import login
+from api import suggestion
 from api import user
 
 handlers = [
@@ -20,4 +21,5 @@ handlers = [
     (r'/guan_answer$', guan_answer.GuanAnswerHandler),
     (r'/guan_point$', guan_point.GuanPointHandler),
     (r'/user$', user.UserHandler),
+    (r'/suggestion$', suggestion.SuggestionHandler),
 ]
