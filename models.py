@@ -100,3 +100,14 @@ class Suggestion(Base):
     suggestion_content = Column(Integer)  # 意见内容
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
+
+
+class OfflineMeeting(Base):
+    """线下见面活动数据"""
+    __tablename__ = 'ofline_meeting'
+    id = Column(Integer, primary_key=True)  # 自增
+    guan_info_id = Column(Integer)  # guan info id
+    time = Column(TIMESTAMP)  # 时间
+    address = Column(String)  # 地址
+    updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
+    created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
