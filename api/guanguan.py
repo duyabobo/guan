@@ -38,7 +38,7 @@ class GuanGuanHandler(BaseHandler):
         all_guan_ids = [guanguan.id for guanguan in guanguan_list]
         offline_meetings = get_offline_meetings_by_guan_ids(self.db_session, all_guan_ids)
         offline_meeting_data_dict = {
-            o.guan_id: str(o.time) + '，' + o.address + '：' for o in offline_meetings
+            o.guan_id: str(o.time) + '，' + o.address + '。活动代号：' for o in offline_meetings
         }
         guanguan_list = [
             {
