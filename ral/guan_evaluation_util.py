@@ -29,7 +29,7 @@ def get_evaluation_result_list(db_session, user_id, guan_type_id):
     for answer_info in answer_infoes:
         evaluation = answer_info.answer_evaluation
         if guan_type_id == GUAN_TYPE_ID_MEET:
-            evaluation = guan_name_dict.get(answer_info.guan_id, '') + '：' + evaluation
+            evaluation = guan_name_dict.get(answer_info.guan_id, '') + evaluation
         evaluation_result.append(evaluation)
 
     return evaluation_result
