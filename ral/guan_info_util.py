@@ -7,6 +7,7 @@ from dal.guan_answer import get_guan_answers_by_answer_info_id
 from dal.guan_answer import get_user_info_from_guan_answer
 from dal.guan_info import get_guan_infoes
 from dal.guanguan import get_guanguan
+from dal.offline_meeting import get_offline_meeting_by_guan_id
 from util.const import GUAN_TYPE_ID_MEET
 from util.const import SEX_DICT
 
@@ -52,6 +53,10 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
     """
     guanguan = get_guanguan(db_session, guan_id)
     if guanguan.guan_type_id == GUAN_TYPE_ID_MEET:
+        offline_meeting = get_offline_meeting_by_guan_id(db_session, guan_id)
+        guan_info_dict['meeting_time'] = str(offline_meeting.time)
+        guan_info_dict['meeting_address'] = str(offline_meeting.address)
+
         user_info_from_guan_answer = get_user_info_from_guan_answer(db_session, user_id)
         sex = SEX_DICT[user_info_from_guan_answer.answer_info_id]
         for index in guan_info_dict['answer_dict']:
