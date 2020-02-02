@@ -24,6 +24,8 @@ redis_offline_session = StrictRedis(util.config.get('redis', 'host'),
 
 
 def object_to_json(obj):
+    if not obj:
+        return {}
     json_data = obj.__dict__
     json_data.pop('_sa_instance_state')
     json_data.pop('updated_time')
