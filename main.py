@@ -2,6 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
+import os
 import sys
 
 import tornado.httpserver
@@ -29,10 +30,11 @@ def main():
     })
 
     application.engine = engine
-    http_server = tornado.httpserver.HTTPServer(
-        application,
-    )
-    http_server.listen(port)
+    http_server = tornado.httpserver.HTTPServer(application, ssl_options={
+        "certfile": os.path.join(os.path.abspath("."), "example.com.crt"),
+        "keyfile": os.path.join(os.path.abspath("."), "example.com.key"),
+    })
+    http_server.listen(443)
     print ('>>>>> Starting development server at http://localhost:{}/ <<<<<'.format(port))
     tornado.ioloop.IOLoop.instance().start()
 
