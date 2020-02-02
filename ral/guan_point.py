@@ -25,7 +25,8 @@ def get_answer_user_cnt_dict(redis, db_session):
     answers_dict = redis.hgetall(key)
     if not answers_dict:
         answers_dict = get_answer_user_cnt_dict_from_db(db_session)
-        redis.hmset(key, answers_dict)
+        if answers_dict:
+            redis.hmset(key, answers_dict)
     return answers_dict
 
 
