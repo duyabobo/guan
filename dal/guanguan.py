@@ -4,6 +4,7 @@
 # __created_at__ = '2020/1/19'
 from models import GuanGuan
 from util.const import GUANGUAN_STATUS_ONLINE
+from util.const import GUAN_TYPE_ID_MEET
 
 
 def get_guanguan(db_session, guan_id):
@@ -36,5 +37,30 @@ def get_guanguan_by_guan_type(db_session, guan_type_id):
     :return:
     """
     return db_session.query(GuanGuan).\
-        filter(GuanGuan.guan_type_id == guan_type_id).\
+        filter(GuanGuan.guan_type_id == guan_type_id). \
+        filter(GuanGuan.status == GUANGUAN_STATUS_ONLINE).\
         all()
+
+
+def get_guanguan_of_offline_meeting(db_session):
+    """
+    获取线下见面类关关列表
+    :param db_session:
+    :return:
+    """
+    guan_type_id = GUAN_TYPE_ID_MEET
+    return get_guanguan_by_guan_type(db_session, guan_type_id)
+
+
+def update_guanguan_status(db_session, guan_id, status):
+    """
+    修改关关的 status
+    :param db_session:
+    :param guan_id:
+    :param status:
+    :return:
+    """
+    guanguan = get_guanguan(db_session, guan_id)
+    guanguan.status = status
+    db_session.flush()
+    return guanguan
