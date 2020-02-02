@@ -33,7 +33,7 @@ create table answer_info (
     id int unsigned not null AUTO_INCREMENT,
     guan_id int unsigned not null default 0 comment 'guanguan id',
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
-    answer_key varchar(6) not null default '' comment '答案对应的可读展示内容',
+    answer_key varchar(64) not null default '' comment '答案对应的可读展示内容',
     answer_evaluation varchar(64) not null default '' comment '答案对应的测评结果',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
