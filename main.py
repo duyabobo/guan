@@ -30,10 +30,13 @@ def main():
     })
 
     application.engine = engine
-    http_server = tornado.httpserver.HTTPServer(application, ssl_options={
-        "certfile": os.path.join(os.path.abspath("."), "example.com.crt"),
-        "keyfile": os.path.join(os.path.abspath("."), "example.com.key"),
-    })
+    http_server = tornado.httpserver.HTTPServer(
+        application,
+        ssl_options={
+            "certfile": os.path.join(os.path.abspath("."), "example.com.crt"),
+            "keyfile": os.path.join(os.path.abspath("."), "example.com.key"),
+        }
+    )
     http_server.listen(443)
     print ('>>>>> Starting development server at http://localhost:{}/ <<<<<'.format(port))
     tornado.ioloop.IOLoop.instance().start()
