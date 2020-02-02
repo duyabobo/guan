@@ -4,6 +4,7 @@
 # __created_at__ = '2020/2/2'
 # 监控线下见面类关关的状态，每隔十分钟跑一次
 from datetime import datetime
+from datetime import timedelta
 
 from dal.guanguan import get_guanguan_of_offline_meeting
 from dal.guanguan import update_guanguan_status
@@ -20,5 +21,5 @@ if __name__ == '__main__':
     }
     for guan_id in offline_meeting_dict:
         offline_meeting = offline_meeting_dict[guan_id]
-        if offline_meeting.time < datetime.now():
+        if datetime.now() - offline_meeting.time > timedelta(minutes=20):
             update_guanguan_status(mysql_offline_session, guan_id, GUANGUAN_STATUS_OFFLINE)

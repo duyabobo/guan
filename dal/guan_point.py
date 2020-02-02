@@ -68,3 +68,15 @@ def get_answer_user_cnt_by_guan_id(db_session, guan_id):
     return db_session.query(GuanPoint.guan_id, func.count(distinct(GuanPoint.user_id)).label('c')).\
         filter(GuanPoint.guan_id == guan_id).\
         first()
+
+
+def get_guan_points_by_guan_id(db_session, guan_id):
+    """
+    获取参与记录
+    :param db_session:
+    :param guan_id:
+    :return:
+    """
+    return db_session.query(GuanPoint). \
+        filter(GuanPoint.guan_id == guan_id). \
+        all()
