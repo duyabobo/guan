@@ -37,8 +37,8 @@ def main():
             "keyfile": os.path.join(os.path.abspath("."), "example.com.key"),
         }
     )
-    http_server.listen(443)
-    print ('>>>>> Starting development server at http://localhost:{}/ <<<<<'.format(port))
+    http_server.listen(port)
+    print ('>>>>> Starting development server at http://localhost/ <<<<<')
     tornado.ioloop.IOLoop.instance().start()
 
 
