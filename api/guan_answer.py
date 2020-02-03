@@ -65,7 +65,8 @@ class GuanAnswerHandler(BaseHandler):
             offline_meeting = get_offline_meeting_by_guan_id(self.db_session, guan_id)
             old_offline_meetings = get_offline_meetings_by_guan_ids(self.db_session, old_guan_ids)
             for old_offline_meeting in old_offline_meetings:
-                if offline_meeting.time.date() == old_offline_meeting.time.date():
+                if offline_meeting.time.date() == old_offline_meeting.time.date() \
+                        and offline_meeting.guan_id != old_offline_meeting.guan_id:
                     return self.response(
                         resp_json={
                             'guan_answer_id': 0

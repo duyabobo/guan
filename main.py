@@ -20,12 +20,11 @@ sys.setdefaultencoding('utf-8')
 def main():
     port = util.config.get("global", "port")
     server = util.config.get('global', 'server')
-    login_url = util.config.get('global', 'login_url')
+    debug = util.config.get('global', 'debug')
     cookie_secret = util.config.get('global', 'cookie_secret')
 
     application = tornado.web.Application(handlers, **{
-        'debug': True if server == 'test' else False,
-        'login_url': login_url,
+        'debug': True if debug == 'true' else False,
         'cookie_secret': cookie_secret
     })
 
@@ -36,9 +35,9 @@ def main():
             "certfile": os.path.join(os.path.abspath("."), "example.com.crt"),
             "keyfile": os.path.join(os.path.abspath("."), "example.com.key"),
         }
-    )
+    ) if server == 'online' else tornado.httpserver.HTTPServer(application)
     http_server.listen(port)
-    print ('>>>>> Starting development server at http://localhost/ <<<<<')
+    print ('>>>>> Starting development server at http://localhost:{}/ <<<<<'.format(port))
     tornado.ioloop.IOLoop.instance().start()
 
 
