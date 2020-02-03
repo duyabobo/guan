@@ -9,13 +9,17 @@ from dal.answer_info import get_answer_info
 from dal.guan_answer import add_guan_answer
 from dal.guan_answer import get_guan_answer
 from dal.guan_answer import update_guan_answer
+from dal.guan_point import get_guan_points_by_uid
 from dal.guanguan import get_guanguan
+from dal.offline_meeting import get_offline_meeting_by_guan_id
+from dal.offline_meeting import get_offline_meetings_by_guan_ids
 from dal.user import get_user_by_user_id
 from ral.guan_evaluation import set_evaluation_result
 from ral.guan_evaluation_util import get_evaluation_result_list
 from util.const import GUAN_INFO_ID_USER_INFO
 from util.const import GUAN_TYPE_ID_MEET
 from util.const import RESP_GUAN_POINT_NOT_ENOUGH
+from util.const import RESP_OFFLINE_MEETING_DUPLICATE
 from util.const import RESP_SEX_IS_UNKNOWN
 from util.database import object_to_json
 from util.monitor import super_monitor
@@ -56,6 +60,18 @@ class GuanAnswerHandler(BaseHandler):
                     },
                     resp_normal=RESP_SEX_IS_UNKNOWN
                 )
+            old_guan_points = get_guan_points_by_uid(self.db_session, user_id)
+            old_guan_ids = [guan_point.user_id for guan_point in old_guan_points]
+            offline_meeting = get_offline_meeting_by_guan_id(self.db_session, guan_id)
+            old_offline_meetings = get_offline_meetings_by_guan_ids(self.db_session, old_guan_ids)
+            for old_offline_meeting in old_offline_meetings:
+                if offline_meeting.time.date() == old_offline_meeting.time.date():
+                    return self.response(
+                        resp_json={
+                            'guan_answer_id': 0
+                        },
+                        resp_normal=RESP_OFFLINE_MEETING_DUPLICATE
+                    )
 
         answer_info = get_answer_info(self.db_session, answer_info_id)
         guan_info_id = answer_info.guan_info_id

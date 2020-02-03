@@ -16,6 +16,7 @@ RESP_SEX_IS_UNKNOWN = {'code': 1007, 'errmsg': u'性别未知'}
 RESP_USER_IS_UNKNOWN = {'code': 1008, 'errmsg': u'用户不可达'}
 RESP_SEX_OF_USER_IS_FALSE = {'code': 1009, 'errmsg': u'用户性别不支持当前操作'}
 RESP_GUAN_POINT_NOT_ENOUGH = {'code': 1010, 'errmsg': u'用户积分不足'}
+RESP_OFFLINE_MEETING_DUPLICATE = {'code': 1011, 'errmsg': u'每天只能参加一个线下活动'}
 
 # normal
 YES = 1
