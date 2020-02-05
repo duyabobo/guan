@@ -5,6 +5,27 @@
 from models import AnswerInfo
 
 
+def add_answer_info(db_session, guan_id, guan_info_id, answer_key, answer_evaluation):
+    """
+    增加一个 guan_info 记录
+    :param db_session:
+    :param guan_id:
+    :param guan_info_id:
+    :param answer_key:
+    :param answer_evaluation:
+    :return:
+    """
+    guan_info = AnswerInfo(
+        guan_id=guan_id,
+        guan_info_id=guan_info_id,
+        answer_key=answer_key,
+        answer_evaluation=answer_evaluation
+    )
+    db_session.add(guan_info)
+    db_session.flush()
+    return guan_info
+
+
 def get_answer_infoes(db_session, guan_info_id):
     """
     获取某个 guan_info 的答案列表
