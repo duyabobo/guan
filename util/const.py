@@ -17,6 +17,7 @@ RESP_USER_IS_UNKNOWN = {'code': 1008, 'errmsg': u'用户不可达'}
 RESP_SEX_OF_USER_IS_FALSE = {'code': 1009, 'errmsg': u'用户性别不支持当前操作'}
 RESP_GUAN_POINT_NOT_ENOUGH = {'code': 1010, 'errmsg': u'用户积分不足'}
 RESP_OFFLINE_MEETING_DUPLICATE = {'code': 1011, 'errmsg': u'每天只能参加一个线下活动'}
+RESP_OFFLINE_AUTH_CHECK_FAILED = {'code': 1012, 'errmsg': u'权限检查不通过'}
 
 # normal
 YES = 1
@@ -59,6 +60,11 @@ GUAN_TYPE_ID_MEET = 2
 
 # GUAN_INFO_ID
 GUAN_INFO_ID_USER_INFO = 1
+
+# AUTH_USER_ID_DICT
+AUTH_USER_ID_DICT = {
+    'admin': ['3']
+}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

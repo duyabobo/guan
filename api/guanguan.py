@@ -13,6 +13,7 @@ from dal.offline_meeting import get_offline_meetings_by_guan_ids
 from ral.guan_point import get_answer_user_cnt_dict
 from util.const import GUAN_TYPE_ID_MEET
 from util.monitor import super_monitor
+from util.monitor import auth_checker
 
 
 class GuanGuanHandler(BaseHandler):
@@ -55,3 +56,21 @@ class GuanGuanHandler(BaseHandler):
                 'guanguan_list': guanguan_list
             }
         )
+
+    @run_on_executor
+    @super_monitor
+    @auth_checker('admin')
+    def post(self, *args, **kwargs):
+        """
+        增加 guanguan 信息，后台管理
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        user_id = self.current_user['id']
+        return self.response(
+            resp_json={
+                'user_id': user_id
+            }
+        )
+
