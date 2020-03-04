@@ -18,7 +18,7 @@ sys.setdefaultencoding('utf-8')
 
 
 def main():
-    port = util.config.get("global", "port")
+    port = util.config.get('global', 'port')
     server = util.config.get('global', 'server')
     debug = util.config.get('global', 'debug')
     cookie_secret = util.config.get('global', 'cookie_secret')
@@ -32,8 +32,8 @@ def main():
     http_server = tornado.httpserver.HTTPServer(
         application,
         ssl_options={
-            "certfile": os.path.join(os.path.abspath("."), "example.com.crt"),
-            "keyfile": os.path.join(os.path.abspath("."), "example.com.key"),
+            "certfile": os.path.join(os.path.abspath(''), 'service.pem'),
+            "keyfile": os.path.join(os.path.abspath(''), 'service.key'),
         }
     ) if server == 'online' else tornado.httpserver.HTTPServer(application)
     http_server.listen(port)
