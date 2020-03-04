@@ -22,6 +22,6 @@ class InitHandler(BaseHandler):
         """
         return self.response(
             resp_json={
-                'slogan': ''
+                'slogan': '找到好配偶'
             }
         )

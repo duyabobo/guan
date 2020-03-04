@@ -30,7 +30,7 @@ class ExampleHandler(BaseHandler):
         print time.time()
         para_name = self.get_request_parameter('para_name')  # 接受参数，如果必传就不给出默认值
         print para_name
-        time.sleep(10)
-        response = {'msg': 'abc'}
+        time.sleep(0.1)
+        response = {'msg': 'abc', 'icp': '京ICP备20005743号-1'}
         self.response(response)
         return response
