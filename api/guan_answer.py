@@ -41,17 +41,17 @@ class GuanAnswerHandler(BaseHandler):
         answer_info_id = self.get_request_parameter('answer_info_id', para_type=int)
         guan_id = self.get_request_parameter('guan_id', para_type=int)
 
-        user = get_user_by_user_id(self.db_session, user_id)
         guanguan = get_guanguan(self.db_session, guan_id)
-        if user.guan_point + guanguan.guan_point < 0:
-            return self.response(
-                resp_json={
-                    'guan_answer_id': 0
-                },
-                resp_normal=RESP_GUAN_POINT_NOT_ENOUGH
-            )
         guan_type_id = guanguan.guan_type_id
         if guan_type_id == GUAN_TYPE_ID_MEET:
+            user = get_user_by_user_id(self.db_session, user_id)
+            if user.guan_point + guanguan.guan_point < 0:
+                return self.response(
+                    resp_json={
+                        'guan_answer_id': 0
+                    },
+                    resp_normal=RESP_GUAN_POINT_NOT_ENOUGH
+                )
             guan_answer = get_guan_answer(self.db_session, user_id, GUAN_INFO_ID_USER_INFO)
             if not guan_answer:
                 return self.response(
@@ -61,7 +61,7 @@ class GuanAnswerHandler(BaseHandler):
                     resp_normal=RESP_SEX_IS_UNKNOWN
                 )
             old_guan_points = get_guan_points_by_uid(self.db_session, user_id)
-            old_guan_ids = [guan_point.user_id for guan_point in old_guan_points]
+            old_guan_ids = [guan_point.guan_id for guan_point in old_guan_points]
             offline_meeting = get_offline_meeting_by_guan_id(self.db_session, guan_id)
             old_offline_meetings = get_offline_meetings_by_guan_ids(self.db_session, old_guan_ids)
             for old_offline_meeting in old_offline_meetings:
