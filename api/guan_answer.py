@@ -7,6 +7,7 @@ from tornado.concurrent import run_on_executor
 from api.basehandler import BaseHandler
 from dal.answer_info import get_answer_info
 from dal.guan_answer import add_guan_answer
+from dal.guan_answer import delete_one_guan_answer
 from dal.guan_answer import get_guan_answer
 from dal.guan_answer import update_guan_answer
 from dal.guan_point import get_guan_points_by_uid
@@ -19,6 +20,7 @@ from ral.guan_evaluation_util import get_evaluation_result_list
 from util.const import GUAN_INFO_ID_USER_INFO
 from util.const import GUAN_TYPE_ID_MEET
 from util.const import RESP_GUAN_POINT_NOT_ENOUGH
+from util.const import RESP_GUAN_TYPE_IS_NOT_MEETING
 from util.const import RESP_OFFLINE_MEETING_DUPLICATE
 from util.const import RESP_SEX_IS_UNKNOWN
 from util.database import object_to_json
@@ -88,6 +90,35 @@ class GuanAnswerHandler(BaseHandler):
         return self.response(
             resp_json={
                 'guan_answer_id': guan_answer.id
+            }
+        )
+
+    @run_on_executor
+    @super_monitor
+    def put(self, *args, **kwargs):
+        """
+        修改关关问答，主要针对线下见面类取消操作
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        user_id = self.current_user['id']
+        answer_info_id = self.get_request_parameter('answer_info_id', para_type=int)
+        guan_id = self.get_request_parameter('guan_id', para_type=int)
+
+        guanguan = get_guanguan(self.db_session, guan_id)
+        guan_type_id = guanguan.guan_type_id
+        if guan_type_id != GUAN_TYPE_ID_MEET:
+            return self.response(
+                resp_json={
+                    'guan_answer_id': 0
+                },
+                resp_normal=RESP_GUAN_TYPE_IS_NOT_MEETING
+            )
+        ret = delete_one_guan_answer(self.db_session, user_id, answer_info_id)
+        return self.response(
+            resp_json={
+                'delete_ret': ret
             }
         )
 

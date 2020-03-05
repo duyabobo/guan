@@ -47,9 +47,10 @@ create table guan_answer (
     guan_id int unsigned not null default 0 comment 'guanguan id，如果是分享的话，这里是0就行了',
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
     answer_info_id int unsigned not null default 0 comment '答案的 id',
+    guan_answer_status tinyint unsigned not null default 1 comment '回答的状态：1正常，0已被删除',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    unique uniq_user_id_guan_info_id (user_id, guan_info_id),
+    index user_id (user_id),
     index idx_answer_info_id (answer_info_id),
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='关关回答数据表';

@@ -51,6 +51,7 @@ class GuanGuanHandler(BaseHandler):
                 'id': guanguan.id,
                 'name': offline_meeting_data_dict.get(guanguan.id, '') + guanguan.name,
                 'guan_type': guan_type_dict.get(guanguan.guan_type_id, '未知'),
+                'guan_type_id': guanguan.guan_type_id,
                 'guan_point': str(guanguan.guan_point) + '个积分',
                 'answers': '%s个参与' % answers_dict.get(str(guanguan.id), 0)
             } for guanguan in guanguan_list

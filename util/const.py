@@ -18,10 +18,11 @@ RESP_SEX_OF_USER_IS_FALSE = {'code': 1009, 'errmsg': u'用户性别不支持当�
 RESP_GUAN_POINT_NOT_ENOUGH = {'code': 1010, 'errmsg': u'用户积分不足'}
 RESP_OFFLINE_MEETING_DUPLICATE = {'code': 1011, 'errmsg': u'每天只能参加一个线下活动'}
 RESP_OFFLINE_AUTH_CHECK_FAILED = {'code': 1012, 'errmsg': u'权限检查不通过'}
+RESP_GUAN_TYPE_IS_NOT_MEETING = {'code': 1013, 'errmsg': u'当前操作必须针对线下见面类关关'}
 
 # normal
-YES = 1
-NO = 0
+YES = USABLE = 1
+NO = DELETED = 0
 
 # ANSWER_INFO_ID
 ANSWER_INFO_ID_FEMALE = 1

@@ -63,6 +63,7 @@ class GuanAnswer(Base):
     guan_id = Column(Integer)  # guanguan id
     guan_info_id = Column(Integer)  # guan_info id
     answer_info_id = Column(Integer)  # answer_info id
+    guan_answer_status = Column(Integer, default=1)  # 回答数据的状态：1 正常，0 已删除
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 

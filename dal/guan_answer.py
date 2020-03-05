@@ -3,6 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/28'
 from models import GuanAnswer
+from util.const import DELETED
 from util.const import GUAN_INFO_ID_USER_INFO
 
 
@@ -25,6 +26,20 @@ def add_guan_answer(db_session, user_id, guan_id, guan_info_id, answer_info_id):
     db_session.add(guan_answer)
     db_session.flush()
     return guan_answer
+
+
+def delete_one_guan_answer(db_session, user_id, answer_info_id):
+    """
+    删除一个关关问答数据，软删除
+    :param db_session:
+    :param user_id:
+    :param answer_info_id:
+    :return:
+    """
+    return db_session.query(GuanAnswer). \
+        filter(GuanAnswer.user_id == user_id). \
+        filter(GuanAnswer.answer_info_id == answer_info_id). \
+        update({'guan_answer_status': DELETED})
 
 
 def update_guan_answer(db_session, guan_answer, answer_info_id):
@@ -51,6 +66,7 @@ def get_guan_answer(db_session, user_id, guan_info_id):
     return db_session.query(GuanAnswer).\
         filter(GuanAnswer.user_id == user_id).\
         filter(GuanAnswer.guan_info_id == guan_info_id).\
+        filter(GuanAnswer.guan_answer_status == 1).\
         first()
 
 
@@ -61,7 +77,10 @@ def get_guan_answers_by_answer_info_id(db_session, answer_info_id):
     :param answer_info_id:
     :return:
     """
-    return db_session.query(GuanAnswer).filter(GuanAnswer.answer_info_id == answer_info_id).all()
+    return db_session.query(GuanAnswer).\
+        filter(GuanAnswer.answer_info_id == answer_info_id). \
+        filter(GuanAnswer.guan_answer_status == 1). \
+        all()
 
 
 def get_user_info_from_guan_answer(db_session, user_id):
