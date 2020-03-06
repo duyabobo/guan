@@ -3,6 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from sqlalchemy import Column
+from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import TIMESTAMP
@@ -112,5 +113,7 @@ class OfflineMeeting(Base):
     guan_info_id = Column(Integer)  # guan info id
     time = Column(TIMESTAMP)  # 时间
     address = Column(String)  # 地址
+    latitude = Column(Float)  # 纬度
+    longitude = Column(Float)  # 经度
     updated_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     created_time = Column(TIMESTAMP, default=func.now())  # 创建时间

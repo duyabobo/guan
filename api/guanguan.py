@@ -34,8 +34,12 @@ class GuanGuanHandler(BaseHandler):
         :return:
         """
         user_id = self.current_user['id']
+        longitude = self.get_request_parameter('longitude', para_type=float)
+        latitude = self.get_request_parameter('latitude', para_type=float)
 
         guanguan_list = get_guanguan_list(self.db_session)
+        # todo：加上经纬度筛选线下见面类关关，以后还会有其他的一些智能推荐类算法到里面
+        # guanguan_list = filter_guanguan_list(guanguan_list, longitude, latitude)
         guan_types = get_guan_types(self.db_session)
         guan_type_dict = {guan_type.id: guan_type.name for guan_type in guan_types}
         answers_dict = get_answer_user_cnt_dict(self.redis, self.db_session)
@@ -60,42 +64,5 @@ class GuanGuanHandler(BaseHandler):
         return self.response(
             resp_json={
                 'guanguan_list': guanguan_list
-            }
-        )
-
-    @run_on_executor
-    @super_monitor
-    @auth_checker('admin')
-    def post(self, *args, **kwargs):
-        """
-        增加 guanguan 信息，后台管理
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        name = self.get_request_parameter('name', para_type=str)
-        guan_type_id = self.get_request_parameter('guan_type_id', para_type=int)
-        guan_point = self.get_request_parameter('guan_point', para_type=int)
-        guan_infoes = self.get_request_parameter('guan_infoes', para_type=list)
-
-        guanguan = add_guanguan(self.db_session, name, guan_type_id, guan_point)
-        guan_id = guanguan.id
-        for guan_info in guan_infoes:
-            question = guan_info['question']
-            guan_info = add_guan_info(self.db_session, guan_id, question)
-            answers = guan_info['answers']
-            for answer in answers:
-                answer_key = answer['answer_key']
-                answer_evaluation = answer['answer_evaluation']
-                add_answer_info(
-                    self.db_session, guan_id, guan_info.id, answer_key, answer_evaluation
-                )
-
-        guan_info_dict = get_guan_info_dict(self.db_session, guan_id)
-        set_guan_info(self.redis, guan_id, guan_info_dict)
-
-        return self.response(
-            resp_json={
-                'user_id': 1
             }
         )

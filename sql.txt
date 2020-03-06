@@ -99,6 +99,8 @@ create table offline_meeting (
     guan_info_id int unsigned not null default 0 comment 'guan_info id',
     time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
     address varchar(64) not null default '' comment '地址',
+    latitude float(10, 7) not null default 0 comment '纬度',
+    longitude float(10, 7) not null default 0 comment '经度',
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     index idx_guan_info_id (guan_info_id),
