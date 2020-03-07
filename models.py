@@ -110,7 +110,6 @@ class OfflineMeeting(Base):
     __tablename__ = 'offline_meeting'
     id = Column(Integer, primary_key=True)  # 自增
     guan_id = Column(Integer)  # guan id
-    guan_info_id = Column(Integer)  # guan info id
     time = Column(TIMESTAMP)  # 时间
     address = Column(String)  # 地址
     latitude = Column(Float)  # 纬度
