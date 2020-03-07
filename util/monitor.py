@@ -33,16 +33,3 @@ def super_monitor(method):
             )
             return resp
     return wrapper
-
-
-def auth_checker(role):
-    def wrapper(method):
-        def inner_func(self, *args, **kwargs):
-            user_id = self.current_user['id']
-            if user_id in AUTH_USER_ID_DICT[role]:
-                return method(self, *args, **kwargs)
-            else:
-                resp = self.response(resp_normal=RESP_OFFLINE_AUTH_CHECK_FAILED)
-                return resp
-        return inner_func
-    return wrapper

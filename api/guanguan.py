@@ -6,18 +6,12 @@
 from tornado.concurrent import run_on_executor
 
 from api.basehandler import BaseHandler
-from dal.answer_info import add_answer_info
-from dal.guan_info import add_guan_info
 from dal.guan_point import get_guan_points_by_uid
 from dal.guan_type import get_guan_types
-from dal.guanguan import add_guanguan
 from dal.guanguan import get_guanguan_list
 from dal.offline_meeting import get_offline_meetings_by_guan_ids
-from ral.guan_info import set_guan_info
-from ral.guan_info_util import get_guan_info_dict
 from ral.guan_point import get_answer_user_cnt_dict
 from util.const import GUAN_TYPE_ID_MEET
-from util.monitor import auth_checker
 from util.monitor import super_monitor
 
 

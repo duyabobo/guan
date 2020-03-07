@@ -7,25 +7,6 @@ from util.const import GUANGUAN_STATUS_ONLINE
 from util.const import GUAN_TYPE_ID_MEET
 
 
-def add_guanguan(db_session, name, guan_type_id, guan_point):
-    """
-    增加一个关关
-    :param db_session:
-    :param name:
-    :param guan_type_id:
-    :param guan_point:
-    :return:
-    """
-    guanguan = GuanGuan(
-        name=name,
-        guan_type_id=guan_type_id,
-        guan_point=guan_point
-    )
-    db_session.add(guanguan)
-    db_session.flush()
-    return guanguan
-
-
 def get_guanguan(db_session, guan_id):
     """
     获取一条记录
