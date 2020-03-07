@@ -116,6 +116,8 @@ class GuanAnswerHandler(BaseHandler):
                 resp_normal=RESP_GUAN_TYPE_IS_NOT_MEETING
             )
         ret = delete_one_guan_answer(self.db_session, user_id, answer_info_id)
+        evaluation_result = get_evaluation_result_list(self.db_session, user_id, guan_type_id)
+        set_evaluation_result(self.redis, user_id, guan_type_id, evaluation_result)
         return self.response(
             resp_json={
                 'delete_ret': ret
