@@ -67,7 +67,7 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
                 self_answer = 0
                 answer_key = answer['answer_key']
                 answer_info_id = answer['answer_info_id']
-                if sex in answer_key:
+                if True:  # sex in answer_key:
                     could_answer = 1
                 guan_answers = get_guan_answers_by_answer_info_id(db_session, answer_info_id)
                 if guan_answers:

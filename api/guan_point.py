@@ -37,6 +37,8 @@ class GuanPointHandler(BaseHandler):
             update_answer_user_cnt(self.redis, self.db_session, guan_id)
         return self.response(
             resp_json={
-                'guan_point_id': guan_point.id
+                'guan_point_id': guan_point.id,
+                'information_1': '',  # 1，参与关关在线问答，可以获取积分。
+                'information_2': ''  # 2，参加关关线下活动，需要扣除积分。
             }
         )
