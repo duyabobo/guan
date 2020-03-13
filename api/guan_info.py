@@ -40,6 +40,7 @@ class GuanInfoHandler(BaseHandler):
                     },
                     resp_normal=RESP_SEX_IS_UNKNOWN
                 )
+        # 可以加上 question_background，支持漫画类关关问答
         guan_info = get_guan_info(self.redis, self.db_session, user_id, guan_id)
         guan_info.update({'guan_id': guanguan.id, 'guan_point': guanguan.guan_point})
 
