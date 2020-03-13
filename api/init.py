@@ -23,6 +23,6 @@ class InitHandler(BaseHandler):
         return self.response(
             resp_json={
                 'slogan': '',  # 找到好配偶
-                'logo_url': 'http://img.ggjjzhzz.cn/real_logo.png'
+                'logo_url': 'http://img.ggjjzhzz.cn/logo_login.png'
             }
         )
