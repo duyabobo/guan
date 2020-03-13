@@ -27,6 +27,7 @@ class UserHandler(BaseHandler):
         user = get_user_by_user_id(self.db_session, user_id)
         return self.response(
             resp_json={
-                'guan_point': user.guan_point
+                'guan_point': user.guan_point,
+                'point_background': 'http://img.ggjjzhzz.cn/point_background.png',
             }
         )
