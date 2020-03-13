@@ -22,7 +22,7 @@ class UserHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
 
         user = get_user_by_user_id(self.db_session, user_id)
         return self.response(

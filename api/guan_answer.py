@@ -39,7 +39,7 @@ class GuanAnswerHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         answer_info_id = self.get_request_parameter('answer_info_id', para_type=int)
         guan_id = self.get_request_parameter('guan_id', para_type=int)
 
@@ -102,7 +102,7 @@ class GuanAnswerHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         answer_info_id = self.get_request_parameter('answer_info_id', para_type=int)
         guan_id = self.get_request_parameter('guan_id', para_type=int)
 
@@ -133,7 +133,7 @@ class GuanAnswerHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         guan_info_id = self.get_request_parameter('guan_info_id', para_type=int)
 
         guan_answer = get_guan_answer(self.db_session, user_id, guan_info_id)

@@ -27,7 +27,7 @@ class GuanGuanHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         longitude = self.get_request_parameter('longitude', para_type=float)
         latitude = self.get_request_parameter('latitude', para_type=float)
 

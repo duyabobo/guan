@@ -26,7 +26,7 @@ class GuanPointHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         guan_id = self.get_request_parameter('guan_id', para_type=int)
 
         guan_point = get_guan_point_by_uid_and_guan_id(self.db_session, user_id, guan_id)

@@ -21,7 +21,7 @@ class SuggestionHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         suggestion_content = self.get_request_parameter('suggestion_content', para_type=str)
 
         suggestion = add_suggestion(self.db_session, user_id, suggestion_content)

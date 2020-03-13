@@ -88,6 +88,14 @@ class BaseHandler(RequestHandler):
         self._current_user['mobile'] = self._current_user.get('mobile', '')
         return self._current_user
 
+    @property
+    def current_user_id(self):
+        """
+        获取当前用户id，如果未登录，就是0
+        :return:
+        """
+        return self.current_user.get('id', 0)
+
     def put_offline_job_to_rabbitmq(self, routing_key, body_json):
         """
         抛出异步离线任务

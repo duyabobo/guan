@@ -23,7 +23,7 @@ class GuanEvaluationHandler(BaseHandler):
         :param kwargs:
         :return:
         """
-        user_id = self.current_user['id']
+        user_id = self.current_user_id
         answer_user_id = self.get_request_parameter('answer_user_id', para_type=int)
         if answer_user_id:
             user_id = answer_user_id
