@@ -42,11 +42,9 @@ def get_evaluation_result(redis, db_session, user_id, guan_type_id):
     :return:
     """
     guan_evaluation_key = get_guan_evaluation_key(guan_type_id, user_id)
-    evaluation_result = []
     try:
         evaluation_result = json.loads(redis.get(guan_evaluation_key))
-    finally:
-        if not evaluation_result:
-            evaluation_result = get_evaluation_result_list(db_session, user_id, guan_type_id)
-            set_evaluation_result(redis, user_id, guan_type_id, evaluation_result)
+    except TypeError:
+        evaluation_result = get_evaluation_result_list(db_session, user_id, guan_type_id)
+        set_evaluation_result(redis, user_id, guan_type_id, evaluation_result)
     return evaluation_result

@@ -27,13 +27,11 @@ def get_guan_info(redis, db_session, user_id, guan_id):
     :return:
     """
     guan_info_key = get_guan_info_key(guan_id)
-    guan_info_dict = {}
     try:
         guan_info_dict = json.loads(redis.get(guan_info_key))
-    finally:
-        if not guan_info_dict:
-            guan_info_dict = get_guan_info_dict(db_session, guan_id)
-            set_guan_info(redis, guan_id, guan_info_dict)
+    except TypeError:
+        guan_info_dict = get_guan_info_dict(db_session, guan_id)
+        set_guan_info(redis, guan_id, guan_info_dict)
     update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict)  # 特殊处理一下见面类关关
     return guan_info_dict
 
