@@ -58,7 +58,7 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
         guan_info_dict['meeting_address'] = str(offline_meeting.address)
 
         user_info_from_guan_answer = get_user_info_from_guan_answer(db_session, user_id)
-        sex = SEX_DICT[user_info_from_guan_answer.answer_info_id]
+        # sex = SEX_DICT[user_info_from_guan_answer.answer_info_id]
         for index in guan_info_dict['answer_dict']:
             answers = guan_info_dict['answer_dict'][index]
             for answer in answers:
