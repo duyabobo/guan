@@ -26,7 +26,8 @@ def get_guanguan_list(db_session):
     """
     return db_session.query(GuanGuan).\
         filter(GuanGuan.status == GUANGUAN_STATUS_ONLINE).\
-        order_by(GuanGuan.guan_type_id).all()
+        order_by(GuanGuan.guan_type_id).\
+        order_by(GuanGuan.id).all()
 
 
 def get_guanguan_by_guan_type(db_session, guan_type_id):
