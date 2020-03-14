@@ -69,11 +69,13 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
                 answer_info_id = answer['answer_info_id']
                 if True:  # sex in answer_key:
                     could_answer = 1
-                guan_answers = get_guan_answers_by_answer_info_id(db_session, answer_info_id)
+                guan_answers = get_guan_answers_by_answer_info_id(
+                    db_session, answer_info_id, user_id)  # 隐藏一下涉及社交的逻辑
                 if guan_answers:
                     answer_user_id = guan_answers[0].user_id
                     if int(user_id) != answer_user_id:
-                        could_answer = 0
+                        could_answer = 1
+                        answer_user_id = 0  # 隐藏一下涉及社交的逻辑
                     else:
                         self_answer = 1
                 answer['could_answer'] = could_answer  # 是否可以点击
