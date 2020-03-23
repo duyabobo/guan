@@ -31,15 +31,15 @@ class GuanInfoHandler(BaseHandler):
         guan_id = self.get_request_parameter('guan_id', para_type=int)
         guanguan = get_guanguan(self.db_session, guan_id)
         guan_type_id = guanguan.guan_type_id
-        if guan_type_id == GUAN_TYPE_ID_MEET:
-            guan_answer = get_guan_answer(self.db_session, user_id, GUAN_INFO_ID_USER_INFO)
-            if not guan_answer:
-                return self.response(
-                    resp_json={
-                        'guan_answer_id': 0
-                    },
-                    resp_normal=RESP_SEX_IS_UNKNOWN
-                )
+        # if guan_type_id == GUAN_TYPE_ID_MEET:
+        #     guan_answer = get_guan_answer(self.db_session, user_id, GUAN_INFO_ID_USER_INFO)
+        #     if not guan_answer:
+        #         return self.response(
+        #             resp_json={
+        #                 'guan_answer_id': 0
+        #             },
+        #             resp_normal=RESP_SEX_IS_UNKNOWN
+        #         )
         guan_info = get_guan_info(self.redis, self.db_session, user_id, guan_id)
         # 可以加上 question_background，支持漫画类关关问答
         guan_info.update(
