@@ -54,14 +54,14 @@ class GuanAnswerHandler(BaseHandler):
                     },
                     resp_normal=RESP_GUAN_POINT_NOT_ENOUGH
                 )
-            guan_answer = get_guan_answer(self.db_session, user_id, GUAN_INFO_ID_USER_INFO)
-            if not guan_answer:
-                return self.response(
-                    resp_json={
-                        'guan_answer_id': 0
-                    },
-                    resp_normal=RESP_SEX_IS_UNKNOWN
-                )
+            # guan_answer = get_guan_answer(self.db_session, user_id, GUAN_INFO_ID_USER_INFO)
+            # if not guan_answer:
+            #     return self.response(
+            #         resp_json={
+            #             'guan_answer_id': 0
+            #         },
+            #         resp_normal=RESP_SEX_IS_UNKNOWN
+            #     )
             old_guan_points = get_guan_points_by_uid(self.db_session, user_id)
             old_guan_ids = [guan_point.guan_id for guan_point in old_guan_points]
             offline_meeting = get_offline_meeting_by_guan_id(self.db_session, guan_id)
