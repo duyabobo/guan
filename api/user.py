@@ -28,6 +28,8 @@ class UserHandler(BaseHandler):
         return self.response(
             resp_json={
                 'guan_point': user.guan_point,
+                'information_1': '1，参与关关在线问答，可以获取积分。',
+                'information_2': '2，参加关关线下活动，需要扣除积分。',
                 'point_background': 'http://img.ggjjzhzz.cn/point_background.png',
             }
         )

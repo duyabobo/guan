@@ -58,7 +58,7 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
         guan_info_dict['meeting_address'] = str(offline_meeting.address)
 
         user_info_from_guan_answer = get_user_info_from_guan_answer(db_session, user_id)
-        # sex = SEX_DICT[user_info_from_guan_answer.answer_info_id]
+        sex = SEX_DICT[user_info_from_guan_answer.answer_info_id]
         for index in guan_info_dict['answer_dict']:
             answers = guan_info_dict['answer_dict'][index]
             for answer in answers:
@@ -67,15 +67,13 @@ def update_guan_info_dict(db_session, user_id, guan_id, guan_info_dict):
                 self_answer = 0
                 answer_key = answer['answer_key']
                 answer_info_id = answer['answer_info_id']
-                if True:  # sex in answer_key:
+                if sex in answer_key:
                     could_answer = 1
-                guan_answers = get_guan_answers_by_answer_info_id(
-                    db_session, answer_info_id, user_id)  # 隐藏一下涉及社交的逻辑
+                guan_answers = get_guan_answers_by_answer_info_id(db_session, answer_info_id)
                 if guan_answers:
                     answer_user_id = guan_answers[0].user_id
                     if int(user_id) != answer_user_id:
-                        could_answer = 1
-                        answer_user_id = 0  # 隐藏一下涉及社交的逻辑
+                        could_answer = 0
                     else:
                         self_answer = 1
                 answer['could_answer'] = could_answer  # 是否可以点击
