@@ -5,9 +5,36 @@
 import time
 
 from tornado.concurrent import run_on_executor
-
+from util.con_runner import ConcurrencyExecutor
 from api.basehandler import BaseHandler
 from util.monitor import super_monitor
+
+
+def sleepA(n):
+    print 'in A'
+    time.sleep(n)
+    print 'end A'
+    return 'A'
+
+
+def sleepB(n):
+    print 'in B'
+    time.sleep(n)
+    print 'end B'
+    return 'B'
+
+
+def sleepC(n):
+    print 'in c'
+    time.sleep(n)
+    print 'end C'
+
+
+def sleepD(n):
+    print 'in D'
+    time.sleep(n)
+    print 'end D'
+    return 'D'
 
 
 class ExampleHandler(BaseHandler):
@@ -30,7 +57,16 @@ class ExampleHandler(BaseHandler):
         print time.time()
         para_name = self.get_request_parameter('para_name')  # 接受参数，如果必传就不给出默认值
         print para_name
-        time.sleep(0.1)
+        sleepA(1)
+        sleepB(1)
+        sleepC(1)
+        sleepD(1)
+        con_exe = ConcurrencyExecutor()
+        con_exe.add_job(sleepA, 1)
+        con_exe.add_job(sleepB, 1)
+        con_exe.add_job(sleepC, 1)
+        con_exe.add_job(sleepD, n=1)
+        print con_exe()
         response = {'msg': 'abc', 'icp': '京ICP备20005743号-1'}
         self.response(response)
         return response
