@@ -3,11 +3,11 @@
 # 并发助手
 import gevent
 from gevent import monkey
+monkey.patch_all()
 
 
 class ConcurrencyExecutor(object):
     def __init__(self):
-        monkey.patch_all()
         self.job_dict = {}  # key 是任务的函数名，value 是 greenlet
 
     def add_job(self, job, *args, **kwargs):

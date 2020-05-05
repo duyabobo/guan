@@ -8,6 +8,7 @@ from api import guan_evaluation
 from api import guan_info
 from api import guan_point
 from api import guanguan
+from api import identification
 from api import index
 from api import init
 from api import login
@@ -19,6 +20,7 @@ handlers = [
     (r'/index$', index.IndexHandler),
     (r'/init$', init.InitHandler),
     (r'/login$', login.LoginHandler),
+    (r'/identification$', identification.IdentificationHandler),
     (r'/guanguan$', guanguan.GuanGuanHandler),
     (r'/guan_info$', guan_info.GuanInfoHandler),
     (r'/guan_evaluation$', guan_evaluation.GuanEvaluationHandler),
