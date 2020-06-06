@@ -34,8 +34,8 @@ def main():
     http_server = tornado.httpserver.HTTPServer(
         application,
         ssl_options={
-            "certfile": os.path.join(os.path.abspath(''), 'service.pem'),
-            "keyfile": os.path.join(os.path.abspath(''), 'service.key'),
+            "certfile": '/home/guan/service.pem',
+            "keyfile": '/home/guan/service.key',
         }
     ) if server == 'online' else tornado.httpserver.HTTPServer(application)
     http_server.listen(port)
