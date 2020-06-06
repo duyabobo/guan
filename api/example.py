@@ -5,8 +5,9 @@
 import time
 
 from tornado.concurrent import run_on_executor
-from util.con_runner import ConcurrencyExecutor
+
 from api.basehandler import BaseHandler
+from util.con_runner import ConcurrencyExecutor
 from util.monitor import super_monitor
 
 

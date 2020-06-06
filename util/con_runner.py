@@ -2,8 +2,6 @@
 # coding=utf-8
 # 并发助手
 import gevent
-from gevent import monkey
-monkey.patch_all()
 
 
 class ConcurrencyExecutor(object):

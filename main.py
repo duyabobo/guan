@@ -2,16 +2,18 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
-import os
 import sys
 
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
+from gevent import monkey
 
 import util.config
 from urls import handlers
 from util.database import engine
+
+monkey.patch_all()
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
