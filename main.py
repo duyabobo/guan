@@ -13,7 +13,8 @@ import util.config
 from urls import handlers
 from util.database import engine
 
-monkey.patch_all()
+# tornado 支持 https，如果要使用 gevent，需要 patch_all 的时候，把 ssl 设置为 False
+monkey.patch_all(ssl=False, thread=False, socket=False)
 
 reload(sys)
 sys.setdefaultencoding('utf-8')

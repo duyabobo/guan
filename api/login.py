@@ -41,7 +41,7 @@ class LoginHandler(BaseHandler):
             }
         )
         wx_auth_url = wx_code_to_session_url + url_params
-        wx_auth_res = requests.get(wx_auth_url).json()
+        wx_auth_res = requests.get(wx_auth_url, timeout=3).json()
         if wx_auth_res.get('code'):
             return self.response(resp_normal=RESP_NEED_LOGIN)
         openid = wx_auth_res['openid']
