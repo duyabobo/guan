@@ -1,3 +1,5 @@
+create database guan;
+
 create table guan_type (
     id int unsigned not null AUTO_INCREMENT,
     name varchar(8) not null default '' comment '关关类型',
@@ -22,7 +24,7 @@ create table guan_info (
     id int unsigned not null AUTO_INCREMENT,
     guan_id int unsigned not null default 0 comment 'guanguan id',
     question varchar(64) not null default '' comment '问答内容',
-    // 答案数据可以加缓存
+    -- 答案数据可以加缓存
     updated_time datetime not null default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     index idx_guan_id (guan_id),
