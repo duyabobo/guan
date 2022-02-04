@@ -2,7 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/3/6'
-from api.basehandler import BaseHandler
+from handler.basehandler import BaseHandler
 from util.monitor import super_monitor
 
 

@@ -6,14 +6,14 @@ import json
 
 import pika
 # 这个并发库, python3 自带, python2 需要: pip install futures
-from concurrent.futures import ThreadPoolExecutor
+# from concurrent.futures import ThreadPoolExecutor
 from redis import StrictRedis
 from sqlalchemy.orm import sessionmaker
-from tornado.concurrent import run_on_executor
+# from tornado.concurrent import run_on_executor
 from tornado.web import RequestHandler
 
 import util.config
-from ral import user
+from ral import passport
 from util.const import EXCHANGE_NAME
 from util.const import RESP_OK
 from util.monitor import super_monitor
@@ -28,7 +28,6 @@ class BaseHandler(RequestHandler):
         self._current_user = None
         self._mq_connection = None
         self._mq_channel = None
-        self.executor = ThreadPoolExecutor(1)
         super(BaseHandler, self).__init__(self.application, request, **kwargs)
 
     @property
@@ -84,7 +83,7 @@ class BaseHandler(RequestHandler):
         """
         if hasattr(self, '_current_user') and self._current_user:
             return self._current_user
-        self._current_user = user.get_current_user_info(self.redis, self.access_token)
+        self._current_user = passport.get_current_user_info(self.redis, self.access_token)
         self._current_user['mobile'] = self._current_user.get('mobile', '')
         return self._current_user
 
@@ -157,37 +156,30 @@ class BaseHandler(RequestHandler):
     def data_received(self, chunk):
         return
 
-    @run_on_executor
     @super_monitor
     def head(self, *args, **kwargs):
         return
 
-    @run_on_executor
     @super_monitor
     def get(self, *args, **kwargs):
         return
 
-    @run_on_executor
     @super_monitor
     def post(self, *args, **kwargs):
         return
 
-    @run_on_executor
     @super_monitor
     def delete(self, *args, **kwargs):
         return
 
-    @run_on_executor
     @super_monitor
     def patch(self, *args, **kwargs):
         return
 
-    @run_on_executor
     @super_monitor
     def put(self, *args, **kwargs):
         return
 
-    @run_on_executor
     @super_monitor
     def options(self, *args, **kwargs):
         return

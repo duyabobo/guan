@@ -28,6 +28,6 @@ def object_to_json(obj):
         return {}
     json_data = obj.__dict__
     json_data.pop('_sa_instance_state')
-    json_data.pop('updated_time')
-    json_data.pop('created_time')
+    json_data.pop('update_time')
+    json_data.pop('create_time')
     return json_data

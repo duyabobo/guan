@@ -29,8 +29,8 @@ def main():
     application = tornado.web.Application(handlers, **{
         'debug': True if debug == 'true' else False,
         'cookie_secret': cookie_secret,
-        'template_path': 'template',
-        'static_path': 'static',
+        'template_path': 'handler/template',
+        'static_path': 'handler/static',
     })
 
     application.engine = engine
