@@ -25,7 +25,7 @@ class BaseHandler(RequestHandler):
         self.redis = StrictRedis(util.config.get('redis', 'host'), util.config.get('redis', 'port'))
         self._accessToken = None
         self._dbSession = None
-        self._currentUser = None
+        self._currentPassport = None
         self._mqConnection = None
         self._mqChannel = None
         super(BaseHandler, self).__init__(self.application, request, **kwargs)
@@ -76,24 +76,24 @@ class BaseHandler(RequestHandler):
         return self._accessToken
 
     @property
-    def currentUser(self):
+    def currentPassport(self):
         """
         获取当前登录用户的信息
         :return:
         """
-        if hasattr(self, '_currentUser') and self._currentUser:
-            return self._currentUser
-        self._currentUser = passport.getCurrentUserInfo(self.redis, self.accessToken)
-        self._currentUser['mobile'] = self._currentUser.get('mobile', '')
-        return self._currentUser
+        if hasattr(self, '_currentPassport') and self._currentPassport:
+            return self._currentPassport
+        self._currentPassport = passport.getSession(self.redis, self.accessToken)
+        self._currentPassport['phone'] = self._currentPassport.get('phone', '')
+        return self._currentPassport
 
     @property
-    def currentUId(self):
+    def currentPassportId(self):
         """
         获取当前用户id，如果未登录，就是0
         :return:
         """
-        return self.currentUser.get('id', 0)
+        return self.currentPassport.get('id', 0)
 
     def putOfflineJobToRabbitmq(self, routingKey, bodyJson):
         """

@@ -1,11 +1,14 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import urllib
+
 import requests
 
 import util.config
-from model.passport import Passport
-from ral.passport import putCurrentUserInfo
+from model.passport import PassportModel
+from model.user import UserModel
+from ral.passport import putSession
+from service import BaseService
 from util.encode import generate_access_token
 
 
@@ -31,17 +34,15 @@ class WxHelper(object):
         return wxAuthRes.get("openid", None)
 
 
-class LoginService(object):
-    def __init__(self, dbSession, redis):
-        self.dbSession = dbSession
-        self.redis = redis
+class LoginService(BaseService):
 
     def login(self, openid):
         """检查用户记录，如果不存在就新增，并对该用户创建session"""
-        passport = Passport.get_by_openid(self.dbSession, openid)
+        passport = PassportModel.getByOpenid(self.dbSession, openid)
         if not passport:
-            passport = Passport.add_by_openid(self.dbSession, openid)
+            passport = PassportModel.addByOpenid(self.dbSession, openid)
+            UserModel.addByPassportId(self.dbSession, passport.id)
 
         accessToken = generate_access_token(passport.id)
-        currentUserInfoJson = putCurrentUserInfo(self.redis, accessToken, passport)
+        currentUserInfoJson = putSession(self.redis, accessToken, passport)
         return accessToken, currentUserInfoJson

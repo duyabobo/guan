@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.orm import sessionmaker
 
-from model.passport import Passport
+from model.passport import PassportModel
 from database import engine
 
 
@@ -12,9 +12,9 @@ def get_db_session():
 
 if __name__ == '__main__':
     dbSession = get_db_session()
-    p = Passport.get_by_openid(dbSession, "openid")
+    p = PassportModel.getByOpenid(dbSession, "openid")
     # print p.id
-    p = Passport.add_by_openid(dbSession, "openid")
+    p = PassportModel.addByOpenid(dbSession, "openid")
     print p.id
-    p = Passport.get_by_openid(dbSession, "openid")
+    p = PassportModel.getByOpenid(dbSession, "openid")
     print p.id

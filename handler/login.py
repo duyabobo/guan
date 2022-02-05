@@ -3,7 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from handler.basehandler import BaseHandler
-from ral.passport import delCurrentUserInfo
+from ral.passport import delSession
 from service.login import WxHelper, LoginService
 from util.const import RESP_NEED_LOGIN
 from util.monitor import superMonitor
@@ -30,5 +30,5 @@ class LoginHandler(BaseHandler):
     def put(self, *args, **kwargs):
         """用户退出登录
         """
-        delCurrentUserInfo(self.redis, self.accessToken)
+        delSession(self.redis, self.accessToken)
         return self.response()

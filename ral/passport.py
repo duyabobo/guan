@@ -12,45 +12,15 @@ def getLoginKey(accessToken):
     return 'accessToken:' + accessToken
 
 
-def getAccessTokenKey(uid):
-    """
-    返回 ac 查询的 key
-    :param uid:
-    :return:
-    """
-    return 'uid:' + str(uid) + ':accessToken'
-
-
-def putAccessToken(redis, uid, accessToken):
-    """
-    写入 uid 和 ac 的对应关系
-    :param redis:
-    :param uid:
-    :param accessToken:
-    :return:
-    """
-    return redis.set(getAccessTokenKey(uid), accessToken)
-
-
-def getAccessToken(redis, uid):
-    """
-    获取 uid 和 ac 的对应关系
-    :param redis:
-    :param uid:
-    :return:
-    """
-    return redis.get(getAccessTokenKey(uid))
-
-
-def putCurrentUserInfo(redis, accessToken, currentUserInfo):
+def putSession(redis, accessToken, passport):
     """
     把当前登录用户的基本信息放到 redis, 如果 redis 已有记录, 就更新, 如果没有, 就新增
     :param redis:
     :param accessToken:
-    :param currentUserInfo:
+    :param passport:
     :return:
     """
-    currentUserInfoJson = currentUserInfo.__dict__
+    currentUserInfoJson = passport.__dict__
     currentUserInfoJson = {
         k: currentUserInfoJson[k]
         for k in currentUserInfoJson
@@ -60,7 +30,7 @@ def putCurrentUserInfo(redis, accessToken, currentUserInfo):
     return currentUserInfoJson
 
 
-def delCurrentUserInfo(redis, accessToken):
+def delSession(redis, accessToken):
     """
     删除登录的用户信息
     :param redis:
@@ -70,7 +40,7 @@ def delCurrentUserInfo(redis, accessToken):
     redis.delete(getLoginKey(accessToken))
 
 
-def getCurrentUserInfo(redis, accessToken):
+def getSession(redis, accessToken):
     """
     从 redis 获取当前登录用户的信息
     :param redis:
