@@ -70,7 +70,7 @@ class GuanguanService(BaseService):
         activityList = self.getActivityList(addressMap.keys())
 
         guanguanList = []
-        for activity in activityList:
+        for activity in activityList[:20]:
             address = addressMap[activity.address_id]
             guanguanList.append(
                 {

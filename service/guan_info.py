@@ -110,7 +110,7 @@ class GuanInfoService(BaseService):
             return []
 
         matchHelper = MatchHelper(self.userRecord)
-        return [
+        allInfos = [
             matchHelper.sexValue,
             matchHelper.birthYearValue,
             matchHelper.martialStatus,
@@ -119,3 +119,4 @@ class GuanInfoService(BaseService):
             matchHelper.monthPay,
             matchHelper.education,
         ]
+        return [i for i in allInfos if i]

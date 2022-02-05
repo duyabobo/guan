@@ -2,6 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
+from handler import about
 from handler import example
 from handler import guan_info
 from handler import guanguan
@@ -14,6 +15,7 @@ from handler import requirement
 handlers = [
     (r'/$', example.ExampleHandler),
     (r'/index$', index.IndexHandler),
+    (r'/about$', about.AboutHandler),
     (r'/login$', login.LoginHandler),
     (r'/mine$', mine.MineHandler),
     (r'/myself$', myself.MyselfHandler),
