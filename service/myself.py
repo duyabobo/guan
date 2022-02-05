@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.match import matchHelper
+from common.match import MatchHelper
 from model.user import UserModel
 from service import BaseService
 from util.class_helper import lazy_property
@@ -12,7 +12,7 @@ class UserInfoService(BaseService):
         self.dbSession = dbSession
         self.redis = redis
         self.passportId = passportId
-        self.matchHelper = matchHelper(self.userInfo)
+        self.matchHelper = MatchHelper(self.userInfo)
         super(UserInfoService, self).__init__(dbSession, redis)
 
     @lazy_property
@@ -21,7 +21,7 @@ class UserInfoService(BaseService):
 
     def reloadMatchHelper(self):
         userInfo = UserModel.getByPassportId(self.dbSession, self.passportId)
-        self.matchHelper = matchHelper(userInfo)
+        self.matchHelper = MatchHelper(userInfo)
 
     def getMyselfInfo(self):
         return {

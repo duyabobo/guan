@@ -28,3 +28,7 @@ class AddressModel(BaseModel):
     @classmethod
     def listByLongitudeLatitude(cls, dbSession, longitude, latitude):  # todo
         return dbSession.query(cls).filter(cls.status == const.MODEL_STATUS_YES).all()
+
+    @classmethod
+    def getById(cls, dbSession, addressId):
+        return dbSession.query(cls).filter(cls.id == addressId, cls.status == const.MODEL_STATUS_YES).first()

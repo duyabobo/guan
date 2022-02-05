@@ -3,7 +3,7 @@
 from util import const
 
 
-class matchHelper(object):
+class MatchHelper(object):
 
     def __init__(self, info):
         self.info = info

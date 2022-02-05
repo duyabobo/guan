@@ -3,6 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from handler import example
+from handler import guan_info
 from handler import guanguan
 from handler import index
 from handler import login
@@ -18,4 +19,5 @@ handlers = [
     (r'/myself$', myself.MyselfHandler),
     (r'/requirement$', requirement.RequirementHandler),
     (r'/guanguan$', guanguan.GuanguanHandler),
+    (r'/guan_info$', guan_info.GuanInfoHandler),
 ]

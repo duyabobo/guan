@@ -9,6 +9,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util import const
+from util.util_time import datetime2str
 
 
 class ActivityModel(BaseModel):
@@ -30,3 +31,11 @@ class ActivityModel(BaseModel):
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now().date()
         ).all()
+
+    @classmethod
+    def getById(cls, dbSession, activityId):
+        return dbSession.query(cls).filter(cls.id == activityId, cls.status == const.MODEL_STATUS_YES).first()
+
+    @property
+    def startTimeStr(self):
+        return datetime2str(self.start_time, fmt="%m-%d %H:%M")

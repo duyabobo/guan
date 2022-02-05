@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from model.requirement import RequirementModel
 
-from common.match import matchHelper
+from common.match import MatchHelper
 from service import BaseService
 from util.class_helper import lazy_property
 
@@ -13,7 +13,7 @@ class RequirementService(BaseService):
         self.dbSession = dbSession
         self.redis = redis
         self.passportId = passportId
-        self.matchHelper = matchHelper(self.requirementInfo)
+        self.matchHelper = MatchHelper(self.requirementInfo)
         super(RequirementService, self).__init__(dbSession, redis)
 
     @lazy_property
@@ -22,7 +22,7 @@ class RequirementService(BaseService):
 
     def reloadMatchHelper(self):
         requirementInfo = RequirementModel.getByPassportId(self.dbSession, self.passportId)
-        self.matchHelper = matchHelper(requirementInfo)
+        self.matchHelper = MatchHelper(requirementInfo)
 
     def getRequirementInfo(self):
         return {
