@@ -34,3 +34,7 @@ def timestamp2date(t):
         return datetime.fromtimestamp(t / 1000).date()
     else:
         return None
+
+
+def datetime2str(d, fmt="%Y-%m-%d %H:%M:%S"):
+    return d.strftime(fmt)

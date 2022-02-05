@@ -3,6 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from handler import example
+from handler import guanguan
 from handler import index
 from handler import login
 from handler import mine
@@ -16,4 +17,5 @@ handlers = [
     (r'/mine$', mine.MineHandler),
     (r'/myself$', myself.MyselfHandler),
     (r'/requirement$', requirement.RequirementHandler),
+    (r'/guanguan$', guanguan.GuanguanHandler),
 ]

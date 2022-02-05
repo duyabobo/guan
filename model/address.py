@@ -8,6 +8,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from util import const
 
 
 class AddressModel(BaseModel):
@@ -15,11 +16,15 @@ class AddressModel(BaseModel):
     __tablename__ = 'address'
     id = Column(Integer, primary_key=True)  # 自增
     name = Column(String)  # name
-    description = Column(String)  # 地点描述(人均消费/吃喝玩乐推荐)
-    location_id = Column(Integer)  # (省市区表)地区id
-    longitude = Column(Float)  # 经度
-    latitude = Column(Float)  # 纬度
+    description = Column(String, default="")  # 地点描述(人均消费/吃喝玩乐推荐)
+    img = Column(String, default="")
+    location_id = Column(Integer, default=0)  # (省市区表)地区id
+    longitude = Column(Float, default=0)  # 经度
+    latitude = Column(Float, default=0)  # 纬度
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
+    @classmethod
+    def listByLongitudeLatitude(cls, dbSession, longitude, latitude):  # todo
+        return dbSession.query(cls).filter(cls.status == const.MODEL_STATUS_YES).all()
