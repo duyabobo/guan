@@ -7,6 +7,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from util import const
 
 
 class UserModel(BaseModel):
@@ -27,13 +28,19 @@ class UserModel(BaseModel):
 
     @classmethod
     def getByPassportId(cls, dbSession, passportId):
-        return dbSession.query(cls).filter(cls.passport_id == passportId).first()
+        return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == const.MODEL_STATUS_YES).first()
 
     @classmethod
     def addByPassportId(cls, dbSession, passportId):
         user = cls(
             passport_id=passportId,
+            status=const.MODEL_STATUS_YES
         )
         dbSession.add(user)
         dbSession.flush()
         return user
+
+    @classmethod
+    def updateByPassportId(cls, dbSession, passportId, **updateParams):
+        dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == const.MODEL_STATUS_YES).update(updateParams)
+        dbSession.commit()
