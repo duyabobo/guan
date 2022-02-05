@@ -3,18 +3,17 @@
 from common.match import matchHelper
 from model.user import UserModel
 from service import BaseService
-from util import const
 from util.class_helper import lazy_property
 
 
-class userInfoService(BaseService):
+class UserInfoService(BaseService):
 
     def __init__(self, dbSession, redis, passportId):
         self.dbSession = dbSession
         self.redis = redis
         self.passportId = passportId
         self.matchHelper = matchHelper(self.userInfo)
-        super(userInfoService, self).__init__(dbSession, redis)
+        super(UserInfoService, self).__init__(dbSession, redis)
 
     @lazy_property
     def userInfo(self):
@@ -26,18 +25,8 @@ class userInfoService(BaseService):
 
     def getMyselfInfo(self):
         return {
-            "sex": {
-                "opType": const.MODEL_USER_OP_TYPE_SEX,
-                "desc": "性别",
-                "value": self.matchHelper.sexValue,
-                "choiceList": const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST,
-            },
-            "birthYear": {
-                "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
-                "desc": "出生年份",
-                "value": self.matchHelper.birthYearValue,
-                "defaultValue": const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
-            },
+            "sex": self.matchHelper.getSexInfo(),
+            "birthYear": self.matchHelper.getbirthYearInfo(),
             "otherInfoList": self.matchHelper.getOtherInfoList(),
         }
 

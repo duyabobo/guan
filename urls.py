@@ -7,6 +7,7 @@ from handler import index
 from handler import login
 from handler import mine
 from handler import myself
+from handler import requirement
 
 handlers = [
     (r'/$', example.ExampleHandler),
@@ -14,4 +15,5 @@ handlers = [
     (r'/login$', login.LoginHandler),
     (r'/mine$', mine.MineHandler),
     (r'/myself$', myself.MyselfHandler),
+    (r'/requirement$', requirement.RequirementHandler),
 ]

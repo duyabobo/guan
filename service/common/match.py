@@ -36,6 +36,22 @@ class matchHelper(object):
     def education(self):
         return const.MODEL_USER_OP_TYPE_EDUCATION_CHOICE_LIST[self.info.education]
 
+    def getSexInfo(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_SEX,
+            "desc": "性别",
+            "value": self.sexValue,
+            "choiceList": const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST,
+        }
+
+    def getbirthYearInfo(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
+            "desc": "出生年份",
+            "value": self.birthYearValue,
+            "defaultValue": const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
+        }
+
     def getOtherInfoList(self):
         return [
             {

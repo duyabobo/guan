@@ -6,6 +6,7 @@ import requests
 
 import util.config
 from model.passport import PassportModel
+from model.requirement import RequirementModel
 from model.user import UserModel
 from ral.passport import putSession
 from service import BaseService
@@ -42,6 +43,7 @@ class LoginService(BaseService):
         if not passport:
             passport = PassportModel.addByOpenid(self.dbSession, openid)
             UserModel.addByPassportId(self.dbSession, passport.id)
+            RequirementModel.addByPassportId(self.dbSession, passport.id)
 
         accessToken = generate_access_token(passport.id)
         currentUserInfoJson = putSession(self.redis, accessToken, passport)
