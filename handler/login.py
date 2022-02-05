@@ -3,32 +3,32 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from handler.basehandler import BaseHandler
-from ral.passport import del_current_user_info
+from ral.passport import delCurrentUserInfo
 from service.login import WxHelper, LoginService
 from util.const import RESP_NEED_LOGIN
-from util.monitor import super_monitor
+from util.monitor import superMonitor
 
 
 class LoginHandler(BaseHandler):
     __model__ = ''
 
-    @super_monitor
+    @superMonitor
     def get(self, *args, **kwargs):
         """微信登录注册接口
         """
-        js_code = self.get_request_parameter('code')
-        openid = WxHelper.get_openid_by_code(js_code)
+        jsCode = self.getRequestParameter('code')
+        openid = WxHelper.getOpenidByCode(jsCode)
         if not openid:
-            return self.response(resp_normal=RESP_NEED_LOGIN)
+            return self.response(respNormal=RESP_NEED_LOGIN)
 
-        access_token, current_user_info = LoginService(self.db_session, self.redis).login(openid)
+        accessToken, currentUserInfo = LoginService(self.dbSession, self.redis).login(openid)
         return self.response(
-            resp_json={'access_token': access_token, 'current_user_info': current_user_info}
+            respJson={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
         )
 
-    @super_monitor
+    @superMonitor
     def put(self, *args, **kwargs):
         """用户退出登录
         """
-        del_current_user_info(self.redis, self.access_token)
+        delCurrentUserInfo(self.redis, self.accessToken)
         return self.response()

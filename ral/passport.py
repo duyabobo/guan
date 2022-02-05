@@ -4,77 +4,77 @@
 # __created_at__ = '2020/1/1'
 
 
-def get_login_key(access_token):
+def getLoginKey(accessToken):
     """
     返回登录查询 redis 的 key
     :return:
     """
-    return 'access_token:' + access_token
+    return 'accessToken:' + accessToken
 
 
-def get_access_token_key(user_id):
+def getAccessTokenKey(uid):
     """
     返回 ac 查询的 key
-    :param user_id:
+    :param uid:
     :return:
     """
-    return 'user_id:' + str(user_id) + ':access_token'
+    return 'uid:' + str(uid) + ':accessToken'
 
 
-def put_access_token(redis, user_id, access_token):
+def putAccessToken(redis, uid, accessToken):
     """
     写入 uid 和 ac 的对应关系
     :param redis:
-    :param user_id:
-    :param access_token:
+    :param uid:
+    :param accessToken:
     :return:
     """
-    return redis.set(get_access_token_key(user_id), access_token)
+    return redis.set(getAccessTokenKey(uid), accessToken)
 
 
-def get_access_token(redis, user_id):
+def getAccessToken(redis, uid):
     """
     获取 uid 和 ac 的对应关系
     :param redis:
-    :param user_id:
+    :param uid:
     :return:
     """
-    return redis.get(get_access_token_key(user_id))
+    return redis.get(getAccessTokenKey(uid))
 
 
-def put_current_user_info(redis, access_token, current_user_info):
+def putCurrentUserInfo(redis, accessToken, currentUserInfo):
     """
     把当前登录用户的基本信息放到 redis, 如果 redis 已有记录, 就更新, 如果没有, 就新增
     :param redis:
-    :param access_token:
-    :param current_user_info:
+    :param accessToken:
+    :param currentUserInfo:
     :return:
     """
-    current_user_info_json = current_user_info.__dict__
-    current_user_info_json = {
-        k: current_user_info_json[k]
-        for k in current_user_info_json
+    currentUserInfoJson = currentUserInfo.__dict__
+    currentUserInfoJson = {
+        k: currentUserInfoJson[k]
+        for k in currentUserInfoJson
         if k in ['id', 'phone']
     }
-    redis.hmset(get_login_key(access_token), current_user_info_json)
-    return current_user_info_json
+    redis.hmset(getLoginKey(accessToken), currentUserInfoJson)
+    return currentUserInfoJson
 
 
-def del_current_user_info(redis, access_token):
+def delCurrentUserInfo(redis, accessToken):
     """
     删除登录的用户信息
     :param redis:
-    :param access_token:
+    :param accessToken:
     :return:
     """
-    redis.delete(get_login_key(access_token))
+    redis.delete(getLoginKey(accessToken))
 
 
-def get_current_user_info(redis, access_token):
+def getCurrentUserInfo(redis, accessToken):
     """
     从 redis 获取当前登录用户的信息
     :param redis:
-    :param access_token:
+    :param accessToken:
     :return:
     """
-    return redis.hgetall(get_login_key(access_token))
+    return redis.hgetall(getLoginKey(accessToken))

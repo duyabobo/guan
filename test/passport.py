@@ -11,10 +11,10 @@ def get_db_session():
 
 
 if __name__ == '__main__':
-    db_session = get_db_session()
-    p = Passport.get_by_openid(db_session, "openid")
+    dbSession = get_db_session()
+    p = Passport.get_by_openid(dbSession, "openid")
     # print p.id
-    p = Passport.add_by_openid(db_session, "openid")
+    p = Passport.add_by_openid(dbSession, "openid")
     print p.id
-    p = Passport.get_by_openid(db_session, "openid")
+    p = Passport.get_by_openid(dbSession, "openid")
     print p.id

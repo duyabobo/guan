@@ -5,10 +5,10 @@ import time
 from log import monitor_logger
 from util.const import RESP_TOP_MONITOR_ERROR
 
-monitorLogger = monitor_logger('super_monitor')
+monitorLogger = monitor_logger('superMonitor')
 
 
-def super_monitor(method):
+def superMonitor(method):
     def wrapper(self, *args, **kwargs):
         try:
             start = time.time()
@@ -16,17 +16,17 @@ def super_monitor(method):
             end = time.time()
             # 正常日志
             monitorLogger.info(
-                'method: %s, uri: %s, body: %s, access_token: %s, result: %s, request_time: %s' %
+                'method: %s, uri: %s, body: %s, accessToken: %s, result: %s, request_time: %s' %
                 (self.request.method, str(self.request.uri), str(self.request.body),
-                 self.access_token, result, (end - start))
+                 self.accessToken, result, (end - start))
             )
         except Exception as e:
             # 出错日志
             resp = RESP_TOP_MONITOR_ERROR
             monitorLogger.exception(
-                'method: %s, uri: %s, body: %s, access_token: %s, result: %s, error: %s' %
+                'method: %s, uri: %s, body: %s, accessToken: %s, result: %s, error: %s' %
                 (self.request.method, str(self.request.uri), str(self.request.body),
-                 self.access_token, resp, e)
+                 self.accessToken, resp, e)
             )
-            self.response(resp_normal=resp)
+            self.response(respNormal=resp)
     return wrapper

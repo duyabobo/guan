@@ -3,13 +3,13 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/3/6'
 from handler.basehandler import BaseHandler
-from util.monitor import super_monitor
+from util.monitor import superMonitor
 
 
 class IndexHandler(BaseHandler):
     __model__ = ''
 
-    @super_monitor
+    @superMonitor
     def get(self, *args, **kwargs):
         """
         获取pc页面首页

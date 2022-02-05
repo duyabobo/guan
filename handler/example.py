@@ -8,7 +8,7 @@ from tornado.concurrent import run_on_executor
 
 from handler.basehandler import BaseHandler
 from util.con_runner import ConcurrencyExecutor
-from util.monitor import super_monitor
+from util.monitor import superMonitor
 
 
 def sleepA(n):
@@ -45,12 +45,12 @@ class ExampleHandler(BaseHandler):
     # 可以在请求这个接口的时候，后面加上不同的请求参数，就可以看到异步非阻塞效果了！！
     __model__ = ''
 
-    @super_monitor
+    @superMonitor
     def get(self):
         """注释, 说明这个接口是干嘛的, 以及一些注意事项, 请求和返回结果不必说明, 会单独写到 DOC 文档中的。
         """
         # 第一步, 把传参接受过来, 赋值给本地变量
-        # 第二步, 请求数据访问层(dal), 数据库操作结束后, 需要立刻调用 finish_db_operation 释放数据库连接
+        # 第二步, 请求数据访问层(dal), 数据库操作结束后, 需要立刻调用 finishDbOperation 释放数据库连接
         # 第三步, 调用 response 或者 redirect
         # 第四步, return response
         # 说明: 接口中不需要有日志抓取操作, 数据库操作要求: 一个接口只有一个 commit, 数据库操作层只需要执行 flush

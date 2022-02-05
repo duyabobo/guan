@@ -21,15 +21,15 @@ class Passport(Base):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def get_by_openid(cls, db_session, openid):
-        return db_session.query(cls).filter(cls.openid == openid).first()
+    def get_by_openid(cls, dbSession, openid):
+        return dbSession.query(cls).filter(cls.openid == openid).first()
 
     @classmethod
-    def add_by_openid(cls, db_session, openid):
+    def add_by_openid(cls, dbSession, openid):
         passport = cls(
             openid=openid,
             phone="",
         )
-        db_session.add(passport)
-        db_session.flush()
+        dbSession.add(passport)
+        dbSession.flush()
         return passport
