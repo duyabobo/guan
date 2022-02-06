@@ -10,6 +10,7 @@ class AboutHandler(BaseHandler):
     def get(self):
         return self.response(
             {
-                "realLogoUrl": const.CDN_QINIU_URL + '/real_logo.png'
+                "realLogoUrl": const.CDN_QINIU_URL + '/real_logo.png',
+                "version": "v2.0"
             }
         )
