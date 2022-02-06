@@ -11,18 +11,12 @@ class GuanInfoHandler(BaseHandler):
     def get(self):
         activityId = self.getRequestParameter('guanId', paraType=int)
         gis = GuanInfoService(self.dbSession, self.redis, activityId, self.currentPassportId)
-        return self.response(
-            {
-                "img": gis.img,
-                "address": gis.address,
-                "address_desc": gis.addressDesc,
-                "time": gis.time,
-                "time_desc": gis.timeDesc,
-                "personInfos": gis.personInfos,
-                "opDesc": gis.opDesc,
-                "opType": gis.opType,
-                "timeImg": gis.timeIcon,
-                "addressImg": gis.addressIcon,
-                "personImg": gis.personIcon,
-            }
-        )
+        return self.response(gis.getGuanInfo())
+
+    @superMonitor
+    def put(self, *args, **kwargs):
+        activityId = self.getRequestParameter('guanId', paraType=int)
+        opType = self.getRequestParameter('opType', paraType=int)
+        gis = GuanInfoService(self.dbSession, self.redis, activityId, self.currentPassportId)
+        gis.activityOprete(opType)
+        return self.response(gis.getGuanInfo())

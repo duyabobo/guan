@@ -17,11 +17,9 @@ class GuanInfoService(BaseService):
         self.redis = redis
         self.activityId = activityId
         self.passportId = passportId
+        self.activityRecord = None
+        self.reloadActivityRecord()
         super(GuanInfoService, self).__init__(dbSession, redis)
-
-    @lazy_property
-    def activityRecord(self):
-        return ActivityModel.getById(self.dbSession, self.activityId)
 
     @lazy_property
     def addressRecord(self):
@@ -120,3 +118,27 @@ class GuanInfoService(BaseService):
             matchHelper.education,
         ]
         return [i for i in allInfos if i]
+    
+    def getGuanInfo(self):
+        return {
+            "img": self.img,
+            "address": self.address,
+            "addressDesc": self.addressDesc,
+            "time": self.time,
+            "timeDesc": self.timeDesc,
+            "guanId": self.activityId,
+            "personInfos": self.personInfos,
+            "opDesc": self.opDesc,
+            "opType": self.opType,
+            "timeImg": self.timeIcon,
+            "addressImg": self.addressIcon,
+            "personImg": self.personIcon,
+        }
+
+    def reloadActivityRecord(self):
+        self.activityRecord = ActivityModel.getById(self.dbSession, self.activityId)
+
+    def activityOprete(self, opType):
+        """对活动进行操作"""
+        pass  # todo
+        self.reloadActivityRecord()

@@ -48,7 +48,7 @@ class MatchHelper(object):
         return {
             "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
             "desc": "出生年份",
-            "value": self.birthYearValue,
+            "value": self.birthYearValue or "",
             "defaultValue": const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
         }
 

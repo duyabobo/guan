@@ -4,6 +4,8 @@ from common.match import MatchHelper
 from model.user import UserModel
 from service import BaseService
 from util.class_helper import lazy_property
+from model.verify import VerifyModel
+from util import const
 
 
 class UserInfoService(BaseService):
@@ -19,12 +21,21 @@ class UserInfoService(BaseService):
     def userInfo(self):
         return UserModel.getByPassportId(self.dbSession, self.passportId)
 
+    def getVerify(self):
+        verify = VerifyModel.getByPassportId(self.dbSession, self.passportId)
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_VERIFY,
+            "desc": "工作认证",
+            "value": "已认证" if verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES else "未认证",
+        }
+
     def reloadMatchHelper(self):
         userInfo = UserModel.getByPassportId(self.dbSession, self.passportId)
         self.matchHelper = MatchHelper(userInfo)
 
     def getMyselfInfo(self):
         return {
+            "verify": self.getVerify(),
             "sex": self.matchHelper.getSexInfo(),
             "birthYear": self.matchHelper.getbirthYearInfo(),
             "otherInfoList": self.matchHelper.getOtherInfoList(),

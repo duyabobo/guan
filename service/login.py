@@ -8,6 +8,7 @@ import util.config
 from model.passport import PassportModel
 from model.requirement import RequirementModel
 from model.user import UserModel
+from model.verify import VerifyModel
 from ral.passport import putSession
 from service import BaseService
 from util.encode import generate_access_token
@@ -44,6 +45,7 @@ class LoginService(BaseService):
             passport = PassportModel.addByOpenid(self.dbSession, openid)
             UserModel.addByPassportId(self.dbSession, passport.id)
             RequirementModel.addByPassportId(self.dbSession, passport.id)
+            VerifyModel.addByPassportId(self.dbSession, passport.id)
 
         accessToken = generate_access_token(passport.id)
         currentUserInfoJson = putSession(self.redis, accessToken, passport)

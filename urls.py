@@ -11,6 +11,7 @@ from handler import login
 from handler import mine
 from handler import myself
 from handler import requirement
+from handler import email_verify
 
 handlers = [
     (r'/$', example.ExampleHandler),
@@ -22,4 +23,5 @@ handlers = [
     (r'/requirement$', requirement.RequirementHandler),
     (r'/guanguan$', guanguan.GuanguanHandler),
     (r'/guan_info$', guan_info.GuanInfoHandler),
+    (r'/email_verify$', email_verify.EmailVerifyHandler),
 ]

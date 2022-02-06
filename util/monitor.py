@@ -8,7 +8,7 @@ from util.const import RESP_TOP_MONITOR_ERROR
 monitorLogger = monitor_logger('superMonitor')
 
 
-def superMonitor(method):
+def superMonitor(method):  # todo 增加token验证
     def wrapper(self, *args, **kwargs):
         try:
             start = time.time()
