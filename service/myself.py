@@ -45,5 +45,6 @@ class UserInfoService(BaseService):
         updateParams = self.matchHelper.getUpdateParams(opType, value)
         if updateParams:
             UserModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
+            # todo 自动填充一下需求信息
             self.reloadMatchHelper()
         return self.getMyselfInfo()
