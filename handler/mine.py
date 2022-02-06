@@ -11,5 +11,5 @@ class MineHandler(BaseHandler):
     def get(self, *args, **kwargs):
         headImg = MineService(self.dbSession, self.redis).getHeadImg(self.currentPassportId)
         return self.response(
-            respJson={'headImg': headImg}
+            respData={'headImg': headImg}
         )

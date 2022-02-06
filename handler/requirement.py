@@ -10,7 +10,7 @@ class RequirementHandler(BaseHandler):
     def get(self, *args, **kwargs):
         ris = RequirementService(self.dbSession, self.redis, self.currentPassportId)
         return self.response(
-            respJson=ris.getRequirementInfo()
+            respData=ris.getRequirementInfo()
         )
 
     @superMonitor
@@ -19,5 +19,5 @@ class RequirementHandler(BaseHandler):
         value = self.getRequestParameter('value')
         ris = RequirementService(self.dbSession, self.redis, self.currentPassportId)
         return self.response(
-            respJson=ris.updateRequirementInfo(opType, value)
+            respData=ris.updateRequirementInfo(opType, value)
         )

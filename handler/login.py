@@ -23,7 +23,7 @@ class LoginHandler(BaseHandler):
 
         accessToken, currentUserInfo = LoginService(self.dbSession, self.redis).login(openid)
         return self.response(
-            respJson={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
+            respData={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
         )
 
     @superMonitor

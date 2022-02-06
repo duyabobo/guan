@@ -11,7 +11,7 @@ class MyselfHandler(BaseHandler):
     def get(self, *args, **kwargs):
         uis = UserInfoService(self.dbSession, self.redis, self.currentPassportId)
         return self.response(
-            respJson=uis.getMyselfInfo()
+            respData=uis.getMyselfInfo()
         )
 
     @superMonitor
@@ -20,5 +20,5 @@ class MyselfHandler(BaseHandler):
         value = self.getRequestParameter('value')
         uis = UserInfoService(self.dbSession, self.redis, self.currentPassportId)
         return self.response(
-            respJson=uis.updateMyselfInfo(opType, value)
+            respData=uis.updateMyselfInfo(opType, value)
         )

@@ -130,12 +130,14 @@ class BaseHandler(RequestHandler):
         except:
             return default
 
-    def response(self, respJson=None, respNormal=RESP_OK):
-        if not respJson:
-            respJson = {}
-        respJson.update(respNormal)
-        resp = json.dumps(respJson)
-        self.write(resp)
+    def response(self, respData=None, respNormal=RESP_OK):
+        if not respData:
+            respData = {}
+        resp = {
+            'data': respData,
+        }
+        resp.update(respNormal)
+        self.write(json.dumps(resp))
         self.finishDbOperation(respNormal)
         if self._mqConnection:
             self._mqConnection.close()
