@@ -14,7 +14,7 @@ RESP_NEED_FILL_INFO = {'code': 1003, 'errMsg': '请完善个人信息'}
 EXCHANGE_NAME = 'offline_script'
 
 # 七牛
-CDN_QINIU_URL = 'http://img.ggjjzhzz.cn/'
+CDN_QINIU_URL = 'http:#img.ggjjzhzz.cn/'
 CDN_QINIU_BOY_HEAD_IMG = CDN_QINIU_URL + 'boy.jpg'
 CDN_QINIU_GIRL_HEAD_IMG = CDN_QINIU_URL + 'girl.jpg'
 CDN_QINIU_UNKNOWN_HEAD_IMG = CDN_QINIU_URL + 'unknown.jpg'
@@ -53,3 +53,12 @@ GUAN_INFO_OP_TYPE_ACCEPT = 1  # 成为接受人
 GUAN_INFO_OP_TYPE_INVITE_QUIT = 2  # 邀请人退出
 GUAN_INFO_OP_TYPE_ACCEPT_QUIT = 3  # 接受人退出
 GUAN_INFO_OP_TYPE_ACCEPT_UNKNOWN = 99  # 未知操作类型
+
+# MINI_PROGRAM
+ABOUT_PAGE = '/page/about/about'  # 关于
+SETTING_PAGE = '/page/setting/setting'  # 设置
+SHARE_PAGE = '/page/share/share'  # 分享
+SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
+MYINFORMATION_PAGE = '/page/my_information/my_information?errMsg='  # 我的资料
+MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement'  # 我的期望
+WORKVERIFY_PAGE = '/page/work_verify/work_verify'  # 工作认证
