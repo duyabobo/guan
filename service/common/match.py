@@ -138,6 +138,42 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("max_height 无法获取")
 
     @property
+    def monthPayMinValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.min_month_pay
+        else:
+            raise Exception("min_month_pay 无法获取")
+
+    @property
+    def defaultMonthPayMinIndex(self):
+        if not self.isUserNotRequirement:
+            minMonthPay = self.monthPayMinValue or const.GOOD_MONTH_PAY
+            try:
+                return const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY.index(minMonthPay)
+            except:
+                return 0
+        else:
+            raise Exception("min_month_pay 无法获取")
+
+    @property
+    def monthPayMaxValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.max_month_pay
+        else:
+            raise Exception("min_month_pay 无法获取")
+
+    @property
+    def defaultMonthPayMaxIndex(self):
+        if not self.isUserNotRequirement:
+            maxValue = self.monthPayMaxValue or const.GOOD_MONTH_PAY
+            try:
+                return const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY.index(maxValue)
+            except:
+                return 0
+        else:
+            raise Exception("min_month_pay 无法获取")
+
+    @property
     def martialStatus(self):
         return const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST[self.info.martial_status]
 
@@ -253,6 +289,16 @@ class MatchHelper(object):  # todo 拆分成两个helper
             "choiceList": const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST,
         }
 
+    def getRequirementMonthPay(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD,
+            "desc": "税前月收入(元)",
+            "fromValue": self.monthPayMinValue,
+            "toValue": self.monthPayMaxValue,
+            "fromAndToArray": [const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY],
+            "fromAndToIndex": [self.defaultMonthPayMinIndex, self.defaultMonthPayMaxIndex],
+        }
+
     def getOtherInfoList(self):
         return [
             {
@@ -296,4 +342,8 @@ class MatchHelper(object):  # todo 拆分成两个helper
             value = json.loads(value)
             updateParams['min_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY[value[0]]
             updateParams['max_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY[value[1]]
+        elif opType == const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD:
+            value = json.loads(value)
+            updateParams['min_month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY[value[0]]
+            updateParams['max_month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY[value[1]]
         return updateParams

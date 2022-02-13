@@ -23,7 +23,8 @@ class RequirementModel(BaseModel):
     min_height = Column(Integer, default=0)  # 最小身高(cm)
     max_height = Column(Integer, default=0)  # 最大身高(cm)
     martial_status = Column(Integer, default=0)  # 婚姻现状：0未知，1未婚，2离异
-    month_pay = Column(String, default="")  # 月收入(元-元)
+    max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
+    min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     education = Column(Integer, default=0)  # 学历枚举
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
