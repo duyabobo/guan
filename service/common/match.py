@@ -21,16 +21,37 @@ class MatchHelper(object):
         return const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST[self.info.martial_status]
 
     @property
-    def height(self):
-        return const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST[self.info.height]
+    def heightValue(self):
+        return self.info.height
 
     @property
-    def weight(self):
-        return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST[self.info.weight]
+    def heightIndex(self):
+        try:
+            return const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST.index(self.heightValue)
+        except:
+            return -1
 
     @property
-    def monthPay(self):
+    def weightValue(self):
+        return self.info.weight
+
+    @property
+    def weightIndex(self):
+        try:
+            return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST.index(self.weightValue)
+        except:
+            return -1
+
+    @property
+    def monthPayValue(self):
         return self.info.month_pay
+
+    @property
+    def monthPayIndex(self):
+        try:
+            return const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST.index(self.monthPayValue)
+        except:
+            return -1
 
     @property
     def education(self):
@@ -56,7 +77,7 @@ class MatchHelper(object):
         return {
             "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
             "desc": "体重",
-            "value": self.weight,
+            "value": self.weightIndex,
             "defaultValue": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
         }
 
@@ -64,8 +85,16 @@ class MatchHelper(object):
         return {
             "opType": const.MODEL_USER_OP_TYPE_HEIGHT,
             "desc": "身高",
-            "value": self.height,
+            "value": self.heightIndex,
             "defaultValue": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
+        }
+
+    def getMonthPay(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY,
+            "desc": "月收入",
+            "value": self.monthPayIndex,
+            "defaultValue": const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST,
         }
 
     def getOtherInfoList(self):
