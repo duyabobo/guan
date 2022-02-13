@@ -22,7 +22,6 @@ class RequirementModel(BaseModel):
     max_weight = Column(Integer, default=0)  # 最大体重(kg)
     martial_status = Column(Integer, default=0)  # 婚姻现状：0未知，1未婚，2离异
     height = Column(String, default="")  # 身高(厘米-厘米)
-    weight = Column(String, default="")  # 体重(公斤-公斤)
     month_pay = Column(String, default="")  # 月收入(元-元)
     education = Column(Integer, default=0)  # 学历枚举
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
