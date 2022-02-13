@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
+
 from util import const
 
 
 class MatchHelper(object):
 
-    def __init__(self, info, currentUserInfo=None):
+    def __init__(self, info, isUserNotRequirement=True):
         self.info = info
-        self.currentUserInfo = currentUserInfo
+        self.isUserNotRequirement = isUserNotRequirement
 
     @property
     def sexValue(self):
@@ -15,7 +17,53 @@ class MatchHelper(object):
 
     @property
     def birthYearValue(self):
-        return self.info.birth_year
+        if self.isUserNotRequirement:
+            return self.info.birth_year
+        else:
+            raise Exception("birth_year 无法获取")
+
+    @property
+    def defaultBirthYear(self):
+        if self.isUserNotRequirement:
+            return self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR
+        else:
+            raise Exception("birth_year 无法获取")
+
+    @property
+    def birthMinYearValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.min_birth_year
+        else:
+            raise Exception("min_birth_year 无法获取")
+
+    @property
+    def defaultMinBirthYearIndex(self):
+        if not self.isUserNotRequirement:
+            defaultMin = self.birthMinYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
+            try:
+                return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY.index(defaultMin)
+            except:
+                return 0
+        else:
+            raise Exception("min_birth_year 无法获取")
+
+    @property
+    def birthMaxYearValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.max_birth_year
+        else:
+            raise Exception("max_birth_year 无法获取")
+
+    @property
+    def defaultMaxBirthYearIndex(self):
+        if not self.isUserNotRequirement:
+            defaultMax = self.birthMaxYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
+            try:
+                return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY.index(defaultMax)
+            except:
+                return 0
+        else:
+            raise Exception("max_birth_year 无法获取")
 
     @property
     def martialStatus(self):
@@ -44,32 +92,6 @@ class MatchHelper(object):
             return -1
 
     @property
-    def defaultBirthYear(self):
-        return self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR
-
-    def getCurrentUserBirthYear(self):
-        return int(self.currentUserInfo.birth_year)
-
-    @property
-    def defaultBirthYearPeriod(self):
-        birthYear = self.getCurrentUserBirthYear()
-        return "%s-%s年" % (birthYear - const.AGE_PERIOD, birthYear + const.AGE_PERIOD)
-
-    @property
-    def birthYearPeriodChoiceList(self):
-        periodList = [
-            "%s-%s年" % (max(const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START, s - const.AGE_PERIOD), s)
-            for s in range(self.getCurrentUserBirthYear(), const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START, -const.AGE_PERIOD)
-        ][::-1]
-        periodList.extend(
-            [
-                "%s-%s年" % (s, min(const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END, s + const.AGE_PERIOD))
-                for s in range(self.getCurrentUserBirthYear(), const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END, const.AGE_PERIOD)
-            ]
-        )
-        return periodList
-
-    @property
     def monthPayValue(self):
         return self.info.month_pay
 
@@ -92,7 +114,7 @@ class MatchHelper(object):
             "choiceList": const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST,
         }
 
-    def getbirthYearInfo(self):
+    def getBirthYearInfo(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
             "desc": "出生年份",
@@ -102,14 +124,14 @@ class MatchHelper(object):
             "defaultValue": self.defaultBirthYear,
         }
 
-    def getbirthYearPeriodInfo(self):
-        # 获取出生年份区间列表
+    def getRequirementBirthYearInfo(self):
         return {
-            "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
-            "desc": "出生年份",
-            "value": self.weightValue,
-            "defaultValue": self.defaultBirthYearPeriod,
-            "choiceList": self.birthYearPeriodChoiceList,
+            "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD,
+            "desc": "出生年份区间",
+            "fromValue": self.birthMinYearValue,
+            "toValue": self.birthMaxYearValue,
+            "fromAndToArray": [const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY],
+            "fromAndToIndex": [self.defaultMinBirthYearIndex, self.defaultMaxBirthYearIndex],
         }
 
     def getWeight(self):
@@ -170,4 +192,8 @@ class MatchHelper(object):
             updateParams['month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST[int(value)]
         elif opType == const.MODEL_USER_OP_TYPE_EDUCATION:
             updateParams['education'] = value
+        elif opType == const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD:
+            value = json.loads(value)
+            updateParams['min_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY[value[0]]
+            updateParams['max_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY[value[1]]
         return updateParams

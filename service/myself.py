@@ -37,7 +37,7 @@ class UserInfoService(BaseService):
         return {
             "verify": self.getVerify(),
             "sex": self.matchHelper.getSexInfo(),
-            "birthYear": self.matchHelper.getbirthYearInfo(),
+            "birthYear": self.matchHelper.getBirthYearInfo(),
             "weight": self.matchHelper.getWeight(),
             "monthPay": self.matchHelper.getMonthPay(),
             "height": self.matchHelper.getHeight(),
