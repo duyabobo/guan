@@ -237,7 +237,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getRequirementHeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD,
-            "desc": "体重(kg)",
+            "desc": "身高(cm)",
             "fromValue": self.heightMinValue,
             "toValue": self.heightMaxValue,
             "fromAndToArray": [const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY],
