@@ -14,7 +14,7 @@ RESP_NEED_FILL_INFO = {'code': 1003, 'errMsg': '请完善个人信息'}
 EXCHANGE_NAME = 'offline_script'
 
 # 七牛
-CDN_QINIU_URL = 'http:#img.ggjjzhzz.cn/'
+CDN_QINIU_URL = 'http://img.ggjjzhzz.cn/'
 CDN_QINIU_BOY_HEAD_IMG = CDN_QINIU_URL + 'boy.jpg'
 CDN_QINIU_GIRL_HEAD_IMG = CDN_QINIU_URL + 'girl.jpg'
 CDN_QINIU_UNKNOWN_HEAD_IMG = CDN_QINIU_URL + 'unknown.jpg'
