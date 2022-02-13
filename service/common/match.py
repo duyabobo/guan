@@ -137,7 +137,7 @@ class MatchHelper(object):
     def getWeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
-            "desc": "体重",
+            "desc": "体重(kg)",
             "value": self.weightValue or "",
             "defaultValue": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT,
             "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
@@ -146,7 +146,7 @@ class MatchHelper(object):
     def getHeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_HEIGHT,
-            "desc": "身高",
+            "desc": "身高(cm)",
             "value": self.heightValue or "",
             "defaultValue": self.heightIndex if self.heightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_HEIGHT,
             "choiceList": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
@@ -155,7 +155,7 @@ class MatchHelper(object):
     def getMonthPay(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY,
-            "desc": "月收入(税前)",
+            "desc": "税前月收入(元)",
             "value": self.monthPayValue or "",
             "defaultValue": self.monthPayIndex if self.monthPayIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_MONTH_PAY,
             "choiceList": const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST,
