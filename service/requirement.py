@@ -27,7 +27,7 @@ class RequirementService(BaseService):
     def getRequirementInfo(self):
         return {
             "sex": self.matchHelper.getSexInfo(),
-            "birthYear": self.matchHelper.getbirthYearInfo(),
+            "birthYear": self.matchHelper.getbirthYearPeriodInfo(),
             "weight": self.matchHelper.getWeight(),
             "height": self.matchHelper.getHeight(),
             "monthPay": self.matchHelper.getMonthPay(),

@@ -70,7 +70,19 @@ class MatchHelper(object):
             "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
             "desc": "出生年份",
             "value": self.birthYearValue or "",
+            "start": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START,
+            "end": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END,
             "defaultValue": self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
+        }
+
+    def getbirthYearPeriodInfo(self):
+        # 获取出生年份区间列表
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
+            "desc": "出生年份",
+            "value": self.weightValue or "",
+            "defaultValue": self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
+            "choiceList": self.birthYearValue or const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_CHOICE_LIST,
         }
 
     def getWeight(self):
