@@ -18,6 +18,8 @@ class RequirementModel(BaseModel):
     sex = Column(Integer, default=0)  # 性别：MODEL_SEX_ENUMERATE
     min_birth_year = Column(Integer, default=0)  # 最小出生年份
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
+    min_weight = Column(Integer, default=0)  # 最小体重(kg)
+    max_weight = Column(Integer, default=0)  # 最大体重(kg)
     martial_status = Column(Integer, default=0)  # 婚姻现状：0未知，1未婚，2离异
     height = Column(String, default="")  # 身高(厘米-厘米)
     weight = Column(String, default="")  # 体重(公斤-公斤)

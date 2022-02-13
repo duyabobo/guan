@@ -5,7 +5,7 @@ import json
 from util import const
 
 
-class MatchHelper(object):
+class MatchHelper(object):  # todo 拆分成两个helper
 
     def __init__(self, info, isUserNotRequirement=True):
         self.info = info
@@ -30,16 +30,16 @@ class MatchHelper(object):
             raise Exception("birth_year 无法获取")
 
     @property
-    def birthMinYearValue(self):
+    def birthYearMinValue(self):
         if not self.isUserNotRequirement:
             return self.info.min_birth_year
         else:
             raise Exception("min_birth_year 无法获取")
 
     @property
-    def defaultMinBirthYearIndex(self):
+    def defaultBirthYearMinIndex(self):
         if not self.isUserNotRequirement:
-            defaultMin = self.birthMinYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
+            defaultMin = self.birthYearMinValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
             try:
                 return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY.index(defaultMin)
             except:
@@ -48,22 +48,56 @@ class MatchHelper(object):
             raise Exception("min_birth_year 无法获取")
 
     @property
-    def birthMaxYearValue(self):
+    def birthYearMaxValue(self):
         if not self.isUserNotRequirement:
             return self.info.max_birth_year
         else:
             raise Exception("max_birth_year 无法获取")
 
     @property
-    def defaultMaxBirthYearIndex(self):
+    def defaultBirthYearMaxIndex(self):
         if not self.isUserNotRequirement:
-            defaultMax = self.birthMaxYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
+            defaultMax = self.birthYearMaxValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
             try:
                 return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY.index(defaultMax)
             except:
                 return 0
         else:
             raise Exception("max_birth_year 无法获取")
+
+    @property
+    def weightMinValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.min_weight
+        else:
+            raise Exception("min_weight 无法获取")
+
+    @property
+    def defaultWeightMinIndex(self):
+        if not self.isUserNotRequirement:
+            try:
+                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(self.weightMinValue)
+            except:
+                return const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX
+        else:
+            raise Exception("min_weight 无法获取")
+
+    @property
+    def weightMaxValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.max_weight
+        else:
+            raise Exception("max_weight 无法获取")
+
+    @property
+    def defaultWeightMaxIndex(self):
+        if not self.isUserNotRequirement:
+            try:
+                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(self.weightMaxValue)
+            except:
+                return const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX
+        else:
+            raise Exception("max_weight 无法获取")
 
     @property
     def martialStatus(self):
@@ -128,10 +162,10 @@ class MatchHelper(object):
         return {
             "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD,
             "desc": "出生年份区间",
-            "fromValue": self.birthMinYearValue,
-            "toValue": self.birthMaxYearValue,
+            "fromValue": self.birthYearMinValue,
+            "toValue": self.birthYearMaxValue,
             "fromAndToArray": [const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY],
-            "fromAndToIndex": [self.defaultMinBirthYearIndex, self.defaultMaxBirthYearIndex],
+            "fromAndToIndex": [self.defaultBirthYearMinIndex, self.defaultBirthYearMaxIndex],
         }
 
     def getWeight(self):
@@ -139,8 +173,18 @@ class MatchHelper(object):
             "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
             "desc": "体重(kg)",
             "value": self.weightValue or "",
-            "defaultValue": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT,
+            "defaultValue": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX,
             "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
+        }
+
+    def getRequirementWeight(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD,
+            "desc": "体重(kg)",
+            "fromValue": self.weightMinValue,
+            "toValue": self.weightMaxValue,
+            "fromAndToArray": [const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY],
+            "fromAndToIndex": [self.defaultWeightMinIndex, self.defaultWeightMaxIndex],
         }
 
     def getHeight(self):
@@ -148,7 +192,7 @@ class MatchHelper(object):
             "opType": const.MODEL_USER_OP_TYPE_HEIGHT,
             "desc": "身高(cm)",
             "value": self.heightValue or "",
-            "defaultValue": self.heightIndex if self.heightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_HEIGHT,
+            "defaultValue": self.heightIndex if self.heightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_HEIGHT_INDEX,
             "choiceList": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
         }
 
@@ -157,7 +201,7 @@ class MatchHelper(object):
             "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY,
             "desc": "税前月收入(元)",
             "value": self.monthPayValue or "",
-            "defaultValue": self.monthPayIndex if self.monthPayIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_MONTH_PAY,
+            "defaultValue": self.monthPayIndex if self.monthPayIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_MONTH_PAY_INDEX,
             "choiceList": const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST,
         }
 
@@ -196,4 +240,8 @@ class MatchHelper(object):
             value = json.loads(value)
             updateParams['min_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY[value[0]]
             updateParams['max_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY[value[1]]
+        elif opType == const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD:
+            value = json.loads(value)
+            updateParams['min_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY[value[0]]
+            updateParams['max_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY[value[1]]
         return updateParams
