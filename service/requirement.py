@@ -30,6 +30,7 @@ class RequirementService(BaseService):
             "birthYear": self.matchHelper.getbirthYearInfo(),
             "weight": self.matchHelper.getWeight(),
             "height": self.matchHelper.getHeight(),
+            "monthPay": self.matchHelper.getMonthPay(),
             "otherRequirementList": self.matchHelper.getOtherInfoList(),
         }
 
