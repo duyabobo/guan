@@ -38,7 +38,7 @@ class GuanInfoService(BaseService):
         return const.CDN_QINIU_URL + "address.jpeg"
 
     @property
-    def personIcon(self):
+    def peopleImg(self):
         if not self.userRecord:
             return const.CDN_QINIU_UNKNOWN_HEAD_IMG
 
@@ -103,7 +103,7 @@ class GuanInfoService(BaseService):
         }.get(self.opType, "敬请期待")
 
     @property
-    def personInfos(self):
+    def peopleInfos(self):
         if not self.userRecord:
             return []
 
@@ -124,15 +124,18 @@ class GuanInfoService(BaseService):
             "img": self.img,
             "address": self.address,
             "addressDesc": self.addressDesc,
+            "addressInfos": [],  # todo
             "time": self.time,
+            "timeInfos": [],  # todo
             "timeDesc": self.timeDesc,
             "guanId": self.activityId,
-            "personInfos": self.personInfos,
+            "peopleInfos": self.peopleInfos,
             "opDesc": self.opDesc,
             "opType": self.opType,
             "timeImg": self.timeIcon,
             "addressImg": self.addressIcon,
-            "personImg": self.personIcon,
+            "peopleImg": self.peopleImg,
+            "people": "人物",  # todo 相亲对象
         }
 
     def reloadActivityRecord(self):
