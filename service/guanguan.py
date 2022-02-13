@@ -76,8 +76,8 @@ class GuanguanService(BaseService):
                 {
                     "id": activity.id,
                     "img": const.CDN_QINIU_URL + address.img,
-                    "addressImg": const.CDN_QINIU_URL + 'address.png',
-                    "timeImg": const.CDN_QINIU_URL + 'time.png',
+                    "addressImg": const.CDN_QINIU_ADDRESS_IMG,
+                    "timeImg": const.CDN_QINIU_TIME_IMG,
                     "time": activity.startTimeStr,
                     "address": address.name,
                     "state": self.getState(activity),

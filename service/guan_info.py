@@ -31,11 +31,11 @@ class GuanInfoService(BaseService):
 
     @property
     def timeIcon(self):
-        return const.CDN_QINIU_URL + "time.jpeg"
+        return const.CDN_QINIU_TIME_IMG
 
     @property
     def addressIcon(self):
-        return const.CDN_QINIU_URL + "address.jpeg"
+        return const.CDN_QINIU_ADDRESS_IMG
 
     @property
     def peopleImg(self):
