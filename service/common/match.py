@@ -22,11 +22,11 @@ class MatchHelper(object):
 
     @property
     def height(self):
-        return self.info.height
+        return const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST[self.info.height]
 
     @property
     def weight(self):
-        return self.info.weight
+        return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST[self.info.weight]
 
     @property
     def monthPay(self):
@@ -52,6 +52,22 @@ class MatchHelper(object):
             "defaultValue": const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
         }
 
+    def getWeight(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
+            "desc": "体重",
+            "value": self.weight,
+            "defaultValue": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
+        }
+
+    def getHeight(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_HEIGHT,
+            "desc": "身高",
+            "value": self.height,
+            "defaultValue": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
+        }
+
     def getOtherInfoList(self):
         return [
             {
@@ -59,21 +75,6 @@ class MatchHelper(object):
                 "desc": "婚姻现状",
                 "value": self.martialStatus,
                 "choiceList": const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST,
-            },{
-                "opType": const.MODEL_USER_OP_TYPE_HEIGHT,
-                "desc": "身高",
-                "value": self.height,
-                "choiceList": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
-            },{
-                "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
-                "desc": "体重",
-                "value": self.weight,
-                "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
-            },{
-                "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY,
-                "desc": "月收入",
-                "value": self.monthPay,
-                "choiceList": const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST,
             },{
                 "opType": const.MODEL_USER_OP_TYPE_EDUCATION,
                 "desc": "学历",

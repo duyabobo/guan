@@ -38,6 +38,8 @@ class UserInfoService(BaseService):
             "verify": self.getVerify(),
             "sex": self.matchHelper.getSexInfo(),
             "birthYear": self.matchHelper.getbirthYearInfo(),
+            "weight": self.matchHelper.getWeight(),
+            "height": self.matchHelper.getHeight(),
             "otherInfoList": self.matchHelper.getOtherInfoList(),
         }
 

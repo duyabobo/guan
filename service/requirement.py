@@ -28,6 +28,8 @@ class RequirementService(BaseService):
         return {
             "sex": self.matchHelper.getSexInfo(),
             "birthYear": self.matchHelper.getbirthYearInfo(),
+            "weight": self.matchHelper.getWeight(),
+            "height": self.matchHelper.getHeight(),
             "otherRequirementList": self.matchHelper.getOtherInfoList(),
         }
 
