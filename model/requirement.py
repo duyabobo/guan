@@ -20,8 +20,9 @@ class RequirementModel(BaseModel):
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
     min_weight = Column(Integer, default=0)  # 最小体重(kg)
     max_weight = Column(Integer, default=0)  # 最大体重(kg)
+    min_height = Column(Integer, default=0)  # 最小身高(cm)
+    max_height = Column(Integer, default=0)  # 最大身高(cm)
     martial_status = Column(Integer, default=0)  # 婚姻现状：0未知，1未婚，2离异
-    height = Column(String, default="")  # 身高(厘米-厘米)
     month_pay = Column(String, default="")  # 月收入(元-元)
     education = Column(Integer, default=0)  # 学历枚举
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE

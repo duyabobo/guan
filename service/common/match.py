@@ -75,10 +75,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
     @property
     def defaultWeightMinIndex(self):
         if not self.isUserNotRequirement:
+            minWeight = self.weightMinValue or const.GOOD_WEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(self.weightMinValue)
+                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(minWeight)
             except:
-                return const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX
+                return 0
         else:
             raise Exception("min_weight 无法获取")
 
@@ -92,12 +93,49 @@ class MatchHelper(object):  # todo 拆分成两个helper
     @property
     def defaultWeightMaxIndex(self):
         if not self.isUserNotRequirement:
+            maxWeight = self.weightMaxValue or const.GOOD_WEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(self.weightMaxValue)
+                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(maxWeight)
             except:
-                return const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX
+                return 0
         else:
             raise Exception("max_weight 无法获取")
+
+    @property
+    def heightMinValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.min_height
+        else:
+            raise Exception("min_height 无法获取")
+
+    @property
+    def defaultHeightMinIndex(self):
+        if not self.isUserNotRequirement:
+            minHeight = self.heightMinValue or const.GOOD_HEIGHT
+            try:
+                return const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY.index(minHeight)
+            except:
+                return 0
+        else:
+            raise Exception("min_height 无法获取")
+
+    @property
+    def heightMaxValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.max_height
+        else:
+            raise Exception("max_height 无法获取")
+
+    @property
+    def defaultHeightMaxIndex(self):
+        if not self.isUserNotRequirement:
+            maxValue = self.heightMaxValue or const.GOOD_HEIGHT
+            try:
+                return const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY.index(maxValue)
+            except:
+                return 0
+        else:
+            raise Exception("max_height 无法获取")
 
     @property
     def martialStatus(self):
@@ -196,6 +234,16 @@ class MatchHelper(object):  # todo 拆分成两个helper
             "choiceList": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
         }
 
+    def getRequirementHeight(self):
+        return {
+            "opType": const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD,
+            "desc": "体重(kg)",
+            "fromValue": self.heightMinValue,
+            "toValue": self.heightMaxValue,
+            "fromAndToArray": [const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY],
+            "fromAndToIndex": [self.defaultHeightMinIndex, self.defaultHeightMaxIndex],
+        }
+
     def getMonthPay(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY,
@@ -244,4 +292,8 @@ class MatchHelper(object):  # todo 拆分成两个helper
             value = json.loads(value)
             updateParams['min_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY[value[0]]
             updateParams['max_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY[value[1]]
+        elif opType == const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD:
+            value = json.loads(value)
+            updateParams['min_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY[value[0]]
+            updateParams['max_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY[value[1]]
         return updateParams
