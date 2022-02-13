@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from model.requirement import RequirementModel
-
 from common.match import MatchHelper
+from model.requirement import RequirementModel
+from model.user import UserModel
 from service import BaseService
 from util.class_helper import lazy_property
 
@@ -13,16 +13,21 @@ class RequirementService(BaseService):
         self.dbSession = dbSession
         self.redis = redis
         self.passportId = passportId
-        self.matchHelper = MatchHelper(self.requirementInfo)
+        self.matchHelper = MatchHelper(self.requirementInfo, self.currentUser)
         super(RequirementService, self).__init__(dbSession, redis)
 
     @lazy_property
     def requirementInfo(self):
         return RequirementModel.getByPassportId(self.dbSession, self.passportId)
 
+    @lazy_property
+    def currentUser(self):
+        return UserModel.getByPassportId(self.dbSession, self.passportId)
+
     def reloadMatchHelper(self):
         requirementInfo = RequirementModel.getByPassportId(self.dbSession, self.passportId)
-        self.matchHelper = MatchHelper(requirementInfo)
+        currentUser = UserModel.getByPassportId(self.dbSession, self.passportId)
+        self.matchHelper = MatchHelper(requirementInfo, currentUser)
 
     def getRequirementInfo(self):
         return {

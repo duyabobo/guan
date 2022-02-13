@@ -5,8 +5,9 @@ from util import const
 
 class MatchHelper(object):
 
-    def __init__(self, info):
+    def __init__(self, info, currentUserInfo=None):
         self.info = info
+        self.currentUserInfo = currentUserInfo
 
     @property
     def sexValue(self):
@@ -43,6 +44,32 @@ class MatchHelper(object):
             return -1
 
     @property
+    def defaultBirthYear(self):
+        return self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR
+
+    def getCurrentUserBirthYear(self):
+        return int(self.currentUserInfo.birth_year)
+
+    @property
+    def defaultBirthYearPeriod(self):
+        birthYear = self.getCurrentUserBirthYear()
+        return "%s-%s年" % (birthYear - const.AGE_PERIOD, birthYear + const.AGE_PERIOD)
+
+    @property
+    def birthYearPeriodChoiceList(self):
+        periodList = [
+            "%s-%s年" % (max(const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START, s - const.AGE_PERIOD), s)
+            for s in range(self.getCurrentUserBirthYear(), const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START, -const.AGE_PERIOD)
+        ][::-1]
+        periodList.extend(
+            [
+                "%s-%s年" % (s, min(const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END, s + const.AGE_PERIOD))
+                for s in range(self.getCurrentUserBirthYear(), const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END, const.AGE_PERIOD)
+            ]
+        )
+        return periodList
+
+    @property
     def monthPayValue(self):
         return self.info.month_pay
 
@@ -70,9 +97,9 @@ class MatchHelper(object):
             "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
             "desc": "出生年份",
             "value": self.birthYearValue or "",
-            "start": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START,
-            "end": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END,
-            "defaultValue": self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
+            "start": "%s-01-01" % const.MODEL_USER_OP_TYPE_BIRTH_YEAR_START,
+            "end": "%s-01-01" % const.MODEL_USER_OP_TYPE_BIRTH_YEAR_END,
+            "defaultValue": self.defaultBirthYear,
         }
 
     def getbirthYearPeriodInfo(self):
@@ -80,9 +107,9 @@ class MatchHelper(object):
         return {
             "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR,
             "desc": "出生年份",
-            "value": self.weightValue or "",
-            "defaultValue": self.birthYearValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR,
-            "choiceList": self.birthYearValue or const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_CHOICE_LIST,
+            "value": self.weightValue,
+            "defaultValue": self.defaultBirthYearPeriod,
+            "choiceList": self.birthYearPeriodChoiceList,
         }
 
     def getWeight(self):
