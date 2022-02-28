@@ -84,7 +84,6 @@ class BaseHandler(RequestHandler):
         if hasattr(self, '_currentPassport') and self._currentPassport:
             return self._currentPassport
         self._currentPassport = passport.getSession(self.redis, self.accessToken)
-        self._currentPassport['phone'] = self._currentPassport.get('phone', '')
         return self._currentPassport
 
     @property

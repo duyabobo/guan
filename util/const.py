@@ -39,7 +39,7 @@ CDN_QINIU_BOY_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/boy.jpg'
 CDN_QINIU_GIRL_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/girl.jpg'
 CDN_QINIU_UNKNOWN_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/unknown.jpg'
 CDN_QINIU_ADDRESS_IMG = CDN_QINIU_URL + 'miniprogress/icon/address.png'
-CDN_QINIU_TIME_IMG = CDN_QINIU_URL + 'miniprogress/icontime.png'
+CDN_QINIU_TIME_IMG = CDN_QINIU_URL + 'miniprogress/icon/time.png'
 CDN_QINIU_LOGO = CDN_QINIU_URL + 'miniprogress/logo.png'
 
 # model
@@ -53,8 +53,7 @@ MODEL_WORK_VERIFY_STATUS_NO = 0
 MODEL_SEX_UNKNOWN = 0
 MODEL_SEX_MALE = 1
 MODEL_SEX_FEMALE = 2
-# MODEL_USER_OP_TYPE_ENUMERATE  如果更改，需要考虑小程序对应关系
-MODEL_USER_OP_TYPE_VERIFY = 0
+# MODEL_USER_OP_TYPE_ENUMERATE  如果更改，需要同步小程序对应枚举
 MODEL_USER_OP_TYPE_SEX = 1
 MODEL_USER_OP_TYPE_SEX_CHOICE_LIST = ["未知", "男", "女"]
 MODEL_USER_OP_TYPE_BIRTH_YEAR = 2

@@ -9,7 +9,7 @@ from service.myself import UserInfoService
 class MyselfHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
-        uis = UserInfoService(self.dbSession, self.redis, self.currentPassportId)
+        uis = UserInfoService(self.dbSession, self.redis, self.currentPassport)
         return self.response(
             respData=uis.getMyselfInfo()
         )
@@ -18,7 +18,7 @@ class MyselfHandler(BaseHandler):
     def put(self, *args, **kwargs):
         opType = self.getRequestParameter('opType', paraType=int)
         value = self.getRequestParameter('value')
-        uis = UserInfoService(self.dbSession, self.redis, self.currentPassportId)
+        uis = UserInfoService(self.dbSession, self.redis, self.currentPassport)
         return self.response(
             respData=uis.updateMyselfInfo(opType, value)
         )

@@ -10,10 +10,11 @@ from util import const
 
 class UserInfoService(BaseService):
 
-    def __init__(self, dbSession, redis, passportId):
+    def __init__(self, dbSession, redis, currentPassport):
         self.dbSession = dbSession
         self.redis = redis
-        self.passportId = passportId
+        self.currentPassport = currentPassport
+        self.passportId = currentPassport.get('id', 0)
         self.matchHelper = MatchHelper(self.userInfo)
         super(UserInfoService, self).__init__(dbSession, redis)
 
@@ -21,12 +22,17 @@ class UserInfoService(BaseService):
     def userInfo(self):
         return UserModel.getByPassportId(self.dbSession, self.passportId)
 
-    def getVerify(self):
+    def getWork(self):
         verify = VerifyModel.getByPassportId(self.dbSession, self.passportId)
         return {
-            "opType": const.MODEL_USER_OP_TYPE_VERIFY,
             "desc": "工作认证",
             "value": "已认证" if verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES else "未认证",
+        }
+
+    def getPhone(self):
+        return {
+            "desc": "手机认证",
+            "value": "已认证" if self.currentPassport.get('phone', '') else "未认证",
         }
 
     def reloadMatchHelper(self):
@@ -35,7 +41,8 @@ class UserInfoService(BaseService):
 
     def getMyselfInfo(self):
         return {
-            "verify": self.getVerify(),
+            "phoneVerify": self.getPhone(),
+            "work": self.getWork(),
             "sex": self.matchHelper.getSexInfo(),
             "birthYear": self.matchHelper.getBirthYearInfo(),
             "weight": self.matchHelper.getWeight(),
