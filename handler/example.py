@@ -4,10 +4,7 @@
 # __created_at__ = '2020/1/1'
 import time
 
-from tornado.concurrent import run_on_executor
-
 from handler.basehandler import BaseHandler
-from util.con_runner import ConcurrencyExecutor
 from util.monitor import superMonitor
 
 

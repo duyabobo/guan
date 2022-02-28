@@ -34,11 +34,13 @@ EXCHANGE_NAME = 'offline_script'
 
 # 七牛
 CDN_QINIU_URL = 'http://img.ggjjzhzz.cn/'
-CDN_QINIU_BOY_HEAD_IMG = CDN_QINIU_URL + 'boy.jpg'
-CDN_QINIU_GIRL_HEAD_IMG = CDN_QINIU_URL + 'girl.jpg'
-CDN_QINIU_UNKNOWN_HEAD_IMG = CDN_QINIU_URL + 'unknown.jpg'
-CDN_QINIU_ADDRESS_IMG = CDN_QINIU_URL + 'address.png'
-CDN_QINIU_TIME_IMG = CDN_QINIU_URL + 'time.png'
+CDN_QINIU_ADDRESS_URL = 'http://img.ggjjzhzz.cn/address/'
+CDN_QINIU_BOY_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/boy.jpg'
+CDN_QINIU_GIRL_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/girl.jpg'
+CDN_QINIU_UNKNOWN_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/unknown.jpg'
+CDN_QINIU_ADDRESS_IMG = CDN_QINIU_URL + 'miniprogress/icon/address.png'
+CDN_QINIU_TIME_IMG = CDN_QINIU_URL + 'miniprogress/icontime.png'
+CDN_QINIU_LOGO = CDN_QINIU_URL + 'miniprogress/logo.png'
 
 # model
 # MODEL_STATUS_ENUMERATE

@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
-from util import const
-from util.monitor import superMonitor 
-
 from service.mine import MineService
+from util.monitor import superMonitor
 
 
 class MineHandler(BaseHandler):

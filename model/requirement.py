@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column
 from sqlalchemy import Integer
-from sqlalchemy import String
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 

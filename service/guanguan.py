@@ -5,7 +5,6 @@ from model.address import AddressModel
 from model.user import UserModel
 from service import BaseService
 from util import const
-from util import util_time
 from util.class_helper import lazy_property
 
 
@@ -75,7 +74,7 @@ class GuanguanService(BaseService):
             guanguanList.append(
                 {
                     "id": activity.id,
-                    "img": const.CDN_QINIU_URL + address.img,
+                    "img": const.CDN_QINIU_ADDRESS_URL + address.img,
                     "addressImg": const.CDN_QINIU_ADDRESS_IMG,
                     "timeImg": const.CDN_QINIU_TIME_IMG,
                     "time": activity.startTimeStr,
