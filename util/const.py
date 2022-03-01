@@ -40,7 +40,7 @@ CDN_QINIU_GIRL_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/girl.jpg'
 CDN_QINIU_UNKNOWN_HEAD_IMG = CDN_QINIU_URL + 'miniprogress/user_head/unknown.jpg'
 CDN_QINIU_ADDRESS_IMG = CDN_QINIU_URL + 'miniprogress/icon/address.png'
 CDN_QINIU_TIME_IMG = CDN_QINIU_URL + 'miniprogress/icon/time.png'
-CDN_QINIU_LOGO = CDN_QINIU_URL + 'miniprogress/logo.png'
+CDN_QINIU_LOGO = CDN_QINIU_URL + 'miniprogress/about.png'
 
 # model
 # MODEL_STATUS_ENUMERATE
