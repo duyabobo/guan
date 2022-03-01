@@ -42,7 +42,7 @@ class UserInfoService(BaseService):
     def getMyselfInfo(self):
         return {
             "phoneVerify": self.getPhone(),
-            "work": self.getWork(),
+            "workVerify": self.getWork(),
             "sex": self.matchHelper.getSexInfo(),
             "birthYear": self.matchHelper.getBirthYearInfo(),
             "weight": self.matchHelper.getWeight(),
