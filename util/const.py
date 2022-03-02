@@ -29,6 +29,9 @@ RESP_TOP_MONITOR_ERROR = {'code': 1001, 'errMsg': '服务器错误'}
 RESP_NEED_LOGIN = {'code': 1002, 'errMsg': '需要登录'}
 RESP_SIGN_INVALID = {'code': 1003, 'errMsg': '签名验证失败'}
 RESP_NEED_FILL_INFO = {'code': 1004, 'errMsg': '请完善个人信息'}
+RESP_HAS_EMAIL_VERIFY_RECENTLY = {'code': 1005, 'errMsg': '您半年内已经工作认证过，请联系客服修改'}
+RESP_HAS_EMAIL_VERIFY_FAILED = {'code': 1006, 'errMsg': '验证码错误，请重新输入'}
+RESP_HAS_EMAIL_IS_NOT_COMPANY = {'code': 1007, 'errMsg': '贵公司尚未开放认证，请联系客服'}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

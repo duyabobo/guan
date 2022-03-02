@@ -34,3 +34,14 @@ class VerifyModel(BaseModel):
     @classmethod
     def getByPassportId(cls, dbSession, passportId):
         return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == const.MODEL_STATUS_YES).first()
+
+    @classmethod
+    def updateVerifyStatus(cls, dbSession, passportId, email):
+        dbSession.query(cls).filter(cls.passport_id == passportId).\
+            update({"work_mail": email, "work_verify_status": const.MODEL_WORK_VERIFY_STATUS_YES})
+        dbSession.commit()
+
+    @classmethod
+    def fillWorkMail(cls, dbSession, passportId, email):
+        dbSession.query(cls).filter(cls.passport_id == passportId).update({"work_mail": email})
+        dbSession.commit()
