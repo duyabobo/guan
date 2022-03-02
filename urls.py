@@ -2,16 +2,11 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
-from handler import about
 from handler import example
-from handler import guan_info
-from handler import guanguan
-from handler import index
-from handler import login
-from handler import mine
-from handler import myself
-from handler import requirement
-from handler import email_verify
+from handler.miniprogram import guan_info, guanguan, mine, about
+from handler.pc import index
+from handler.user import login, myself, requirement
+from handler.verify import email_verify
 
 handlers = [
     (r'/$', example.ExampleHandler),
