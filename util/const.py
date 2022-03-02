@@ -27,7 +27,8 @@ MOBILE_SECRET = 'matchispursued'
 RESP_OK = {'code': 0}
 RESP_TOP_MONITOR_ERROR = {'code': 1001, 'errMsg': '服务器错误'}
 RESP_NEED_LOGIN = {'code': 1002, 'errMsg': '需要登录'}
-RESP_NEED_FILL_INFO = {'code': 1003, 'errMsg': '请完善个人信息'}
+RESP_SIGN_INVALID = {'code': 1003, 'errMsg': '签名验证失败'}
+RESP_NEED_FILL_INFO = {'code': 1004, 'errMsg': '请完善个人信息'}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

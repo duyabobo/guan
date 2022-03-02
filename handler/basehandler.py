@@ -24,6 +24,8 @@ class BaseHandler(RequestHandler):
         self.application = application
         self.redis = StrictRedis(util.config.get('redis', 'host'), util.config.get('redis', 'port'))
         self._accessToken = None
+        self._sign = None
+        self._timestamp = None
         self._dbSession = None
         self._currentPassport = None
         self._mqConnection = None
@@ -74,6 +76,28 @@ class BaseHandler(RequestHandler):
             return self._accessToken
         self._accessToken = self.getRequestParameter('accessToken', None)
         return self._accessToken
+
+    @property
+    def sign(self):
+        """
+        获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
+        :return:
+        """
+        if hasattr(self, '_sign') and self._sign:
+            return self._sign
+        self._sign = self.getRequestParameter('sign', None)
+        return self._sign
+
+    @property
+    def timestamp(self):
+        """
+        获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
+        :return:
+        """
+        if hasattr(self, '_timestamp') and self._timestamp:
+            return self._timestamp
+        self._timestamp = self.getRequestParameter('timestamp', None)
+        return self._timestamp
 
     @property
     def currentPassport(self):
