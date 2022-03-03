@@ -55,7 +55,7 @@ class GuanguanService(BaseService):
         inv_pid = activity.invite_passport_id
         ac_pid = activity.accept_passport_id
         if inv_pid and ac_pid:
-            return "匹配成功"
+            return "即将赴约"
         elif inv_pid and self.passportId == inv_pid:
             return "我的邀请"
         elif inv_pid:
