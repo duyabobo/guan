@@ -69,8 +69,8 @@ def superMonitor(method):
             end = time.time()
             # 正常日志
             monitorLogger.info(
-                'method: %s, uri: %s, body: %s, accessToken: %s, ret: %s, request_time: %s' %
-                (self.request.method, str(self.request.uri), str(self.request.body),
+                'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s, ret: %s, request_time: %s' %
+                (self.currentPassportId, self.request.method, str(self.request.uri), str(self.request.body),
                  self.accessToken, ret, (end - start))
             )
             return
@@ -78,8 +78,8 @@ def superMonitor(method):
             # 出错日志
             resp = RESP_TOP_MONITOR_ERROR
             monitorLogger.exception(
-                'method: %s, uri: %s, body: %s, accessToken: %s, result: %s, error: %s' %
-                (self.request.method, str(self.request.uri), str(self.request.body),
+                'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s, result: %s, error: %s' %
+                (self.currentPassportId, self.request.method, str(self.request.uri), str(self.request.body),
                  self.accessToken, resp, e)
             )
             self.response(respNormal=resp)
