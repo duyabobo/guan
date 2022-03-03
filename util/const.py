@@ -33,6 +33,7 @@ RESP_HAS_EMAIL_VERIFY_RECENTLY = {'code': 1005, 'errMsg': '您半年内已经工
 RESP_HAS_EMAIL_VERIFY_FAILED = {'code': 1006, 'errMsg': '验证码错误，请重新输入'}
 RESP_HAS_EMAIL_IS_NOT_COMPANY = {'code': 1007, 'errMsg': '贵公司尚未开放认证，请联系客服'}
 RESP_JOIN_ACTIVITY_FAILED = {'code': 1008, 'errMsg': '参加相亲活动失败'}
+RESP_HAS_ONGOING_ACTIVITY = {'code': 1009, 'errMsg': '您有进行中的相亲，不能参与别的相亲'}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

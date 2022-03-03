@@ -63,10 +63,28 @@ class GuanguanService(BaseService):
         else:
             return "虚位以待"
 
+    def reSortActivityList(self, activityList, ongoingActivity):
+        for a in activityList:
+            if a.id == ongoingActivity.id:
+                activityList.remove(a)
+                break
+        activityList.insert(0, ongoingActivity)
+
+    def fillAddressMap(self, addressMap, addressId):
+        if addressId in addressMap:
+            return
+        address = AddressModel.getById(self.dbSession, addressId)
+        addressMap[address.id] = address
+
     def getGuanguanList(self, longitude, latitude):
         """优先展示有邀请人的，其次没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
         addressMap = self.getAddressMap(longitude, latitude)
         activityList = self.getActivityList(addressMap.keys())
+
+        ongoingActivity = ActivityModel.getOngoingActivity(self.dbSession, self.passportId)
+        if ongoingActivity:  # 进行中的永远在第一位
+            self.reSortActivityList(activityList, ongoingActivity)
+            self.fillAddressMap(addressMap, ongoingActivity.address_id)
 
         guanguanList = []
         for activity in activityList[:20]:
@@ -82,4 +100,5 @@ class GuanguanService(BaseService):
                     "state": self.getState(activity),
                 }
             )
+
         return guanguanList

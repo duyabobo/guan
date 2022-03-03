@@ -6,6 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
+from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util import const
@@ -44,3 +45,11 @@ class ActivityModel(BaseModel):
     def updateById(cls, dbSession, activityId, **updateParams):
         dbSession.query(cls).filter(cls.id == activityId).update(updateParams)
         dbSession.flush()
+
+    @classmethod
+    def getOngoingActivity(cls, dbSession, passportId):
+        return dbSession.query(cls).filter(
+            or_(cls.accept_passport_id == passportId, cls.invite_passport_id == passportId)
+        ).filter(
+            cls.start_time > datetime.datetime.now()
+        ).first()

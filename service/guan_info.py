@@ -106,7 +106,7 @@ class GuanInfoService(BaseService):
     def opDesc(self):
         return {
             const.GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
-            const.GUAN_INFO_OP_TYPE_INVITE_QUIT: "收回邀请",
+            const.GUAN_INFO_OP_TYPE_INVITE_QUIT: "取消邀请",
             const.GUAN_INFO_OP_TYPE_ACCEPT: "接受邀请",
             const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT: "取消见面",
             const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT: "取消见面",
@@ -145,11 +145,15 @@ class GuanInfoService(BaseService):
             "timeImg": self.timeIcon,
             "addressImg": self.addressIcon,
             "peopleImg": self.peopleImg,
-            "people": "人物",  # todo 相亲对象
+            "people": "相亲对象",
         }
 
     def reloadActivityRecord(self):
         self.activityRecord = ActivityModel.getById(self.dbSession, self.activityId)
+
+    @property
+    def hasOngoingActivity(self):
+        return bool(ActivityModel.getOngoingActivity(self.dbSession, self.passportId))
 
     def activityOprete(self, opType):
         """对活动进行操作"""
@@ -158,6 +162,9 @@ class GuanInfoService(BaseService):
             return const.RESP_NEED_FILL_INFO
         if opType != self.opType:
             return const.RESP_JOIN_ACTIVITY_FAILED
+        if self.hasOngoingActivity and \
+                opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_ACCEPT]:  # 有进行中的活动，不能再次参与
+            return const.RESP_HAS_ONGOING_ACTIVITY
         updateParams = {}
         if opType == const.GUAN_INFO_OP_TYPE_INVITE:
             updateParams['invite_passport_id'] = self.passportId
@@ -176,4 +183,4 @@ class GuanInfoService(BaseService):
             ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.accept_passport_id,
                                              const.GUAN_INFO_OP_TYPE_ACCEPT_BECOME_INVITE)
         self.reloadActivityRecord()
-        return const.RESP_OK
+        return const.RESP_OK  # todo 需要发个小程序推送消息，告知活动规则，并定时任务提前提醒
