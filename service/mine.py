@@ -21,6 +21,7 @@ class MineService(BaseService):
             [
                 {
                     "id": 1,
+                    "index": 0,
                     "url": const.MYINFORMATION_PAGE,
                     "name": '我的资料',
                     "needLogin": True,
@@ -29,6 +30,7 @@ class MineService(BaseService):
                 },
                 {
                     "id": 2,
+                    "index": 1,
                     "url": const.MYREQUIREMENT_PAGE,
                     "name": '我的期望',
                     "needLogin": True,
@@ -39,6 +41,7 @@ class MineService(BaseService):
             [
                 {
                     "id": 3,
+                    "index": 0,
                     "url": const.SUGGESTION_PAGE,
                     "name": '客服',
                     "needLogin": False,
@@ -47,6 +50,7 @@ class MineService(BaseService):
                 },
                 {
                     "id": 4,
+                    "index": 1,
                     "url": const.SHARE_PAGE,
                     "name": '分享',
                     "needLogin": False,
@@ -57,6 +61,7 @@ class MineService(BaseService):
             [
                 {
                     "id": 5,
+                    "index": 0,
                     "url": const.SETTING_PAGE,
                     "name": '设置',
                     "needLogin": True,
@@ -65,6 +70,7 @@ class MineService(BaseService):
                 },
                 {
                     "id": 6,
+                    "index": 1,
                     "url": const.ABOUT_PAGE,
                     "name": '关于',
                     "needLogin": False,
