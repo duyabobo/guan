@@ -245,7 +245,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getWeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
-            "desc": "周六是否有时间",
+            "desc": "体重(kg)",
             "value": self.weightValue or "",
             "defaultValue": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX,
             "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
@@ -254,7 +254,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getRequirementWeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD,
-            "desc": "周二空闲时间段",
+            "desc": "体重(kg)",
             "fromValue": self.weightMinValue,
             "toValue": self.weightMaxValue,
             "fromAndToArray": [const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY],
@@ -264,7 +264,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getHeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_HEIGHT,
-            "desc": "周五是否有时间",
+            "desc": "身高(cm)",
             "value": self.heightValue or "",
             "defaultValue": self.heightIndex if self.heightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_HEIGHT_INDEX,
             "choiceList": const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST,
@@ -273,7 +273,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getRequirementHeight(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD,
-            "desc": "周五空闲时间段",
+            "desc": "身高(cm)",
             "fromValue": self.heightMinValue,
             "toValue": self.heightMaxValue,
             "fromAndToArray": [const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY],
@@ -283,7 +283,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getMonthPay(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY,
-            "desc": "周日是否有时间",
+            "desc": "税前月收入(元)",
             "value": self.monthPayValue or "",
             "defaultValue": self.monthPayIndex if self.monthPayIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_MONTH_PAY_INDEX,
             "choiceList": const.MODEL_USER_OP_TYPE_MONTH_PAY_CHOICE_LIST,
@@ -292,7 +292,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
     def getRequirementMonthPay(self):
         return {
             "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD,
-            "desc": "周日空闲时间段",
+            "desc": "税前月收入(元)",
             "fromValue": self.monthPayMinValue,
             "toValue": self.monthPayMaxValue,
             "fromAndToArray": [const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY],
@@ -301,17 +301,17 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getOtherInfoList(self):
         return [
-            # {
-            #     "opType": const.MODEL_USER_OP_TYPE_MARTIAL_STATUS,
-            #     "desc": "婚姻现状",
-            #     "value": self.martialStatus,
-            #     "choiceList": const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST,
-            # },{
-            #     "opType": const.MODEL_USER_OP_TYPE_EDUCATION,
-            #     "desc": "学历",
-            #     "value": self.education,
-            #     "choiceList": const.MODEL_USER_OP_TYPE_EDUCATION_CHOICE_LIST,
-            # },
+            {
+                "opType": const.MODEL_USER_OP_TYPE_MARTIAL_STATUS,
+                "desc": "婚姻现状",
+                "value": self.martialStatus,
+                "choiceList": const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST,
+            },{
+                "opType": const.MODEL_USER_OP_TYPE_EDUCATION,
+                "desc": "学历",
+                "value": self.education,
+                "choiceList": const.MODEL_USER_OP_TYPE_EDUCATION_CHOICE_LIST,
+            },
         ]
 
     def getUpdateParams(self, opType, value):
