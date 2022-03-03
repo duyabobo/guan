@@ -78,7 +78,7 @@ class GuanguanService(BaseService):
                     "addressImg": const.CDN_QINIU_ADDRESS_IMG,
                     "timeImg": const.CDN_QINIU_TIME_IMG,
                     "time": activity.startTimeStr,
-                    "address": address.name,
+                    "address": address.nameShort,
                     "state": self.getState(activity),
                 }
             )

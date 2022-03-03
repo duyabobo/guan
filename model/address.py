@@ -32,3 +32,17 @@ class AddressModel(BaseModel):
     @classmethod
     def getById(cls, dbSession, addressId):
         return dbSession.query(cls).filter(cls.id == addressId, cls.status == const.MODEL_STATUS_YES).first()
+
+    @property
+    def nameShort(self):
+        if len(self.name) <= 6:
+            return self.name
+        else:
+            return self.name[:6] + "..."
+
+    @property
+    def nameLong(self):
+        if len(self.name) <= 12:
+            return self.name
+        else:
+            return self.name[:12] + "..."
