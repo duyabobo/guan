@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
-from util import const
 from util.monitor import superMonitor
 
 
@@ -10,7 +9,7 @@ class AboutHandler(BaseHandler):
     def get(self):
         return self.response(
             {
-                "realLogoUrl": const.CDN_QINIU_LOGO,
-                "version": "v2.0"
+                "title": "关关雎鸠介绍",
+                "descList": []  # todo
             }
         )
