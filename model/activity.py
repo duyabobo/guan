@@ -39,3 +39,8 @@ class ActivityModel(BaseModel):
     @property
     def startTimeStr(self):
         return datetime2str(self.start_time, fmt="%m-%d %H:%M")
+
+    @classmethod
+    def updateById(cls, dbSession, activityId, **updateParams):
+        dbSession.query(cls).filter(cls.id == activityId).update(updateParams)
+        dbSession.flush()

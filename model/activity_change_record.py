@@ -18,3 +18,14 @@ class ActivityChangeRecordModel(BaseModel):
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
+
+    @classmethod
+    def addOne(cls, dbSession, activityId, passportId, changeType):
+        record = cls(
+            activity_id=activityId,
+            passport_id=passportId,
+            change_type=changeType,
+        )
+        dbSession.add(record)
+        dbSession.flush()
+        return record

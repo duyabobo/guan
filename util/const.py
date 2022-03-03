@@ -27,11 +27,12 @@ MOBILE_SECRET = 'matchispursued'
 RESP_OK = {'code': 0}
 RESP_TOP_MONITOR_ERROR = {'code': 1001, 'errMsg': '服务器错误'}
 RESP_NEED_LOGIN = {'code': 1002, 'errMsg': '需要登录'}
-RESP_SIGN_INVALID = {'code': 1003, 'errMsg': '签名验证失败'}
-RESP_NEED_FILL_INFO = {'code': 1004, 'errMsg': '请完善个人信息'}
+RESP_NEED_FILL_INFO = {'code': 1003, 'errMsg': '请完善个人信息'}
+RESP_SIGN_INVALID = {'code': 1004, 'errMsg': '签名验证失败'}
 RESP_HAS_EMAIL_VERIFY_RECENTLY = {'code': 1005, 'errMsg': '您半年内已经工作认证过，请联系客服修改'}
 RESP_HAS_EMAIL_VERIFY_FAILED = {'code': 1006, 'errMsg': '验证码错误，请重新输入'}
 RESP_HAS_EMAIL_IS_NOT_COMPANY = {'code': 1007, 'errMsg': '贵公司尚未开放认证，请联系客服'}
+RESP_JOIN_ACTIVITY_FAILED = {'code': 1008, 'errMsg': '参加相亲活动失败'}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'
@@ -87,10 +88,12 @@ MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD = 11
 MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY = range(0, 24)
 
 # GUAN_INFO_OP_TYPE_ENUMERATE
-GUAN_INFO_OP_TYPE_INVITE = 0  # 成为邀请人
-GUAN_INFO_OP_TYPE_ACCEPT = 1  # 成为接受人
-GUAN_INFO_OP_TYPE_INVITE_QUIT = 2  # 邀请人退出
-GUAN_INFO_OP_TYPE_ACCEPT_QUIT = 3  # 接受人退出
+GUAN_INFO_OP_TYPE_INVITE = 1  # 成为邀请人
+GUAN_INFO_OP_TYPE_ACCEPT = 2  # 成为接受人
+GUAN_INFO_OP_TYPE_INVITE_QUIT = 3  # 邀请人退出
+GUAN_INFO_OP_TYPE_ACCEPT_QUIT = 4  # 接受人退出
+GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT = 5  # 已有接受，但是邀请人退出
+GUAN_INFO_OP_TYPE_ACCEPT_BECOME_INVITE = 6  # 已有接受，但是邀请人退出的情况下，接受人成为邀请人
 GUAN_INFO_OP_TYPE_ACCEPT_UNKNOWN = 99  # 未知操作类型
 
 # MINI_PROGRAM

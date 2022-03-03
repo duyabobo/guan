@@ -3,20 +3,23 @@
 import datetime
 
 from model.activity import ActivityModel
+from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.user import UserModel
 from service import BaseService
 from service.common.match import MatchHelper
+from service.myself import UserInfoService
 from util import const
 from util.class_helper import lazy_property
 
 
 class GuanInfoService(BaseService):
-    def __init__(self, dbSession, redis, activityId, passportId):
+    def __init__(self, dbSession, redis, activityId, passport):
         self.dbSession = dbSession
         self.redis = redis
         self.activityId = activityId
-        self.passportId = passportId
+        self.passport = passport
+        self.passportId = passport.get('id', 0)
         self.activityRecord = None
         self.reloadActivityRecord()
         super(GuanInfoService, self).__init__(dbSession, redis)
@@ -27,7 +30,11 @@ class GuanInfoService(BaseService):
 
     @lazy_property
     def userRecord(self):
-        return UserModel.getByPassportId(self.dbSession, self.activityRecord.invite_passport_id)
+        if self.opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_INVITE_QUIT]:
+            passportId = self.activityRecord.accept_passport_id
+        else:
+            passportId = self.activityRecord.invite_passport_id
+        return UserModel.getByPassportId(self.dbSession, passportId)
 
     @property
     def timeIcon(self):
@@ -84,6 +91,8 @@ class GuanInfoService(BaseService):
     def opType(self):
         if not self.activityRecord.invite_passport_id:
             return const.GUAN_INFO_OP_TYPE_INVITE
+        elif self.activityRecord.invite_passport_id == self.passportId and self.activityRecord.accept_passport_id:
+            return const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT
         elif self.activityRecord.invite_passport_id == self.passportId:
             return const.GUAN_INFO_OP_TYPE_INVITE_QUIT
         elif not self.activityRecord.accept_passport_id:
@@ -99,7 +108,8 @@ class GuanInfoService(BaseService):
             const.GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
             const.GUAN_INFO_OP_TYPE_INVITE_QUIT: "收回邀请",
             const.GUAN_INFO_OP_TYPE_ACCEPT: "接受邀请",
-            const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT: "取消邀请",
+            const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT: "取消见面",
+            const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT: "取消见面",
         }.get(self.opType, "敬请期待")
 
     @property
@@ -143,5 +153,27 @@ class GuanInfoService(BaseService):
 
     def activityOprete(self, opType):
         """对活动进行操作"""
-        pass  # todo
+        uis = UserInfoService(self.dbSession, self.redis, self.passport)
+        if not uis.userInfoIsFilled:
+            return const.RESP_NEED_FILL_INFO
+        if opType != self.opType:
+            return const.RESP_JOIN_ACTIVITY_FAILED
+        updateParams = {}
+        if opType == const.GUAN_INFO_OP_TYPE_INVITE:
+            updateParams['invite_passport_id'] = self.passportId
+        elif opType == const.GUAN_INFO_OP_TYPE_ACCEPT:
+            updateParams['accept_passport_id'] = self.passportId
+        elif opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT:
+            updateParams['invite_passport_id'] = 0
+        elif opType == const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT:
+            updateParams['accept_passport_id'] = 0
+        elif opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT:
+            updateParams['invite_passport_id'] = self.activityRecord.accept_passport_id
+            updateParams['accept_passport_id'] = 0
+        ActivityModel.updateById(self.dbSession, self.activityId, **updateParams)
+        ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.passportId, opType)
+        if opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT:
+            ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.accept_passport_id,
+                                             const.GUAN_INFO_OP_TYPE_ACCEPT_BECOME_INVITE)
         self.reloadActivityRecord()
+        return const.RESP_OK

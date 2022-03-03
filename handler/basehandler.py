@@ -108,6 +108,7 @@ class BaseHandler(RequestHandler):
         if hasattr(self, '_currentPassport') and self._currentPassport:
             return self._currentPassport
         self._currentPassport = passport.getSession(self.redis, self.accessToken)
+        self._currentPassport['id'] = int(self._currentPassport.get('id', 0))  # redis取出来都是str，这里转一下
         return self._currentPassport
 
     @property

@@ -22,11 +22,26 @@ class UserInfoService(BaseService):
     def userInfo(self):
         return UserModel.getByPassportId(self.dbSession, self.passportId)
 
+    @property
+    def verify(self):
+        return VerifyModel.getByPassportId(self.dbSession, self.passportId)
+
+    @property
+    def isVerified(self):
+        return self.verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES
+
+    @property
+    def infoIsFilled(self):
+        return
+
+    @property
+    def userInfoIsFilled(self):
+        return self.isVerified and self.infoIsFilled
+
     def getWork(self):
-        verify = VerifyModel.getByPassportId(self.dbSession, self.passportId)
         return {
             "desc": "工作认证",
-            "value": "已认证" if verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES else "未认证",
+            "value": "已认证" if self.verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES else "未认证",
         }
 
     def getPhone(self):
