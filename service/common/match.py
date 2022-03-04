@@ -13,7 +13,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     @property
     def sexValue(self):
-        return const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[self.info.sex]
+        return const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[self.info.sex] if self.info.sex != const.MODEL_SEX_UNKNOWN else "未知"
 
     @property
     def birthYearValue(self):
@@ -316,7 +316,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getUpdateParams(self, opType, value):
         updateParams = {}
-        if opType == const.MODEL_USER_OP_TYPE_SEX:
+        if opType == const.MODEL_USER_OP_TYPE_SEX and value != const.MODEL_SEX_UNKNOWN:
             updateParams['sex'] = value
         elif opType == const.MODEL_USER_OP_TYPE_BIRTH_YEAR:
             updateParams['birth_year'] = value
