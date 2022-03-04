@@ -36,6 +36,8 @@ RESP_JOIN_ACTIVITY_FAILED = {'code': 1008, 'errMsg': '参加相亲活动失败'}
 RESP_HAS_ONGOING_ACTIVITY = {'code': 1009, 'errMsg': '您有进行中的相亲，不能参与别的相亲'}
 RESP_HAS_SEND_EMAIL = {'code': 0, 'errMsg': '您已发送过认证邮件，请稍后检查'}
 RESP_SEX_CANOT_EDIT = {'code': 1010, 'errMsg': '不能修改性别，请联系客服'}
+RESP_USER_SEX_FIRST_EDIT = {'code': 1011, 'errMsg': '请先完善个人信息里的性别'}
+RESP_REQUIREMENT_SEX_ERROR = {'code': 1012, 'errMsg': '期望性别不能与自己相同'}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'

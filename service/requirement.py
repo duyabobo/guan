@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 from common.match import MatchHelper
 from model.requirement import RequirementModel
+from model.user import UserModel
 from service import BaseService
+from util import const
 from util.class_helper import lazy_property
 
 
@@ -14,6 +16,10 @@ class RequirementService(BaseService):
         self.passportId = passportId
         self.matchHelper = MatchHelper(self.requirementInfo, isUserNotRequirement=False)
         super(RequirementService, self).__init__(dbSession, redis)
+
+    @lazy_property
+    def userInfo(self):
+        return UserModel.getByPassportId(self.dbSession, self.passportId)
 
     @lazy_property
     def requirementInfo(self):
@@ -39,3 +45,10 @@ class RequirementService(BaseService):
             RequirementModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             self.reloadMatchHelper()
         return self.getRequirementInfo()
+
+    def checkBeforeUpdate(self, opType, value):
+        if opType == const.MODEL_USER_OP_TYPE_SEX and not self.userInfo.sex:
+            return const.RESP_USER_SEX_FIRST_EDIT
+        if opType == const.MODEL_USER_OP_TYPE_SEX and value == self.userInfo.sex:
+            return const.RESP_REQUIREMENT_SEX_ERROR
+        # todo 其他修改限制半年一次修改机会

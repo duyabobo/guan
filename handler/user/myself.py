@@ -17,7 +17,7 @@ class MyselfHandler(BaseHandler):
     @superMonitor
     def put(self, *args, **kwargs):
         opType = self.getRequestParameter('opType', paraType=int)
-        value = self.getRequestParameter('value')
+        value = self.getRequestParameter('value', paraType=int)
 
         uis = UserInfoService(self.dbSession, self.redis, self.currentPassport)
         ret = uis.checkBeforeUpdate(opType, value)
