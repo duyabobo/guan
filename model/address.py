@@ -33,6 +33,10 @@ class AddressModel(BaseModel):
     def getById(cls, dbSession, addressId):
         return dbSession.query(cls).filter(cls.id == addressId, cls.status == const.MODEL_STATUS_YES).first()
 
+    @classmethod
+    def getLastAddress(cls, dbSession):
+        return dbSession.query(cls).filter(cls.status == const.MODEL_STATUS_YES).order_by(cls.id.desc()).first()
+
     @property
     def nameShort(self):
         if len(self.name) <= 6:

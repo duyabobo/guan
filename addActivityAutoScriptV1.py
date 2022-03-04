@@ -1,0 +1,53 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+# 自动添加活动（v1版本）
+# 1，筛选当前是否存在空闲活动，如果不存在就继续。
+# 2，筛选是否有可用的相亲地点，如果存在就继续。
+# 3，判断上一个添加的活动时间是否在周末，是否在早上10点到下午16点之间，如果就时间加上半小时，如果不是就初始化下一个周末的早上十点。
+# 4，添加下一个活动。
+import datetime
+
+from sqlalchemy.orm import sessionmaker
+
+from model.activity import ActivityModel
+from model.address import AddressModel
+from util.database import engine
+
+
+class ActivityAutoCreater(object):
+    def __init__(self):
+        self.dbSession = sessionmaker(bind=engine)()
+
+    def hasFreeActivity(self):
+        return bool(ActivityModel.getLastFreeActivity(self.dbSession))
+
+    def getAvaliableAddress(self):
+        return AddressModel.getLastAddress(self.dbSession)
+
+    def getLastActivity(self):
+        return ActivityModel.getLastActivity(self.dbSession)
+
+    def getNextTime(self):
+        lastActivity = self.getLastActivity()
+        if lastActivity and lastActivity.start_time.weekday() > 4 and lastActivity.start_time.hour < 17:  # 最新的活动是周末
+            nextTime = lastActivity.start_time + datetime.timedelta(minutes=30)
+        else:
+            lastTime = max(datetime.datetime.now(), lastActivity.start_time)
+            targetTime = lastTime + datetime.timedelta(days={0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 1, 6: 6}.get(lastTime.weekday()))
+            nextTime = datetime.datetime(year=targetTime.year, month=targetTime.month, day=targetTime.day, hour=10)
+        return nextTime
+
+    def createActivity(self):
+        if self.hasFreeActivity():
+            return
+        address = self.getAvaliableAddress()
+        if not address:
+            return
+        nextTime = self.getNextTime()
+        ActivityModel.addOne(self.dbSession, address.id, nextTime)
+        return
+
+
+if __name__ == '__main__':
+    aac = ActivityAutoCreater()
+    aac.createActivity()

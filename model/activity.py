@@ -53,3 +53,29 @@ class ActivityModel(BaseModel):
         ).filter(
             cls.start_time > datetime.datetime.now()
         ).first()
+
+    @classmethod
+    def getLastFreeActivity(cls, dbSession):
+        return dbSession.query(cls).filter(
+            cls.start_time > datetime.datetime.now(),
+            cls.invite_passport_id == 0,
+            cls.accept_passport_id == 0,
+            cls.status == const.MODEL_STATUS_YES
+        ).order_by(cls.id.desc()).first()
+
+    @classmethod
+    def getLastActivity(cls, dbSession):
+        return dbSession.query(cls).filter(
+            cls.start_time > datetime.datetime.now(),
+            cls.status == const.MODEL_STATUS_YES
+        ).order_by(cls.id.desc()).first()
+
+    @classmethod
+    def addOne(cls, dbSession, addressId, startTime):
+        record = cls(
+            address_id=addressId,
+            start_time=startTime
+        )
+        dbSession.add(record)
+        dbSession.commit()
+        return record
