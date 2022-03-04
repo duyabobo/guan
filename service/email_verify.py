@@ -6,7 +6,7 @@ from model.verify import VerifyModel
 from service import BaseService
 from util.class_helper import lazy_property
 from util.const import RESP_HAS_EMAIL_VERIFY_RECENTLY, RESP_OK, \
-    RESP_HAS_EMAIL_VERIFY_FAILED, RESP_HAS_EMAIL_IS_NOT_COMPANY, MODEL_WORK_VERIFY_STATUS_NO
+    RESP_HAS_EMAIL_VERIFY_FAILED, RESP_HAS_EMAIL_IS_NOT_COMPANY, MODEL_WORK_VERIFY_STATUS_NO, RESP_HAS_SEND_EMAIL
 from util.mail import send_email_verify
 from util.verify import generate_code
 
@@ -50,11 +50,18 @@ class EmailVerifyService(BaseService):
     def emailIsCompany(self, email):
         return True  # todo 可以不断累积白名单，暂时全部放开
 
+    def hasSendEmailRecently(self, email):
+        if self.redis.get(self.getVerifyCodeKey(email)):
+            return True
+        return False
+
     def sendVerifyEmail(self, email):
         if not self.emailIsCompany(email):
             return RESP_HAS_EMAIL_IS_NOT_COMPANY
         if self.hasVerifiedRecently:
             return RESP_HAS_EMAIL_VERIFY_RECENTLY
+        if self.hasSendEmailRecently(email):
+            return RESP_HAS_SEND_EMAIL
         if self.verifyRecord.work_mail != email and self.verifyRecord.work_verify_status == MODEL_WORK_VERIFY_STATUS_NO:
             VerifyModel.fillWorkMail(self.dbSession, self.passportId, email)
         code = generate_code()
