@@ -183,4 +183,4 @@ class GuanInfoService(BaseService):
             ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.accept_passport_id,
                                              const.GUAN_INFO_OP_TYPE_ACCEPT_BECOME_INVITE)
         self.reloadActivityRecord()
-        return const.RESP_OK  # todo 需要发个小程序推送消息，告知活动规则，并定时任务提前提醒
+        return const.RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI

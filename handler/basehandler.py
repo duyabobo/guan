@@ -15,7 +15,7 @@ from tornado.web import RequestHandler
 import util.config
 from ral import passport
 from util.const import EXCHANGE_NAME
-from util.const import RESP_OK
+from util.const import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.monitor import superMonitor
 
 
@@ -173,7 +173,7 @@ class BaseHandler(RequestHandler):
         此方法将做如下操作: commit + close
         :return:
         """
-        if respNormal['code'] == 0:
+        if respNormal['code'] == RESP_SUCCESS_CODE or respNormal['code'] > RESP_SUCCESS_WITH_NOTI_MIN_CODE:
             self.dbSession.commit()
         else:
             self.dbSession.rollback()

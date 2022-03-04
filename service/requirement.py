@@ -44,7 +44,7 @@ class RequirementService(BaseService):
         if updateParams:
             RequirementModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             self.reloadMatchHelper()
-        return self.getRequirementInfo()
+        return self.getRequirementInfo()  # todo 可以扩展需要支持返回成功+提醒的code码
 
     def checkBeforeUpdate(self, opType, value):
         if opType == const.MODEL_USER_OP_TYPE_SEX and not self.userInfo.sex:

@@ -24,6 +24,7 @@ MAX_MONTH_PAY = 100000
 MOBILE_SECRET = 'matchispursued'
 
 # response
+RESP_SUCCESS_CODE = 0
 RESP_OK = {'code': 0}
 RESP_TOP_MONITOR_ERROR = {'code': 1001, 'errMsg': '服务器错误'}
 RESP_NEED_LOGIN = {'code': 1002, 'errMsg': '需要登录'}
@@ -38,6 +39,10 @@ RESP_HAS_SEND_EMAIL = {'code': 0, 'errMsg': '您已发送过认证邮件，请�
 RESP_SEX_CANOT_EDIT = {'code': 1010, 'errMsg': '不能修改性别，请联系客服'}
 RESP_USER_SEX_FIRST_EDIT = {'code': 1011, 'errMsg': '请先完善个人信息里的性别'}
 RESP_REQUIREMENT_SEX_ERROR = {'code': 1012, 'errMsg': '期望性别不能与自己相同'}
+RESP_SUCCESS_WITH_NOTI_MIN_CODE = 9000
+RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI = {'code': 9001, 'errMsg': 'tobefilled'}
+RESP_USER_INFO_UPDATE_SUCCESS_WITH_NOTI = {'code': 9002, 'errMsg': 'tobefilled'}
+RESP_REQUIREMENT_UPDATE_SUCCESS_WITH_NOTI = {'code': 9003, 'errMsg': 'tobefilled'}
 
 # rabbitmq
 EXCHANGE_NAME = 'offline_script'
