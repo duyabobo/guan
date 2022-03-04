@@ -122,9 +122,9 @@ class GuanInfoService(BaseService):
             matchHelper.sexValue,
             "出生于%d年" % matchHelper.birthYearValue,
             matchHelper.martialStatus,
-            "身高%dcm" % matchHelper.heightValue,
-            "体重%dkg" % matchHelper.weightValue,
-            "月收入(税前)%d" % matchHelper.monthPayValue,
+            "身高%scm" % matchHelper.heightValue,
+            "体重%skg" % matchHelper.weightValue,
+            "月收入(税前)%s元" % matchHelper.monthPayValue,
             matchHelper.education,
         ]
         return [i for i in allInfos if i]
