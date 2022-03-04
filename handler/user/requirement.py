@@ -16,7 +16,7 @@ class RequirementHandler(BaseHandler):
     @superMonitor
     def put(self, *args, **kwargs):
         opType = self.getRequestParameter('opType', paraType=int)
-        value = self.getRequestParameter('value', paraType=int)
+        value = self.getRequestParameter('value')
 
         ris = RequirementService(self.dbSession, self.redis, self.currentPassportId)
         ret = ris.checkBeforeUpdate(opType, value)

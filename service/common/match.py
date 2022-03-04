@@ -316,7 +316,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getUpdateParams(self, opType, value):
         updateParams = {}
-        if opType == const.MODEL_USER_OP_TYPE_SEX and value != const.MODEL_SEX_UNKNOWN:
+        if opType == const.MODEL_USER_OP_TYPE_SEX and int(value) != const.MODEL_SEX_UNKNOWN:
             updateParams['sex'] = value
         elif opType == const.MODEL_USER_OP_TYPE_BIRTH_YEAR:
             updateParams['birth_year'] = value

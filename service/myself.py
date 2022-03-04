@@ -77,6 +77,6 @@ class UserInfoService(BaseService):
         return self.getMyselfInfo()
 
     def checkBeforeUpdate(self, opType, value):
-        if opType == const.MODEL_USER_OP_TYPE_SEX and self.userInfo.sex and self.userInfo.sex != value:
+        if opType == const.MODEL_USER_OP_TYPE_SEX and self.userInfo.sex and self.userInfo.sex != int(value):
             return const.RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会

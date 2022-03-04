@@ -49,6 +49,6 @@ class RequirementService(BaseService):
     def checkBeforeUpdate(self, opType, value):
         if opType == const.MODEL_USER_OP_TYPE_SEX and not self.userInfo.sex:
             return const.RESP_USER_SEX_FIRST_EDIT
-        if opType == const.MODEL_USER_OP_TYPE_SEX and value == self.userInfo.sex:
+        if opType == const.MODEL_USER_OP_TYPE_SEX and int(value) == self.userInfo.sex:
             return const.RESP_REQUIREMENT_SEX_ERROR
         # todo 其他修改限制半年一次修改机会
