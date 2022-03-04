@@ -75,3 +75,8 @@ class UserInfoService(BaseService):
             # todo 自动填充一下需求信息
             self.reloadMatchHelper()
         return self.getMyselfInfo()
+
+    def checkBeforeUpdate(self, opType, value):
+        if opType == const.MODEL_USER_OP_TYPE_SEX and self.userInfo.sex and self.userInfo.sex != value:
+            return const.RESP_SEX_CANOT_EDIT
+        # todo 其他修改限制半年一次修改机会
