@@ -31,6 +31,10 @@ class UserModel(BaseModel):
         return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == const.MODEL_STATUS_YES).first()
 
     @classmethod
+    def getByPassportIds(cls, dbSession, passportIds):
+        return dbSession.query(cls).filter(cls.passport_id.in_(passportIds), cls.status == const.MODEL_STATUS_YES)
+
+    @classmethod
     def addByPassportId(cls, dbSession, passportId):
         user = cls(
             passport_id=passportId,
