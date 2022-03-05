@@ -32,13 +32,13 @@ class RequirementService(BaseService):
     def getRequirementInfo(self):
         return {
             "requirementList": [
-                self.matchHelper.getSexInfo(),
-                self.matchHelper.getBirthYearPeriod(),
+                # self.matchHelper.getSexInfo(),
+                # self.matchHelper.getBirthYearPeriod(),
                 self.matchHelper.getHeightPeriod(),
                 self.matchHelper.getWeightPeriod(),
-                self.matchHelper.getMonthPayPeriod(),
-                self.matchHelper.getMartialStatusPeriod(),
-                self.matchHelper.getEducationPeriod(),
+                # self.matchHelper.getMonthPayPeriod(),
+                # self.matchHelper.getMartialStatusPeriod(),
+                # self.matchHelper.getEducationPeriod(),
             ],
             "columnChangeTypeIndexMap": {  # 给requirementList的每个元素一个对应序号
                 "sex": 0,

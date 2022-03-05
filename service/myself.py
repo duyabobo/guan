@@ -60,12 +60,12 @@ class UserInfoService(BaseService):
         return {
             "informationList": [
                 self.matchHelper.getSexInfo(),
-                self.matchHelper.getBirthYearInfo(),
+                # self.matchHelper.getBirthYearInfo(),
                 self.matchHelper.getHeight(),
                 self.matchHelper.getWeight(),  # demo
-                self.matchHelper.getMonthPay(),
-                self.matchHelper.getMartialStatus(),
-                self.matchHelper.getEducation(),
+                # self.matchHelper.getMonthPay(),
+                # self.matchHelper.getMartialStatus(),
+                # self.matchHelper.getEducation(),
             ],
             "columnChangeTypeIndexMap": {  # 给informationList的每个元素一个对应序号
                 "sex": 0,

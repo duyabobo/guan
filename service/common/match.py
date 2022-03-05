@@ -283,7 +283,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getBirthYearInfo(self):
         return {
-            "desc": "出生年份",
+            "desc": "周5是否有时间",
             "bindChange": "updateBirthYear",
             "pickerType": const.PICKER_TYPE_SELECTOR,
             "value": self.birthYearValue or "",
@@ -293,7 +293,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getHeight(self):
         return {
-            "desc": "身高(cm)",
+            "desc": "周六是否有时间",
             "bindChange": "updateHeight",
             "pickerType": const.PICKER_TYPE_SELECTOR,
             "value": self.heightValue or "",
@@ -303,7 +303,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getWeight(self):
         return {
-            "desc": "体重(kg)",
+            "desc": "周日是否有时间",
             "bindChange": "updateWeight",
             "pickerType": const.PICKER_TYPE_SELECTOR,
             "value": self.weightValue or "",
@@ -365,7 +365,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getBirthYearPeriod(self):
         return {
-            "desc": "出生年份区间",   
+            "desc": "周五上午下午",
             "bindChange": "updateBirthYearPeriod",   
             "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,  
             "bindColumnChange": "birthYearPeriodColumnChange",  
@@ -377,7 +377,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getWeightPeriod(self):
         return {
-            "desc": "体重区间(kg)",
+            "desc": "周日时间段",
             "bindChange": "updateWeightPeriod",   
             "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,  
             "bindColumnChange": "weightPeriodColumnChange",  
@@ -389,7 +389,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getHeightPeriod(self):
         return {
-            "desc": "身高区间(cm)",
+            "desc": "周六时间段",
             "bindChange": "updateHeightPeriod",   
             "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,  
             "bindColumnChange": "heightPeriodColumnChange",  

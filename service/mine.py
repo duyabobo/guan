@@ -32,7 +32,7 @@ class MineService(BaseService):
                     "id": 2,
                     "index": 1,
                     "url": const.MYREQUIREMENT_PAGE,
-                    "name": '择偶期望',
+                    "name": '详细时间',
                     "needLogin": True,
                     "openType": '',
                     "bindFuncName": 'clickMine'
