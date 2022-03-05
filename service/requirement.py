@@ -32,30 +32,35 @@ class RequirementService(BaseService):
     def getRequirementInfo(self):
         return {
             "requirementList": [
-                self.matchHelper.getWeight(),
-                self.matchHelper.getWeight()
+                self.matchHelper.getSexInfo(),
+                self.matchHelper.getBirthYearPeriod(),
+                self.matchHelper.getHeightPeriod(),
+                self.matchHelper.getWeightPeriod(),
+                self.matchHelper.getMonthPayPeriod(),
+                self.matchHelper.getMartialStatusPeriod(),
+                self.matchHelper.getEducationPeriod(),
             ],
             "columnChangeTypeIndexMap": {  # 给requirementList的每个元素一个对应序号
-                "weight": 0,
+                "sex": 0,
+                "birthYearPeriod": 1,
+                "heightPeriod": 2,
+                "weightPeriod": 3,
+                "monthPayPeriod": 4,
+                "martialStatus": 5,
+                "educationPeriod": 6,
             },
-            "sex": self.matchHelper.getSexInfo(),
-            "birthYear": self.matchHelper.getRequirementBirthYearInfo(),
-            "weight": self.matchHelper.getRequirementWeight(),
-            "height": self.matchHelper.getRequirementHeight(),
-            "monthPay": self.matchHelper.getRequirementMonthPay(),
-            "otherRequirementList": self.matchHelper.getOtherInfoList(),
         }
 
-    def updateRequirementInfo(self, opType, value):
-        updateParams = self.matchHelper.getUpdateParams(opType, value)
+    def updateRequirementInfo(self, opType, valueIndex):
+        updateParams = self.matchHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
             RequirementModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             self.reloadMatchHelper()
         return self.getRequirementInfo()  # todo 可以扩展需要支持返回成功+提醒的code码
 
-    def checkBeforeUpdate(self, opType, value):
+    def checkBeforeUpdate(self, opType, valueIndex):
         if opType == const.MODEL_USER_OP_TYPE_SEX and not self.userInfo.sex:
             return const.RESP_USER_SEX_FIRST_EDIT
-        if opType == const.MODEL_USER_OP_TYPE_SEX and int(value) == self.userInfo.sex:
+        if opType == const.MODEL_USER_OP_TYPE_SEX and int(valueIndex) == const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST.index(self.userInfo.sex):
             return const.RESP_REQUIREMENT_SEX_ERROR
         # todo 其他修改限制半年一次修改机会

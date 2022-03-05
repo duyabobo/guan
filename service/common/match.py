@@ -37,6 +37,42 @@ class MatchHelper(object):  # todo 拆分成两个helper
             return -1
 
     @property
+    def educationMinValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.min_education
+        else:
+            raise Exception("min_education 无法获取")
+
+    @property
+    def educationMaxValue(self):
+        if not self.isUserNotRequirement:
+            return self.info.max_education
+        else:
+            raise Exception("max_education 无法获取")
+
+    @property
+    def selectEducationMinIndex(self):
+        if not self.isUserNotRequirement:
+            defaultMin = self.educationMinValue
+            try:
+                return const.MODEL_USER_OP_TYPE_EDUCATION_PERIOD_CHOICE_LIST.index(defaultMin)
+            except:
+                return 0
+        else:
+            raise Exception("min_education 无法获取")
+
+    @property
+    def selectEducationMaxIndex(self):
+        if not self.isUserNotRequirement:
+            defaultMax = self.educationMaxValue
+            try:
+                return const.MODEL_USER_OP_TYPE_EDUCATION_CHOICE_LIST.index(defaultMax)
+            except:
+                return 0
+        else:
+            raise Exception("min_education 无法获取")
+
+    @property
     def birthYearMinValue(self):
         if not self.isUserNotRequirement:
             return self.info.min_birth_year
@@ -44,11 +80,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("min_birth_year 无法获取")
 
     @property
-    def defaultBirthYearMinIndex(self):
+    def selectBirthYearMinIndex(self):
         if not self.isUserNotRequirement:
             defaultMin = self.birthYearMinValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
             try:
-                return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY.index(defaultMin)
+                return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST.index(defaultMin)
             except:
                 return 0
         else:
@@ -62,11 +98,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("max_birth_year 无法获取")
 
     @property
-    def defaultBirthYearMaxIndex(self):
+    def selectBirthYearMaxIndex(self):
         if not self.isUserNotRequirement:
             defaultMax = self.birthYearMaxValue or const.MODEL_USER_OP_TYPE_DEFAULT_BIRTH_YEAR  # todo 可以和用户实际出生日期联通
             try:
-                return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY.index(defaultMax)
+                return const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST.index(defaultMax)
             except:
                 return 0
         else:
@@ -80,11 +116,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("min_weight 无法获取")
 
     @property
-    def defaultWeightMinIndex(self):
+    def selectWeightMinIndex(self):
         if not self.isUserNotRequirement:
             minWeight = self.weightMinValue or const.GOOD_WEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(minWeight)
+                return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST.index(minWeight)
             except:
                 return 0
         else:
@@ -98,11 +134,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("max_weight 无法获取")
 
     @property
-    def defaultWeightMaxIndex(self):
+    def selectWeightMaxIndex(self):
         if not self.isUserNotRequirement:
             maxWeight = self.weightMaxValue or const.GOOD_WEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY.index(maxWeight)
+                return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST.index(maxWeight)
             except:
                 return 0
         else:
@@ -116,11 +152,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("min_height 无法获取")
 
     @property
-    def defaultHeightMinIndex(self):
+    def selectHeightMinIndex(self):
         if not self.isUserNotRequirement:
             minHeight = self.heightMinValue or const.GOOD_HEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY.index(minHeight)
+                return const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_CHOICE_LIST.index(minHeight)
             except:
                 return 0
         else:
@@ -134,11 +170,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("max_height 无法获取")
 
     @property
-    def defaultHeightMaxIndex(self):
+    def selectHeightMaxIndex(self):
         if not self.isUserNotRequirement:
             maxValue = self.heightMaxValue or const.GOOD_HEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY.index(maxValue)
+                return const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_CHOICE_LIST.index(maxValue)
             except:
                 return 0
         else:
@@ -152,11 +188,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("min_month_pay 无法获取")
 
     @property
-    def defaultMonthPayMinIndex(self):
+    def selectMonthPayMinIndex(self):
         if not self.isUserNotRequirement:
             minMonthPay = self.monthPayMinValue or const.GOOD_MONTH_PAY
             try:
-                return const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY.index(minMonthPay)
+                return const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_CHOICE_LIST.index(minMonthPay)
             except:
                 return 0
         else:
@@ -170,11 +206,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             raise Exception("min_month_pay 无法获取")
 
     @property
-    def defaultMonthPayMaxIndex(self):
+    def selectMonthPayMaxIndex(self):
         if not self.isUserNotRequirement:
             maxValue = self.monthPayMaxValue or const.GOOD_MONTH_PAY
             try:
-                return const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY.index(maxValue)
+                return const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_CHOICE_LIST.index(maxValue)
             except:
                 return 0
         else:
@@ -255,16 +291,6 @@ class MatchHelper(object):  # todo 拆分成两个helper
             "choiceList": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST,
         }
 
-    def getRequirementBirthYearInfo(self):
-        return {
-            "opType": const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD,
-            "desc": "出生年份区间",
-            "fromValue": self.birthYearMinValue,
-            "toValue": self.birthYearMaxValue,
-            "fromAndToArray": [const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY],
-            "fromAndToIndex": [self.defaultBirthYearMinIndex, self.defaultBirthYearMaxIndex],
-        }
-
     def getHeight(self):
         return {
             "desc": "身高(cm)",
@@ -315,53 +341,74 @@ class MatchHelper(object):  # todo 拆分成两个helper
             "choiceList": const.MODEL_USER_OP_TYPE_EDUCATION_CHOICE_LIST,
         }
 
-    # def getWeight(self):
-    #     # 选项按钮就是类别选择按钮列表
-    #     # 选择器就是点击某个选项按钮后，页面底部弹出的选择器
-    #     return {
-    #         "desc": "体重(kg)",  # 选项按钮左侧描述文案
-    #         "bindChange": "updateWeight",  # 选择器被选择内容后，绑定的事件处理函数
-    #         "pickerType": const.PICKER_TYPE_SELECTOR,  # 选择器类型：0:selector/1:multiSelector
-    #         # 下面是selector要用到的字段，只有当pickerType=selector时才有意义
-    #         # "value": self.weightValue or "",  # 选项按钮右侧展示的值（可读字符串）
-    #         # "selectValueIndex": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX,  # 选择器选中的序号
-    #         # "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,  # 选择器展示的值列表
-    #         # 下面是multiSelector用到的字段，只有当pickerType=multiSelector时才有意义
-    #         "bindColumnChange": "weightColumnChange",  # 某一列的选中内容发生变化后，触发的时间处理函数
-    #         "fromValue": self.weightMinValue,  # 选项按钮右侧展示的区间开始值（可读字符串）
-    #         "toValue": self.weightMaxValue,  # 选项按钮右侧展示的区间结束值（可读字符串）
-    #         "fromAndToSelectValueIndex": [self.defaultWeightMinIndex, self.defaultWeightMaxIndex],  # 选择器多列（两列）的选中的序号
-    #         "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY],  # 选择器展示的多列（两列）可选值列表
-    #     }
-
-    def getRequirementWeight(self):
+    def getMartialStatusPeriod(self):
         return {
-            "opType": const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD,
-            "desc": "体重(kg)",
+            "desc": "婚姻",
+            "bindChange": "updateMartialStatus",
+            "pickerType": const.PICKER_TYPE_SELECTOR,
+            "value": self.martialStatusValue,
+            "selectValueIndex": self.martialStatusIndex if self.martialStatusIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_MARTIAL_STATUS_INDEX,
+            "choiceList": const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_PERIOD_CHOICE_LIST,
+        }
+
+    def getEducationPeriod(self):
+        return {
+            "desc": "学历区间",
+            "bindChange": "updateEducationPeriod",
+            "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,
+            "bindColumnChange": "educationPeriodColumnChange",
+            "fromValue": self.educationMinValue,
+            "toValue": self.educationMaxValue,
+            "fromAndToSelectValueIndex": [self.selectEducationMinIndex, self.selectEducationMaxIndex],
+            "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_EDUCATION_PERIOD_CHOICE_LIST, const.MODEL_USER_OP_TYPE_EDUCATION_PERIOD_CHOICE_LIST],
+        }
+
+    def getBirthYearPeriod(self):
+        return {
+            "desc": "出生年份区间",   
+            "bindChange": "updateBirthYearPeriod",   
+            "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,  
+            "bindColumnChange": "birthYearPeriodColumnChange",  
+            "fromValue": self.birthYearMinValue,   
+            "toValue": self.birthYearMaxValue,  
+            "fromAndToSelectValueIndex": [self.selectBirthYearMinIndex, self.selectBirthYearMaxIndex],   
+            "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST, const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST],
+        }
+
+    def getWeightPeriod(self):
+        return {
+            "desc": "体重区间(kg)",
+            "bindChange": "updateWeightPeriod",   
+            "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,  
+            "bindColumnChange": "weightPeriodColumnChange",  
             "fromValue": self.weightMinValue,
             "toValue": self.weightMaxValue,
-            "fromAndToArray": [const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY],
-            "fromAndToIndex": [self.defaultWeightMinIndex, self.defaultWeightMaxIndex],
+            "fromAndToSelectValueIndex": [self.selectWeightMinIndex, self.selectWeightMaxIndex],
+            "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_CHOICE_LIST, const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_CHOICE_LIST],
         }
 
-    def getRequirementHeight(self):
+    def getHeightPeriod(self):
         return {
-            "opType": const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD,
-            "desc": "身高(cm)",
+            "desc": "身高区间(cm)",
+            "bindChange": "updateHeightPeriod",   
+            "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,  
+            "bindColumnChange": "heightPeriodColumnChange",  
             "fromValue": self.heightMinValue,
             "toValue": self.heightMaxValue,
-            "fromAndToArray": [const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY],
-            "fromAndToIndex": [self.defaultHeightMinIndex, self.defaultHeightMaxIndex],
+            "fromAndToSelectValueIndex": [self.selectHeightMinIndex, self.selectHeightMaxIndex],
+            "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_CHOICE_LIST, const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_CHOICE_LIST],
         }
 
-    def getRequirementMonthPay(self):
+    def getMonthPayPeriod(self):
         return {
-            "opType": const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD,
-            "desc": "税前月收入(元)",
+            "desc": "税前月收入区间(元)",
+            "bindChange": "updateMonthPayPeriod",
+            "pickerType": const.PICKER_TYPE_MULTI_SELECTOR,
+            "bindColumnChange": "monthPayPeriodColumnChange",
             "fromValue": self.monthPayMinValue,
             "toValue": self.monthPayMaxValue,
-            "fromAndToArray": [const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY],
-            "fromAndToIndex": [self.defaultMonthPayMinIndex, self.defaultMonthPayMaxIndex],
+            "fromAndToSelectValueIndex": [self.selectMonthPayMinIndex, self.selectMonthPayMaxIndex],
+            "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_CHOICE_LIST, const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_CHOICE_LIST],
         }
 
     def getUpdateParams(self, opType, valueIndex):
@@ -382,18 +429,22 @@ class MatchHelper(object):  # todo 拆分成两个helper
             updateParams['education'] = const.MODEL_USER_OP_TYPE_EDUCATION_CHOICE_LIST[int(valueIndex)]
         elif opType == const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY[value[0]]
-            updateParams['max_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD_ARRAY[value[1]]
+            updateParams['min_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST[value[0]]
+            updateParams['max_birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST[value[1]]
         elif opType == const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY[value[0]]
-            updateParams['max_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY[value[1]]
+            updateParams['min_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_CHOICE_LIST[value[0]]
+            updateParams['max_weight'] = const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_CHOICE_LIST[value[1]]
         elif opType == const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY[value[0]]
-            updateParams['max_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_ARRAY[value[1]]
+            updateParams['min_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_CHOICE_LIST[value[0]]
+            updateParams['max_height'] = const.MODEL_USER_OP_TYPE_HEIGHT_PERIOD_CHOICE_LIST[value[1]]
         elif opType == const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY[value[0]]
-            updateParams['max_month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_ARRAY[value[1]]
+            updateParams['min_month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_CHOICE_LIST[value[0]]
+            updateParams['max_month_pay'] = const.MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD_CHOICE_LIST[value[1]]
+        elif opType == const.MODEL_USER_OP_TYPE_EDUCATION_PERIOD:
+            value = json.loads(valueIndex)
+            updateParams['min_education'] = const.MODEL_USER_OP_TYPE_EDUCATION_PERIOD_CHOICE_LIST[value[0]]
+            updateParams['max_education'] = const.MODEL_USER_OP_TYPE_EDUCATION_PERIOD_CHOICE_LIST[value[1]]
         return updateParams
