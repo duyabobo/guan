@@ -243,12 +243,22 @@ class MatchHelper(object):  # todo 拆分成两个helper
         }
 
     def getWeight(self):
+        # 选项按钮就是类别选择按钮列表
+        # 选择器就是点击某个选项按钮后，页面底部弹出的选择器
         return {
-            "opType": const.MODEL_USER_OP_TYPE_WEIGHT,
-            "desc": "体重(kg)",
-            "value": self.weightValue or "",
-            "defaultValue": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX,
-            "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,
+            "desc": "体重(kg)",  # 选项按钮左侧描述文案
+            "bindChange": "updateWeight",  # 选择器被选择内容后，绑定的事件处理函数
+            "pickerType": 1,  # 选择器类型：0:selector/1:multiSelector
+            # 下面是selector要用到的字段，只有当pickerType=selector时才有意义
+            # "value": self.weightValue or "",  # 选项按钮右侧展示的值（可读字符串）
+            # "selectValueIndex": self.weightIndex if self.weightIndex > 0 else const.MODEL_USER_OP_TYPE_DEFAULT_WEIGHT_INDEX,  # 选择器选中的序号
+            # "choiceList": const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST,  # 选择器展示的值列表
+            # 下面是multiSelector用到的字段，只有当pickerType=multiSelector时才有意义
+            "bindColumnChange": "weightColumnChange",  # 某一列的选中内容发生变化后，触发的时间处理函数
+            "fromValue": self.weightMinValue,  # 选项按钮右侧展示的区间开始值（可读字符串）
+            "toValue": self.weightMaxValue,  # 选项按钮右侧展示的区间结束值（可读字符串）
+            "fromAndToSelectValueIndex": [self.defaultWeightMinIndex, self.defaultWeightMaxIndex],  # 选择器多列（两列）的选中的序号
+            "fromAndToChoiceList": [const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY, const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_ARRAY],  # 选择器展示的多列（两列）可选值列表
         }
 
     def getRequirementWeight(self):

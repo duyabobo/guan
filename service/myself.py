@@ -58,14 +58,18 @@ class UserInfoService(BaseService):
 
     def getMyselfInfo(self):
         return {
-            "phoneVerify": self.getPhone(),
+            "informationList": [
+                self.matchHelper.getWeight(),
+                self.matchHelper.getWeight()
+            ],
+            # "phoneVerify": self.getPhone(),
             "workVerify": self.getWork(),
-            "sex": self.matchHelper.getSexInfo(),
-            "birthYear": self.matchHelper.getBirthYearInfo(),
-            "weight": self.matchHelper.getWeight(),
-            "monthPay": self.matchHelper.getMonthPay(),
-            "height": self.matchHelper.getHeight(),
-            "otherInfoList": self.matchHelper.getOtherInfoList(),
+            # "sex": self.matchHelper.getSexInfo(),
+            # "birthYear": self.matchHelper.getBirthYearInfo(),
+            # "weight": self.matchHelper.getWeight(),
+            # "monthPay": self.matchHelper.getMonthPay(),
+            # "height": self.matchHelper.getHeight(),
+            # "otherInfoList": self.matchHelper.getOtherInfoList(),
         }
 
     def updateMyselfInfo(self, opType, value):
