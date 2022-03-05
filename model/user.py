@@ -21,7 +21,7 @@ class UserModel(BaseModel):
     height = Column(String, default="")  # 身高(厘米-厘米)
     weight = Column(String, default="")  # 体重(公斤-公斤)
     month_pay = Column(String, default="")  # 月收入(元-元)
-    education = Column(String, default="")  # 学历枚举
+    education = Column(String, default="未知")  # 学历枚举
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
