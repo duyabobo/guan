@@ -59,7 +59,7 @@ class RequirementService(BaseService):
         return self.getRequirementInfo()  # todo 可以扩展需要支持返回成功+提醒的code码
 
     def checkBeforeUpdate(self, opType, valueIndex):
-        if opType == const.MODEL_USER_OP_TYPE_SEX and not self.userInfo.sex:
+        if opType == const.MODEL_USER_OP_TYPE_SEX and self.userInfo.sex == const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[const.MODEL_USER_OP_TYPE_DEFAULT_SEX_INDEX]:
             return const.RESP_USER_SEX_FIRST_EDIT
         if opType == const.MODEL_USER_OP_TYPE_SEX and int(valueIndex) == const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST.index(self.userInfo.sex):
             return const.RESP_REQUIREMENT_SEX_ERROR

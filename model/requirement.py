@@ -21,11 +21,11 @@ class RequirementModel(BaseModel):
     max_weight = Column(Integer, default=0)  # 最大体重(kg)
     min_height = Column(Integer, default=0)  # 最小身高(cm)
     max_height = Column(Integer, default=0)  # 最大身高(cm)
-    martial_status = Column(String, default='未知')  # 婚姻现状：未知，未婚，离异
+    martial_status = Column(String, default='不限')  # 婚姻现状：不限，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
-    min_education = Column(String, default='未知')  # 最低学历
-    max_education = Column(String, default='未知')  # 最高学历
+    min_education = Column(String, default='不限')  # 最低学历
+    max_education = Column(String, default='不限')  # 最高学历
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
