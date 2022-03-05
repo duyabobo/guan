@@ -35,7 +35,7 @@ class RequirementService(BaseService):
                 self.matchHelper.getWeight(),
                 self.matchHelper.getWeight()
             ],
-            "columnChangeTypeIndexMap": {  # 多列选择器的单列发生变化，选择器类别对应requirementList的序号下标
+            "columnChangeTypeIndexMap": {  # 给requirementList的每个元素一个对应序号
                 "weight": 0,
             },
             "sex": self.matchHelper.getSexInfo(),

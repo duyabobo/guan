@@ -121,11 +121,11 @@ class GuanInfoService(BaseService):
         allInfos = [
             matchHelper.sexValue,
             "出生于%d年" % matchHelper.birthYearValue,
-            matchHelper.martialStatus,
+            matchHelper.martialStatusValue,
             "身高%scm" % matchHelper.heightValue,
             "体重%skg" % matchHelper.weightValue,
             "月收入(税前)%s元" % matchHelper.monthPayValue,
-            matchHelper.education,
+            matchHelper.educationValue,
         ]
         return [i for i in allInfos if i]
     

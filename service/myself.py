@@ -59,28 +59,37 @@ class UserInfoService(BaseService):
     def getMyselfInfo(self):
         return {
             "informationList": [
-                self.matchHelper.getWeight(),
-                self.matchHelper.getWeight()
+                self.matchHelper.getSexInfo(),
+                self.matchHelper.getBirthYearInfo(),
+                self.matchHelper.getHeight(),
+                self.matchHelper.getWeight(),  # demo
+                self.matchHelper.getMonthPay(),
+                self.matchHelper.getMartialStatus(),
+                self.matchHelper.getEducation(),
             ],
-            # "phoneVerify": self.getPhone(),
+            "columnChangeTypeIndexMap": {  # 给informationList的每个元素一个对应序号
+                "sex": 0,
+                "birthYear": 1,
+                "height": 2,
+                "weight": 3,
+                "monthPay": 4,
+                "martialStatus": 5,
+                "education": 6,
+            },
             "workVerify": self.getWork(),
-            # "sex": self.matchHelper.getSexInfo(),
-            # "birthYear": self.matchHelper.getBirthYearInfo(),
-            # "weight": self.matchHelper.getWeight(),
-            # "monthPay": self.matchHelper.getMonthPay(),
-            # "height": self.matchHelper.getHeight(),
-            # "otherInfoList": self.matchHelper.getOtherInfoList(),
         }
 
-    def updateMyselfInfo(self, opType, value):
-        updateParams = self.matchHelper.getUpdateParams(opType, value)
+    def updateMyselfInfo(self, opType, valueIndex):
+        updateParams = self.matchHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
             UserModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             # todo 自动填充一下需求信息
             self.reloadMatchHelper()
         return self.getMyselfInfo()
 
-    def checkBeforeUpdate(self, opType, value):
-        if opType == const.MODEL_USER_OP_TYPE_SEX and self.userInfo.sex and self.userInfo.sex != int(value):
+    def checkBeforeUpdate(self, opType, valueIndex):
+        if opType == const.MODEL_USER_OP_TYPE_SEX and \
+                self.userInfo.sex != const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[const.MODEL_USER_OP_TYPE_DEFAULT_SEX_INDEX] and\
+                self.userInfo.sex != const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[int(valueIndex)]:
             return const.RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会
