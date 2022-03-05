@@ -14,14 +14,14 @@ class RequirementModel(BaseModel):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer)  # passport_id
-    sex = Column(String, default='')  # 性别：MODEL_SEX_ENUMERATE
+    sex = Column(String, default='未知')  # 性别：MODEL_SEX_ENUMERATE
     min_birth_year = Column(Integer, default=0)  # 最小出生年份
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
     min_weight = Column(Integer, default=0)  # 最小体重(kg)
     max_weight = Column(Integer, default=0)  # 最大体重(kg)
     min_height = Column(Integer, default=0)  # 最小身高(cm)
     max_height = Column(Integer, default=0)  # 最大身高(cm)
-    martial_status = Column(String, default=0)  # 婚姻现状：未知，未婚，离异
+    martial_status = Column(String, default='未知')  # 婚姻现状：未知，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_education = Column(String, default='未知')  # 最低学历
