@@ -120,7 +120,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
         if not self.isUserNotRequirement:
             minWeight = self.weightMinValue or const.GOOD_WEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST.index(minWeight)
+                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_CHOICE_LIST.index(minWeight)
             except:
                 return 0
         else:
@@ -138,7 +138,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
         if not self.isUserNotRequirement:
             maxWeight = self.weightMaxValue or const.GOOD_WEIGHT
             try:
-                return const.MODEL_USER_OP_TYPE_WEIGHT_CHOICE_LIST.index(maxWeight)
+                return const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD_CHOICE_LIST.index(maxWeight)
             except:
                 return 0
         else:
