@@ -418,7 +418,8 @@ class MatchHelper(object):  # todo 拆分成两个helper
         elif opType == const.MODEL_USER_OP_TYPE_BIRTH_YEAR:
             updateParams['birth_year'] = const.MODEL_USER_OP_TYPE_BIRTH_YEAR_CHOICE_LIST[int(valueIndex)]
         elif opType == const.MODEL_USER_OP_TYPE_MARTIAL_STATUS:
-            updateParams['martial_status'] = const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST[int(valueIndex)]
+            choiceList = const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_CHOICE_LIST if self.isUserNotRequirement else const.MODEL_USER_OP_TYPE_MARTIAL_STATUS_PERIOD_CHOICE_LIST
+            updateParams['martial_status'] = choiceList[int(valueIndex)]
         elif opType == const.MODEL_USER_OP_TYPE_HEIGHT:
             updateParams['height'] = const.MODEL_USER_OP_TYPE_HEIGHT_CHOICE_LIST[int(valueIndex)]
         elif opType == const.MODEL_USER_OP_TYPE_WEIGHT:
