@@ -134,9 +134,7 @@ class GuanInfoService(BaseService):
             "img": self.img,
             "address": self.address,
             "addressDesc": self.addressDesc,
-            "addressInfos": [],  # todo
             "time": self.time,
-            "timeInfos": [],  # todo
             "timeDesc": self.timeDesc,
             "guanId": self.activityId,
             "peopleInfos": self.peopleInfos,
