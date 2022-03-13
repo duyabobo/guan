@@ -155,24 +155,19 @@ class GuanInfoService(BaseService):
         if opType != self.opType:
             return const.RESP_JOIN_ACTIVITY_FAILED
         if self.hasOngoingActivity and \
-                opType in [const.GUAN_INFO_OP_TYPE_JOIN, const.GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
+                opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
             return const.RESP_HAS_ONGOING_ACTIVITY
+
+        if opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_JOIN]:
+            passportId = self.passportId
+        else:
+            passportId = 0
         updateParams = {}
-        if opType == const.GUAN_INFO_OP_TYPE_JOIN:
-            updateParams['girl_passport_id'] = self.passportId
-        elif opType == const.GUAN_INFO_OP_TYPE_JOIN:
-            updateParams['boy_passport_id'] = self.passportId
-        elif opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT:
-            updateParams['girl_passport_id'] = 0
-        elif opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT:
-            updateParams['boy_passport_id'] = 0
-        elif opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT_AFTER_ACCEPT:
-            updateParams['girl_passport_id'] = self.activityRecord.boy_passport_id
-            updateParams['boy_passport_id'] = 0
+        if uis.userInfo.sexIndex == const.MODEL_SEX_MALE_INDEX:
+            updateParams['boy_passport_id'] = passportId
+        elif uis.userInfo.sexIndex == const.MODEL_SEX_FEMALE_INDEX:
+            updateParams['girl_passport_id'] = passportId
         ActivityModel.updateById(self.dbSession, self.activityId, **updateParams)
         ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.passportId, opType)
-        if opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT_AFTER_ACCEPT:
-            ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.boy_passport_id,
-                                             const.GUAN_INFO_OP_TYPE_JOIN_BECOME_INVITE)
         self.reloadActivityRecord()
         return const.RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
