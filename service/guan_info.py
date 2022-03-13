@@ -108,12 +108,12 @@ class GuanInfoService(BaseService):
             const.GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
             const.GUAN_INFO_OP_TYPE_INVITE_QUIT: "取消邀请",
             const.GUAN_INFO_OP_TYPE_ACCEPT: "接受邀请",
-            const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT: "请准时参加，或联系客服取消",
-            const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT: "请准时参加，或联系客服取消",
-        }.get(self.opType, "敬请期待")
+            const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT: "取消相亲",
+            const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT: "取消相亲",
+        }.get(self.opType, "参加")
 
     @property
-    def peopleInfos(self):
+    def oppositePeopleInfos(self):
         if not self.userRecord:
             return []
 
@@ -137,7 +137,7 @@ class GuanInfoService(BaseService):
             "time": self.time,
             "timeDesc": self.timeDesc,
             "guanId": self.activityId,
-            "peopleInfos": self.peopleInfos,
+            "oppositePeopleInfos": self.oppositePeopleInfos,
             "opDesc": self.opDesc,
             "opType": self.opType,
             "timeImg": self.timeIcon,

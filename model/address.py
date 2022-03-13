@@ -46,4 +46,7 @@ class AddressModel(BaseModel):
 
     @property
     def nameLong(self):
-        return self.name
+        if len(self.name) <= 22:
+            return self.name
+        else:
+            return self.name[:22] + "..."
