@@ -19,8 +19,8 @@ class ActivityModel(BaseModel):
     id = Column(Integer, primary_key=True)  # 自增
     address_id = Column(Integer, default=0)  # 地点id
     start_time = Column(TIMESTAMP, default="1970-01-01")  # 开始时间
-    invite_passport_id = Column(Integer, default=0)  # 邀请者passport_id
-    accept_passport_id = Column(Integer, default=0)  # 接受者passport_id
+    girl_passport_id = Column(Integer, default=0)  # 女孩passport_id
+    boy_passport_id = Column(Integer, default=0)  # 男孩passport_id
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
@@ -39,7 +39,15 @@ class ActivityModel(BaseModel):
 
     @property
     def startTimeStr(self):
-        return datetime2str(self.start_time, fmt="%m-%d %H:%M")
+        return datetime2str(self.start_time, fmt="%Y-%m-%d %H:%M")
+
+    @property
+    def boyImg(self):
+        return const.CDN_QINIU_BOY_HEAD_IMG  # todo 如果是有男孩参加，就点亮头像，否则是置灰头像
+
+    @property
+    def girlImg(self):
+        return const.CDN_QINIU_GIRL_HEAD_IMG  # todo 如果是有女孩参加，就点亮头像，否则是置灰头像
 
     @classmethod
     def updateById(cls, dbSession, activityId, **updateParams):
@@ -49,7 +57,7 @@ class ActivityModel(BaseModel):
     @classmethod
     def getOngoingActivity(cls, dbSession, passportId):
         return dbSession.query(cls).filter(
-            or_(cls.accept_passport_id == passportId, cls.invite_passport_id == passportId)
+            or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
         ).filter(
             cls.start_time > datetime.datetime.now()
         ).first()
@@ -58,8 +66,8 @@ class ActivityModel(BaseModel):
     def getLastFreeActivity(cls, dbSession):
         return dbSession.query(cls).filter(
             cls.start_time > datetime.datetime.now(),
-            cls.invite_passport_id == 0,
-            cls.accept_passport_id == 0,
+            cls.girl_passport_id == 0,
+            cls.boy_passport_id == 0,
             cls.status == const.MODEL_STATUS_YES
         ).order_by(cls.id.desc()).first()
 

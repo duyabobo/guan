@@ -39,10 +39,10 @@ class AddressModel(BaseModel):
 
     @property
     def nameShort(self):
-        if len(self.name) <= 6:
+        if len(self.name) <= 8:
             return self.name
         else:
-            return self.name[:6] + "..."
+            return self.name[:8] + "..."
 
     @property
     def nameLong(self):

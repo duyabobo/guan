@@ -31,9 +31,9 @@ class GuanInfoService(BaseService):
     @lazy_property
     def userRecord(self):
         if self.opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_INVITE_QUIT]:
-            passportId = self.activityRecord.accept_passport_id
+            passportId = self.activityRecord.boy_passport_id
         else:
-            passportId = self.activityRecord.invite_passport_id
+            passportId = self.activityRecord.girl_passport_id
         return UserModel.getByPassportId(self.dbSession, passportId)
 
     @property
@@ -89,15 +89,15 @@ class GuanInfoService(BaseService):
 
     @property
     def opType(self):
-        if not self.activityRecord.invite_passport_id:
+        if not self.activityRecord.girl_passport_id:
             return const.GUAN_INFO_OP_TYPE_INVITE
-        elif self.activityRecord.invite_passport_id == self.passportId and self.activityRecord.accept_passport_id:
+        elif self.activityRecord.girl_passport_id == self.passportId and self.activityRecord.boy_passport_id:
             return const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT
-        elif self.activityRecord.invite_passport_id == self.passportId:
+        elif self.activityRecord.girl_passport_id == self.passportId:
             return const.GUAN_INFO_OP_TYPE_INVITE_QUIT
-        elif not self.activityRecord.accept_passport_id:
+        elif not self.activityRecord.boy_passport_id:
             return const.GUAN_INFO_OP_TYPE_ACCEPT
-        elif self.activityRecord.accept_passport_id == self.passportId:
+        elif self.activityRecord.boy_passport_id == self.passportId:
             return const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT
         else:
             return const.GUAN_INFO_OP_TYPE_ACCEPT_UNKNOWN
@@ -167,20 +167,20 @@ class GuanInfoService(BaseService):
             return const.RESP_HAS_ONGOING_ACTIVITY
         updateParams = {}
         if opType == const.GUAN_INFO_OP_TYPE_INVITE:
-            updateParams['invite_passport_id'] = self.passportId
+            updateParams['girl_passport_id'] = self.passportId
         elif opType == const.GUAN_INFO_OP_TYPE_ACCEPT:
-            updateParams['accept_passport_id'] = self.passportId
+            updateParams['boy_passport_id'] = self.passportId
         elif opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT:
-            updateParams['invite_passport_id'] = 0
+            updateParams['girl_passport_id'] = 0
         elif opType == const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT:
-            updateParams['accept_passport_id'] = 0
+            updateParams['boy_passport_id'] = 0
         elif opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT:
-            updateParams['invite_passport_id'] = self.activityRecord.accept_passport_id
-            updateParams['accept_passport_id'] = 0
+            updateParams['girl_passport_id'] = self.activityRecord.boy_passport_id
+            updateParams['boy_passport_id'] = 0
         ActivityModel.updateById(self.dbSession, self.activityId, **updateParams)
         ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.passportId, opType)
         if opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT:
-            ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.accept_passport_id,
+            ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.boy_passport_id,
                                              const.GUAN_INFO_OP_TYPE_ACCEPT_BECOME_INVITE)
         self.reloadActivityRecord()
         return const.RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
