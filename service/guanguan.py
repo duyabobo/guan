@@ -26,15 +26,15 @@ class GuanguanService(BaseService):
         if inviteUser and inviteUser.sex == self.userInfo.sex:
             return False
 
-        inv_pid = activity.invite_passport_id
-        ac_pid = activity.accept_passport_id
+        inv_pid = activity.boy_passport_id
+        ac_pid = activity.girl_passport_id
         if inv_pid and ac_pid and self.passportId not in [inv_pid, ac_pid]:
             return False
 
         return True
 
     def getInviteUserMap(self, activityList):
-        invitePassportIds = list(set([a.invite_passport_id for a in activityList]))
+        invitePassportIds = list(set([a.boy_passport_id for a in activityList]))
         if not invitePassportIds:
             return {}
 
@@ -56,7 +56,7 @@ class GuanguanService(BaseService):
         inviteUserMap = self.getInviteUserMap(_activityList)
         activityList = []  # 筛选掉不符合邀请人期望的，以及已完成的（但是保留自己参与的）
         for a in _activityList:
-            if self.match(a, inviteUserMap.get(a.invite_passport_id, None)):
+            if self.match(a, inviteUserMap.get(a.boy_passport_id, None)):
                 activityList.append(a)
 
         return activityList
@@ -68,8 +68,8 @@ class GuanguanService(BaseService):
         }
 
     def getState(self, activity):
-        inv_pid = activity.invite_passport_id
-        ac_pid = activity.accept_passport_id
+        inv_pid = activity.boy_passport_id
+        ac_pid = activity.girl_passport_id
         if inv_pid and ac_pid:
             return "即将赴约"
         elif inv_pid and self.passportId == inv_pid:
