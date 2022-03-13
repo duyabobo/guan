@@ -29,11 +29,13 @@ class GuanInfoService(BaseService):
         return AddressModel.getById(self.dbSession, self.activityRecord.address_id)
 
     @lazy_property
-    def userRecord(self):
-        if self.opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_INVITE_QUIT]:
-            passportId = self.activityRecord.boy_passport_id
-        else:
+    def oppositeUserRecord(self):
+        user = UserModel.getByPassportId(self.dbSession, self.passportId)
+        if user.sexIndex == const.MODEL_SEX_MALE_INDEX:
             passportId = self.activityRecord.girl_passport_id
+        else:
+            passportId = self.activityRecord.boy_passport_id
+
         return UserModel.getByPassportId(self.dbSession, passportId)
 
     @property
@@ -46,12 +48,12 @@ class GuanInfoService(BaseService):
 
     @property
     def peopleImg(self):
-        if not self.userRecord:
+        if not self.oppositeUserRecord:
             return const.CDN_QINIU_UNKNOWN_HEAD_IMG
 
-        if self.userRecord.sex == const.MODEL_SEX_MALE:
+        if self.oppositeUserRecord.sexIndex == const.MODEL_SEX_MALE_INDEX:
             return const.CDN_QINIU_BOY_HEAD_IMG
-        elif self.userRecord.sex == const.MODEL_SEX_FEMALE:
+        elif self.oppositeUserRecord.sexIndex == const.MODEL_SEX_FEMALE_INDEX:
             return const.CDN_QINIU_GIRL_HEAD_IMG
         else:
             return const.CDN_QINIU_UNKNOWN_HEAD_IMG
@@ -89,35 +91,27 @@ class GuanInfoService(BaseService):
 
     @property
     def opType(self):
-        if not self.activityRecord.girl_passport_id:
+        if not self.activityRecord.boy_passport_id and not self.activityRecord.girl_passport_id:
             return const.GUAN_INFO_OP_TYPE_INVITE
-        elif self.activityRecord.girl_passport_id == self.passportId and self.activityRecord.boy_passport_id:
-            return const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT
-        elif self.activityRecord.girl_passport_id == self.passportId:
-            return const.GUAN_INFO_OP_TYPE_INVITE_QUIT
-        elif not self.activityRecord.boy_passport_id:
-            return const.GUAN_INFO_OP_TYPE_ACCEPT
-        elif self.activityRecord.boy_passport_id == self.passportId:
-            return const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT
+        elif self.passportId in [self.activityRecord.girl_passport_id, self.activityRecord.boy_passport_id]:
+            return const.GUAN_INFO_OP_TYPE_QUIT
         else:
-            return const.GUAN_INFO_OP_TYPE_ACCEPT_UNKNOWN
+            return const.GUAN_INFO_OP_TYPE_JOIN
 
     @property
     def opDesc(self):
         return {
             const.GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
-            const.GUAN_INFO_OP_TYPE_INVITE_QUIT: "取消邀请",
-            const.GUAN_INFO_OP_TYPE_ACCEPT: "接受邀请",
-            const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT: "取消相亲",
-            const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT: "取消相亲",
+            const.GUAN_INFO_OP_TYPE_QUIT: "取消相亲",
+            const.GUAN_INFO_OP_TYPE_JOIN: "接受邀请",
         }.get(self.opType, "参加")
 
     @property
     def oppositePeopleInfos(self):
-        if not self.userRecord:
+        if not self.oppositeUserRecord:
             return []
 
-        matchHelper = MatchHelper(self.userRecord)
+        matchHelper = MatchHelper(self.oppositeUserRecord)
         allInfos = [
             matchHelper.sexValue,
             "出生于%d年" % matchHelper.birthYearValue,
@@ -161,24 +155,24 @@ class GuanInfoService(BaseService):
         if opType != self.opType:
             return const.RESP_JOIN_ACTIVITY_FAILED
         if self.hasOngoingActivity and \
-                opType in [const.GUAN_INFO_OP_TYPE_INVITE, const.GUAN_INFO_OP_TYPE_ACCEPT]:  # 有进行中的活动，不能再次参与
+                opType in [const.GUAN_INFO_OP_TYPE_JOIN, const.GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
             return const.RESP_HAS_ONGOING_ACTIVITY
         updateParams = {}
-        if opType == const.GUAN_INFO_OP_TYPE_INVITE:
+        if opType == const.GUAN_INFO_OP_TYPE_JOIN:
             updateParams['girl_passport_id'] = self.passportId
-        elif opType == const.GUAN_INFO_OP_TYPE_ACCEPT:
+        elif opType == const.GUAN_INFO_OP_TYPE_JOIN:
             updateParams['boy_passport_id'] = self.passportId
-        elif opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT:
+        elif opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT:
             updateParams['girl_passport_id'] = 0
-        elif opType == const.GUAN_INFO_OP_TYPE_ACCEPT_QUIT:
+        elif opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT:
             updateParams['boy_passport_id'] = 0
-        elif opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT:
+        elif opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT_AFTER_ACCEPT:
             updateParams['girl_passport_id'] = self.activityRecord.boy_passport_id
             updateParams['boy_passport_id'] = 0
         ActivityModel.updateById(self.dbSession, self.activityId, **updateParams)
         ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.passportId, opType)
-        if opType == const.GUAN_INFO_OP_TYPE_INVITE_QUIT_AFTER_ACCEPT:
+        if opType == const.GUAN_INFO_OP_TYPE_JOIN_QUIT_AFTER_ACCEPT:
             ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.activityRecord.boy_passport_id,
-                                             const.GUAN_INFO_OP_TYPE_ACCEPT_BECOME_INVITE)
+                                             const.GUAN_INFO_OP_TYPE_JOIN_BECOME_INVITE)
         self.reloadActivityRecord()
         return const.RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI

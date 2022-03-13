@@ -48,3 +48,7 @@ class UserModel(BaseModel):
     def updateByPassportId(cls, dbSession, passportId, **updateParams):
         dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == const.MODEL_STATUS_YES).update(updateParams)
         dbSession.commit()
+
+    @property
+    def sexIndex(self):
+        return const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST.index(self.sex)
