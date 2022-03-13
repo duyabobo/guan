@@ -18,5 +18,5 @@ class GuanInfoHandler(BaseHandler):
         activityId = self.getRequestParameter('guanId', paraType=int)
         opType = self.getRequestParameter('opType', paraType=int)
         gis = GuanInfoService(self.dbSession, self.redis, activityId, self.currentPassport)
-        ret = gis.activityOprete(opType)
+        # ret = gis.activityOprete(opType)
         return self.response(gis.getGuanInfo(), respNormal=ret)
