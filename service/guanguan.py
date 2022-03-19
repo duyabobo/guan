@@ -20,12 +20,9 @@ class GuanguanService(BaseService):
     def userInfo(self):
         return UserModel.getByPassportId(self.dbSession, self.passportId)
 
-    def match(self, activity, inviteUser):
+    def match(self, activity, userMap):
         """筛选掉不符合期望的，筛选掉已完成匹配但是没有当前用户参与的"""
         # todo 资料/预期对比排除
-        if inviteUser and inviteUser.sex == self.userInfo.sex:
-            return False
-
         inv_pid = activity.girl_passport_id
         ac_pid = activity.boy_passport_id
         if inv_pid and ac_pid and self.passportId not in [inv_pid, ac_pid]:
@@ -33,16 +30,8 @@ class GuanguanService(BaseService):
 
         return True
 
-    def getInviteUserMap(self, activityList):
-        invitePassportIds = list(set([a.girl_passport_id for a in activityList]))
-        if not invitePassportIds:
-            return {}
-
-        users = UserModel.getByPassportIds(self.dbSession, invitePassportIds)
-        if not users:
-            return {}
-
-        return {u.passport_id: u for u in users}
+    def getUserMap(self, passportIds):
+        return []
 
     def getActivityList(self, addressIds):
         """
@@ -53,10 +42,11 @@ class GuanguanService(BaseService):
             return []
 
         _activityList = ActivityModel.listByAddressIds(self.dbSession, addressIds)  # 筛选掉已经已经过期的
-        inviteUserMap = self.getInviteUserMap(_activityList)
+        passportIds = []  # todo 所有涉及到的passportId列表，包括自己的passportid，以及活动里已参与的passportid
+        userMap = self.getUserMap(passportIds)
         activityList = []  # 筛选掉不符合邀请人期望的，以及已完成的（但是保留自己参与的）
         for a in _activityList:
-            if self.match(a, inviteUserMap.get(a.girl_passport_id, None)):
+            if self.match(a, userMap):
                 activityList.append(a)
 
         return activityList
