@@ -138,5 +138,5 @@ SECRET_PAGE = '/page/secret/secret'  # 隐私条款
 SHARE_PAGE = '/page/share/share'  # 分享
 SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
 MYINFORMATION_PAGE = '/page/my_information/my_information?errMsg='  # 我的资料
-MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement'  # 择偶期望
+MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement'  # 择偶条件
 WORKVERIFY_PAGE = '/page/work_verify/work_verify'  # 工作认证
