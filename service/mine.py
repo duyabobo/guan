@@ -62,9 +62,9 @@ class MineService(BaseService):
                 {
                     "id": 5,
                     "index": 0,
-                    "url": const.SETTING_PAGE,
-                    "name": '设置',
-                    "needLogin": True,
+                    "url": const.SECRET_PAGE,
+                    "name": '隐私条款',
+                    "needLogin": False,
                     "openType": '',
                     "bindFuncName": 'clickMine'
                 },
@@ -72,7 +72,7 @@ class MineService(BaseService):
                     "id": 6,
                     "index": 1,
                     "url": const.ABOUT_PAGE,
-                    "name": '关于',
+                    "name": '关于我们',
                     "needLogin": False,
                     "openType": '',
                     "bindFuncName": 'clickMine'

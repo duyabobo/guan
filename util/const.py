@@ -134,7 +134,7 @@ GUAN_INFO_OP_TYPE_QUIT = 3  # 退出
 PICKER_TYPE_SELECTOR = 0
 PICKER_TYPE_MULTI_SELECTOR = 1
 ABOUT_PAGE = '/page/about/about'  # 关于
-SETTING_PAGE = '/page/setting/setting'  # 设置
+SECRET_PAGE = '/page/secret/secret'  # 隐私条款
 SHARE_PAGE = '/page/share/share'  # 分享
 SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
 MYINFORMATION_PAGE = '/page/my_information/my_information?errMsg='  # 我的资料
