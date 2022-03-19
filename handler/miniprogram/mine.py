@@ -13,7 +13,7 @@ class MineHandler(BaseHandler):
         mainGroupList = ms.getMainGroupList()
 
         hasLogin = False
-        if self.currentPassportId:
+        if self.accessToken:
             hasLogin = True
         return self.response(
             respData={
