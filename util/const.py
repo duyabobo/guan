@@ -133,10 +133,10 @@ GUAN_INFO_OP_TYPE_QUIT = 3  # 退出
 # MINI_PROGRAM
 PICKER_TYPE_SELECTOR = 0
 PICKER_TYPE_MULTI_SELECTOR = 1
-ABOUT_PAGE = '/page/about/about'  # 关于
-SECRET_PAGE = '/page/secret/secret'  # 隐私条款
+ABOUT_PAGE = '/page/about/about?title=关于我们'  # 关于我们
+SECRET_PAGE = '/page/secret/secret?title=隐私条款'  # 隐私条款
 SHARE_PAGE = '/page/share/share'  # 分享
 SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
-MYINFORMATION_PAGE = '/page/my_information/my_information?errMsg='  # 我的资料
-MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement'  # 择偶条件
+MYINFORMATION_PAGE = '/page/my_information/my_information?title=我的资料'  # 我的资料
+MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=择偶条件'  # 择偶条件
 WORKVERIFY_PAGE = '/page/work_verify/work_verify'  # 工作认证

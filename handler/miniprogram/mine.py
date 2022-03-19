@@ -11,9 +11,14 @@ class MineHandler(BaseHandler):
         ms = MineService(self.dbSession, self.redis)
         headImg = ms.getHeadImg(self.currentPassportId)
         mainGroupList = ms.getMainGroupList()
+
+        hasLogin = False
+        if self.currentPassportId:
+            hasLogin = True
         return self.response(
             respData={
-                'headImg': headImg, 
+                'headImg': headImg,
+                'hasLogin': hasLogin,
                 'mainGroupList': mainGroupList,
             }
         )
