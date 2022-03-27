@@ -16,9 +16,9 @@ class SendMsgHandler(BaseHandler):
 
     @superMonitor
     def get(self):
-        openId = self.currentPassport.get('openid', '')
+        openId = self.getRequestParameter('openid', '')
         templateId = self.getRequestParameter('templateId', const.SUBSCRIBE_ACTIVITY_START_NOTI_TID)
-        miniprogramState = self.getRequestParameter('miniprogramState', 'trial')
+        miniprogramState = self.getRequestParameter('miniprogramState', 'trial')  # formal/developer/trial
         ss = SubscribeService(self.dbSession, self.redis, openId, templateId, miniprogramState)
         ret = ss.sendActivityStartMsg()
         return self.response(respData=ret)
