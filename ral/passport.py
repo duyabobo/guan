@@ -24,7 +24,7 @@ def putSession(redis, accessToken, passport):
     currentUserInfoJson = {
         k: currentUserInfoJson[k]
         for k in currentUserInfoJson
-        if k in ['id', 'phone']
+        if k in ['id', 'phone', 'openid']
     }
     redis.hmset(getLoginKey(accessToken), currentUserInfoJson)
     return currentUserInfoJson

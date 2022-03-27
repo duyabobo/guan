@@ -1,10 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import urllib
-
-import requests
-
-import util.config
 from model.passport import PassportModel
 from model.requirement import RequirementModel
 from model.user import UserModel
@@ -12,28 +7,6 @@ from model.verify import VerifyModel
 from ral.passport import putSession
 from service import BaseService
 from util.encode import generate_access_token
-
-
-class WxHelper(object):
-    def __init__(self):
-        pass
-
-    @classmethod
-    def getOpenidByCode(cls, jsCode):
-        """使用小程序返回的code，请求wx的接口查询openid"""
-        urlParams = urllib.urlencode(
-            {
-                'js_code': jsCode,
-                'appid': util.config.get("weixin", "appid"),
-                'secret': util.config.get("weixin", "secret"),
-                'grant_type': util.config.get("weixin", "grant_type")
-            }
-        )
-
-        wxCodeToSessionUrl = util.config.get("weixin", "code_to_session_url")
-        wxAuthUrl = wxCodeToSessionUrl + urlParams
-        wxAuthRes = requests.get(wxAuthUrl, timeout=3).json()
-        return wxAuthRes.get("openid", None)
 
 
 class LoginService(BaseService):

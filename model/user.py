@@ -18,9 +18,9 @@ class UserModel(BaseModel):
     sex = Column(String, default="未知")  # 性别：MODEL_SEX_ENUMERATE
     birth_year = Column(Integer, default=0)  # 出生年份
     martial_status = Column(String, default="未知")  # 婚姻现状：未知，未婚，离异
-    height = Column(String, default="")  # 身高(厘米-厘米)
-    weight = Column(String, default="")  # 体重(公斤-公斤)
-    month_pay = Column(String, default="")  # 月收入(元-元)
+    height = Column(Integer, default=0)  # 身高(厘米-厘米)
+    weight = Column(Integer, default=0)  # 体重(公斤-公斤)
+    month_pay = Column(Integer, default=0)  # 月收入(元-元)
     education = Column(String, default="未知")  # 学历枚举
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间

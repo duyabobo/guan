@@ -22,4 +22,5 @@ handlers = [
     (r'/phone_verify$', phone_verify.PhoneVerifyHandler),
     (r'/email_verify$', email_verify.EmailVerifyHandler),
     (r'/subscribe_cb$', subscribe.SubscribeCBHandler),
+    (r'/send_subscribe_msg$', subscribe.SendMsgHandler)
 ]
