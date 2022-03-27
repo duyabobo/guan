@@ -323,7 +323,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getMartialStatus(self):
         return {
-            "desc": "婚姻现状",
+            "desc": "周六是否有时间",
             "bindChange": "updateMartialStatus",
             "pickerType": const.PICKER_TYPE_SELECTOR,
             "value": self.martialStatusValue,
@@ -333,7 +333,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getEducation(self):
         return {
-            "desc": "学历",
+            "desc": "周日是否有时间",
             "bindChange": "updateEducation",
             "pickerType": const.PICKER_TYPE_SELECTOR,
             "value": self.educationValue,
@@ -343,7 +343,7 @@ class MatchHelper(object):  # todo 拆分成两个helper
 
     def getMartialStatusPeriod(self):
         return {
-            "desc": "婚姻",
+            "desc": "周日是否有时间",
             "bindChange": "updateMartialStatus",
             "pickerType": const.PICKER_TYPE_SELECTOR,
             "value": self.martialStatusValue,
