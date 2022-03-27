@@ -140,3 +140,4 @@ SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
 MYINFORMATION_PAGE = '/page/my_information/my_information?title=我的资料'  # 我的资料
 MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=择偶条件'  # 择偶条件
 WORKVERIFY_PAGE = '/page/work_verify/work_verify'  # 工作认证
+SUBSCRIBE_ACTIVITY_START_NOTI_TID = '0LeRGd69AHugmAOYDLHxut1DBZhpkZUdZb5f57DeD3g'  # 活动开始前推送的模板消息

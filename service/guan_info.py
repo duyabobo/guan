@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 
+import util.config
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
@@ -124,6 +125,10 @@ class GuanInfoService(BaseService):
         return [i for i in allInfos if i]
     
     def getGuanInfo(self):
+        if self.opType != const.GUAN_INFO_OP_TYPE_QUIT:  # opType 是下一步操作类型
+            subscribeTemplateIds = []
+        else:
+            subscribeTemplateIds = [const.SUBSCRIBE_ACTIVITY_START_NOTI_TID]
         return {
             "img": self.img,
             "address": self.address,
@@ -138,6 +143,7 @@ class GuanInfoService(BaseService):
             "addressImg": self.addressIcon,
             "peopleImg": self.peopleImg,
             "people": "相亲对象",
+            "subscribeTemplateIds": subscribeTemplateIds
         }
 
     def reloadActivityRecord(self):
