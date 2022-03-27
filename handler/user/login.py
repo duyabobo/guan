@@ -18,7 +18,7 @@ class LoginHandler(BaseHandler):
         """微信登录注册接口
         """
         jsCode = self.getRequestParameter('code')
-        openid = WxHelper().getOpenidByCode(jsCode)
+        openid = WxHelper(self.redis).getOpenidByCode(jsCode)
         if not openid:
             return self.response(respNormal=RESP_NEED_LOGIN)
 
