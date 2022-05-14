@@ -32,7 +32,8 @@ class ActivityAutoCreater(object):
         if lastActivity and lastActivity.start_time.weekday() > 4 and lastActivity.start_time.hour < 17:  # 最新的活动是周末
             nextTime = lastActivity.start_time + datetime.timedelta(minutes=30)
         else:
-            lastTime = max(datetime.datetime.now(), lastActivity.start_time)
+            now = datetime.datetime.now()
+            lastTime = max(now, lastActivity.start_time) if lastActivity else now
             targetTime = lastTime + datetime.timedelta(days={0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 1, 6: 6}.get(lastTime.weekday()))
             nextTime = datetime.datetime(year=targetTime.year, month=targetTime.month, day=targetTime.day, hour=10)
         return nextTime
