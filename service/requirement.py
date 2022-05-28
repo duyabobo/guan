@@ -49,7 +49,7 @@ class RequirementService(BaseService):
                 "martialStatus": 5,
                 "educationPeriod": 6,
             },
-            "requirementResult": "共37人符合您的择偶条件"  # todo
+            "requirementResult": "共37人符合您的见面条件"  # todo
         }
 
     def updateRequirementInfo(self, opType, valueIndex):

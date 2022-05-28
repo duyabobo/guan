@@ -102,7 +102,7 @@ class GuanInfoService(BaseService):
     def opDesc(self):
         return {
             const.GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
-            const.GUAN_INFO_OP_TYPE_QUIT: "取消相亲",
+            const.GUAN_INFO_OP_TYPE_QUIT: "取消见面",
             const.GUAN_INFO_OP_TYPE_JOIN: "接受邀请",
         }.get(self.opType, "参加")
 
@@ -141,10 +141,10 @@ class GuanInfoService(BaseService):
             "timeImg": self.timeIcon,
             "addressImg": self.addressIcon,
             "peopleImg": self.peopleImg,
-            "people": "相亲对象",
+            "people": "见面对象",
             "subscribeTemplateIds": subscribeTemplateIds,
             "myRequirementPage": const.MYREQUIREMENT_PAGE,
-            "requirementResult": "共37人符合您的择偶条件"  # todo
+            "requirementResult": "共37人符合您的见面条件"  # todo
         }
 
     def reloadActivityRecord(self):

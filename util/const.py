@@ -33,8 +33,8 @@ RESP_SIGN_INVALID = {'code': 1004, 'errMsg': '签名验证失败'}
 RESP_HAS_EMAIL_VERIFY_RECENTLY = {'code': 1005, 'errMsg': '您半年内已经工作认证过，请联系客服修改'}
 RESP_HAS_EMAIL_VERIFY_FAILED = {'code': 1006, 'errMsg': '验证码错误，请重新输入'}
 RESP_HAS_EMAIL_IS_NOT_COMPANY = {'code': 1007, 'errMsg': '贵公司尚未开放认证，请联系客服'}
-RESP_JOIN_ACTIVITY_FAILED = {'code': 1008, 'errMsg': '参加相亲活动失败'}
-RESP_HAS_ONGOING_ACTIVITY = {'code': 1009, 'errMsg': '您有进行中的相亲，不能参与别的相亲'}
+RESP_JOIN_ACTIVITY_FAILED = {'code': 1008, 'errMsg': '参加见面活动失败'}
+RESP_HAS_ONGOING_ACTIVITY = {'code': 1009, 'errMsg': '您有进行中的见面，不能参与别的见面'}
 RESP_HAS_SEND_EMAIL = {'code': 0, 'errMsg': '您已发送过认证邮件，请稍后检查'}
 RESP_SEX_CANOT_EDIT = {'code': 1010, 'errMsg': '不能修改性别，请联系客服'}
 RESP_USER_SEX_FIRST_EDIT = {'code': 1011, 'errMsg': '请先完善个人信息里的性别'}
@@ -139,7 +139,7 @@ SHARE_PAGE = '/page/share/share'  # 分享
 SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
 GUANINFO_PAGE = '/page/guan_info/guan_info?guan_id={guan_id}'  # 活动详情页
 MYINFORMATION_PAGE = '/page/my_information/my_information?title=我的资料'  # 我的资料
-MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=择偶条件'  # 择偶条件
+MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=见面条件'  # 见面条件
 WORKVERIFY_PAGE = '/page/work_verify/work_verify'  # 工作认证
 GUANINFO_SHORT_PAGE = 'guan_info/guan_info?guan_id={guan_id}'  # 活动详情页
 SUBSCRIBE_ACTIVITY_START_NOTI_TID = '0LeRGd69AHugmAOYDLHxut1DBZhpkZUdZb5f57DeD3g'  # 活动开始前推送的模板消息

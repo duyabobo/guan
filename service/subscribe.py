@@ -17,7 +17,7 @@ class SubscribeService(BaseService):
         page = const.GUANINFO_SHORT_PAGE.format(guan_id=1)  # todo guan_id 需要查询
         data = {
           "thing1": {
-              "value": "您参加的相亲活动即将开始，请准时参加。"
+              "value": "您参加的见面活动即将开始，请准时参加。"
           },
           "thing2": {
               "value": "五道口"  # todo 计算用户参与活动的地点

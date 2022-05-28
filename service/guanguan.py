@@ -63,9 +63,9 @@ class GuanguanService(BaseService):
         if not girl_pid and not boy_pid:
             return "虚位以待"
         elif self.passportId in [girl_pid, boy_pid]:
-            return "我的相亲"
+            return "我的见面"
         else:
-            return "相亲邀请"
+            return "见面邀请"
 
     def reSortActivityList(self, activityList, ongoingActivity):
         for a in activityList:
