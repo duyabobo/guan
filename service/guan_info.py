@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-import util.config
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
@@ -143,7 +142,9 @@ class GuanInfoService(BaseService):
             "addressImg": self.addressIcon,
             "peopleImg": self.peopleImg,
             "people": "相亲对象",
-            "subscribeTemplateIds": subscribeTemplateIds
+            "subscribeTemplateIds": subscribeTemplateIds,
+            "myRequirementPage": const.MYREQUIREMENT_PAGE,
+            "requirementResult": "共37人符合您的择偶条件"  # todo
         }
 
     def reloadActivityRecord(self):
