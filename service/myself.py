@@ -77,7 +77,8 @@ class UserInfoService(BaseService):
                 "education": 6,
             },
             "workVerify": self.getWork(),
-            "obtainWorkEmailPlaceHolder": "输入校园/工作邮箱"
+            "obtainWorkEmailPlaceHolder": "输入校园/工作邮箱",
+            "informationResult": "已有23人完善信息"  # todo
         }
 
     def updateMyselfInfo(self, opType, valueIndex):

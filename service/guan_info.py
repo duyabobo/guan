@@ -144,7 +144,8 @@ class GuanInfoService(BaseService):
             "people": "见面对象",
             "subscribeTemplateIds": subscribeTemplateIds,
             "myRequirementPage": const.MYREQUIREMENT_PAGE,
-            "requirementResult": "共37人符合您的见面条件"  # todo
+            "myInformationPage": const.MYINFORMATION_PAGE,
+            "requirementResult": "3人满足见面条件"  # todo
         }
 
     def reloadActivityRecord(self):
