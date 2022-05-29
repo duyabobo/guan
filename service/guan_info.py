@@ -144,7 +144,7 @@ class GuanInfoService(BaseService):
             "people": "见面对象",
             "subscribeTemplateIds": subscribeTemplateIds,
             "myRequirementPage": const.MYREQUIREMENT_PAGE,
-            "myInformationPage": const.MYINFORMATION_PAGE,
+            "myInformationPage": const.MYINFORMATION_PAGE_WITH_ERRMSG,
             "requirementResult": "3人满足见面条件"  # todo
         }
 
