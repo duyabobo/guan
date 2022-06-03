@@ -148,6 +148,7 @@ class GuanInfoService(BaseService):
             "timeImg": self.timeIcon,
             "addressImg": self.addressIcon,
             "isAfterMeet": 1,  # todo
+            "meetResultDesc": "点评内容只会被自己看到",
             "meetResult": self.getMeetResult(),
             "peopleImg": self.peopleImg,
             "people": "见面对象",
