@@ -124,6 +124,18 @@ MODEL_USER_OP_TYPE_PERIOD_EXTEND_8 = 208
 MODEL_USER_OP_TYPE_PERIOD_EXTEND_9 = 209
 MODEL_USER_OP_TYPE_PERIOD_EXTEND_10 = 210
 
+# MEET_RESULT
+MODEL_MEET_RESULT_MAP = {
+    0: "等待点评",
+    1: "人不错",
+    2: "不合适",
+    3: "信息造假",
+    4: "迟到爽约",
+    5: "太小气",
+    6: "邋里邋遢"
+}
+MODEL_MEET_RESULT_CHOICE_LIST = [x[1] for x in sorted(MODEL_MEET_RESULT_MAP.items(), key=lambda i:i[0])]
+
 
 # GUAN_INFO_OP_TYPE_ENUMERATE
 GUAN_INFO_OP_TYPE_INVITE = 1  # 邀请

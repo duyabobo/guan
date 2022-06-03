@@ -122,6 +122,13 @@ class GuanInfoService(BaseService):
             matchHelper.educationValue,
         ]
         return [i for i in allInfos if i]
+
+    def getMeetResult(self):
+        return {
+            "value": const.MODEL_MEET_RESULT_MAP[self.activityRecord.meet_result],
+            "selectValueIndex": self.activityRecord.meet_result,
+            "choiceList": const.MODEL_MEET_RESULT_CHOICE_LIST,
+        }
     
     def getGuanInfo(self):
         if self.opType != const.GUAN_INFO_OP_TYPE_QUIT:  # opType 是下一步操作类型
@@ -140,6 +147,8 @@ class GuanInfoService(BaseService):
             "opType": self.opType,
             "timeImg": self.timeIcon,
             "addressImg": self.addressIcon,
+            "isAfterMeet": 1,  # todo
+            "meetResult": self.getMeetResult(),
             "peopleImg": self.peopleImg,
             "people": "见面对象",
             "subscribeTemplateIds": subscribeTemplateIds,

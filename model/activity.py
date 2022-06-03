@@ -4,6 +4,7 @@ import datetime
 
 from sqlalchemy import Column
 from sqlalchemy import Integer
+from sqlalchemy import String
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 from sqlalchemy.sql import or_
@@ -21,6 +22,7 @@ class ActivityModel(BaseModel):
     start_time = Column(TIMESTAMP, default="1970-01-01")  # 开始时间
     girl_passport_id = Column(Integer, default=0)  # 女孩passport_id
     boy_passport_id = Column(Integer, default=0)  # 男孩passport_id
+    meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
