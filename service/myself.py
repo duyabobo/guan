@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.match import MatchHelper
+from common.requirement_helper import MatchHelper
 from model.user import UserModel
 from model.verify import VerifyModel
 from ral import user

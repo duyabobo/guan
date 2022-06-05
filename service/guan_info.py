@@ -7,7 +7,7 @@ from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.user import UserModel
 from service import BaseService
-from service.common.match import MatchHelper
+from service.common.requirement_helper import MatchHelper
 from service.myself import UserInfoService
 from util import const
 from util.class_helper import lazy_property
