@@ -4,22 +4,14 @@ import json
 
 from util import const
 
-USER_INFO_GET_SEX = 'getSexInfo'
-USER_INFO_GET_MARTIAL_STATUS_PERIOD = 'getMartialStatusPeriod'
-USER_INFO_GET_EDUCATION_PERIOD = 'getEducationPeriod'
-USER_INFO_GET_BIRTH_YEAR_PERIOD = 'getBirthYearPeriod'
-USER_INFO_GET_WEIGHT_PERIOD = 'getWeightPeriod'
-USER_INFO_GET_HEIGHT_PERIOD = 'getHeightPeriod'
-USER_INFO_GET_MONTH_PAY_PERIOD = 'getMonthPayPeriod'
-
-REQUIREMENT_GET_FUNCS = [
-    USER_INFO_GET_SEX,
-    USER_INFO_GET_BIRTH_YEAR_PERIOD,
-    USER_INFO_GET_HEIGHT_PERIOD,
-    USER_INFO_GET_WEIGHT_PERIOD,
-    USER_INFO_GET_EDUCATION_PERIOD,
-    USER_INFO_GET_MONTH_PAY_PERIOD,
-    USER_INFO_GET_MARTIAL_STATUS_PERIOD,
+REQUIREMENT_GET_FUNCS = [  # 真正生效的期望条件字段获取方法
+    'getSexInfo',
+    'getBirthYearPeriod',
+    'getHeightPeriod',
+    'getWeightPeriod',
+    'getEducationPeriod',
+    'getMonthPayPeriod',
+    'getMartialStatusPeriod',
 ]
 
 

@@ -3,22 +3,14 @@
 
 from util import const
 
-USER_INFO_GET_SEX = 'getSexInfo'
-USER_INFO_GET_BIRTH_YEAR = 'getBirthYearInfo'
-USER_INFO_GET_MARTIAL_STATUS = 'getMartialStatus'
-USER_INFO_GET_HEIGHT = 'getHeight'
-USER_INFO_GET_WEIGHT = 'getWeight'
-USER_INFO_GET_MONTH_PAY = 'getMonthPay'
-USER_INFO_GET_EDUCATION = 'getEducation'
-
-USER_INFO_GET_FUNCS = [  # 真正生效的用户信息字段
-    USER_INFO_GET_SEX,
-    USER_INFO_GET_BIRTH_YEAR,
-    USER_INFO_GET_HEIGHT,
-    USER_INFO_GET_WEIGHT,
-    USER_INFO_GET_EDUCATION,
-    USER_INFO_GET_MONTH_PAY,
-    USER_INFO_GET_MARTIAL_STATUS,
+USER_INFO_GET_FUNCS = [  # 真正生效的用户信息字段获取方法
+    'getSexInfo',
+    'getBirthYearInfo',
+    'getHeight',
+    'getWeight',
+    'getEducation',
+    'getMonthPay',
+    'getMartialStatus',
 ]
 
 
