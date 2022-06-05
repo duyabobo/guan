@@ -31,7 +31,9 @@ class GuanInfoService(BaseService):
     @lazy_property
     def oppositeUserRecord(self):
         user = UserModel.getByPassportId(self.dbSession, self.passportId)
-        if user.sexIndex == const.MODEL_SEX_MALE_INDEX:
+        if not user:
+            return None
+        elif user.sexIndex == const.MODEL_SEX_MALE_INDEX:
             passportId = self.activityRecord.girl_passport_id
         else:
             passportId = self.activityRecord.boy_passport_id
