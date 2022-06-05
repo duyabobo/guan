@@ -53,6 +53,7 @@ class MineService(BaseService):
                     "index": 1,
                     "url": const.SHARE_PAGE,
                     "name": '分享',
+                    "desc": '近水楼台先得月',
                     "needLogin": False,
                     "openType": 'share',
                     "bindFuncName": 'onShareAppMessage'
