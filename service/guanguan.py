@@ -83,7 +83,7 @@ class GuanguanService(BaseService):
     def getGuanguanList(self, longitude, latitude):
         """优先展示有邀请人的，其次没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
         addressMap = self.getAddressMap(longitude, latitude)
-        activityList = self.getActivityList(addressMap.keys())  # todo 自己参与过的，后期还有流程环节要做
+        activityList = self.getActivityList(addressMap.keys())  # todo next 自己参与过的，后期还有流程环节要做
 
         ongoingActivity = ActivityModel.getOngoingActivity(self.dbSession, self.passportId)
         if ongoingActivity:  # 进行中的永远在第一位

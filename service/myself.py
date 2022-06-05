@@ -72,14 +72,14 @@ class UserInfoService(BaseService):
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
             "workVerify": self.getWork(),
             "obtainWorkEmailPlaceHolder": "输入校园/工作邮箱",
-            "informationResult": "已有23人完善信息"  # todo
+            "informationResult": "已有23人完善信息"  # todo next
         }
 
     def updateMyselfInfo(self, opType, valueIndex):
         updateParams = self.matchHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
             UserModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
-            # todo 自动填充一下需求信息
+            # todo next
             self.reloadMatchHelper()
         return self.getMyselfInfo()
 
