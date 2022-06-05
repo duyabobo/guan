@@ -30,7 +30,7 @@ class RequirementService(BaseService):
         self.matchHelper = MatchHelper(requirementInfo, isUserNotRequirement=False)
 
     def getRequirementInfo(self):
-        requirementList = [
+        requirementList = [  # todo today
             self.matchHelper.getSexInfo(),
             self.matchHelper.getBirthYearPeriod(),
             self.matchHelper.getHeightPeriod(),

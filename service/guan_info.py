@@ -114,7 +114,7 @@ class GuanInfoService(BaseService):
             return []
 
         matchHelper = MatchHelper(self.oppositeUserRecord)
-        allInfos = [
+        allInfos = [  # todo today
             matchHelper.sexValue,
             "出生于%d年" % matchHelper.birthYearValue,
             matchHelper.martialStatusValue,

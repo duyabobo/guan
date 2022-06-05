@@ -449,3 +449,11 @@ class MatchHelper(object):  # todo 拆分成两个helper
             updateParams['min_education'] = const.MODEL_USER_EDUCATION_PERIOD_CHOICE_LIST[value[0]]
             updateParams['max_education'] = const.MODEL_USER_EDUCATION_PERIOD_CHOICE_LIST[value[1]]
         return updateParams
+
+    @property
+    def hasFillFinish(self):
+        if self.isUserNotRequirement:
+            return self.info.sex != const.MODEL_USER_SEX_CHOICE_LIST[const.MODEL_SEX_UNKNOWN_INDEX] and \
+                   self.info.birth_year != const.MODEL_USER_BIRTH_YEAR_CHOICE_LIST[const.MODEL_USER_DEFAULT_BIRTH_YEAR_INDEX]   # todo today
+        else:
+            return False

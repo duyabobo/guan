@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 from common.match import MatchHelper
 from model.user import UserModel
-from service import BaseService
-from util.class_helper import lazy_property
 from model.verify import VerifyModel
+from ral import user
+from service import BaseService
 from util import const
+from util.class_helper import lazy_property
 
 
 class UserInfoService(BaseService):
@@ -21,6 +22,11 @@ class UserInfoService(BaseService):
     @lazy_property
     def userInfo(self):
         return UserModel.getByPassportId(self.dbSession, self.passportId)
+
+    @property
+    def infoFinishCnt(self):
+        # 已完成信息完善的用户数量
+        return user.getFillFinishCnt(self.redis)
 
     @property
     def verify(self):
@@ -57,7 +63,7 @@ class UserInfoService(BaseService):
         self.matchHelper = MatchHelper(userInfo)
 
     def getMyselfInfo(self):
-        informationList = [
+        informationList = [  # todo today
             self.matchHelper.getSexInfo(),
             self.matchHelper.getBirthYearInfo(),
             self.matchHelper.getHeight(),
@@ -72,7 +78,7 @@ class UserInfoService(BaseService):
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
             "workVerify": self.getWork(),
             "obtainWorkEmailPlaceHolder": "输入校园/工作邮箱",
-            "informationResult": "已有23人完善信息"  # todo next
+            "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
         }
 
     def updateMyselfInfo(self, opType, valueIndex):
@@ -81,6 +87,8 @@ class UserInfoService(BaseService):
             UserModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             # todo next
             self.reloadMatchHelper()
+            if self.matchHelper.hasFillFinish:
+                user.addFillFinishSet(self.redis, self.passportId)
         return self.getMyselfInfo()
 
     def checkBeforeUpdate(self, opType, valueIndex):
