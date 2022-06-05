@@ -51,4 +51,4 @@ class UserModel(BaseModel):
 
     @property
     def sexIndex(self):
-        return const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST.index(self.sex)
+        return const.MODEL_USER_SEX_CHOICE_LIST.index(self.sex)

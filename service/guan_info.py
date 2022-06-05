@@ -147,7 +147,7 @@ class GuanInfoService(BaseService):
             "opType": self.opType,
             "timeImg": self.timeIcon,
             "addressImg": self.addressIcon,
-            "isAfterMeet": 1,  # todo
+            "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
             "meetResultDesc": "点评内容只会被自己看到",
             "meetResult": self.getMeetResult(),
             "peopleImg": self.peopleImg,

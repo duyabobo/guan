@@ -45,11 +45,11 @@ class ActivityModel(BaseModel):
 
     @property
     def boyImg(self):
-        return const.CDN_QINIU_BOY_HEAD_IMG  # todo 如果是有男孩参加，就点亮头像，否则是置灰头像
+        return const.CDN_QINIU_BOY_HEAD_IMG if self.boy_passport_id else ""
 
     @property
     def girlImg(self):
-        return const.CDN_QINIU_GIRL_HEAD_IMG  # todo 如果是有女孩参加，就点亮头像，否则是置灰头像
+        return const.CDN_QINIU_GIRL_HEAD_IMG if self.girl_passport_id else ""
 
     @classmethod
     def updateById(cls, dbSession, activityId, **updateParams):

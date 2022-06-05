@@ -57,25 +57,19 @@ class UserInfoService(BaseService):
         self.matchHelper = MatchHelper(userInfo)
 
     def getMyselfInfo(self):
+        informationList = [
+            self.matchHelper.getSexInfo(),
+            self.matchHelper.getBirthYearInfo(),
+            self.matchHelper.getHeight(),
+            self.matchHelper.getWeight(),
+            self.matchHelper.getMonthPay(),
+            self.matchHelper.getMartialStatus(),
+            self.matchHelper.getEducation(),
+        ]
+        columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(informationList)}
         return {
-            "informationList": [
-                self.matchHelper.getSexInfo(),
-                self.matchHelper.getBirthYearInfo(),
-                self.matchHelper.getHeight(),
-                self.matchHelper.getWeight(),  # demo
-                self.matchHelper.getMonthPay(),
-                self.matchHelper.getMartialStatus(),
-                self.matchHelper.getEducation(),
-            ],
-            "columnChangeTypeIndexMap": {  # 给informationList的每个元素一个对应序号
-                "sex": 0,
-                "birthYear": 1,
-                "height": 2,
-                "weight": 3,
-                "monthPay": 4,
-                "martialStatus": 5,
-                "education": 6,
-            },
+            "informationList": informationList,
+            "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
             "workVerify": self.getWork(),
             "obtainWorkEmailPlaceHolder": "输入校园/工作邮箱",
             "informationResult": "已有23人完善信息"  # todo
@@ -91,7 +85,7 @@ class UserInfoService(BaseService):
 
     def checkBeforeUpdate(self, opType, valueIndex):
         if opType == const.MODEL_USER_OP_TYPE_SEX and \
-                self.userInfo.sex != const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[const.MODEL_USER_OP_TYPE_DEFAULT_SEX_INDEX] and\
-                self.userInfo.sex != const.MODEL_USER_OP_TYPE_SEX_CHOICE_LIST[int(valueIndex)]:
+                self.userInfo.sex != const.MODEL_USER_SEX_CHOICE_LIST[const.MODEL_USER_DEFAULT_SEX_INDEX] and\
+                self.userInfo.sex != const.MODEL_USER_SEX_CHOICE_LIST[int(valueIndex)]:
             return const.RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会
