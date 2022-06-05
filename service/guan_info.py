@@ -7,7 +7,7 @@ from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.user import UserModel
 from service import BaseService
-from service.common.requirement_helper import MatchHelper
+from service.common.myself_helper import UserHelper
 from service.myself import UserInfoService
 from util import const
 from util.class_helper import lazy_property
@@ -113,15 +113,15 @@ class GuanInfoService(BaseService):
         if not self.oppositeUserRecord:
             return []
 
-        matchHelper = MatchHelper(self.oppositeUserRecord)
+        userHelper = UserHelper(self.oppositeUserRecord)
         allInfos = [  # todo today
-            matchHelper.sexValue,
-            "出生于%d年" % matchHelper.birthYearValue,
-            matchHelper.martialStatusValue,
-            "身高%scm" % matchHelper.heightValue,
-            "体重%skg" % matchHelper.weightValue,
-            "月收入(税前)%s元" % matchHelper.monthPayValue,
-            matchHelper.educationValue,
+            userHelper.user.sex,
+            "出生于%d年" % userHelper.user.birth_year,
+            userHelper.user.martial_status,
+            "身高%scm" % userHelper.user.height,
+            "体重%skg" % userHelper.user.weight,
+            "月收入(税前)%s元" % userHelper.user.month_pay,
+            userHelper.user.education,
         ]
         return [i for i in allInfos if i]
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.requirement_helper import MatchHelper
+from common.myself_helper import UserHelper
 from model.user import UserModel
 from model.verify import VerifyModel
 from ral import user
@@ -16,7 +16,7 @@ class UserInfoService(BaseService):
         self.redis = redis
         self.currentPassport = currentPassport
         self.passportId = currentPassport.get('id', 0)
-        self.matchHelper = MatchHelper(self.userInfo)
+        self.userHelper = UserHelper(self.userInfo)
         super(UserInfoService, self).__init__(dbSession, redis)
 
     @lazy_property
@@ -58,19 +58,19 @@ class UserInfoService(BaseService):
             "value": "已认证" if self.currentPassport.get('phone', '') else "未认证",
         }
 
-    def reloadMatchHelper(self):
+    def reloaduserHelper(self):
         userInfo = UserModel.getByPassportId(self.dbSession, self.passportId)
-        self.matchHelper = MatchHelper(userInfo)
+        self.userHelper = UserHelper(userInfo)
 
     def getMyselfInfo(self):
         informationList = [  # todo today
-            self.matchHelper.getSexInfo(),
-            self.matchHelper.getBirthYearInfo(),
-            self.matchHelper.getHeight(),
-            self.matchHelper.getWeight(),
-            self.matchHelper.getMonthPay(),
-            self.matchHelper.getMartialStatus(),
-            self.matchHelper.getEducation(),
+            self.userHelper.getSexInfo(),
+            self.userHelper.getBirthYearInfo(),
+            self.userHelper.getHeight(),
+            self.userHelper.getWeight(),
+            self.userHelper.getMonthPay(),
+            self.userHelper.getMartialStatus(),
+            self.userHelper.getEducation(),
         ]
         columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(informationList)}
         return {
@@ -82,12 +82,12 @@ class UserInfoService(BaseService):
         }
 
     def updateMyselfInfo(self, opType, valueIndex):
-        updateParams = self.matchHelper.getUpdateParams(opType, valueIndex)
+        updateParams = self.userHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
             UserModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             # todo next
-            self.reloadMatchHelper()
-            if self.matchHelper.hasFillFinish:
+            self.reloaduserHelper()
+            if self.userHelper.hasFillFinish:
                 user.addFillFinishSet(self.redis, self.passportId)
         return self.getMyselfInfo()
 

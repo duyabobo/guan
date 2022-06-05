@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.requirement_helper import MatchHelper
+from common.requirement_helper import RequirementHelper
 from model.requirement import RequirementModel
 from model.user import UserModel
 from service import BaseService
@@ -14,7 +14,7 @@ class RequirementService(BaseService):
         self.dbSession = dbSession
         self.redis = redis
         self.passportId = passportId
-        self.matchHelper = MatchHelper(self.requirementInfo, isUserNotRequirement=False)
+        self.RequirementHelper = RequirementHelper(self.requirementInfo)
         super(RequirementService, self).__init__(dbSession, redis)
 
     @lazy_property
@@ -27,17 +27,17 @@ class RequirementService(BaseService):
 
     def reloadMatchHelper(self):
         requirementInfo = RequirementModel.getByPassportId(self.dbSession, self.passportId)
-        self.matchHelper = MatchHelper(requirementInfo, isUserNotRequirement=False)
+        self.RequirementHelper = RequirementHelper(requirementInfo)
 
     def getRequirementInfo(self):
         requirementList = [  # todo today
-            self.matchHelper.getSexInfo(),
-            self.matchHelper.getBirthYearPeriod(),
-            self.matchHelper.getHeightPeriod(),
-            self.matchHelper.getWeightPeriod(),
-            self.matchHelper.getMonthPayPeriod(),
-            self.matchHelper.getMartialStatusPeriod(),
-            self.matchHelper.getEducationPeriod(),
+            self.RequirementHelper.getSexInfo(),
+            self.RequirementHelper.getBirthYearPeriod(),
+            self.RequirementHelper.getHeightPeriod(),
+            self.RequirementHelper.getWeightPeriod(),
+            self.RequirementHelper.getMonthPayPeriod(),
+            self.RequirementHelper.getMartialStatusPeriod(),
+            self.RequirementHelper.getEducationPeriod(),
         ]
         columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(requirementList)}
         return {
@@ -47,7 +47,7 @@ class RequirementService(BaseService):
         }
 
     def updateRequirementInfo(self, opType, valueIndex):
-        updateParams = self.matchHelper.getUpdateParams(opType, valueIndex)
+        updateParams = self.RequirementHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
             RequirementModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             self.reloadMatchHelper()
