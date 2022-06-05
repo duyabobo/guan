@@ -113,17 +113,8 @@ class GuanInfoService(BaseService):
         if not self.oppositeUserRecord:
             return []
 
-        userHelper = UserHelper(self.oppositeUserRecord)
-        allInfos = [  # todo today
-            userHelper.user.sex,
-            "出生于%d年" % userHelper.user.birth_year,
-            userHelper.user.martial_status,
-            "身高%scm" % userHelper.user.height,
-            "体重%skg" % userHelper.user.weight,
-            "月收入(税前)%s元" % userHelper.user.month_pay,
-            userHelper.user.education,
-        ]
-        return [i for i in allInfos if i]
+        informationList = UserHelper(self.oppositeUserRecord).getInformationList()
+        return [i['infoStr'] for i in informationList if i['infoStr']]
 
     def getMeetResult(self):
         return {

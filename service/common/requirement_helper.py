@@ -4,11 +4,36 @@ import json
 
 from util import const
 
+USER_INFO_GET_SEX = 'getSexInfo'
+USER_INFO_GET_MARTIAL_STATUS_PERIOD = 'getMartialStatusPeriod'
+USER_INFO_GET_EDUCATION_PERIOD = 'getEducationPeriod'
+USER_INFO_GET_BIRTH_YEAR_PERIOD = 'getBirthYearPeriod'
+USER_INFO_GET_WEIGHT_PERIOD = 'getWeightPeriod'
+USER_INFO_GET_HEIGHT_PERIOD = 'getHeightPeriod'
+USER_INFO_GET_MONTH_PAY_PERIOD = 'getMonthPayPeriod'
+
+REQUIREMENT_GET_FUNCS = [
+    USER_INFO_GET_SEX,
+    USER_INFO_GET_BIRTH_YEAR_PERIOD,
+    USER_INFO_GET_HEIGHT_PERIOD,
+    USER_INFO_GET_WEIGHT_PERIOD,
+    USER_INFO_GET_MARTIAL_STATUS_PERIOD,
+    USER_INFO_GET_EDUCATION_PERIOD,
+    USER_INFO_GET_MONTH_PAY_PERIOD,
+]
+
 
 class RequirementHelper(object):
 
     def __init__(self, requirement):
         self.requirement = requirement
+        
+    def getRequirementList(self):
+        requirementList = []
+        for func_name in REQUIREMENT_GET_FUNCS:
+            func = self.__getattribute__(func_name)
+            requirementList.append(func())
+        return requirementList
 
     @property
     def sexIndex(self):
@@ -192,6 +217,8 @@ class RequirementHelper(object):
             value = json.loads(valueIndex)
             updateParams['min_birth_year'] = const.MODEL_USER_BIRTH_YEAR_CHOICE_LIST[value[0]]
             updateParams['max_birth_year'] = const.MODEL_USER_BIRTH_YEAR_CHOICE_LIST[value[1]]
+        elif opType == const.MODEL_USER_OP_TYPE_MARTIAL_STATUS:
+            updateParams['martial_status'] = const.MODEL_USER_MARTIAL_STATUS_PERIOD_CHOICE_LIST[int(valueIndex)]
         elif opType == const.MODEL_USER_OP_TYPE_WEIGHT_PERIOD:
             value = json.loads(valueIndex)
             updateParams['min_weight'] = const.MODEL_USER_WEIGHT_PERIOD_CHOICE_LIST[value[0]]

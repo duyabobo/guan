@@ -63,15 +63,7 @@ class UserInfoService(BaseService):
         self.userHelper = UserHelper(userInfo)
 
     def getMyselfInfo(self):
-        informationList = [  # todo today
-            self.userHelper.getSexInfo(),
-            self.userHelper.getBirthYearInfo(),
-            self.userHelper.getHeight(),
-            self.userHelper.getWeight(),
-            self.userHelper.getMonthPay(),
-            self.userHelper.getMartialStatus(),
-            self.userHelper.getEducation(),
-        ]
+        informationList = self.userHelper.getInformationList()
         columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(informationList)}
         return {
             "informationList": informationList,
