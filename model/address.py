@@ -18,7 +18,7 @@ class AddressModel(BaseModel):
     name = Column(String)  # name
     description = Column(String, default="")  # 地点描述(人均消费/吃喝玩乐推荐)
     img = Column(String, default="")
-    location_id = Column(Integer, default=0)  # (省市区表)地区id
+    area_id = Column(Integer, default=0)  # (省市区表)地区id
     longitude = Column(Float, default=0)  # 经度
     latitude = Column(Float, default=0)  # 纬度
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
