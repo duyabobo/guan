@@ -28,7 +28,6 @@ class RequirementHelper(object):
             requirementList.append(func())
         return requirementList
 
-
     def getUpdateParams(self, opType, valueIndex):
         updateParams = {}
         if opType == MODEL_USER_OP_TYPE_SEX and int(valueIndex) != MODEL_SEX_UNKNOWN_INDEX:

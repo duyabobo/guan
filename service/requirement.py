@@ -15,7 +15,7 @@ class RequirementService(BaseService):
         self.dbSession = dbSession
         self.redis = redis
         self.passportId = passportId
-        self.RequirementHelper = RequirementHelper(self.requirementInfo)
+        self.requirementHelper = RequirementHelper(self.requirementInfo)
         super(RequirementService, self).__init__(dbSession, redis)
 
     @lazy_property
@@ -28,18 +28,10 @@ class RequirementService(BaseService):
 
     def reloadMatchHelper(self):
         requirementInfo = RequirementModel.getByPassportId(self.dbSession, self.passportId)
-        self.RequirementHelper = RequirementHelper(requirementInfo)
+        self.requirementHelper = RequirementHelper(requirementInfo)
 
     def getRequirementInfo(self):
-        requirementList = [  # todo today
-            self.RequirementHelper.getSexInfo(),
-            self.RequirementHelper.getBirthYearPeriod(),
-            self.RequirementHelper.getHeightPeriod(),
-            self.RequirementHelper.getWeightPeriod(),
-            self.RequirementHelper.getMonthPayPeriod(),
-            self.RequirementHelper.getMartialStatusPeriod(),
-            self.RequirementHelper.getEducationPeriod(),
-        ]
+        requirementList = self.requirementHelper.getRequirementList()
         columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(requirementList)}
         return {
             "requirementList": requirementList,
@@ -48,7 +40,7 @@ class RequirementService(BaseService):
         }
 
     def updateRequirementInfo(self, opType, valueIndex):
-        updateParams = self.RequirementHelper.getUpdateParams(opType, valueIndex)
+        updateParams = self.requirementHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
             RequirementModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
             self.reloadMatchHelper()
