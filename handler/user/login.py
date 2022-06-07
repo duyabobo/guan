@@ -5,7 +5,7 @@
 from handler.basehandler import BaseHandler
 from ral.passport import delSession
 from service.login import LoginService
-from util.const import RESP_NEED_LOGIN
+from util.const.response import RESP_NEED_LOGIN
 from util.monitor import superMonitor
 from util.wx_mini import WxHelper
 

@@ -8,7 +8,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
-from util import const
+from util.const import model
 
 
 class AddressModel(BaseModel):
@@ -29,15 +29,15 @@ class AddressModel(BaseModel):
 
     @classmethod
     def listByLongitudeLatitude(cls, dbSession, longitude, latitude):  # todo
-        return dbSession.query(cls).filter(cls.status == const.MODEL_STATUS_YES).all()
+        return dbSession.query(cls).filter(cls.status == model.MODEL_STATUS_YES).all()
 
     @classmethod
     def getById(cls, dbSession, addressId):
-        return dbSession.query(cls).filter(cls.id == addressId, cls.status == const.MODEL_STATUS_YES).first()
+        return dbSession.query(cls).filter(cls.id == addressId, cls.status == model.MODEL_STATUS_YES).first()
 
     @classmethod
     def getLastAddress(cls, dbSession):
-        return dbSession.query(cls).filter(cls.status == const.MODEL_STATUS_YES).order_by(cls.id.desc()).first()
+        return dbSession.query(cls).filter(cls.status == model.MODEL_STATUS_YES).order_by(cls.id.desc()).first()
 
     @property
     def nameShort(self):

@@ -7,7 +7,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
-from util import const
+from util.const import model
 
 
 class PassportModel(BaseModel):
@@ -22,14 +22,14 @@ class PassportModel(BaseModel):
 
     @classmethod
     def getByOpenid(cls, dbSession, openid):
-        return dbSession.query(cls).filter(cls.openid == openid, cls.status == const.MODEL_STATUS_YES).first()
+        return dbSession.query(cls).filter(cls.openid == openid, cls.status == model.MODEL_STATUS_YES).first()
 
     @classmethod
     def addByOpenid(cls, dbSession, openid):
         passport = cls(
             openid=openid,
             phone="",
-            status=const.MODEL_STATUS_YES
+            status=model.MODEL_STATUS_YES
         )
         dbSession.add(passport)
         dbSession.flush()

@@ -5,8 +5,10 @@ from model.user import UserModel
 from model.verify import VerifyModel
 from ral import user
 from service import BaseService
-from util import const
 from util.class_helper import lazy_property
+from util.const.model import MODEL_WORK_VERIFY_STATUS_YES, MODEL_USER_OP_TYPE_SEX, MODEL_USER_SEX_CHOICE_LIST, \
+    MODEL_USER_DEFAULT_SEX_INDEX
+from util.const.response import RESP_SEX_CANOT_EDIT
 
 
 class UserInfoService(BaseService):
@@ -34,7 +36,7 @@ class UserInfoService(BaseService):
 
     @property
     def isVerified(self):
-        return self.verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES
+        return self.verify.work_verify_status == MODEL_WORK_VERIFY_STATUS_YES
 
     @property
     def infoIsFilled(self):
@@ -49,7 +51,7 @@ class UserInfoService(BaseService):
     def getWork(self):
         return {
             "desc": "工作认证",
-            "value": "已认证" if self.verify.work_verify_status == const.MODEL_WORK_VERIFY_STATUS_YES else "未认证",
+            "value": "已认证" if self.verify.work_verify_status == MODEL_WORK_VERIFY_STATUS_YES else "未认证",
         }
 
     def getPhone(self):
@@ -84,8 +86,8 @@ class UserInfoService(BaseService):
         return self.getMyselfInfo()
 
     def checkBeforeUpdate(self, opType, valueIndex):
-        if opType == const.MODEL_USER_OP_TYPE_SEX and \
-                self.userInfo.sex != const.MODEL_USER_SEX_CHOICE_LIST[const.MODEL_USER_DEFAULT_SEX_INDEX] and\
-                self.userInfo.sex != const.MODEL_USER_SEX_CHOICE_LIST[int(valueIndex)]:
-            return const.RESP_SEX_CANOT_EDIT
+        if opType == MODEL_USER_OP_TYPE_SEX and \
+                self.userInfo.sex != MODEL_USER_SEX_CHOICE_LIST[MODEL_USER_DEFAULT_SEX_INDEX] and\
+                self.userInfo.sex != MODEL_USER_SEX_CHOICE_LIST[int(valueIndex)]:
+            return RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会

@@ -4,8 +4,8 @@ from model.activity import ActivityModel
 from model.address import AddressModel
 from model.user import UserModel
 from service import BaseService
-from util import const
 from util.class_helper import lazy_property
+from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
 
 
 class GuanguanService(BaseService):
@@ -100,9 +100,9 @@ class GuanguanService(BaseService):
                     "boyImg": activity.boyImg,
                     "girlImg": activity.girlImg,
                     "state": self.getState(activity),
-                    "img": const.CDN_QINIU_ADDRESS_URL + address.img,
-                    "addressImg": const.CDN_QINIU_ADDRESS_IMG,
-                    "timeImg": const.CDN_QINIU_TIME_IMG,
+                    "img": CDN_QINIU_ADDRESS_URL + address.img,
+                    "addressImg": CDN_QINIU_ADDRESS_IMG,
+                    "timeImg": CDN_QINIU_TIME_IMG,
                     "address": address.nameShort,
                 }
             )

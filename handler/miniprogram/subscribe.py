@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
 from service.subscribe import SubscribeService
-from util import const
+from util.const.mini_program import SUBSCRIBE_ACTIVITY_START_NOTI_TID
 from util.monitor import superMonitor
 
 
@@ -17,7 +17,7 @@ class SendMsgHandler(BaseHandler):
     @superMonitor
     def get(self):
         openId = self.getRequestParameter('openid', '')
-        templateId = self.getRequestParameter('templateId', const.SUBSCRIBE_ACTIVITY_START_NOTI_TID)
+        templateId = self.getRequestParameter('templateId', SUBSCRIBE_ACTIVITY_START_NOTI_TID)
         miniprogramState = self.getRequestParameter('miniprogramState', 'trial')  # formal/developer/trial
         ss = SubscribeService(self.dbSession, self.redis, openId, templateId, miniprogramState)
         ret = ss.sendActivityStartMsg()

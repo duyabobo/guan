@@ -6,8 +6,9 @@ import requests
 
 import util.config
 import util.config
-from util import const
 from ral import wx
+from util.const.mini_program import WX_MINIPROGRAM_CODE_TO_SESSION, WX_MINIPROGRAM_GET_TEKEN, \
+    WX_MINIPROGRAM_SEND_SUBSCRIBE_MSG
 
 
 class WxHelper(object):
@@ -27,7 +28,7 @@ class WxHelper(object):
             }
         )
 
-        wxAuthUrl = const.WX_MINIPROGRAM_CODE_TO_SESSION + urlParams
+        wxAuthUrl = WX_MINIPROGRAM_CODE_TO_SESSION + urlParams
         wxAuthRes = requests.get(wxAuthUrl, timeout=3).json()
         return wxAuthRes.get("openid", None)
 
@@ -36,7 +37,7 @@ class WxHelper(object):
         localToken = wx.getToken(self.redis)
         if localToken:
             return localToken
-        getTokenUrl = const.WX_MINIPROGRAM_GET_TEKEN.format(appid=self.appid, secret=self.secret)
+        getTokenUrl = WX_MINIPROGRAM_GET_TEKEN.format(appid=self.appid, secret=self.secret)
         tokenRes = requests.get(getTokenUrl, timeout=3).json()
         accessToken = tokenRes.get("access_token", "")
         if accessToken:
@@ -46,7 +47,7 @@ class WxHelper(object):
     def sendSubscribeMsg(self, openId, templateId, page, data, miniprogramState):
         """发送用户订阅消息"""
         access_token = self.getMiniProgramToken()
-        sendSmsUrl = const.WX_MINIPROGRAM_SEND_SUBSCRIBE_MSG.format(access_token=access_token)
+        sendSmsUrl = WX_MINIPROGRAM_SEND_SUBSCRIBE_MSG.format(access_token=access_token)
         res = requests.post(sendSmsUrl, json={
             "touser": openId,
             "template_id": templateId,

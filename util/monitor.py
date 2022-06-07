@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
-import time
 import hashlib
+import time
 
 from log import monitor_logger
-from util.const import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID
+from util.const.response import RESP_TOP_MONITOR_ERROR
 
 monitorLogger = monitor_logger('superMonitor')
 

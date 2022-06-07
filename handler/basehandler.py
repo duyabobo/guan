@@ -14,8 +14,8 @@ from tornado.web import RequestHandler
 
 import util.config
 from ral import passport
-from util.const import EXCHANGE_NAME
-from util.const import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
+from util.const.base import EXCHANGE_NAME
+from util.const.response import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.monitor import superMonitor
 
 

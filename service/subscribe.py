@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from service import BaseService
-from util import const
+from util.const.mini_program import GUANINFO_SHORT_PAGE
 from util.wx_mini import WxHelper
 
 
@@ -14,7 +14,7 @@ class SubscribeService(BaseService):
         super(SubscribeService, self).__init__(dbSession, redis)
 
     def sendActivityStartMsg(self):
-        page = const.GUANINFO_SHORT_PAGE.format(guan_id=1)  # todo guan_id 需要查询
+        page = GUANINFO_SHORT_PAGE.format(guan_id=1)  # todo guan_id 需要查询
         data = {
           "thing1": {
               "value": "您参加的见面活动即将开始，请准时参加。"
