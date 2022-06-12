@@ -3,6 +3,27 @@
 from util.const.mini_program import PICKER_TYPE_SELECTOR
 from util.const.model import *
 
+
+class MyselfSingleSelector(object):
+    """个人信息选择项数据结构：单项选择器"""
+    def __init__(self, desc, value, infoStr, bindChange):
+        def _selectValueIndex():  # 值对应的取值范围索引
+            try:
+                return self.choiceList.index(self.value) or self.defaultIndex
+            except:
+                return self.defaultIndex
+        self.desc = desc  # 名描述
+        self.value = value  # 当前值
+        self.infoStr = infoStr  # 当前值可读字符串
+        self.bindChange = bindChange  # 对应小程序的绑定方法
+        self.pickerType = PICKER_TYPE_SELECTOR  # 选择器类型：单项
+        self.choiceList = {MODEL_USER_OP_TYPE_SEX: MODEL_USER_SEX_CHOICE_LIST}.get(self.bindChange, [])  # 可选范围列表
+        self.defaultIndex = {MODEL_USER_OP_TYPE_SEX: MODEL_USER_DEFAULT_SEX_INDEX}.get(self.bindChange, 0)
+        self.selectValueIndex = _selectValueIndex()
+        self.hasFilled = self.value and self.selectValueIndex != self.defaultIndex  # 当前值是否已完善
+        self.bindColumnChange = ''  # 单选无效
+
+
 USER_INFO_GET_FUNCS = [  # 真正生效的用户信息字段获取方法
     'getSexInfo',
     'getBirthYearInfo',
@@ -12,29 +33,6 @@ USER_INFO_GET_FUNCS = [  # 真正生效的用户信息字段获取方法
     'getMonthPay',
     'getMartialStatus',
 ]
-
-
-class MyselfSingleSelector(object):
-    """个人信息选择项数据结构：单项选择器"""
-    def __init__(self, desc, value, infoStr, bindChange):
-        self.desc = desc  # 名描述
-        self.value = value  # 当前值
-        self.infoStr = infoStr  # 当前值可读字符串
-        self.bindChange = bindChange  # 对应小程序的绑定方法
-        self.pickerType = PICKER_TYPE_SELECTOR  # 选择器类型：单项
-        self.bindColumnChange = ''  # 单选无效
-
-    @property
-    def choiceList(self):  # 可选范围列表
-        pass
-
-    @property
-    def selectValueIndex(self):  # 值对应的取值范围索引
-        pass
-
-    @property
-    def hasFilled(self):  # 当前值是否已完善
-        pass
 
 
 class UserHelper(object):
@@ -73,82 +71,22 @@ class UserHelper(object):
         return updateParams
 
     def getSexInfo(self):
-        def _sexIndex():
-            try:
-                return MODEL_USER_SEX_CHOICE_LIST.index(self.user.sex) or MODEL_USER_DEFAULT_SEX_INDEX
-            except:
-                return MODEL_USER_DEFAULT_SEX_INDEX
-
-        return MyselfSingleSelector("性别", self.user.sex, self.user.sex, MODEL_USER_OP_TYPE_SEX)
+        return MyselfSingleSelector("性别", self.user.sex, self.user.sex, MODEL_USER_OP_TYPE_SEX)  # todo FACTORY
 
     def getBirthYearInfo(self):
-        def _birthYearIndex():
-            try:
-                return MODEL_USER_BIRTH_YEAR_CHOICE_LIST.index(
-                    self.user.birth_year) or MODEL_USER_DEFAULT_BIRTH_YEAR_INDEX
-            except:
-                return MODEL_USER_DEFAULT_BIRTH_YEAR_INDEX
-
-        return MyselfSingleSelector("出生年份", MODEL_USER_OP_TYPE_BIRTH_YEAR, MODEL_USER_BIRTH_YEAR_CHOICE_LIST,
-                                    self.user.birth_year or "", _birthYearIndex(), "出生于%d年" % self.user.birth_year,
-                                    self.user.birth_year != 0)
+        return MyselfSingleSelector("出生年份", self.user.birth_year, "出生于%d年" % self.user.birth_year, MODEL_USER_OP_TYPE_MARTIAL_STATUS)
 
     def getHeight(self):
-        def _heightIndex():
-            try:
-                return MODEL_USER_HEIGHT_CHOICE_LIST.index(
-                    self.user.height) or MODEL_USER_DEFAULT_HEIGHT_INDEX
-            except:
-                return MODEL_USER_DEFAULT_HEIGHT_INDEX
-
-        return MyselfSingleSelector("身高(cm)", MODEL_USER_OP_TYPE_HEIGHT, MODEL_USER_HEIGHT_CHOICE_LIST,
-                                    self.user.height or "", _heightIndex(), "身高%scm" % self.user.height,
-                                    self.user.height != 0)
+        return MyselfSingleSelector("身高(cm)", self.user.height, "身高%scm" % self.user.height, MODEL_USER_OP_TYPE_WEIGHT)
 
     def getWeight(self):
-        def _weightIndex():
-            try:
-                return MODEL_USER_WEIGHT_CHOICE_LIST.index(
-                    self.user.weight) or MODEL_USER_DEFAULT_WEIGHT_INDEX
-            except:
-                return MODEL_USER_DEFAULT_WEIGHT_INDEX
-
-        return MyselfSingleSelector("体重(kg)", MODEL_USER_OP_TYPE_WEIGHT,MODEL_USER_WEIGHT_CHOICE_LIST,
-                                    self.user.weight or "", _weightIndex(), "体重%skg" % self.user.weight,
-                                    self.user.weight != 0)
+        return MyselfSingleSelector("体重(kg)", self.user.weight, "体重%skg" % self.user.weight, MODEL_USER_OP_TYPE_WEIGHT)
 
     def getMonthPay(self):
-        def _monthPayIndex():
-            try:
-                return MODEL_USER_MONTH_PAY_CHOICE_LIST.index(
-                    self.user.month_pay) or MODEL_USER_DEFAULT_MONTH_PAY_INDEX
-            except:
-                return MODEL_USER_DEFAULT_MONTH_PAY_INDEX
-
-        return MyselfSingleSelector("税前月收入(元)", MODEL_USER_OP_TYPE_MONTH_PAY, MODEL_USER_MONTH_PAY_CHOICE_LIST,
-                                    self.user.month_pay or "", _monthPayIndex(), "月收入(税前)%s元" % self.user.month_pay,
-                                    self.user.month_pay != 0)
+        return MyselfSingleSelector("税前月收入(元)", self.user.month_pay, "月收入(税前)%s元" % self.user.month_pay, MODEL_USER_OP_TYPE_MONTH_PAY)
 
     def getMartialStatus(self):
-        def _martialStatusIndex():
-            try:
-                return MODEL_USER_MARTIAL_STATUS_CHOICE_LIST.index(
-                    self.user.martial_status) or MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX
-            except:
-                return MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX
-
-        return MyselfSingleSelector("婚姻现状", MODEL_USER_OP_TYPE_MARTIAL_STATUS, MODEL_USER_MARTIAL_STATUS_CHOICE_LIST,
-                                    self.user.martial_status, _martialStatusIndex(), self.user.martial_status,
-                                    self.user.martial_status != MODEL_USER_MARTIAL_STATUS_CHOICE_LIST[MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX])
+        return MyselfSingleSelector("婚姻现状", self.user.martial_status, self.user.martial_status, MODEL_USER_OP_TYPE_MARTIAL_STATUS)
 
     def getEducation(self):
-        def _educationIndex():
-            try:
-                return MODEL_USER_EDUCATION_CHOICE_LIST.index(
-                    self.user.education) or MODEL_USER_DEFAULT_EDUCATION_INDEX
-            except:
-                return MODEL_USER_DEFAULT_EDUCATION_INDEX
-
-        return MyselfSingleSelector("学历", MODEL_USER_OP_TYPE_EDUCATION, MODEL_USER_EDUCATION_CHOICE_LIST,
-                                    self.user.education, _educationIndex(), self.user.education,
-                                    self.user.education != MODEL_USER_EDUCATION_CHOICE_LIST[MODEL_USER_DEFAULT_EDUCATION_INDEX])
+        return MyselfSingleSelector("学历", self.user.education, self.user.education, MODEL_USER_OP_TYPE_EDUCATION)
