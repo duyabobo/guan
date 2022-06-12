@@ -25,6 +25,7 @@ class RequirementSingleSelector(object):
         self.choiceList = choiceList  # 条件可选范围列表
         self.value = value  # 条件当前值
         self.selectValueIndex = selectValueIndex  # 条件值对应的取值范围索引
+        self.bindColumnChange = ''
 
 
 class RequirementMultiSelector(object):

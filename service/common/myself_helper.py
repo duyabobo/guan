@@ -25,6 +25,7 @@ class MyselfSingleSelector(object):
         self.selectValueIndex = selectValueIndex  # 值对应的取值范围索引
         self.infoStr = infoStr  # 当前值可读字符串
         self.hasFilled = hasFilled  # 当前值是否已完善
+        self.bindColumnChange = ''
 
 
 class UserHelper(object):
@@ -42,7 +43,7 @@ class UserHelper(object):
     @property
     def hasFillFinish(self):
         informationList = self.getInformationList()
-        return reduce(lambda x, y: x and y, [i['hasFilled'] for i in informationList])
+        return reduce(lambda x, y: x and y, [i.hasFilled for i in informationList])
 
     def getUpdateParams(self, opType, valueIndex):
         updateParams = {}

@@ -32,7 +32,7 @@ class RequirementService(BaseService):
 
     def getRequirementInfo(self):
         requirementList = self.requirementHelper.getRequirementList()
-        columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(requirementList)}
+        columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(requirementList)}
         return {
             "requirementList": requirementList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给requirementList的每个元素一个对应序号，用来小程序实时更新对应的picker值

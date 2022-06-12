@@ -66,7 +66,7 @@ class UserInfoService(BaseService):
 
     def getMyselfInfo(self):
         informationList = self.userHelper.getInformationList()
-        columnChangeTypeIndexMap = {v.get('bindColumnChange', ''): i for i, v in enumerate(informationList)}
+        columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(informationList)}
         return {
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号

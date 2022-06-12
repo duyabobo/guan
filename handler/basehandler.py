@@ -17,6 +17,7 @@ from ral import passport
 from util.const.base import EXCHANGE_NAME
 from util.const.response import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.monitor import superMonitor
+from util.obj_util import object_2_dict
 
 
 class BaseHandler(RequestHandler):
@@ -158,7 +159,7 @@ class BaseHandler(RequestHandler):
         if not respData:
             respData = {}
         resp = {
-            'data': respData,
+            'data': object_2_dict(respData),
         }
         resp.update(respNormal)
         self.write(json.dumps(resp))
