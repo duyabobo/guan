@@ -15,7 +15,7 @@ OP_FUNCS = [  # 真正生效的用户信息字段操作类型
 ]
 
 
-def SingleSelectorFactory(op_type, data):
+def selectorFactory(op_type, data):
     if op_type == OP_TYPE_SEX:
         return SingleSelector("性别", data.sex, data.sex, op_type)
     elif op_type == OP_TYPE_BIRTH_YEAR:
@@ -40,7 +40,7 @@ class UserHelper(object):
     def getInformationList(self):
         informationList = []
         for op_func in OP_FUNCS:
-            info = SingleSelectorFactory(op_func, self.user)
+            info = selectorFactory(op_func, self.user)
             if info:
                 informationList.append(info)
         return informationList

@@ -22,7 +22,7 @@ OP_TYPE_HEIGHT = 'updateHeight'
 OP_TYPE_WEIGHT = 'updateWeight'
 OP_TYPE_MONTH_PAY = 'updateMonthPay'
 OP_TYPE_EDUCATION = 'updateEducation'
-BIRTH_YEAR_PERIOD = 'updateBirthYearPeriod'
+OP_BIRTH_YEAR_PERIOD = 'updateBirthYearPeriod'
 OP_TYPE_HEIGHT_PERIOD = 'updateHeightPeriod'
 OP_TYPE_WEIGHT_PERIOD = 'updateWeightPeriod'
 OP_TYPE_MONTH_PAY_PERIOD = 'updateMonthPayPeriod'
@@ -92,7 +92,7 @@ MATCH_INFO_DICT = {
         "PICKER_TYPE": PICKER_TYPE_SELECTOR,
         "COLUMN_CHANGE_FUNC": ""
     },
-    BIRTH_YEAR_PERIOD: {
+    OP_BIRTH_YEAR_PERIOD: {
         "CHOICE_LIST": BIRTH_YEAR_CHOICE_LIST,
         "DEFAULT_INDEX": DEFAULT_YEAR_INDEX,
         "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
