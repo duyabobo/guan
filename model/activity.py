@@ -9,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.sql import or_
 
 from model import BaseModel
-from util.const import model
+from util.const import match
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.util_time import datetime2str
 
@@ -30,14 +30,14 @@ class ActivityModel(BaseModel):
     @classmethod
     def listByAddressIds(cls, dbSession, addressIds):
         return dbSession.query(cls).filter(
-            cls.status == model.MODEL_STATUS_YES,
+            cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now().date()
         ).all()
 
     @classmethod
     def getById(cls, dbSession, activityId):
-        return dbSession.query(cls).filter(cls.id == activityId, cls.status == model.MODEL_STATUS_YES).first()
+        return dbSession.query(cls).filter(cls.id == activityId, cls.status == match.MODEL_STATUS_YES).first()
 
     @property
     def startTimeStr(self):
@@ -70,14 +70,14 @@ class ActivityModel(BaseModel):
             cls.start_time > datetime.datetime.now(),
             cls.girl_passport_id == 0,
             cls.boy_passport_id == 0,
-            cls.status == model.MODEL_STATUS_YES
+            cls.status == match.MODEL_STATUS_YES
         ).order_by(cls.id.desc()).first()
 
     @classmethod
     def getLastActivity(cls, dbSession):
         return dbSession.query(cls).filter(
             cls.start_time > datetime.datetime.now(),
-            cls.status == model.MODEL_STATUS_YES
+            cls.status == match.MODEL_STATUS_YES
         ).order_by(cls.id.desc()).first()
 
     @classmethod

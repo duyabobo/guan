@@ -7,7 +7,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
-from util.const import model
+from util.const import match
 
 
 class VerifyModel(BaseModel):
@@ -25,7 +25,7 @@ class VerifyModel(BaseModel):
     def addByPassportId(cls, dbSession, passportId):
         verify = cls(
             passport_id=passportId,
-            status=model.MODEL_STATUS_YES
+            status=match.MODEL_STATUS_YES
         )
         dbSession.add(verify)
         dbSession.flush()
@@ -33,12 +33,12 @@ class VerifyModel(BaseModel):
 
     @classmethod
     def getByPassportId(cls, dbSession, passportId):
-        return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == model.MODEL_STATUS_YES).first()
+        return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
     def updateVerifyStatus(cls, dbSession, passportId, email):
         dbSession.query(cls).filter(cls.passport_id == passportId).\
-            update({"work_mail": email, "work_verify_status": model.MODEL_WORK_VERIFY_STATUS_YES})
+            update({"work_mail": email, "work_verify_status": match.MODEL_WORK_VERIFY_STATUS_YES})
         dbSession.commit()
 
     @classmethod

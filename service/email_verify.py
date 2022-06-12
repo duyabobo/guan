@@ -5,7 +5,7 @@ import gevent
 from model.verify import VerifyModel
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.model import MODEL_WORK_VERIFY_STATUS_NO
+from util.const.match import MODEL_WORK_VERIFY_STATUS_NO
 from util.const.response import RESP_HAS_EMAIL_VERIFY_RECENTLY, RESP_OK, \
     RESP_HAS_EMAIL_VERIFY_FAILED, RESP_HAS_EMAIL_IS_NOT_COMPANY, RESP_HAS_SEND_EMAIL
 from util.mail import send_email_verify
