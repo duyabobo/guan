@@ -14,6 +14,19 @@ USER_INFO_GET_FUNCS = [  # 真正生效的用户信息字段获取方法
 ]
 
 
+class MyselfSingleSelector(object):
+    """个人信息选择项数据结构：单项选择器"""
+    def __init__(self, desc, bindChange, choiceList, value, selectValueIndex, infoStr, hasFilled):
+        self.desc = desc  # 名描述
+        self.bindChange = bindChange  # 对应小程序的绑定方法
+        self.pickerType = PICKER_TYPE_SELECTOR  # 选择器类型：单项
+        self.choiceList = choiceList  # 可选范围列表
+        self.value = value  # 当前值
+        self.selectValueIndex = selectValueIndex  # 值对应的取值范围索引
+        self.infoStr = infoStr  # 当前值可读字符串
+        self.hasFilled = hasFilled  # 当前值是否已完善
+
+
 class UserHelper(object):
 
     def __init__(self, user):
@@ -56,16 +69,9 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_SEX_INDEX
 
-        return {
-            "desc": "性别",
-            "bindChange": MODEL_USER_OP_TYPE_SEX,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.sex,
-            "selectValueIndex": _sexIndex(),
-            "choiceList": MODEL_USER_SEX_CHOICE_LIST,
-            "infoStr": self.user.sex,
-            "hasFilled": self.user.sex != MODEL_USER_SEX_CHOICE_LIST[MODEL_USER_DEFAULT_SEX_INDEX],
-        }
+        return MyselfSingleSelector("性别", MODEL_USER_OP_TYPE_SEX, MODEL_USER_SEX_CHOICE_LIST,
+                                    self.user.sex, _sexIndex(), self.user.sex,
+                                    self.user.sex != MODEL_USER_SEX_CHOICE_LIST[MODEL_USER_DEFAULT_SEX_INDEX])
 
     def getBirthYearInfo(self):
         def _birthYearIndex():
@@ -75,16 +81,9 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_BIRTH_YEAR_INDEX
 
-        return {
-            "desc": "出生年份",
-            "bindChange": MODEL_USER_OP_TYPE_BIRTH_YEAR,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.birth_year or "",
-            "selectValueIndex": _birthYearIndex(),
-            "choiceList": MODEL_USER_BIRTH_YEAR_CHOICE_LIST,
-            "infoStr": "出生于%d年" % self.user.birth_year,
-            "hasFilled": self.user.birth_year != 0,
-        }
+        return MyselfSingleSelector("出生年份", MODEL_USER_OP_TYPE_BIRTH_YEAR, MODEL_USER_BIRTH_YEAR_CHOICE_LIST,
+                                    self.user.birth_year or "", _birthYearIndex(), "出生于%d年" % self.user.birth_year,
+                                    self.user.birth_year != 0)
 
     def getHeight(self):
         def _heightIndex():
@@ -94,16 +93,9 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_HEIGHT_INDEX
 
-        return {
-            "desc": "身高(cm)",
-            "bindChange": MODEL_USER_OP_TYPE_HEIGHT,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.height or "",
-            "selectValueIndex": _heightIndex(),
-            "choiceList": MODEL_USER_HEIGHT_CHOICE_LIST,
-            "infoStr": "身高%scm" % self.user.height,
-            "hasFilled": self.user.height != 0,
-        }
+        return MyselfSingleSelector("身高(cm)", MODEL_USER_OP_TYPE_HEIGHT, MODEL_USER_HEIGHT_CHOICE_LIST,
+                                    self.user.height or "", _heightIndex(), "身高%scm" % self.user.height,
+                                    self.user.height != 0)
 
     def getWeight(self):
         def _weightIndex():
@@ -113,16 +105,9 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_WEIGHT_INDEX
 
-        return {
-            "desc": "体重(kg)",
-            "bindChange": MODEL_USER_OP_TYPE_WEIGHT,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.weight or "",
-            "selectValueIndex": _weightIndex(),
-            "choiceList": MODEL_USER_WEIGHT_CHOICE_LIST,
-            "infoStr": "体重%skg" % self.user.weight,
-            "hasFilled": self.user.weight != 0,
-        }
+        return MyselfSingleSelector("体重(kg)", MODEL_USER_OP_TYPE_WEIGHT,MODEL_USER_WEIGHT_CHOICE_LIST,
+                                    self.user.weight or "", _weightIndex(), "体重%skg" % self.user.weight,
+                                    self.user.weight != 0)
 
     def getMonthPay(self):
         def _monthPayIndex():
@@ -132,16 +117,9 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_MONTH_PAY_INDEX
 
-        return {
-            "desc": "税前月收入(元)",
-            "bindChange": MODEL_USER_OP_TYPE_MONTH_PAY,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.month_pay or "",
-            "selectValueIndex": _monthPayIndex(),
-            "choiceList": MODEL_USER_MONTH_PAY_CHOICE_LIST,
-            "infoStr": "月收入(税前)%s元" % self.user.month_pay,
-            "hasFilled": self.user.month_pay != 0,
-        }
+        return MyselfSingleSelector("税前月收入(元)", MODEL_USER_OP_TYPE_MONTH_PAY, MODEL_USER_MONTH_PAY_CHOICE_LIST,
+                                    self.user.month_pay or "", _monthPayIndex(), "月收入(税前)%s元" % self.user.month_pay,
+                                    self.user.month_pay != 0)
 
     def getMartialStatus(self):
         def _martialStatusIndex():
@@ -150,16 +128,10 @@ class UserHelper(object):
                     self.user.martial_status) or MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX
             except:
                 return MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX
-        return {
-            "desc": "婚姻现状",
-            "bindChange": MODEL_USER_OP_TYPE_MARTIAL_STATUS,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.martial_status,
-            "selectValueIndex": _martialStatusIndex(),
-            "choiceList": MODEL_USER_MARTIAL_STATUS_CHOICE_LIST,
-            "infoStr": self.user.martial_status,
-            "hasFilled": self.user.martial_status != MODEL_USER_MARTIAL_STATUS_CHOICE_LIST[MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX],
-        }
+
+        return MyselfSingleSelector("婚姻现状", MODEL_USER_OP_TYPE_MARTIAL_STATUS, MODEL_USER_MARTIAL_STATUS_CHOICE_LIST,
+                                    self.user.martial_status, _martialStatusIndex(), self.user.martial_status,
+                                    self.user.martial_status != MODEL_USER_MARTIAL_STATUS_CHOICE_LIST[MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX])
 
     def getEducation(self):
         def _educationIndex():
@@ -169,13 +141,6 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_EDUCATION_INDEX
 
-        return {
-            "desc": "学历",
-            "bindChange": MODEL_USER_OP_TYPE_EDUCATION,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.user.education,
-            "selectValueIndex": _educationIndex(),
-            "choiceList": MODEL_USER_EDUCATION_CHOICE_LIST,
-            "infoStr": self.user.education,
-            "hasFilled": self.user.education != MODEL_USER_EDUCATION_CHOICE_LIST[MODEL_USER_DEFAULT_EDUCATION_INDEX],
-        }
+        return MyselfSingleSelector("学历", MODEL_USER_OP_TYPE_EDUCATION, MODEL_USER_EDUCATION_CHOICE_LIST,
+                                    self.user.education, _educationIndex(), self.user.education,
+                                    self.user.education != MODEL_USER_EDUCATION_CHOICE_LIST[MODEL_USER_DEFAULT_EDUCATION_INDEX])
