@@ -16,16 +16,25 @@ USER_INFO_GET_FUNCS = [  # 真正生效的用户信息字段获取方法
 
 class MyselfSingleSelector(object):
     """个人信息选择项数据结构：单项选择器"""
-    def __init__(self, desc, bindChange, choiceList, value, selectValueIndex, infoStr, hasFilled):
+    def __init__(self, desc, value, infoStr, bindChange):
         self.desc = desc  # 名描述
+        self.value = value  # 当前值
+        self.infoStr = infoStr  # 当前值可读字符串
         self.bindChange = bindChange  # 对应小程序的绑定方法
         self.pickerType = PICKER_TYPE_SELECTOR  # 选择器类型：单项
-        self.choiceList = choiceList  # 可选范围列表
-        self.value = value  # 当前值
-        self.selectValueIndex = selectValueIndex  # 值对应的取值范围索引
-        self.infoStr = infoStr  # 当前值可读字符串
-        self.hasFilled = hasFilled  # 当前值是否已完善
-        self.bindColumnChange = ''
+        self.bindColumnChange = ''  # 单选无效
+
+    @property
+    def choiceList(self):  # 可选范围列表
+        pass
+
+    @property
+    def selectValueIndex(self):  # 值对应的取值范围索引
+        pass
+
+    @property
+    def hasFilled(self):  # 当前值是否已完善
+        pass
 
 
 class UserHelper(object):
@@ -70,9 +79,7 @@ class UserHelper(object):
             except:
                 return MODEL_USER_DEFAULT_SEX_INDEX
 
-        return MyselfSingleSelector("性别", MODEL_USER_OP_TYPE_SEX, MODEL_USER_SEX_CHOICE_LIST,
-                                    self.user.sex, _sexIndex(), self.user.sex,
-                                    self.user.sex != MODEL_USER_SEX_CHOICE_LIST[MODEL_USER_DEFAULT_SEX_INDEX])
+        return MyselfSingleSelector("性别", self.user.sex, self.user.sex, MODEL_USER_OP_TYPE_SEX)
 
     def getBirthYearInfo(self):
         def _birthYearIndex():
