@@ -16,6 +16,29 @@ REQUIREMENT_GET_FUNCS = [  # 真正生效的期望条件字段获取方法
 ]
 
 
+class RequirementSingleSelector(object):
+    """择偶条件选择项数据结构：单项选择器"""
+    def __init__(self, desc, bindChange, choiceList, value, selectValueIndex):
+        self.desc = desc  # 条件名描述
+        self.bindChange = bindChange  # 对应小程序的绑定方法
+        self.pickerType = PICKER_TYPE_SELECTOR  # 选择器类型：单项
+        self.choiceList = choiceList  # 条件可选范围列表
+        self.value = value  # 条件当前值
+        self.selectValueIndex = selectValueIndex  # 条件值对应的取值范围索引
+
+
+class RequirementMultiSelector(object):
+    def __init__(self, desc, bindChange, bindColumnChange, fromValue, toValue, fromAndToSelectValueIndex, fromAndToChoiceList):
+        self.desc = desc
+        self.pickerType = PICKER_TYPE_MULTI_SELECTOR  # 选择器类型：多项
+        self.bindChange = bindChange
+        self.bindColumnChange = bindColumnChange
+        self.fromValue = fromValue
+        self.toValue = toValue
+        self.fromAndToSelectValueIndex = fromAndToSelectValueIndex
+        self.fromAndToChoiceList = fromAndToChoiceList
+
+
 class RequirementHelper(object):
 
     def __init__(self, requirement):
@@ -64,14 +87,8 @@ class RequirementHelper(object):
             except:
                 return MODEL_USER_DEFAULT_SEX_INDEX
 
-        return {
-            "desc": "性别",
-            "bindChange": MODEL_USER_OP_TYPE_SEX,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.requirement.sex,
-            "selectValueIndex": _sexIndex(),
-            "choiceList": MODEL_USER_SEX_CHOICE_LIST,
-        }
+        return RequirementSingleSelector("性别", MODEL_USER_OP_TYPE_SEX, MODEL_USER_SEX_CHOICE_LIST,
+                                         self.requirement.sex, _sexIndex())
 
     def getMartialStatusPeriod(self):
         def _martialStatusIndex():
@@ -81,14 +98,8 @@ class RequirementHelper(object):
             except:
                 return MODEL_USER_DEFAULT_MARTIAL_STATUS_INDEX
 
-        return {
-            "desc": "婚姻",
-            "bindChange": MODEL_USER_OP_TYPE_MARTIAL_STATUS,
-            "pickerType": PICKER_TYPE_SELECTOR,
-            "value": self.requirement.martial_status,
-            "selectValueIndex": _martialStatusIndex(),
-            "choiceList": MODEL_USER_MARTIAL_STATUS_PERIOD_CHOICE_LIST,
-        }
+        return RequirementSingleSelector("婚姻", MODEL_USER_OP_TYPE_MARTIAL_STATUS, MODEL_USER_MARTIAL_STATUS_PERIOD_CHOICE_LIST,
+                                         self.requirement.martial_status, _martialStatusIndex())
 
     def getEducationPeriod(self):
         def _selectEducationMinIndex():
@@ -105,16 +116,10 @@ class RequirementHelper(object):
             except:
                 return 0
 
-        return {
-            "desc": "学历区间",
-            "bindChange": MODEL_USER_OP_TYPE_EDUCATION_PERIOD,
-            "pickerType": PICKER_TYPE_MULTI_SELECTOR,
-            "bindColumnChange": "educationPeriodColumnChange",
-            "fromValue": self.requirement.min_education,
-            "toValue": self.requirement.max_education,
-            "fromAndToSelectValueIndex": [_selectEducationMinIndex(), _selectEducationMaxIndex()],
-            "fromAndToChoiceList": [MODEL_USER_EDUCATION_PERIOD_CHOICE_LIST, MODEL_USER_EDUCATION_PERIOD_CHOICE_LIST],
-        }
+        return RequirementMultiSelector("学历区间", MODEL_USER_OP_TYPE_EDUCATION_PERIOD, "educationPeriodColumnChange",
+                                        self.requirement.min_education, self.requirement.max_education,
+                                        [_selectEducationMinIndex(), _selectEducationMaxIndex()],
+                                        [MODEL_USER_EDUCATION_PERIOD_CHOICE_LIST, MODEL_USER_EDUCATION_PERIOD_CHOICE_LIST])
 
     def getBirthYearPeriod(self):
         def _selectBirthYearMinIndex():
@@ -131,16 +136,10 @@ class RequirementHelper(object):
             except:
                 return 0
 
-        return {
-            "desc": "出生年份区间",   
-            "bindChange": MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD,
-            "pickerType": PICKER_TYPE_MULTI_SELECTOR,  
-            "bindColumnChange": "birthYearPeriodColumnChange",  
-            "fromValue": self.requirement.min_birth_year,
-            "toValue": self.requirement.max_birth_year,
-            "fromAndToSelectValueIndex": [_selectBirthYearMinIndex(), _selectBirthYearMaxIndex()],
-            "fromAndToChoiceList": [MODEL_USER_BIRTH_YEAR_CHOICE_LIST, MODEL_USER_BIRTH_YEAR_CHOICE_LIST],
-        }
+        return RequirementMultiSelector("出生年份区间", MODEL_USER_OP_TYPE_BIRTH_YEAR_PERIOD, "birthYearPeriodColumnChange",
+                                        self.requirement.min_birth_year, self.requirement.max_birth_year,
+                                        [_selectBirthYearMinIndex(), _selectBirthYearMaxIndex()],
+                                        [MODEL_USER_BIRTH_YEAR_CHOICE_LIST, MODEL_USER_BIRTH_YEAR_CHOICE_LIST])
 
     def getWeightPeriod(self):
         def _selectWeightMinIndex():
@@ -157,16 +156,10 @@ class RequirementHelper(object):
             except:
                 return 0
 
-        return {
-            "desc": "体重区间(kg)",
-            "bindChange": MODEL_USER_OP_TYPE_WEIGHT_PERIOD,
-            "pickerType": PICKER_TYPE_MULTI_SELECTOR,  
-            "bindColumnChange": "weightPeriodColumnChange",  
-            "fromValue": self.requirement.min_weight,
-            "toValue": self.requirement.max_weight,
-            "fromAndToSelectValueIndex": [_selectWeightMinIndex(), _selectWeightMaxIndex()],
-            "fromAndToChoiceList": [MODEL_USER_WEIGHT_PERIOD_CHOICE_LIST, MODEL_USER_WEIGHT_PERIOD_CHOICE_LIST],
-        }
+        return RequirementMultiSelector("体重区间(kg)", MODEL_USER_OP_TYPE_WEIGHT_PERIOD, "weightPeriodColumnChange",
+                                        self.requirement.min_weight, self.requirement.max_weight,
+                                        [_selectWeightMinIndex(), _selectWeightMaxIndex()],
+                                        [MODEL_USER_WEIGHT_PERIOD_CHOICE_LIST, MODEL_USER_WEIGHT_PERIOD_CHOICE_LIST])
 
     def getHeightPeriod(self):
         def _selectHeightMinIndex():
@@ -183,16 +176,10 @@ class RequirementHelper(object):
             except:
                 return 0
 
-        return {
-            "desc": "身高区间(cm)",
-            "bindChange": MODEL_USER_OP_TYPE_HEIGHT_PERIOD,
-            "pickerType": PICKER_TYPE_MULTI_SELECTOR,  
-            "bindColumnChange": "heightPeriodColumnChange",  
-            "fromValue": self.requirement.min_height,
-            "toValue": self.requirement.max_height,
-            "fromAndToSelectValueIndex": [_selectHeightMinIndex(), _selectHeightMaxIndex()],
-            "fromAndToChoiceList": [MODEL_USER_HEIGHT_PERIOD_CHOICE_LIST, MODEL_USER_HEIGHT_PERIOD_CHOICE_LIST],
-        }
+        return RequirementMultiSelector("身高区间(cm)", MODEL_USER_OP_TYPE_HEIGHT_PERIOD, "heightPeriodColumnChange",
+                                        self.requirement.min_height, self.requirement.max_height,
+                                        [_selectHeightMinIndex(), _selectHeightMaxIndex()],
+                                        [MODEL_USER_HEIGHT_PERIOD_CHOICE_LIST, MODEL_USER_HEIGHT_PERIOD_CHOICE_LIST])
 
     def getMonthPayPeriod(self):
         def _selectMonthPayMinIndex():
@@ -209,13 +196,7 @@ class RequirementHelper(object):
             except:
                 return 0
 
-        return {
-            "desc": "税前月收入区间(元)",
-            "bindChange": MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD,
-            "pickerType": PICKER_TYPE_MULTI_SELECTOR,
-            "bindColumnChange": "monthPayPeriodColumnChange",
-            "fromValue": self.requirement.min_month_pay,
-            "toValue": self.requirement.max_month_pay,
-            "fromAndToSelectValueIndex": [_selectMonthPayMinIndex(), _selectMonthPayMaxIndex()],
-            "fromAndToChoiceList": [MODEL_USER_MONTH_PAY_PERIOD_CHOICE_LIST, MODEL_USER_MONTH_PAY_PERIOD_CHOICE_LIST],
-        }
+        return RequirementMultiSelector("税前月收入区间(元)", MODEL_USER_OP_TYPE_MONTH_PAY_PERIOD, "monthPayPeriodColumnChange",
+                                        self.requirement.min_month_pay, self.requirement.max_month_pay,
+                                        [_selectMonthPayMinIndex(), _selectMonthPayMaxIndex()],
+                                        [MODEL_USER_MONTH_PAY_PERIOD_CHOICE_LIST, MODEL_USER_MONTH_PAY_PERIOD_CHOICE_LIST])
