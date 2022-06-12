@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from service.common.selector import SingleSelector
+from service.common.selector import selectorFactory
 from util.const.match import *
 
 
@@ -13,23 +13,6 @@ OP_FUNCS = [  # 真正生效的用户信息字段操作类型
     OP_TYPE_MARTIAL_STATUS,
     OP_TYPE_EDUCATION,
 ]
-
-
-def selectorFactory(op_type, data):
-    if op_type == OP_TYPE_SEX:
-        return SingleSelector("性别", data.sex, data.sex, op_type)
-    elif op_type == OP_TYPE_BIRTH_YEAR:
-        return SingleSelector("出生年份", data.birth_year, "出生于%d年" % data.birth_year, op_type)
-    elif op_type == OP_TYPE_HEIGHT:
-        return SingleSelector("身高(cm)", data.height, "身高%scm" % data.height, op_type)
-    elif op_type == OP_TYPE_WEIGHT:
-        return SingleSelector("体重(kg)", data.weight, "体重%skg" % data.weight, op_type)
-    elif op_type == OP_TYPE_MONTH_PAY:
-        return SingleSelector("税前月收入(元)", data.month_pay, "月收入(税前)%s元" % data.month_pay, op_type)
-    elif op_type == OP_TYPE_MARTIAL_STATUS:
-        return SingleSelector("婚姻现状", data.martial_status, data.martial_status, op_type)
-    elif op_type == OP_TYPE_EDUCATION:
-        return SingleSelector("学历", data.education, data.education, op_type)
 
 
 class UserHelper(object):
