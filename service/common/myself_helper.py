@@ -6,12 +6,12 @@ from util.const.match import *
 
 OP_FUNCS = [  # 真正生效的用户信息字段操作类型
     OP_TYPE_SEX,
-    OP_TYPE_BIRTH_YEAR,
-    OP_TYPE_HEIGHT,
-    OP_TYPE_WEIGHT,
-    OP_TYPE_MONTH_PAY,
-    OP_TYPE_MARTIAL_STATUS,
-    OP_TYPE_EDUCATION,
+    # OP_TYPE_BIRTH_YEAR,
+    # OP_TYPE_HEIGHT,
+    # OP_TYPE_WEIGHT,
+    # OP_TYPE_MONTH_PAY,
+    # OP_TYPE_MARTIAL_STATUS,
+    # OP_TYPE_EDUCATION,
 ]
 
 

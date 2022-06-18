@@ -33,8 +33,8 @@ class MineService(BaseService):
     def getMainGroupList(self):
         return [
             [
-                MainFuncObj(1, 0, MYINFORMATION_PAGE, "我的资料", "clickMine"),
-                MainFuncObj(2, 1, MYREQUIREMENT_PAGE, "见面条件", "clickMine"),
+                MainFuncObj(1, 0, MYINFORMATION_PAGE, "时间安排", "clickMine"),
+                MainFuncObj(2, 1, MYREQUIREMENT_PAGE, "具体时间", "clickMine"),
             ],
             [
                 MainFuncObj(3, 0, SUGGESTION_PAGE, "客服", "handleContact", needLogin=False, openType="contact"),

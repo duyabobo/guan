@@ -109,10 +109,10 @@ class GuanInfoService(BaseService):
     @property
     def opDesc(self):
         return {
-            GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
-            GUAN_INFO_OP_TYPE_QUIT: "取消见面",
-            GUAN_INFO_OP_TYPE_JOIN: "接受邀请",
-        }.get(self.opType, "参加")
+            GUAN_INFO_OP_TYPE_INVITE: "报名",
+            GUAN_INFO_OP_TYPE_QUIT: "报名",
+            GUAN_INFO_OP_TYPE_JOIN: "报名",
+        }.get(self.opType, "报名")
 
     @property
     def oppositePeopleInfos(self):
@@ -141,7 +141,7 @@ class GuanInfoService(BaseService):
             "time": self.time,
             "timeDesc": self.timeDesc,
             "guanId": self.activityId,
-            "oppositePeopleInfos": self.oppositePeopleInfos,
+            # "oppositePeopleInfos": self.oppositePeopleInfos,
             "opDesc": self.opDesc,
             "opType": self.opType,
             "timeImg": self.timeIcon,
@@ -154,7 +154,7 @@ class GuanInfoService(BaseService):
             "subscribeTemplateIds": subscribeTemplateIds,
             "myRequirementPage": MYREQUIREMENT_PAGE,
             "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
-            "requirementResult": "3人满足见面条件"  # todo
+            "requirementResult": "3人满足具体时间"  # todo
         }
 
     def reloadActivityRecord(self):

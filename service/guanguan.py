@@ -60,11 +60,11 @@ class GuanguanService(BaseService):
         girl_pid = activity.girl_passport_id
         boy_pid = activity.boy_passport_id
         if not girl_pid and not boy_pid:
-            return "虚位以待"
+            return "报名"
         elif self.passportId in [girl_pid, boy_pid]:
-            return "我的见面"
+            return "报名"
         else:
-            return "见面邀请"
+            return "报名"
 
     def reSortActivityList(self, activityList, ongoingActivity):
         for a in activityList:
@@ -96,8 +96,8 @@ class GuanguanService(BaseService):
                 {
                     "id": activity.id,
                     "time": activity.startTimeStr,
-                    "boyImg": activity.boyImg,
-                    "girlImg": activity.girlImg,
+                    # "boyImg": activity.boyImg,
+                    # "girlImg": activity.girlImg,
                     "state": self.getState(activity),
                     "img": CDN_QINIU_ADDRESS_URL + address.img,
                     "addressImg": CDN_QINIU_ADDRESS_IMG,

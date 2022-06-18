@@ -6,7 +6,7 @@ from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELE
 
 def selectorFactory(op_type, data):
     if op_type == OP_TYPE_SEX:
-        return SingleSelector("性别", data.sex, data.sex, op_type)
+        return SingleSelector("时间（小时）", data.sex, data.sex, op_type)
     elif op_type == OP_TYPE_BIRTH_YEAR:
         return SingleSelector("出生年份", data.birth_year, "出生于%d年" % data.birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT:

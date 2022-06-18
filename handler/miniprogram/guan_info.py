@@ -16,7 +16,7 @@ class GuanInfoHandler(BaseHandler):
     @superMonitor
     def put(self, *args, **kwargs):
         activityId = self.getRequestParameter('guanId', paraType=int)
-        opType = self.getRequestParameter('opType', paraType=int)
+        # opType = self.getRequestParameter('opType', paraType=int)
         gis = GuanInfoService(self.redis, activityId, self.currentPassport)
-        ret = gis.activityOprete(opType)
-        return self.response(gis.getGuanInfo(), respNormal=ret)
+        # ret = gis.activityOprete(opType)
+        return self.response(gis.getGuanInfo())
