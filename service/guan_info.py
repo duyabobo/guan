@@ -120,7 +120,7 @@ class GuanInfoService(BaseService):
             return []
 
         informationList = UserHelper(self.oppositeUserRecord).getInformationList()
-        return [i['infoStr'] for i in informationList if i['infoStr']]
+        return [i.infoStr for i in informationList if i.infoStr]
 
     def getMeetResult(self):
         return {
