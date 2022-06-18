@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 import util.config
-from redis import StrictRedis
+from redis_conn import StrictRedis
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

@@ -2,28 +2,43 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
+import functools
 import json
 
 import pika
 # 这个并发库, python3 自带, python2 需要: pip install futures
 # from concurrent.futures import ThreadPoolExecutor
-from redis import StrictRedis
+import tornado
 from sqlalchemy.orm import sessionmaker
 # from tornado.concurrent import run_on_executor
 from tornado.web import RequestHandler
 
 import util.config
 from ral import passport
+from util import redis_conn
 from util.const.base import EXCHANGE_NAME
 from util.const.response import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
+from util.ctx import LocalContext
 from util.monitor import superMonitor
 from util.obj_util import object_2_dict
+
+
+def packaging_response_data(fn):
+    @functools.wraps(fn)
+    def _wrap(wrap_self, *args, **kwargs):
+        # 不管是否异步函数都统一用request_context封装
+        wrap_self.dbSession.__enter__ = lambda: None
+        wrap_self.dbSession.__exit__ = lambda type, value, traceback: None
+        with LocalContext(lambda: wrap_self.dbSession):
+            ret = fn(*args, **kwargs)
+        return ret
+    return _wrap
 
 
 class BaseHandler(RequestHandler):
     def __init__(self, application, request, **kwargs):
         self.application = application
-        self.redis = StrictRedis(util.config.get('redis', 'host'), util.config.get('redis', 'port'))
+        self.redis = redis_conn.redisConn
         self._accessToken = None
         self._sign = None
         self._timestamp = None
@@ -32,6 +47,12 @@ class BaseHandler(RequestHandler):
         self._mqConnection = None
         self._mqChannel = None
         super(BaseHandler, self).__init__(self.application, request, **kwargs)
+
+    def __getattribute__(self, name):
+        if name.upper() in BaseHandler.SUPPORTED_METHODS:
+            method = packaging_response_data(super(BaseHandler, self).__getattribute__(name))
+            setattr(self, name, method.__get__(self, self.__class__))
+        return super(BaseHandler, self).__getattribute__(name)
 
     @property
     def dbSession(self):

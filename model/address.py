@@ -9,6 +9,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util.const import match
+from util.ctx import getDbSession
 
 
 class AddressModel(BaseModel):
@@ -28,8 +29,8 @@ class AddressModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def listByLongitudeLatitude(cls, dbSession, longitude, latitude):  # todo
-        return dbSession.query(cls).filter(cls.status == match.MODEL_STATUS_YES).all()
+    def listByLongitudeLatitude(cls, _dbSession, longitude, latitude):  # todo
+        return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).all()
 
     @classmethod
     def getById(cls, dbSession, addressId):
