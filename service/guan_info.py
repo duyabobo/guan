@@ -21,23 +21,22 @@ from util.const.response import RESP_OK, RESP_NEED_FILL_INFO, RESP_JOIN_ACTIVITY
 
 
 class GuanInfoService(BaseService):
-    def __init__(self, dbSession, redis, activityId, passport):
-        self.dbSession = dbSession
+    def __init__(self, redis, activityId, passport):
         self.redis = redis
         self.activityId = activityId
         self.passport = passport
         self.passportId = passport.get('id', 0)
         self.activityRecord = None
         self.reloadActivityRecord()
-        super(GuanInfoService, self).__init__(dbSession, redis)
+        super(GuanInfoService, self).__init__(redis)
 
     @lazy_property
     def addressRecord(self):
-        return AddressModel.getById(self.dbSession, self.activityRecord.address_id)
+        return AddressModel.getById(self.activityRecord.address_id)
 
     @lazy_property
     def oppositeUserRecord(self):
-        user = UserModel.getByPassportId(self.dbSession, self.passportId)
+        user = UserModel.getByPassportId(self.passportId)
         if not user:
             return None
         elif user.sexIndex == MODEL_SEX_MALE_INDEX:
@@ -45,7 +44,7 @@ class GuanInfoService(BaseService):
         else:
             passportId = self.activityRecord.boy_passport_id
 
-        return UserModel.getByPassportId(self.dbSession, passportId)
+        return UserModel.getByPassportId(passportId)
 
     @property
     def timeIcon(self):
@@ -159,15 +158,15 @@ class GuanInfoService(BaseService):
         }
 
     def reloadActivityRecord(self):
-        self.activityRecord = ActivityModel.getById(self.dbSession, self.activityId)
+        self.activityRecord = ActivityModel.getById(self.activityId)
 
     @property
     def hasOngoingActivity(self):
-        return bool(ActivityModel.getOngoingActivity(self.dbSession, self.passportId))
+        return bool(ActivityModel.getOngoingActivity(self.passportId))
 
     def activityOprete(self, opType):
         """对活动进行操作"""
-        uis = UserInfoService(self.dbSession, self.redis, self.passport)
+        uis = UserInfoService(self.redis, self.passport)
         if not uis.userInfoIsFilled:
             return RESP_NEED_FILL_INFO
         if opType != self.opType:
@@ -185,7 +184,7 @@ class GuanInfoService(BaseService):
             updateParams['boy_passport_id'] = passportId
         elif uis.userInfo.sexIndex == MODEL_SEX_FEMALE_INDEX:
             updateParams['girl_passport_id'] = passportId
-        ActivityModel.updateById(self.dbSession, self.activityId, **updateParams)
-        ActivityChangeRecordModel.addOne(self.dbSession, self.activityId, self.passportId, opType)
+        ActivityModel.updateById(self.activityId, **updateParams)
+        ActivityChangeRecordModel.addOne(self.activityId, self.passportId, opType)
         self.reloadActivityRecord()
         return RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI

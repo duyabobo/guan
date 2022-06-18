@@ -11,23 +11,22 @@ from util.const.response import RESP_USER_SEX_FIRST_EDIT, RESP_REQUIREMENT_SEX_E
 
 class RequirementService(BaseService):
 
-    def __init__(self, dbSession, redis, passportId):
-        self.dbSession = dbSession
+    def __init__(self, redis, passportId):
         self.redis = redis
         self.passportId = passportId
         self.requirementHelper = RequirementHelper(self.requirementInfo)
-        super(RequirementService, self).__init__(dbSession, redis)
+        super(RequirementService, self).__init__(redis)
 
     @lazy_property
     def userInfo(self):
-        return UserModel.getByPassportId(self.dbSession, self.passportId)
+        return UserModel.getByPassportId(self.passportId)
 
     @lazy_property
     def requirementInfo(self):
-        return RequirementModel.getByPassportId(self.dbSession, self.passportId)
+        return RequirementModel.getByPassportId(self.passportId)
 
     def reloadMatchHelper(self):
-        requirementInfo = RequirementModel.getByPassportId(self.dbSession, self.passportId)
+        requirementInfo = RequirementModel.getByPassportId(self.passportId)
         self.requirementHelper = RequirementHelper(requirementInfo)
 
     def getRequirementInfo(self):
@@ -42,7 +41,7 @@ class RequirementService(BaseService):
     def updateRequirementInfo(self, opType, valueIndex):
         updateParams = self.requirementHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
-            RequirementModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
+            RequirementModel.updateByPassportId(self.passportId, **updateParams)
             self.reloadMatchHelper()
         return self.getRequirementInfo()  # todo 可以扩展需要支持返回成功+提醒的code码
 

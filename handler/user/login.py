@@ -22,7 +22,7 @@ class LoginHandler(BaseHandler):
         if not openid:
             return self.response(respNormal=RESP_NEED_LOGIN)
 
-        accessToken, currentUserInfo = LoginService(self.dbSession, self.redis).login(openid)
+        accessToken, currentUserInfo = LoginService(self.redis).login(openid)
         return self.response(
             respData={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
         )

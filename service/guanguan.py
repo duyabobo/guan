@@ -10,15 +10,14 @@ from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, C
 
 class GuanguanService(BaseService):
 
-    def __init__(self, dbSession, redis, passportId):
-        self.dbSession = dbSession
+    def __init__(self, redis, passportId):
         self.redis = redis
         self.passportId = passportId
-        super(GuanguanService, self).__init__(dbSession, redis)
+        super(GuanguanService, self).__init__(redis)
 
     @lazy_property
     def userInfo(self):
-        return UserModel.getByPassportId(self.dbSession, self.passportId)
+        return UserModel.getByPassportId(self.passportId)
 
     def match(self, activity, userMap):
         """筛选掉不符合期望的，筛选掉已完成匹配但是没有当前用户参与的"""
@@ -41,7 +40,7 @@ class GuanguanService(BaseService):
         if not addressIds:
             return []
 
-        _activityList = ActivityModel.listByAddressIds(self.dbSession, addressIds)  # 筛选掉已经已经过期的
+        _activityList = ActivityModel.listByAddressIds(addressIds)  # 筛选掉已经已经过期的
         passportIds = []  # todo 所有涉及到的passportId列表，包括自己的passportid，以及活动里已参与的passportid
         userMap = self.getUserMap(passportIds)
         activityList = []  # 筛选掉不符合邀请人期望的，以及已完成的（但是保留自己参与的）
@@ -52,7 +51,7 @@ class GuanguanService(BaseService):
         return activityList
 
     def getAddressMap(self, longitude, latitude):
-        addressList = AddressModel.listByLongitudeLatitude(self.dbSession, longitude, latitude)  # 根据地理位置查出activity
+        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查出activity
         return {
             a.id: a for a in addressList
         }
@@ -77,7 +76,7 @@ class GuanguanService(BaseService):
     def fillAddressMap(self, addressMap, addressId):
         if addressId in addressMap:
             return
-        address = AddressModel.getById(self.dbSession, addressId)
+        address = AddressModel.getById(addressId)
         addressMap[address.id] = address
 
     def getGuanguanList(self, longitude, latitude):
@@ -85,7 +84,7 @@ class GuanguanService(BaseService):
         addressMap = self.getAddressMap(longitude, latitude)
         activityList = self.getActivityList(addressMap.keys())  # todo next 自己参与过的，后期还有流程环节要做
 
-        ongoingActivity = ActivityModel.getOngoingActivity(self.dbSession, self.passportId)
+        ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
         if ongoingActivity:  # 进行中的永远在第一位
             self.reSortActivityList(activityList, ongoingActivity)
             self.fillAddressMap(addressMap, ongoingActivity.address_id)

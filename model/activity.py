@@ -11,6 +11,7 @@ from sqlalchemy.sql import or_
 from model import BaseModel
 from util.const import match
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
+from util.ctx import getDbSession
 from util.util_time import datetime2str
 
 
@@ -28,16 +29,16 @@ class ActivityModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def listByAddressIds(cls, dbSession, addressIds):
-        return dbSession.query(cls).filter(
+    def listByAddressIds(cls, addressIds):
+        return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now().date()
         ).all()
 
     @classmethod
-    def getById(cls, dbSession, activityId):
-        return dbSession.query(cls).filter(cls.id == activityId, cls.status == match.MODEL_STATUS_YES).first()
+    def getById(cls, activityId):
+        return getDbSession().query(cls).filter(cls.id == activityId, cls.status == match.MODEL_STATUS_YES).first()
 
     @property
     def startTimeStr(self):
@@ -52,21 +53,21 @@ class ActivityModel(BaseModel):
         return CDN_QINIU_GIRL_HEAD_IMG if self.girl_passport_id else ""
 
     @classmethod
-    def updateById(cls, dbSession, activityId, **updateParams):
-        dbSession.query(cls).filter(cls.id == activityId).update(updateParams)
-        dbSession.flush()
+    def updateById(cls, activityId, **updateParams):
+        getDbSession().query(cls).filter(cls.id == activityId).update(updateParams)
+        getDbSession().flush()
 
     @classmethod
-    def getOngoingActivity(cls, dbSession, passportId):
-        return dbSession.query(cls).filter(
+    def getOngoingActivity(cls, passportId):
+        return getDbSession().query(cls).filter(
             or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
         ).filter(
             cls.start_time > datetime.datetime.now()
         ).first()
 
     @classmethod
-    def getLastFreeActivity(cls, dbSession):
-        return dbSession.query(cls).filter(
+    def getLastFreeActivity(cls):
+        return getDbSession().query(cls).filter(
             cls.start_time > datetime.datetime.now(),
             cls.girl_passport_id == 0,
             cls.boy_passport_id == 0,
@@ -74,18 +75,18 @@ class ActivityModel(BaseModel):
         ).order_by(cls.id.desc()).first()
 
     @classmethod
-    def getLastActivity(cls, dbSession):
-        return dbSession.query(cls).filter(
+    def getLastActivity(cls):
+        return getDbSession().query(cls).filter(
             cls.start_time > datetime.datetime.now(),
             cls.status == match.MODEL_STATUS_YES
         ).order_by(cls.id.desc()).first()
 
     @classmethod
-    def addOne(cls, dbSession, addressId, startTime):
+    def addOne(cls, addressId, startTime):
         record = cls(
             address_id=addressId,
             start_time=startTime
         )
-        dbSession.add(record)
-        dbSession.commit()
+        getDbSession().add(record)
+        getDbSession().commit()
         return record

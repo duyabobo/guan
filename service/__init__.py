@@ -2,6 +2,5 @@
 # -*- coding: utf-8 -*-
 
 class BaseService(object):
-    def __init__(self, dbSession, redis):
-        self.dbSession = dbSession
+    def __init__(self, redis):
         self.redis = redis

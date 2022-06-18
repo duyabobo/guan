@@ -8,7 +8,7 @@ from util.monitor import superMonitor
 class MineHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
-        ms = MineService(self.dbSession, self.redis)
+        ms = MineService(self.redis)
         headImg = ms.getHeadImg(self.currentPassportId)
         mainGroupList = ms.getMainGroupList()
 

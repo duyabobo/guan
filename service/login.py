@@ -13,12 +13,12 @@ class LoginService(BaseService):
 
     def login(self, openid):
         """检查用户记录，如果不存在就新增，并对该用户创建session"""
-        passport = PassportModel.getByOpenid(self.dbSession, openid)
+        passport = PassportModel.getByOpenid(openid)
         if not passport:
-            passport = PassportModel.addByOpenid(self.dbSession, openid)
-            UserModel.addByPassportId(self.dbSession, passport.id)
-            RequirementModel.addByPassportId(self.dbSession, passport.id)
-            VerifyModel.addByPassportId(self.dbSession, passport.id)
+            passport = PassportModel.addByOpenid(openid)
+            UserModel.addByPassportId(passport.id)
+            RequirementModel.addByPassportId(passport.id)
+            VerifyModel.addByPassportId(passport.id)
 
         accessToken = generate_access_token(passport.id)
         currentUserInfoJson = putSession(self.redis, accessToken, passport)

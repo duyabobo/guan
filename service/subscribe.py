@@ -7,11 +7,11 @@ from util.wx_mini import WxHelper
 
 class SubscribeService(BaseService):
 
-    def __init__(self, dbSession, redis, openId, templateId, miniprogram_state):
+    def __init__(self, redis, openId, templateId, miniprogram_state):
         self.openId = openId
         self.templateId = templateId
         self.miniprogramState = miniprogram_state
-        super(SubscribeService, self).__init__(dbSession, redis)
+        super(SubscribeService, self).__init__(redis)
 
     def sendActivityStartMsg(self):
         page = GUANINFO_SHORT_PAGE.format(guan_id=1)  # todo guan_id 需要查询

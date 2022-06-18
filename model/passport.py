@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util.const import match
+from util.ctx import getDbSession
 
 
 class PassportModel(BaseModel):
@@ -21,16 +22,16 @@ class PassportModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def getByOpenid(cls, dbSession, openid):
-        return dbSession.query(cls).filter(cls.openid == openid, cls.status == match.MODEL_STATUS_YES).first()
+    def getByOpenid(cls, openid):
+        return getDbSession().query(cls).filter(cls.openid == openid, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
-    def addByOpenid(cls, dbSession, openid):
+    def addByOpenid(cls, openid):
         passport = cls(
             openid=openid,
             phone="",
             status=match.MODEL_STATUS_YES
         )
-        dbSession.add(passport)
-        dbSession.flush()
+        getDbSession().add(passport)
+        getDbSession().flush()
         return passport

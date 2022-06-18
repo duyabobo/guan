@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util.const import match
+from util.ctx import getDbSession
 
 
 class VerifyModel(BaseModel):
@@ -22,26 +23,26 @@ class VerifyModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def addByPassportId(cls, dbSession, passportId):
+    def addByPassportId(cls, passportId):
         verify = cls(
             passport_id=passportId,
             status=match.MODEL_STATUS_YES
         )
-        dbSession.add(verify)
-        dbSession.flush()
+        getDbSession().add(verify)
+        getDbSession().flush()
         return verify
 
     @classmethod
-    def getByPassportId(cls, dbSession, passportId):
-        return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
+    def getByPassportId(cls, passportId):
+        return getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
-    def updateVerifyStatus(cls, dbSession, passportId, email):
-        dbSession.query(cls).filter(cls.passport_id == passportId).\
+    def updateVerifyStatus(cls, passportId, email):
+        getDbSession().query(cls).filter(cls.passport_id == passportId).\
             update({"work_mail": email, "work_verify_status": match.MODEL_WORK_VERIFY_STATUS_YES})
-        dbSession.commit()
+        getDbSession().commit()
 
     @classmethod
-    def fillWorkMail(cls, dbSession, passportId, email):
-        dbSession.query(cls).filter(cls.passport_id == passportId).update({"work_mail": email})
-        dbSession.commit()
+    def fillWorkMail(cls, passportId, email):
+        getDbSession().query(cls).filter(cls.passport_id == passportId).update({"work_mail": email})
+        getDbSession().commit()

@@ -13,17 +13,16 @@ from util.const.response import RESP_SEX_CANOT_EDIT
 
 class UserInfoService(BaseService):
 
-    def __init__(self, dbSession, redis, currentPassport):
-        self.dbSession = dbSession
+    def __init__(self, redis, currentPassport):
         self.redis = redis
         self.currentPassport = currentPassport
         self.passportId = currentPassport.get('id', 0)
         self.userHelper = UserHelper(self.userInfo)
-        super(UserInfoService, self).__init__(dbSession, redis)
+        super(UserInfoService, self).__init__(redis)
 
     @lazy_property
     def userInfo(self):
-        return UserModel.getByPassportId(self.dbSession, self.passportId)
+        return UserModel.getByPassportId(self.passportId)
 
     @property
     def infoFinishCnt(self):
@@ -32,7 +31,7 @@ class UserInfoService(BaseService):
 
     @property
     def verify(self):
-        return VerifyModel.getByPassportId(self.dbSession, self.passportId)
+        return VerifyModel.getByPassportId(self.passportId)
 
     @property
     def isVerified(self):
@@ -61,7 +60,7 @@ class UserInfoService(BaseService):
         }
 
     def reloaduserHelper(self):
-        userInfo = UserModel.getByPassportId(self.dbSession, self.passportId)
+        userInfo = UserModel.getByPassportId(self.passportId)
         self.userHelper = UserHelper(userInfo)
 
     def getMyselfInfo(self):
@@ -78,7 +77,7 @@ class UserInfoService(BaseService):
     def updateMyselfInfo(self, opType, valueIndex):
         updateParams = self.userHelper.getUpdateParams(opType, valueIndex)
         if updateParams:
-            UserModel.updateByPassportId(self.dbSession, self.passportId, **updateParams)
+            UserModel.updateByPassportId(self.passportId, **updateParams)
             # todo next
             self.reloaduserHelper()
             if self.userHelper.hasFillFinish:

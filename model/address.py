@@ -29,16 +29,16 @@ class AddressModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def listByLongitudeLatitude(cls, _dbSession, longitude, latitude):  # todo
+    def listByLongitudeLatitude(cls, _longitude, latitude):  # todo
         return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).all()
 
     @classmethod
-    def getById(cls, dbSession, addressId):
-        return dbSession.query(cls).filter(cls.id == addressId, cls.status == match.MODEL_STATUS_YES).first()
+    def getById(cls, addressId):
+        return getDbSession().query(cls).filter(cls.id == addressId, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
-    def getLastAddress(cls, dbSession):
-        return dbSession.query(cls).filter(cls.status == match.MODEL_STATUS_YES).order_by(cls.id.desc()).first()
+    def getLastAddress(cls):
+        return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).order_by(cls.id.desc()).first()
 
     @property
     def nameShort(self):

@@ -45,7 +45,7 @@ class ActivityAutoCreater(object):
         if not address:
             return
         nextTime = self.getNextTime()
-        ActivityModel.addOne(self.dbSession, address.id, nextTime)
+        ActivityModel.addOne(address.id, nextTime)
         return
 
 

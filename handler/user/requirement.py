@@ -8,7 +8,7 @@ from util.monitor import superMonitor
 class RequirementHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
-        ris = RequirementService(self.dbSession, self.redis, self.currentPassportId)
+        ris = RequirementService(self.redis, self.currentPassportId)
         return self.response(
             respData=ris.getRequirementInfo()
         )
@@ -18,7 +18,7 @@ class RequirementHandler(BaseHandler):
         opType = self.getRequestParameter('opType')
         valueIndex = self.getRequestParameter('value')
 
-        ris = RequirementService(self.dbSession, self.redis, self.currentPassportId)
+        ris = RequirementService(self.redis, self.currentPassportId)
         ret = ris.checkBeforeUpdate(opType, valueIndex)
         if ret:
             return self.response(

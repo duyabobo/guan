@@ -17,11 +17,10 @@ EMAIL_VERIFY_CODE = "email_verify_code:{passportId}:{email}"
 
 class EmailVerifyService(BaseService):
 
-    def __init__(self, dbSession, redis, passportId):
-        self.dbSession = dbSession
+    def __init__(self, redis, passportId):
         self.redis = redis
         self.passportId = passportId
-        super(EmailVerifyService, self).__init__(dbSession, redis)
+        super(EmailVerifyService, self).__init__(redis)
         self.verifyRecordKey = EMAIL_VERIFY_RECORD.format(passportId=self.passportId)
 
     @property
@@ -30,7 +29,7 @@ class EmailVerifyService(BaseService):
 
     @lazy_property
     def verifyRecord(self):
-        return VerifyModel.getByPassportId(self.dbSession, self.passportId)
+        return VerifyModel.getByPassportId(self.passportId)
 
     def recordVerifyOperate(self):
         self.redis.set(self.verifyRecordKey, 1, ex=6*30*24*3600)
@@ -44,7 +43,7 @@ class EmailVerifyService(BaseService):
     def checkCodeWithCache(self, email, code):
         if self.redis.get(self.getVerifyCodeKey(email)) != code:
             return RESP_HAS_EMAIL_VERIFY_FAILED
-        VerifyModel.updateVerifyStatus(self.dbSession, self.passportId, email)
+        VerifyModel.updateVerifyStatus(self.passportId, email)
         self.recordVerifyOperate()
         return RESP_OK
 
@@ -64,7 +63,7 @@ class EmailVerifyService(BaseService):
         if self.hasSendEmailRecently(email):
             return RESP_HAS_SEND_EMAIL
         if self.verifyRecord.work_mail != email and self.verifyRecord.work_verify_status == MODEL_WORK_VERIFY_STATUS_NO:
-            VerifyModel.fillWorkMail(self.dbSession, self.passportId, email)
+            VerifyModel.fillWorkMail(self.passportId, email)
         code = generate_code()
         # 可以用celery替代
         gevent.spawn(send_email_verify, email, code)

@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util.const import match
+from util.ctx import getDbSession
 
 
 class UserModel(BaseModel):
@@ -37,27 +38,27 @@ class UserModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def getByPassportId(cls, dbSession, passportId):
-        return dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
+    def getByPassportId(cls, passportId):
+        return getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
-    def getByPassportIds(cls, dbSession, passportIds):
-        return dbSession.query(cls).filter(cls.passport_id.in_(passportIds), cls.status == match.MODEL_STATUS_YES)
+    def getByPassportIds(cls, passportIds):
+        return getDbSession().query(cls).filter(cls.passport_id.in_(passportIds), cls.status == match.MODEL_STATUS_YES)
 
     @classmethod
-    def addByPassportId(cls, dbSession, passportId):
+    def addByPassportId(cls, passportId):
         user = cls(
             passport_id=passportId,
             status=match.MODEL_STATUS_YES
         )
-        dbSession.add(user)
-        dbSession.flush()
+        getDbSession().add(user)
+        getDbSession().flush()
         return user
 
     @classmethod
-    def updateByPassportId(cls, dbSession, passportId, **updateParams):
-        dbSession.query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
-        dbSession.commit()
+    def updateByPassportId(cls, passportId, **updateParams):
+        getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
+        getDbSession().commit()
 
     @property
     def sexIndex(self):

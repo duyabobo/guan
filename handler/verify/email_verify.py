@@ -11,7 +11,7 @@ class EmailVerifyHandler(BaseHandler):
     @superMonitor
     def get(self):
         email = self.getRequestParameter('email')
-        evs = EmailVerifyService(self.dbSession, self.redis, self.currentPassportId)
+        evs = EmailVerifyService(self.redis, self.currentPassportId)
         ret = evs.sendVerifyEmail(email)
         return self.response(respNormal=ret)
 
@@ -19,7 +19,7 @@ class EmailVerifyHandler(BaseHandler):
     def put(self, *args, **kwargs):
         email = self.getRequestParameter('email')
         code = self.getRequestParameter('code')
-        evs = EmailVerifyService(self.dbSession, self.redis, self.currentPassportId)
+        evs = EmailVerifyService(self.redis, self.currentPassportId)
         ret = evs.checkCodeWithCache(email, code)
-        uis = UserInfoService(self.dbSession, self.redis, self.currentPassport)
+        uis = UserInfoService(self.redis, self.currentPassport)
         return self.response(respData=uis.getMyselfInfo(), respNormal=ret)

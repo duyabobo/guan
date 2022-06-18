@@ -6,6 +6,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from util.ctx import getDbSession
 
 
 class ActivityChangeRecordModel(BaseModel):
@@ -20,12 +21,12 @@ class ActivityChangeRecordModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def addOne(cls, dbSession, activityId, passportId, changeType):
+    def addOne(cls, activityId, passportId, changeType):
         record = cls(
             activity_id=activityId,
             passport_id=passportId,
             change_type=changeType,
         )
-        dbSession.add(record)
-        dbSession.flush()
+        getDbSession().add(record)
+        getDbSession().flush()
         return record
