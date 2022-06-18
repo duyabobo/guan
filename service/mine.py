@@ -7,6 +7,18 @@ from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_SEX_MALE_INDEX, MODE
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG, CDN_QINIU_UNKNOWN_HEAD_IMG
 
 
+class MainFuncObj(object):
+    def __init__(self, id, index, url, name, bindFuncName, needLogin=True, openType="", desc=""):
+        self.id = id
+        self.index = index
+        self.url = url
+        self.name = name
+        self.bindFuncName = bindFuncName
+        self.needLogin = needLogin
+        self.openType = openType
+        self.desc = desc
+
+
 class MineService(BaseService):
 
     def getHeadImg(self, passportId):
@@ -21,64 +33,15 @@ class MineService(BaseService):
     def getMainGroupList(self):
         return [
             [
-                {
-                    "id": 1,
-                    "index": 0,
-                    "url": MYINFORMATION_PAGE,
-                    "name": '我的资料',
-                    "needLogin": True,
-                    "openType": '',
-                    "bindFuncName": 'clickMine'
-                },
-                {
-                    "id": 2,
-                    "index": 1,
-                    "url": MYREQUIREMENT_PAGE,
-                    "name": '见面条件',
-                    "needLogin": True,
-                    "openType": '',
-                    "bindFuncName": 'clickMine'
-                }
+                MainFuncObj(1, 0, MYINFORMATION_PAGE, "我的资料", "clickMine"),
+                MainFuncObj(2, 1, MYREQUIREMENT_PAGE, "见面条件", "clickMine"),
             ],
             [
-                {
-                    "id": 3,
-                    "index": 0,
-                    "url": SUGGESTION_PAGE,
-                    "name": '客服',
-                    "needLogin": False,
-                    "openType": 'contact',
-                    "bindFuncName": 'handleContact'
-                },
-                {
-                    "id": 4,
-                    "index": 1,
-                    "url": SHARE_PAGE,
-                    "name": '分享',
-                    "desc": '近水楼台先得月',
-                    "needLogin": False,
-                    "openType": 'share',
-                    "bindFuncName": 'onShareAppMessage'
-                }
+                MainFuncObj(3, 0, SUGGESTION_PAGE, "客服", "handleContact", needLogin=False, openType="contact"),
+                MainFuncObj(4, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share", desc="近水楼台先得月"),
             ],
             [
-                {
-                    "id": 5,
-                    "index": 0,
-                    "url": SECRET_PAGE,
-                    "name": '隐私条款',
-                    "needLogin": False,
-                    "openType": '',
-                    "bindFuncName": 'clickMine'
-                },
-                {
-                    "id": 6,
-                    "index": 1,
-                    "url": ABOUT_PAGE,
-                    "name": '关于我们',
-                    "needLogin": False,
-                    "openType": '',
-                    "bindFuncName": 'clickMine'
-                }
+                MainFuncObj(5, 0, SECRET_PAGE, "隐私条款", "clickMine", needLogin=False),
+                MainFuncObj(6, 1, ABOUT_PAGE, "关于我们", "clickMine"),
             ]
         ]
