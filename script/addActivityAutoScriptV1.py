@@ -6,29 +6,33 @@
 # 3，判断上一个添加的活动时间是否在周末，是否在早上10点到下午16点之间，如果就时间加上半小时，如果不是就初始化下一个周末的早上十点。
 # 4，添加下一个活动。
 import datetime
+import os
+import sys
 
 from sqlalchemy.orm import sessionmaker
-import sys
-import os
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current_dir))
 from model.activity import ActivityModel
 from model.address import AddressModel
 from util.database import engine
+from util.ctx import LocalContext
 
 
 class ActivityAutoCreater(object):
     def __init__(self):
         self.dbSession = sessionmaker(bind=engine)()
+        self.dbSession.__enter__ = lambda: None
+        self.dbSession.__exit__ = lambda type, value, traceback: None
 
     def hasFreeActivity(self):
-        return bool(ActivityModel.getLastFreeActivity(self.dbSession))
+        return bool(ActivityModel.getLastFreeActivity())
 
     def getAvaliableAddress(self):
-        return AddressModel.getLastAddress(self.dbSession)
+        return AddressModel.getLastAddress()
 
     def getLastActivity(self):
-        return ActivityModel.getLastActivity(self.dbSession)
+        return ActivityModel.getLastActivity()
 
     def getNextTime(self):
         lastActivity = self.getLastActivity()
@@ -42,13 +46,14 @@ class ActivityAutoCreater(object):
         return nextTime
 
     def createActivity(self):
-        if self.hasFreeActivity():
-            return
-        address = self.getAvaliableAddress()
-        if not address:
-            return
-        nextTime = self.getNextTime()
-        ActivityModel.addOne(address.id, nextTime)
+        with LocalContext(lambda: self.dbSession):
+            if self.hasFreeActivity():
+                return
+            address = self.getAvaliableAddress()
+            if not address:
+                return
+            nextTime = self.getNextTime()
+            ActivityModel.addOne(address.id, nextTime)
         return
 
 
