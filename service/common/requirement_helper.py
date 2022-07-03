@@ -2,28 +2,44 @@
 # -*- coding: utf-8 -*-
 import json
 
+from model.verify import VerifyModel
 from service.common.selector import selectorFactory
+from util.class_helper import lazy_property
 from util.const.match import *
 
-OP_FUNCS = [  # 真正生效的期望条件字段变更方法名列表
-    OP_TYPE_SEX,
-    OP_BIRTH_YEAR_PERIOD,
-    OP_TYPE_HEIGHT_PERIOD,
-    OP_TYPE_WEIGHT_PERIOD,
-    OP_TYPE_MONTH_PAY_PERIOD,
-    OP_TYPE_EDUCATION_PERIOD,
-    OP_TYPE_MARTIAL_STATUS,
-]
+OP_FUNCS_DICT = {
+    MODEL_MAIL_TYPE_UNKNOWN: [],
+    MODEL_MAIL_TYPE_SCHOOL: [
+        OP_TYPE_SEX,
+        OP_BIRTH_YEAR_PERIOD,
+        OP_TYPE_HEIGHT_PERIOD,
+        OP_TYPE_WEIGHT_PERIOD,
+        OP_TYPE_MARTIAL_STATUS,
+    ],
+    MODEL_MAIL_TYPE_WORK: [
+        OP_TYPE_SEX,
+        OP_BIRTH_YEAR_PERIOD,
+        OP_TYPE_HEIGHT_PERIOD,
+        OP_TYPE_WEIGHT_PERIOD,
+        OP_TYPE_MONTH_PAY_PERIOD,
+        OP_TYPE_EDUCATION_PERIOD,
+        OP_TYPE_MARTIAL_STATUS,
+    ]
+}
 
 
 class RequirementHelper(object):
 
     def __init__(self, requirement):
         self.requirement = requirement
+
+    @lazy_property
+    def verify_record(self):
+        return VerifyModel.getByPassportId(self.requirement.passportId)
         
     def getRequirementList(self):
         requirementList = []
-        for op_func in OP_FUNCS:
+        for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
             requirement = selectorFactory(op_func, self.requirement)
             if requirement:
                 requirementList.append(requirement)

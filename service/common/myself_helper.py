@@ -12,15 +12,16 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
-        OP_TYPE_MONTH_PAY,
         OP_TYPE_MARTIAL_STATUS,
-        OP_TYPE_EDUCATION,
     ],
     MODEL_MAIL_TYPE_WORK: [
         OP_TYPE_SEX,
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
+        OP_TYPE_MONTH_PAY,
+        OP_TYPE_MARTIAL_STATUS,
+        OP_TYPE_EDUCATION,
     ]
 }
 
