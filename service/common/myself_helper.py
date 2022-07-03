@@ -1,18 +1,28 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from model.verify import VerifyModel
 from service.common.selector import selectorFactory
+from util.class_helper import lazy_property
 from util.const.match import *
 
-
-OP_FUNCS = [  # 真正生效的用户信息字段操作类型
-    OP_TYPE_SEX,
-    OP_TYPE_BIRTH_YEAR,
-    OP_TYPE_HEIGHT,
-    OP_TYPE_WEIGHT,
-    OP_TYPE_MONTH_PAY,
-    OP_TYPE_MARTIAL_STATUS,
-    OP_TYPE_EDUCATION,
-]
+OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
+    MODEL_MAIL_TYPE_UNKNOWN: [],
+    MODEL_MAIL_TYPE_SCHOOL: [
+        OP_TYPE_SEX,
+        OP_TYPE_BIRTH_YEAR,
+        OP_TYPE_HEIGHT,
+        OP_TYPE_WEIGHT,
+        OP_TYPE_MONTH_PAY,
+        OP_TYPE_MARTIAL_STATUS,
+        OP_TYPE_EDUCATION,
+    ],
+    MODEL_MAIL_TYPE_WORK: [
+        OP_TYPE_SEX,
+        OP_TYPE_BIRTH_YEAR,
+        OP_TYPE_HEIGHT,
+        OP_TYPE_WEIGHT,
+    ]
+}
 
 
 class UserHelper(object):
@@ -20,9 +30,13 @@ class UserHelper(object):
     def __init__(self, user):
         self.user = user
 
+    @lazy_property
+    def verify_record(self):
+        return VerifyModel.getByPassportId(self.user.passportId)
+
     def getInformationList(self):
         informationList = []
-        for op_func in OP_FUNCS:
+        for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
             info = selectorFactory(op_func, self.user)
             if info:
                 informationList.append(info)

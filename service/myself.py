@@ -6,7 +6,7 @@ from model.verify import VerifyModel
 from ral import user
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_WORK_VERIFY_STATUS_YES, OP_TYPE_SEX, SEX_CHOICE_LIST, \
+from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, SEX_CHOICE_LIST, \
     DEFAULT_SEX_INDEX
 from util.const.response import RESP_SEX_CANOT_EDIT
 
@@ -35,7 +35,7 @@ class UserInfoService(BaseService):
 
     @property
     def isVerified(self):
-        return self.verify.work_verify_status == MODEL_WORK_VERIFY_STATUS_YES
+        return self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES
 
     @property
     def infoIsFilled(self):
@@ -50,7 +50,8 @@ class UserInfoService(BaseService):
     def getWork(self):
         return {
             "desc": "工作认证",
-            "value": "已认证" if self.verify.work_verify_status == MODEL_WORK_VERIFY_STATUS_YES else "未认证",
+            "value": "已认证" if self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES else "未认证",
+            "is_student": self.verify.mail_type
         }
 
     def getPhone(self):
