@@ -6,7 +6,13 @@ from util.class_helper import lazy_property
 from util.const.match import *
 
 OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
-    MODEL_MAIL_TYPE_UNKNOWN: [],
+    MODEL_MAIL_TYPE_UNKNOWN: [
+        OP_TYPE_SEX,
+        OP_TYPE_BIRTH_YEAR,
+        OP_TYPE_HEIGHT,
+        OP_TYPE_WEIGHT,
+        OP_TYPE_MARTIAL_STATUS,
+    ],
     MODEL_MAIL_TYPE_SCHOOL: [
         OP_TYPE_SEX,
         OP_TYPE_BIRTH_YEAR,
@@ -33,7 +39,7 @@ class UserHelper(object):
 
     @lazy_property
     def verify_record(self):
-        return VerifyModel.getByPassportId(self.user.passportId)
+        return VerifyModel.getByPassportId(self.user.passport_id)
 
     def getInformationList(self):
         informationList = []

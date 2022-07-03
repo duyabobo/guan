@@ -8,7 +8,13 @@ from util.class_helper import lazy_property
 from util.const.match import *
 
 OP_FUNCS_DICT = {
-    MODEL_MAIL_TYPE_UNKNOWN: [],
+    MODEL_MAIL_TYPE_UNKNOWN: [
+        OP_TYPE_SEX,
+        OP_BIRTH_YEAR_PERIOD,
+        OP_TYPE_HEIGHT_PERIOD,
+        OP_TYPE_WEIGHT_PERIOD,
+        OP_TYPE_MARTIAL_STATUS,
+    ],
     MODEL_MAIL_TYPE_SCHOOL: [
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
@@ -35,7 +41,7 @@ class RequirementHelper(object):
 
     @lazy_property
     def verify_record(self):
-        return VerifyModel.getByPassportId(self.requirement.passportId)
+        return VerifyModel.getByPassportId(self.requirement.passport_id)
         
     def getRequirementList(self):
         requirementList = []
