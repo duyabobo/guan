@@ -35,7 +35,7 @@ class UserInfoService(BaseService):
 
     @property
     def isVerified(self):
-        return self.verify.work_verify_status == MODEL_WORK_VERIFY_STATUS_YES
+        return self.verify.mail_verify_status == MODEL_WORK_VERIFY_STATUS_YES
 
     @property
     def infoIsFilled(self):
@@ -50,7 +50,7 @@ class UserInfoService(BaseService):
     def getWork(self):
         return {
             "desc": "工作认证",
-            "value": "已认证" if self.verify.work_verify_status == MODEL_WORK_VERIFY_STATUS_YES else "未认证",
+            "value": "已认证" if self.verify.mail_verify_status == MODEL_WORK_VERIFY_STATUS_YES else "未认证",
         }
 
     def getPhone(self):

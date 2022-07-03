@@ -62,7 +62,7 @@ class EmailVerifyService(BaseService):
             return RESP_HAS_EMAIL_VERIFY_RECENTLY
         if self.hasSendEmailRecently(email):
             return RESP_HAS_SEND_EMAIL
-        if self.verifyRecord.work_mail != email and self.verifyRecord.work_verify_status == MODEL_WORK_VERIFY_STATUS_NO:
+        if self.verifyRecord.mail != email and self.verifyRecord.mail_verify_status == MODEL_WORK_VERIFY_STATUS_NO:
             VerifyModel.fillWorkMail(self.passportId, email)
         code = generate_code()
         # 可以用celery替代
