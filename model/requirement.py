@@ -6,6 +6,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from model.region import RegionModel
 from util.const import match
 from util.ctx import getDbSession
 
@@ -22,8 +23,8 @@ class RequirementModel(BaseModel):
     max_weight = Column(Integer, default=0)  # 最大体重(kg)
     min_height = Column(Integer, default=0)  # 最小身高(cm)
     max_height = Column(Integer, default=0)  # 最大身高(cm)
-    home_address_id = Column(Integer, default=0)  # 籍贯地点id
-    study_address_id = Column(Integer, default=0)  # 学习地点id
+    home_region_id = Column(Integer, default=0)  # 籍贯地点id
+    study_region_id = Column(Integer, default=0)  # 学习地点id
     education_id = Column(Integer, default=0)  # 学习信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
     max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
@@ -54,3 +55,8 @@ class RequirementModel(BaseModel):
     def updateByPassportId(cls, passportId, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
+
+    @property
+    def home_regin(self):
+        """home_address_id"""
+        return RegionModel.getById(self.home_region_id)

@@ -30,7 +30,7 @@ def selectorFactory(op_type, data):
     elif op_type == OP_TYPE_EDUCATION_PERIOD:
         return MultiSelector("学历区间", data.min_education, data.max_education, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
-        return RegionSelector("籍贯", data.regin, op_type)
+        return RegionSelector("籍贯", data.home_regin, op_type)
 
 
 class SingleSelector(object):  # 单项选择器
@@ -89,13 +89,17 @@ class MultiSelector(object):  # 多项选择器
 class RegionSelector(object):  # 省市区选择器
     def __init__(self, desc, region, bindChange):
 
+        def _getRegin(region):
+            """返回['广东省', '广州市', '海珠区']"""
+            return [region.province, region.city, region.area] if region else [self.customItem, self.customItem, self.customItem]
+
         def _getRegionValue():
             """展示的已选省市区文案结果"""
             return ','.join(self.region)
 
+        self.customItem = "全部"  # 可为每一列的顶部添加一个自定义的项
         self.desc = desc
         self.pickerType = PICKER_TYPE_REGION_SELECTOR  # 选择器类型：多项
-        self.region = region  # 省市区数组：['广东省', '广州市', '海珠区']
-        self.customItem = "其他"  # 可为每一列的顶部添加一个自定义的项
-        self.bindRegionChange = bindChange
+        self.region = _getRegin(region)  # 省市区数组
+        self.bindColumnChange = bindChange
         self.value = _getRegionValue()
