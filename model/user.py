@@ -21,15 +21,10 @@ class UserModel(BaseModel):
     birth_year = Column(Integer, default=0)  # 出生年份
     height = Column(Integer, default=0)  # 身高(厘米)
     weight = Column(Integer, default=0)  # 体重(公斤)
-    home_province = Column(String, default="")  # 籍贯省
-    home_city = Column(String, default="")  # 籍贯市
-    home_area = Column(String, default="")  # 籍贯区县
-    province = Column(String, default="")  # 省
-    city = Column(String, default="")  # 市
-    school = Column(String, default="")  # 学校
-    major = Column(String, default="")  # 专业
+    home_address_id = Column(Integer, default=0)  # 籍贯地点id
+    study_address_id = Column(Integer, default=0)  # 学习地点id
     study_from_year = Column(Integer, default=0)  # 入学年份
-    education = Column(String, default="未知")  # 学历枚举
+    education_id = Column(Integer, default=0)  # 学习信息id
     martial_status = Column(String, default="未知")  # 婚姻现状：未知，未婚，离异
     month_pay = Column(Integer, default=0)  # 月收入(元)
     is_fall_in_love = Column(Integer, default=0)  # 是否坠入爱河

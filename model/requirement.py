@@ -22,15 +22,11 @@ class RequirementModel(BaseModel):
     max_weight = Column(Integer, default=0)  # 最大体重(kg)
     min_height = Column(Integer, default=0)  # 最小身高(cm)
     max_height = Column(Integer, default=0)  # 最大身高(cm)
-    home_province = Column(String, default="")  # 籍贯省
-    home_city = Column(String, default="")  # 籍贯市
-    home_area = Column(String, default="")  # 籍贯区县
-    province = Column(String, default="")  # 省
-    city = Column(String, default="")  # 市
-    school = Column(String, default="")  # 学校
-    major = Column(String, default="")  # 专业
-    study_from_year = Column(Integer, default=0)  # 入学年份 0不限
-    school_type = Column(String, default="")  # 学校类型985211双一流本科专科
+    home_address_id = Column(Integer, default=0)  # 籍贯地点id
+    study_address_id = Column(Integer, default=0)  # 学习地点id
+    education_id = Column(Integer, default=0)  # 学习信息id
+    min_study_from_year = Column(Integer, default=0)  # 最早入学年份
+    max_study_from_year = Column(Integer, default=0)  # 最早入学年份
     martial_status = Column(String, default='不限')  # 婚姻现状：不限，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
