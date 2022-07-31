@@ -49,7 +49,7 @@ class UserInfoService(BaseService):
 
     def getWork(self):
         return {
-            "desc": "工作认证",
+            "desc": "教育认证",
             "value": "已认证" if self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES else "未认证",
             "is_student": self.verify.mail_type
         }
@@ -71,7 +71,7 @@ class UserInfoService(BaseService):
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
             "workVerify": self.getWork(),
-            "obtainWorkEmailPlaceHolder": "输入校园/工作邮箱",
+            "obtainWorkEmailPlaceHolder": "输入您的学校邮箱",
             "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
         }
 
