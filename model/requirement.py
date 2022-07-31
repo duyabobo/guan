@@ -26,7 +26,7 @@ class RequirementModel(BaseModel):
     study_address_id = Column(Integer, default=0)  # 学习地点id
     education_id = Column(Integer, default=0)  # 学习信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
-    max_study_from_year = Column(Integer, default=0)  # 最早入学年份
+    max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
     martial_status = Column(String, default='不限')  # 婚姻现状：不限，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
