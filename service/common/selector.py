@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from util.const.match import *
-from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR
+from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR
 
 
 def selectorFactory(op_type, data):
@@ -29,6 +29,8 @@ def selectorFactory(op_type, data):
         return MultiSelector("税前月收入区间(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_PERIOD:
         return MultiSelector("学历区间", data.min_education, data.max_education, op_type)
+    elif op_type == OP_TYPE_HOME_REGION_PERIOD:
+        return RegionSelector("籍贯", data.regin, op_type)
 
 
 class SingleSelector(object):  # 单项选择器
@@ -82,3 +84,18 @@ class MultiSelector(object):  # 多项选择器
 
         self.fromAndToSelectValueIndex = [_selectMinIndex(), _selectMaxIndex()]
         self.fromAndToChoiceList = [self.choiceList, self.choiceList]
+
+
+class RegionSelector(object):  # 省市区选择器
+    def __init__(self, desc, region, bindChange):
+
+        def _getRegionValue():
+            """展示的已选省市区文案结果"""
+            return ','.join(self.region)
+
+        self.desc = desc
+        self.pickerType = PICKER_TYPE_REGION_SELECTOR  # 选择器类型：多项
+        self.region = region  # 省市区数组：['广东省', '广州市', '海珠区']
+        self.customItem = "其他"  # 可为每一列的顶部添加一个自定义的项
+        self.bindRegionChange = bindChange
+        self.value = _getRegionValue()

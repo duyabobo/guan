@@ -4,6 +4,7 @@
 # MINI_PROGRAM
 PICKER_TYPE_SELECTOR = 0
 PICKER_TYPE_MULTI_SELECTOR = 1
+PICKER_TYPE_REGION_SELECTOR = 2
 ABOUT_PAGE = '/page/about/about?title=关于我们'  # 关于我们
 SECRET_PAGE = '/page/secret/secret?title=隐私条款'  # 隐私条款
 SHARE_PAGE = '/page/share/share'  # 分享
