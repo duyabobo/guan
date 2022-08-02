@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import json
 
 from model.region import RegionModel
 from model.verify import VerifyModel
@@ -77,5 +76,5 @@ class RequirementHelper(object):
             updateParams['min_education'] = EDUCATION_CHOICE_LIST[value[0]]
             updateParams['max_education'] = EDUCATION_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_HOME_REGION_PERIOD:
-            updateParams['home_region_id'] = RegionModel.getByRegion(*value)
+            updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         return updateParams

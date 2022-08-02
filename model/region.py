@@ -22,11 +22,25 @@ class RegionModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
+    def addOne(cls, province, city, area):
+        record = cls(
+            province=province,
+            city=city,
+            area=area,
+        )
+        getDbSession().add(record)
+        getDbSession().flush()
+        return record
+
+    @classmethod
     def getById(cls, reginId):
         return getDbSession().query(cls).filter(cls.id == reginId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
-    def getByRegion(cls, province, city, area):
-        return getDbSession().query(cls).filter(
+    def getIdByRegion(cls, province, city, area):
+        r = getDbSession().query(cls).filter(
             cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES
         ).first()
+        if not r:
+            r = cls.addOne(province, city, area)
+        return r.id
