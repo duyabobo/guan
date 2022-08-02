@@ -57,6 +57,10 @@ class RequirementModel(BaseModel):
         getDbSession().commit()
 
     @property
-    def home_regin(self):
+    def home_region(self):
         """home_address_id"""
         return RegionModel.getById(self.home_region_id)
+
+    @property
+    def study_region(self):
+        return RegionModel.getById(self.study_region_id)

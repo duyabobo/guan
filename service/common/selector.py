@@ -18,6 +18,7 @@ VALUE_TYPE_DICT = {
     OP_TYPE_MONTH_PAY_PERIOD: list,
     OP_TYPE_EDUCATION_PERIOD: list,
     OP_TYPE_HOME_REGION_PERIOD: list,
+    OP_TYPE_STUDY_REGION_PERIOD: list,
 }
 
 
@@ -47,7 +48,9 @@ def selectorFactory(op_type, data):
     elif op_type == OP_TYPE_EDUCATION_PERIOD:
         return MultiSelector("学历区间", data.min_education, data.max_education, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
-        return RegionSelector("籍贯", data.home_regin, op_type)
+        return RegionSelector("籍贯范围", data.home_region, op_type)
+    elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
+        return RegionSelector("现居地范围", data.study_region, op_type)
 
 
 class SingleSelector(object):  # 单项选择器

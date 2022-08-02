@@ -14,6 +14,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_HEIGHT_PERIOD,
         OP_TYPE_WEIGHT_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
+        OP_TYPE_STUDY_REGION_PERIOD,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
@@ -22,6 +23,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_HEIGHT_PERIOD,
         OP_TYPE_WEIGHT_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
+        OP_TYPE_STUDY_REGION_PERIOD,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_WORK: [
@@ -32,6 +34,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_MONTH_PAY_PERIOD,
         OP_TYPE_EDUCATION_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
+        OP_TYPE_STUDY_REGION_PERIOD,
         OP_TYPE_MARTIAL_STATUS,
     ]
 }
@@ -77,4 +80,6 @@ class RequirementHelper(object):
             updateParams['max_education'] = EDUCATION_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_HOME_REGION_PERIOD:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
+        elif opType == OP_TYPE_STUDY_REGION_PERIOD:
+            updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
         return updateParams
