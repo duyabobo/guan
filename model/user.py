@@ -7,6 +7,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from model.region import RegionModel
 from util.const import match
 from util.ctx import getDbSession
 
@@ -58,3 +59,12 @@ class UserModel(BaseModel):
     @property
     def sexIndex(self):
         return match.SEX_CHOICE_LIST.index(self.sex)
+
+    @property
+    def home_region(self):
+        """home_address_id"""
+        return RegionModel.getById(self.home_region_id)
+
+    @property
+    def study_region(self):
+        return RegionModel.getById(self.study_region_id)

@@ -19,6 +19,8 @@ VALUE_TYPE_DICT = {
     OP_TYPE_EDUCATION_PERIOD: list,
     OP_TYPE_HOME_REGION_PERIOD: list,
     OP_TYPE_STUDY_REGION_PERIOD: list,
+    OP_TYPE_HOME_REGION: list,
+    OP_TYPE_STUDY_REGION: list,
 }
 
 
@@ -51,6 +53,10 @@ def selectorFactory(op_type, data):
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
         return RegionSelector("现居地范围", data.study_region, op_type)
+    elif op_type == OP_TYPE_HOME_REGION:
+        return RegionSelector("籍贯", data.home_region, op_type)
+    elif op_type == OP_TYPE_STUDY_REGION:
+        return RegionSelector("现居地", data.study_region, op_type)
 
 
 class SingleSelector(object):  # 单项选择器
@@ -129,3 +135,4 @@ class RegionSelector(object):  # 省市区选择器
         self.region = _getRegin(region)  # 省市区数组
         self.bindColumnChange = bindChange
         self.value = _getRegionValue()
+        self.hasFilled = self.value and self.value != self.customItem  # 当前值是否已完善

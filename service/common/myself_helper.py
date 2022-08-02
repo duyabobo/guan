@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from model.region import RegionModel
 from model.verify import VerifyModel
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
@@ -11,6 +12,8 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
+        OP_TYPE_HOME_REGION,
+        OP_TYPE_STUDY_REGION,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
@@ -18,6 +21,8 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
+        OP_TYPE_HOME_REGION,
+        OP_TYPE_STUDY_REGION,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_WORK: [
@@ -25,6 +30,8 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
+        OP_TYPE_HOME_REGION,
+        OP_TYPE_STUDY_REGION,
         OP_TYPE_MONTH_PAY,
         OP_TYPE_MARTIAL_STATUS,
         OP_TYPE_EDUCATION,
@@ -70,4 +77,8 @@ class UserHelper(object):
             updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
         elif opType == OP_TYPE_EDUCATION:
             updateParams['education'] = EDUCATION_CHOICE_LIST[value]
+        elif opType == OP_TYPE_HOME_REGION:
+            updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
+        elif opType == OP_TYPE_STUDY_REGION:
+            updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
         return updateParams

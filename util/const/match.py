@@ -34,6 +34,8 @@ OP_TYPE_MONTH_PAY_PERIOD = 'updateMonthPayPeriod'
 OP_TYPE_EDUCATION_PERIOD = 'updateEducationPeriod'
 OP_TYPE_HOME_REGION_PERIOD = 'updateHomeRegionPeriod'
 OP_TYPE_STUDY_REGION_PERIOD = 'updateStudyRegionPeriod'
+OP_TYPE_HOME_REGION = 'updateHomeRegion'
+OP_TYPE_STUDY_REGION = 'updateStudyRegion'
 # CHOICE_LIST and DEFAULT_INDEX
 SEX_CHOICE_LIST = ["未知", "男", "女"]
 DEFAULT_SEX_INDEX = 0
