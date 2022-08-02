@@ -95,11 +95,17 @@ class RegionSelector(object):  # 省市区选择器
 
         def _getRegionValue():
             """展示的已选省市区文案结果"""
-            return ','.join(self.region)
+            v = self.customItem
+            for r in self.region:
+                if r == self.customItem:
+                    continue
+                else:
+                    v = r
+            return v[:10]
 
         self.customItem = "全部"  # 可为每一列的顶部添加一个自定义的项
         self.desc = desc
-        self.pickerType = PICKER_TYPE_REGION_SELECTOR  # 选择器类型：多项
+        self.pickerType = PICKER_TYPE_REGION_SELECTOR  # 选择器类型：地址
         self.region = _getRegin(region)  # 省市区数组
         self.bindColumnChange = bindChange
         self.value = _getRegionValue()
