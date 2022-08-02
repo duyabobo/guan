@@ -4,6 +4,23 @@ from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR
 
 
+VALUE_TYPE_DICT = {
+    OP_TYPE_SEX: int,
+    OP_TYPE_BIRTH_YEAR: int,
+    OP_TYPE_HEIGHT: int,
+    OP_TYPE_WEIGHT: int,
+    OP_TYPE_MONTH_PAY: int,
+    OP_TYPE_EDUCATION: int,
+    OP_BIRTH_YEAR_PERIOD: list,
+    OP_TYPE_MARTIAL_STATUS: int,
+    OP_TYPE_WEIGHT_PERIOD:list,
+    OP_TYPE_HEIGHT_PERIOD: list,
+    OP_TYPE_MONTH_PAY_PERIOD: list,
+    OP_TYPE_EDUCATION_PERIOD: list,
+    OP_TYPE_HOME_REGION_PERIOD: list,
+}
+
+
 def selectorFactory(op_type, data):
     if op_type == OP_TYPE_SEX:
         return SingleSelector("性别", data.sex, data.sex, op_type)

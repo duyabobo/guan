@@ -75,8 +75,8 @@ class UserInfoService(BaseService):
             "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
         }
 
-    def updateMyselfInfo(self, opType, valueIndex):
-        updateParams = self.userHelper.getUpdateParams(opType, valueIndex)
+    def updateMyselfInfo(self, opType, value):
+        updateParams = self.userHelper.getUpdateParams(opType, value)
         if updateParams:
             UserModel.updateByPassportId(self.passportId, **updateParams)
             # todo next
@@ -85,9 +85,9 @@ class UserInfoService(BaseService):
                 user.addFillFinishSet(self.redis, self.passportId)
         return self.getMyselfInfo()
 
-    def checkBeforeUpdate(self, opType, valueIndex):
+    def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and \
                 self.userInfo.sex != SEX_CHOICE_LIST[DEFAULT_SEX_INDEX] and\
-                self.userInfo.sex != SEX_CHOICE_LIST[int(valueIndex)]:
+                self.userInfo.sex != SEX_CHOICE_LIST[value]:
             return RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会

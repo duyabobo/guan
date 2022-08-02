@@ -24,3 +24,9 @@ class RegionModel(BaseModel):
     @classmethod
     def getById(cls, reginId):
         return getDbSession().query(cls).filter(cls.id == reginId, cls.status == MODEL_STATUS_YES).first()
+
+    @classmethod
+    def getByRegion(cls, province, city, area):
+        return getDbSession().query(cls).filter(
+            cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES
+        ).first()

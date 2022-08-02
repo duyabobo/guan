@@ -38,16 +38,16 @@ class RequirementService(BaseService):
             "requirementResult": "3人满足见面条件"  # todo next
         }
 
-    def updateRequirementInfo(self, opType, valueIndex):
-        updateParams = self.requirementHelper.getUpdateParams(opType, valueIndex)
+    def updateRequirementInfo(self, opType, value):
+        updateParams = self.requirementHelper.getUpdateParams(opType, value)
         if updateParams:
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
             self.reloadMatchHelper()
         return self.getRequirementInfo()  # todo 可以扩展需要支持返回成功+提醒的code码
 
-    def checkBeforeUpdate(self, opType, valueIndex):
+    def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and self.userInfo.sex == SEX_CHOICE_LIST[DEFAULT_SEX_INDEX]:
             return RESP_USER_SEX_FIRST_EDIT
-        if opType == OP_TYPE_SEX and int(valueIndex) == SEX_CHOICE_LIST.index(self.userInfo.sex):
+        if opType == OP_TYPE_SEX and value == SEX_CHOICE_LIST.index(self.userInfo.sex):
             return RESP_REQUIREMENT_SEX_ERROR
         # todo 其他修改限制半年一次修改机会

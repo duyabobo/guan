@@ -54,20 +54,20 @@ class UserHelper(object):
         informationList = self.getInformationList()
         return reduce(lambda x, y: x and y, [i.hasFilled for i in informationList])
 
-    def getUpdateParams(self, opType, valueIndex):
+    def getUpdateParams(self, opType, value):
         updateParams = {}
-        if opType == OP_TYPE_SEX and int(valueIndex) != MODEL_SEX_UNKNOWN_INDEX:
-            updateParams['sex'] = SEX_CHOICE_LIST[int(valueIndex)]
+        if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
+            updateParams['sex'] = SEX_CHOICE_LIST[value]
         elif opType == OP_TYPE_BIRTH_YEAR:
-            updateParams['birth_year'] = BIRTH_YEAR_CHOICE_LIST[int(valueIndex)]
+            updateParams['birth_year'] = BIRTH_YEAR_CHOICE_LIST[value]
         elif opType == OP_TYPE_MARTIAL_STATUS:
-            updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[int(valueIndex)]
+            updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[value]
         elif opType == OP_TYPE_HEIGHT:
-            updateParams['height'] = HEIGHT_CHOICE_LIST[int(valueIndex)]
+            updateParams['height'] = HEIGHT_CHOICE_LIST[value]
         elif opType == OP_TYPE_WEIGHT:
-            updateParams['weight'] = WEIGHT_CHOICE_LIST[int(valueIndex)]
+            updateParams['weight'] = WEIGHT_CHOICE_LIST[value]
         elif opType == OP_TYPE_MONTH_PAY:
-            updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[int(valueIndex)]
+            updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
         elif opType == OP_TYPE_EDUCATION:
-            updateParams['education'] = EDUCATION_CHOICE_LIST[int(valueIndex)]
+            updateParams['education'] = EDUCATION_CHOICE_LIST[value]
         return updateParams
