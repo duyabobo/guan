@@ -21,6 +21,7 @@ VALUE_TYPE_DICT = {
     OP_TYPE_STUDY_REGION_PERIOD: list,
     OP_TYPE_HOME_REGION: list,
     OP_TYPE_STUDY_REGION: list,
+    OP_TYPE_EDUCATION_MULTI: list,
 }
 
 
@@ -49,6 +50,8 @@ def selectorFactory(op_type, data):
         return MultiSelector("税前月收入区间(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_PERIOD:
         return MultiSelector("学历区间", data.min_education, data.max_education, op_type)
+    elif op_type == OP_TYPE_EDUCATION_MULTI:
+        return MultiSelectorExtra("教育信息", data.school, data.level, data.major, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
@@ -83,7 +86,7 @@ class SingleSelector(object):  # 单项选择器
         self.hasFilled = self.value and self.selectValueIndex != self.defaultIndex  # 当前值是否已完善
 
 
-class MultiSelector(object):  # 多项选择器
+class MultiSelector(object):  # 两项选择器
     def __init__(self, desc, fromValue, toValue, bindChange):
         def _selectMinIndex():
             try:
@@ -112,6 +115,54 @@ class MultiSelector(object):  # 多项选择器
         self.fromAndToChoiceList = [self.choiceList, self.choiceList]
 
 
+class MultiSelectorExtra(object):  # 三项选择器
+    def __init__(self, desc, firstValue, secondValue, thirdValue, bindChange):
+        def _firstChoiceList():
+            pass
+
+        def _secondChoiceList():
+            pass
+
+        def _thirdChoiceList():
+            pass
+
+        def _selectFirstIndex():
+            try:
+                return 0 or self.defaultIndex  # todo
+            except:
+                return self.defaultIndex
+
+        def _selectSecondIndex():
+            try:
+                return 0 or self.secondValue  # todo
+            except:
+                return self.defaultIndex
+
+        def _selectThirdIndex():
+            try:
+                return 0 or self.thirdValue  # todo
+            except:
+                return self.defaultIndex
+
+        self.desc = desc
+        self.pickerType = PICKER_TYPE_MULTI_SELECTOR  # 选择器类型：多项
+        self.bindChange = bindChange
+        self.firstValue = firstValue
+        self.secondValue = secondValue
+        self.thirdValue = thirdValue
+
+        matchInfo = MATCH_INFO_DICT[self.bindChange]
+        self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围
+        self.defaultIndex = matchInfo['DEFAULT_INDEX']
+        self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
+
+        self.firstChoiceList = _firstChoiceList()
+        self.secondChoiceList = _secondChoiceList()
+        self.thirdChoiceList = _thirdChoiceList()
+        self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
+        self.multiChoiceList = [self.firstChoiceList, self.secondChoiceList, self.thirdChoiceList]
+
+
 class RegionSelector(object):  # 省市区选择器
     def __init__(self, desc, region, bindChange):
 
@@ -129,7 +180,7 @@ class RegionSelector(object):  # 省市区选择器
                     v = r
             return v[:10]
 
-        self.customItem = "全部"  # 可为每一列的顶部添加一个自定义的项
+        self.customItem = ALL_STR  # 可为每一列的顶部添加一个自定义的项
         self.desc = desc
         self.pickerType = PICKER_TYPE_REGION_SELECTOR  # 选择器类型：地址
         self.region = _getRegin(region)  # 省市区数组

@@ -19,6 +19,7 @@ MODEL_MAIL_TYPE_WORK = 2
 MODEL_SEX_UNKNOWN_INDEX = 0
 MODEL_SEX_MALE_INDEX = 1
 MODEL_SEX_FEMALE_INDEX = 2
+ALL_STR = "全部"
 # OP_TYPE_ENUMERATE  如果更改，需要同步小程序对应枚举
 OP_TYPE_SEX = 'updateSex'
 OP_TYPE_BIRTH_YEAR = 'updateBirthYear'
@@ -26,12 +27,14 @@ OP_TYPE_MARTIAL_STATUS = 'updateMartialStatus'
 OP_TYPE_HEIGHT = 'updateHeight'
 OP_TYPE_WEIGHT = 'updateWeight'
 OP_TYPE_MONTH_PAY = 'updateMonthPay'
-OP_TYPE_EDUCATION = 'updateEducation'
+OP_TYPE_EDUCATION = 'updateEducation'  # 废弃
+OP_TYPE_EDUCATION_MULTI = 'updateEducationMulti'
 OP_BIRTH_YEAR_PERIOD = 'updateBirthYearPeriod'
 OP_TYPE_HEIGHT_PERIOD = 'updateHeightPeriod'
 OP_TYPE_WEIGHT_PERIOD = 'updateWeightPeriod'
 OP_TYPE_MONTH_PAY_PERIOD = 'updateMonthPayPeriod'
-OP_TYPE_EDUCATION_PERIOD = 'updateEducationPeriod'
+OP_TYPE_EDUCATION_PERIOD = 'updateEducationPeriod'  # 废弃
+OP_TYPE_EDUCATION_MULTI_PERIOD = 'updateEducationMultiPeriod'
 OP_TYPE_HOME_REGION_PERIOD = 'updateHomeRegionPeriod'
 OP_TYPE_STUDY_REGION_PERIOD = 'updateStudyRegionPeriod'
 OP_TYPE_HOME_REGION = 'updateHomeRegion'
@@ -57,6 +60,22 @@ DEFAULT_MONTH_PAY_INDEX = 6
 
 EDUCATION_CHOICE_LIST = ["未知", "高中", "专科", "本科", "硕士", "博士"]
 DEFAULT_EDUCATION_INDEX = 0
+
+EDUCATION_MULTI_LIST = [
+    [
+        ALL_STR,   # city
+        [
+            ALL_STR,  # school
+            [
+                ALL_STR,  # level
+                [
+                    ALL_STR,  # major
+                ]
+            ]
+        ]
+    ]
+]
+DEFAULT_EDUCATION_MULTI = 0
 
 MATCH_INFO_DICT = {
     OP_TYPE_SEX: {
@@ -118,6 +137,12 @@ MATCH_INFO_DICT = {
         "DEFAULT_INDEX": DEFAULT_WEIGHT_INDEX,
         "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
         "COLUMN_CHANGE_FUNC": "weightPeriodColumnChange"
+    },
+    OP_TYPE_EDUCATION_MULTI: {
+        "CHOICE_LIST": EDUCATION_MULTI_LIST,
+        "DEFAULT_INDEX": DEFAULT_EDUCATION_MULTI,
+        "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
+        "COLUMN_CHANGE_FUNC": "educationMultiColumnChange"
     },
     OP_TYPE_MONTH_PAY_PERIOD: {
         "CHOICE_LIST": MONTH_PAY_CHOICE_LIST,
