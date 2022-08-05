@@ -9,6 +9,7 @@ from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
 from util.const import match
+from util.const.base import ALL_STR
 from util.ctx import getDbSession
 
 
@@ -72,12 +73,12 @@ class RequirementModel(BaseModel):
 
     @property
     def school(self):
-        return self.education.school if self.education else ""
+        return self.education.school if self.education else ALL_STR
 
     @property
     def level(self):
-        return self.education.level if self.education else ""
+        return self.education.level if self.education else ALL_STR
 
     @property
     def major(self):
-        return self.education.major if self.education else ""
+        return self.education.major if self.education else ALL_STR

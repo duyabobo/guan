@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from util.const.base import ALL_STR
 
-ALL_STR = u"全部"
 DEFAULT_EDUCATION_MULTI_CHOICE_LIST = [ALL_STR]
 DEFAULT_SCHOOL = [
     ALL_STR,  # school

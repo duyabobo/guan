@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+ALL_STR = u"全部"
 # logic
 MOBILE_SECRET = 'matchispursued'
 
