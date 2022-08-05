@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 from util.const.base import *
+from util.const.education import EDUCATION_MULTI_LIST, DEFAULT_EDUCATION_MULTI_INDEX
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR
 
 # model
@@ -19,7 +20,6 @@ MODEL_MAIL_TYPE_WORK = 2
 MODEL_SEX_UNKNOWN_INDEX = 0
 MODEL_SEX_MALE_INDEX = 1
 MODEL_SEX_FEMALE_INDEX = 2
-ALL_STR = "全部"
 # OP_TYPE_ENUMERATE  如果更改，需要同步小程序对应枚举
 OP_TYPE_SEX = 'updateSex'
 OP_TYPE_BIRTH_YEAR = 'updateBirthYear'
@@ -60,22 +60,6 @@ DEFAULT_MONTH_PAY_INDEX = 6
 
 EDUCATION_CHOICE_LIST = ["未知", "高中", "专科", "本科", "硕士", "博士"]
 DEFAULT_EDUCATION_INDEX = 0
-
-EDUCATION_MULTI_LIST = [
-    [
-        ALL_STR,   # city
-        [
-            ALL_STR,  # school
-            [
-                ALL_STR,  # level
-                [
-                    ALL_STR,  # major
-                ]
-            ]
-        ]
-    ]
-]
-DEFAULT_EDUCATION_MULTI = 0
 
 MATCH_INFO_DICT = {
     OP_TYPE_SEX: {
@@ -140,7 +124,7 @@ MATCH_INFO_DICT = {
     },
     OP_TYPE_EDUCATION_MULTI: {
         "CHOICE_LIST": EDUCATION_MULTI_LIST,
-        "DEFAULT_INDEX": DEFAULT_EDUCATION_MULTI,
+        "DEFAULT_INDEX": DEFAULT_EDUCATION_MULTI_INDEX,
         "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
         "COLUMN_CHANGE_FUNC": "educationMultiColumnChange"
     },

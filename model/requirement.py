@@ -6,6 +6,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from model.education import EducationModel
 from model.region import RegionModel
 from util.const import match
 from util.ctx import getDbSession
@@ -64,3 +65,19 @@ class RequirementModel(BaseModel):
     @property
     def study_region(self):
         return RegionModel.getById(self.study_region_id)
+
+    @property
+    def education(self):
+        return EducationModel.getById(self.education_id)
+
+    @property
+    def school(self):
+        return self.education.school if self.education else ""
+
+    @property
+    def level(self):
+        return self.education.level if self.education else ""
+
+    @property
+    def major(self):
+        return self.education.major if self.education else ""
