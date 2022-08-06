@@ -121,7 +121,7 @@ class MultiSelectorExtra(object):  # 三项选择器
 
         def _secondChoiceList():
             firstMapSecondChoiceList = {
-                f[0]: f[1:] for f in firstList
+                f[0]: [s[0] for s in f[1:]] for f in firstList
             }
             return firstMapSecondChoiceList.get(firstValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
 
