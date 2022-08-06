@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util.const import match
+from util.const.base import EMPTY_STR
 from util.ctx import getDbSession
 
 
@@ -16,7 +17,7 @@ class VerifyModel(BaseModel):
     __tablename__ = 'verify'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer)  # passport_id
-    mail = Column(String, default="")  # 验证邮箱（需要加密）
+    mail = Column(String, default=EMPTY_STR)  # 验证邮箱（需要加密）
     mail_type = Column(Integer, default=0)  # 邮箱类型：VERIFY_MAIL_TYPE
     mail_verify_status = Column(Integer, default=0)  # 工作认证状态: MODEL_MAIL_VERIFY_STATUS_ENUMERATE
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE

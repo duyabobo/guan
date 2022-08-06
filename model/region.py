@@ -6,6 +6,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from util.const.base import EMPTY_STR
 from util.const.match import MODEL_STATUS_YES
 from util.ctx import getDbSession
 
@@ -14,9 +15,9 @@ class RegionModel(BaseModel):
     """省市区数据"""
     __tablename__ = 'region'
     id = Column(Integer, primary_key=True)  # 自增
-    province = Column(String, default='')  # 省份
-    city = Column(String, default='')  # 市
-    area = Column(String, default='')  # 区
+    province = Column(String, default=EMPTY_STR)  # 省份
+    city = Column(String, default=EMPTY_STR)  # 市
+    area = Column(String, default=EMPTY_STR)  # 区
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间

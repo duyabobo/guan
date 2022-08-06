@@ -9,7 +9,7 @@ from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
 from util.const import match
-from util.const.base import ALL_STR
+from util.const.base import ALL_STR, UNKNOWN_STR, NO_LIMIT_STR
 from util.ctx import getDbSession
 
 
@@ -18,7 +18,7 @@ class RequirementModel(BaseModel):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer)  # passport_id
-    sex = Column(String, default='未知')  # 性别：MODEL_SEX_ENUMERATE
+    sex = Column(String, default=UNKNOWN_STR)  # 性别：MODEL_SEX_ENUMERATE
     min_birth_year = Column(Integer, default=0)  # 最小出生年份
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
     min_weight = Column(Integer, default=0)  # 最小体重(kg)
@@ -30,11 +30,11 @@ class RequirementModel(BaseModel):
     education_id = Column(Integer, default=0)  # 学习信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
     max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
-    martial_status = Column(String, default='不限')  # 婚姻现状：不限，未婚，离异
+    martial_status = Column(String, default=NO_LIMIT_STR)  # 婚姻现状：不限，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
-    min_education = Column(String, default='不限')  # 最低学历
-    max_education = Column(String, default='不限')  # 最高学历
+    min_education = Column(String, default=NO_LIMIT_STR)  # 最低学历
+    max_education = Column(String, default=NO_LIMIT_STR)  # 最高学历
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间

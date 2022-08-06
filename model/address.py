@@ -9,6 +9,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from util.const import match
+from util.const.base import EMPTY_STR
 from util.ctx import getDbSession
 
 
@@ -17,8 +18,8 @@ class AddressModel(BaseModel):
     __tablename__ = 'address'
     id = Column(Integer, primary_key=True)  # 自增
     name = Column(String)  # name
-    description = Column(String, default="")  # 地点描述(人均消费/吃喝玩乐推荐)
-    img = Column(String, default="")
+    description = Column(String, default=EMPTY_STR)  # 地点描述(人均消费/吃喝玩乐推荐)
+    img = Column(String, default=EMPTY_STR)
     region_id = Column(Integer, default=0)  # 省市区id
     longitude = Column(Float, default=0)  # 经度
     latitude = Column(Float, default=0)  # 纬度

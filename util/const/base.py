@@ -1,7 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import datetime
 
 ALL_STR = u"全部"
+EMPTY_STR = u""
+UNKNOWN_STR = u"未知"
+NO_LIMIT_STR = u"不限"
 # logic
 MOBILE_SECRET = 'matchispursued'
 
@@ -14,7 +18,6 @@ EXCHANGE_NAME = 'offline_script'
 GUAN_INFO_OP_TYPE_INVITE = 1  # 邀请
 GUAN_INFO_OP_TYPE_JOIN = 2  # 加入
 GUAN_INFO_OP_TYPE_QUIT = 3  # 退出
-import datetime
 
 # BASE
 CURRENT_YEAR = datetime.datetime.now().year
