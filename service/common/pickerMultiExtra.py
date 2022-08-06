@@ -7,7 +7,8 @@ def getFirstChoiceList(zeroChoiceList, zeroValue):
     zeroMapFirstChoiceList = {
         z[0]: [f[0] for f in z[1:]] for z in zeroChoiceList
     }
-    choiceList = zeroMapFirstChoiceList.get(zeroValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
+    choiceList = DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+    choiceList.extend(zeroMapFirstChoiceList.get(zeroValue, []))
     return choiceList
 
 
@@ -15,7 +16,8 @@ def getSecondChoiceList(firstChoiceList, firstValue):
     firstMapSecondChoiceList = {
         f[0]: [s[0] for s in f[1:]] for f in firstChoiceList
     }
-    choiceList = firstMapSecondChoiceList.get(firstValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
+    choiceList = DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+    choiceList.extend(firstMapSecondChoiceList.get(firstValue, []))
     return choiceList
 
 
@@ -23,7 +25,8 @@ def getThirdChoiceList(secondChoiceList, secondValue):
     secondMapThirdChoiceList = {
         s[0]: s[1] for s in secondChoiceList
     }
-    choiceList = secondMapThirdChoiceList.get(secondValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
+    choiceList = DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+    choiceList.extend(secondMapThirdChoiceList.get(secondValue, []))
     return choiceList
 
 
