@@ -77,9 +77,6 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_MONTH_PAY_PERIOD:
             updateParams['min_month_pay'] = MONTH_PAY_CHOICE_LIST[value[0]]
             updateParams['max_month_pay'] = MONTH_PAY_CHOICE_LIST[value[1]]
-        elif opType == OP_TYPE_EDUCATION_PERIOD:
-            updateParams['min_education'] = EDUCATION_CHOICE_LIST[value[0]]
-            updateParams['max_education'] = EDUCATION_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_HOME_REGION_PERIOD:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:

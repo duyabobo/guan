@@ -77,8 +77,6 @@ class UserHelper(object):
             updateParams['weight'] = WEIGHT_CHOICE_LIST[value]
         elif opType == OP_TYPE_MONTH_PAY:
             updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
-        elif opType == OP_TYPE_EDUCATION:
-            updateParams['education'] = EDUCATION_CHOICE_LIST[value]
         elif opType == OP_TYPE_HOME_REGION:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION:

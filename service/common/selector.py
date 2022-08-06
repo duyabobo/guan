@@ -11,13 +11,11 @@ VALUE_TYPE_DICT = {
     OP_TYPE_HEIGHT: int,
     OP_TYPE_WEIGHT: int,
     OP_TYPE_MONTH_PAY: int,
-    OP_TYPE_EDUCATION: int,
     OP_BIRTH_YEAR_PERIOD: list,
     OP_TYPE_MARTIAL_STATUS: int,
     OP_TYPE_WEIGHT_PERIOD: list,
     OP_TYPE_HEIGHT_PERIOD: list,
     OP_TYPE_MONTH_PAY_PERIOD: list,
-    OP_TYPE_EDUCATION_PERIOD: list,
     OP_TYPE_HOME_REGION_PERIOD: list,
     OP_TYPE_STUDY_REGION_PERIOD: list,
     OP_TYPE_HOME_REGION: list,
@@ -39,8 +37,6 @@ def selectorFactory(op_type, data):
         return SingleSelector("税前月收入(元)", data.month_pay, "月收入(税前)%s元" % data.month_pay, op_type)
     elif op_type == OP_TYPE_MARTIAL_STATUS:
         return SingleSelector("婚姻现状", data.martial_status, data.martial_status, op_type)
-    elif op_type == OP_TYPE_EDUCATION:
-        return SingleSelector("学历", data.education, data.education, op_type)
     elif op_type == OP_BIRTH_YEAR_PERIOD:
         return MultiSelector("出生年份区间", data.min_birth_year, data.max_birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT_PERIOD:
@@ -49,8 +45,6 @@ def selectorFactory(op_type, data):
         return MultiSelector("体重区间(kg)", data.min_weight, data.max_weight, op_type)
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
         return MultiSelector("税前月收入区间(元)", data.min_month_pay, data.max_month_pay, op_type)
-    elif op_type == OP_TYPE_EDUCATION_PERIOD:  # 废弃
-        return MultiSelector("学历区间", data.min_education, data.max_education, op_type)
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         return MultiSelectorExtra("教育信息", data.study_region.city, data.school, data.level, data.major, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
