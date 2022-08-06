@@ -3,24 +3,10 @@
 from util.const.base import ALL_STR
 
 DEFAULT_EDUCATION_MULTI_CHOICE_LIST = [ALL_STR]
-DEFAULT_SCHOOL = [
-    ALL_STR,  # school
-    [
-        ALL_STR,  # level
-        [
-            ALL_STR,  # major
-        ]
-    ]
-]
 
 EDUCATION_MULTI_LIST = [
-    [
-        ALL_STR,   # city
-        DEFAULT_SCHOOL
-    ],
     [  # 0级
         u"北京市",
-        DEFAULT_SCHOOL,
         [  # 1级
             u"清华大学",
             [  # 2级

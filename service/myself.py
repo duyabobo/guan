@@ -75,8 +75,8 @@ class UserInfoService(BaseService):
             "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
         }
 
-    def updateMyselfInfo(self, opType, value):
-        updateParams = self.userHelper.getUpdateParams(opType, value)
+    def updateMyselfInfo(self, opType, value, column=None):
+        updateParams = self.userHelper.getUpdateParams(opType, value, column)
         if updateParams:
             UserModel.updateByPassportId(self.passportId, **updateParams)
             # todo next

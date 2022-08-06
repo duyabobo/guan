@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
+from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
+from service.common.pickerMultiExtra import getPickerMultiExtraValueBySubmit, getPickerMultiExtraByColumnChange
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
@@ -59,7 +60,7 @@ class RequirementHelper(object):
                 requirementList.append(requirement)
         return requirementList
 
-    def getUpdateParams(self, opType, value):
+    def getUpdateParams(self, opType, value, column=None):
         updateParams = {}
         if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             updateParams['sex'] = SEX_CHOICE_LIST[value]
@@ -81,4 +82,15 @@ class RequirementHelper(object):
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
             updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
+        elif opType == OP_TYPE_EDUCATION_MULTI:
+            education = getPickerMultiExtraValueBySubmit(EDUCATION_MULTI_LIST, self.requirement.study_region.city, value)
+            updateParams['education_id'] = EducationModel.getIdByEducation(*education)
+        elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
+            _oldEducation = self.requirement.education
+            oldEducation = [_oldEducation.school, _oldEducation.level, _oldEducation.major] if _oldEducation else [ALL_STR, ALL_STR, ALL_STR]
+            education = getPickerMultiExtraByColumnChange(
+                EDUCATION_MULTI_LIST, self.requirement.study_region.city,
+                oldEducation, value, column
+            )
+            updateParams['education_id'] = EducationModel.getIdByEducation(*education)
         return updateParams

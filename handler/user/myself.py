@@ -17,6 +17,7 @@ class MyselfHandler(BaseHandler):
     @superMonitor
     def put(self, *args, **kwargs):
         opType = self.getRequestParameter('opType')
+        column = self.getRequestParameter('column', paraType=int)
         valueType = VALUE_TYPE_DICT[opType]
         value = self.getRequestParameter('value', paraType=valueType)
 
@@ -27,5 +28,5 @@ class MyselfHandler(BaseHandler):
                 respNormal=ret
             )
         return self.response(
-            respData=uis.updateMyselfInfo(opType, value)
+            respData=uis.updateMyselfInfo(opType, value, column=column)
         )

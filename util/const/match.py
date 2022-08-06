@@ -28,6 +28,7 @@ OP_TYPE_HEIGHT = 'updateHeight'
 OP_TYPE_WEIGHT = 'updateWeight'
 OP_TYPE_MONTH_PAY = 'updateMonthPay'
 OP_TYPE_EDUCATION_MULTI = 'updateEducationMulti'
+OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE = 'updateEducationMultiColumnChange'
 OP_BIRTH_YEAR_PERIOD = 'updateBirthYearPeriod'
 OP_TYPE_HEIGHT_PERIOD = 'updateHeightPeriod'
 OP_TYPE_WEIGHT_PERIOD = 'updateWeightPeriod'
@@ -114,7 +115,7 @@ MATCH_INFO_DICT = {
         "CHOICE_LIST": EDUCATION_MULTI_LIST,
         "DEFAULT_INDEX": DEFAULT_EDUCATION_MULTI_INDEX,
         "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
-        "COLUMN_CHANGE_FUNC": OP_TYPE_EDUCATION_MULTI,
+        "COLUMN_CHANGE_FUNC": "updateEducationMultiColumnChange",
     },
     OP_TYPE_MONTH_PAY_PERIOD: {
         "CHOICE_LIST": MONTH_PAY_CHOICE_LIST,

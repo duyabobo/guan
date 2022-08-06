@@ -4,6 +4,8 @@ from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
+from service.common.pickerMultiExtra import getFirstChoiceList, getSecondChoiceList, getThirdChoiceList
+
 
 VALUE_TYPE_DICT = {
     OP_TYPE_SEX: int,
@@ -21,6 +23,7 @@ VALUE_TYPE_DICT = {
     OP_TYPE_HOME_REGION: list,
     OP_TYPE_STUDY_REGION: list,
     OP_TYPE_EDUCATION_MULTI: list,
+    OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE: int,
 }
 
 
@@ -113,24 +116,6 @@ class MultiSelector(object):  # 两项选择器
 class MultiSelectorExtra(object):  # 三项选择器
     def __init__(self, desc, zeroValue, firstValue, secondValue, thirdValue, bindChange):
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
-        def _firstChoiceList():
-            zeroMapFirstChoiceList = {
-                z[0]: [f[0] for f in z[1:]] for z in zeroList
-            }
-            return zeroMapFirstChoiceList.get(zeroValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
-
-        def _secondChoiceList():
-            firstMapSecondChoiceList = {
-                f[0]: [s[0] for s in f[1:]] for f in firstList
-            }
-            return firstMapSecondChoiceList.get(firstValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
-
-        def _thirdChoiceList():
-            secondMapThirdChoiceList = {
-                s[0]: s[1] for s in secondList
-            }
-            return secondMapThirdChoiceList.get(secondValue, DEFAULT_EDUCATION_MULTI_CHOICE_LIST)
-
         def _selectFirstIndex():
             try:
                 return self.firstChoiceList.index(self.firstValue) or self.defaultIndex
@@ -171,9 +156,9 @@ class MultiSelectorExtra(object):  # 三项选择器
             if f[0] == firstValue:
                 secondList = f[1:]
 
-        self.firstChoiceList = _firstChoiceList()
-        self.secondChoiceList = _secondChoiceList()
-        self.thirdChoiceList = _thirdChoiceList()
+        self.firstChoiceList = getFirstChoiceList(zeroList, zeroValue)
+        self.secondChoiceList = getSecondChoiceList(firstList, firstValue)
+        self.thirdChoiceList = getThirdChoiceList(secondList, secondValue)
         self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
         self.multiChoiceList = [self.firstChoiceList, self.secondChoiceList, self.thirdChoiceList]
         self.hasFilled = [self.firstValue] != DEFAULT_EDUCATION_MULTI_CHOICE_LIST  # 当前值是否已完善

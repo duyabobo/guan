@@ -27,6 +27,22 @@ class EducationModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id == educationId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
-    def getByEducation(cls, school, level, major):
-        return getDbSession().query(cls).filter(cls.school == school, cls.level == level,
-                                                cls.major == major, cls.status == MODEL_STATUS_YES).first()
+    def addOne(cls, school, level, major):
+        record = cls(
+            school=school,
+            level=level,
+            major=major,
+        )
+        getDbSession().add(record)
+        getDbSession().flush()
+        return record
+
+    @classmethod
+    def getIdByEducation(cls, school, level, major):
+        r = getDbSession().query(cls).filter(
+            cls.school == school, cls.level == level,
+            cls.major == major, cls.status == MODEL_STATUS_YES
+        ).first()
+        if not r:
+            r = cls.addOne(school, level, major)
+        return r.id

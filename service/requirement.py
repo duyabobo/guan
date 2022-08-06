@@ -38,8 +38,8 @@ class RequirementService(BaseService):
             "requirementResult": "3人满足见面条件"  # todo next
         }
 
-    def updateRequirementInfo(self, opType, value):
-        updateParams = self.requirementHelper.getUpdateParams(opType, value)
+    def updateRequirementInfo(self, opType, value, column=None):
+        updateParams = self.requirementHelper.getUpdateParams(opType, value, column)
         if updateParams:
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
             self.reloadMatchHelper()
