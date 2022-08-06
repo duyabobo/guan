@@ -4,7 +4,8 @@ from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
-from service.common.pickerMultiExtra import getFirstChoiceList, getSecondChoiceList, getThirdChoiceList
+from service.common.pickerMultiExtra import getFirstChoiceList, getSecondChoiceList, getThirdChoiceList,\
+    getFirstList, getSecondList
 
 
 VALUE_TYPE_DICT = {
@@ -124,13 +125,13 @@ class MultiSelectorExtra(object):  # 三项选择器
 
         def _selectSecondIndex():
             try:
-                return self.firstChoiceList.index(self.secondValue) or self.defaultIndex
+                return self.secondChoiceList.index(self.secondValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectThirdIndex():
             try:
-                return self.firstChoiceList.index(self.thirdValue) or self.defaultIndex
+                return self.thirdChoiceList.index(self.thirdValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
@@ -147,14 +148,8 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
         zeroList = self.choiceList
-        firstList = DEFAULT_EDUCATION_MULTI_CHOICE_LIST
-        for z in zeroList:
-            if z[0] == zeroValue:
-                firstList = z[1:]
-        secondList = DEFAULT_EDUCATION_MULTI_CHOICE_LIST
-        for f in firstList:
-            if f[0] == firstValue:
-                secondList = f[1:]
+        firstList = getFirstList(zeroList, zeroValue)
+        secondList = getSecondList(firstList, firstValue)
 
         self.firstChoiceList = getFirstChoiceList(zeroList, zeroValue)
         self.secondChoiceList = getSecondChoiceList(firstList, firstValue)
