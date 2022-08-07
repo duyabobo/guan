@@ -94,7 +94,6 @@ class UserInfoService(BaseService):
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and \
-                self.userInfo.sex != SEX_CHOICE_LIST[DEFAULT_SEX_INDEX] and\
-                self.userInfo.sex != SEX_CHOICE_LIST[value]:
+                self.userInfo.sex != DEFAULT_SEX_INDEX and self.userInfo.sex != value:
             return RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会

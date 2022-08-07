@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column
-from sqlalchemy import Integer, SmallInteger
-from sqlalchemy import String
+from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
@@ -10,7 +9,8 @@ from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
 from util.const import match
-from util.const.base import ALL_STR, UNKNOWN_STR
+from util.const.base import ALL_STR
+from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
 from util.ctx import getDbSession
 
 
@@ -19,7 +19,7 @@ class UserModel(BaseModel):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer, default=0)  # passport_id
-    sex = Column(String, default=UNKNOWN_STR)  # 性别：MODEL_SEX_ENUMERATE
+    sex = Column(Integer, default=MODEL_SEX_UNKNOWN_INDEX)  # 性别：MODEL_SEX_ENUMERATE
     birth_year = Column(Integer, default=0)  # 出生年份
     height = Column(Integer, default=0)  # 身高(厘米)
     weight = Column(Integer, default=0)  # 体重(公斤)
@@ -27,7 +27,7 @@ class UserModel(BaseModel):
     study_region_id = Column(Integer, default=0)  # 学习地点id
     study_from_year = Column(Integer, default=0)  # 入学年份
     education_id = Column(Integer, default=0)  # 学习信息id
-    martial_status = Column(String, default=UNKNOWN_STR)  # 婚姻现状：未知，未婚，离异
+    martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
     month_pay = Column(Integer, default=0)  # 月收入(元)
     is_fall_in_love = Column(Integer, default=0)  # 是否坠入爱河
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
@@ -59,7 +59,7 @@ class UserModel(BaseModel):
 
     @property
     def sexIndex(self):
-        return match.SEX_CHOICE_LIST.index(self.sex)
+        return self.sex
 
     @property
     def home_region(self):

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
@@ -9,7 +9,8 @@ from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
 from util.const import match
-from util.const.base import ALL_STR, UNKNOWN_STR, NO_LIMIT_STR
+from util.const.base import ALL_STR
+from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
 from util.ctx import getDbSession
 
 
@@ -19,7 +20,7 @@ class RequirementModel(BaseModel):
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer)  # passport_id
     verify_type = Column(Integer, default=0)  # 认证类型：MODEL_VERIFY_TYPE
-    sex = Column(String, default=UNKNOWN_STR)  # 性别：MODEL_SEX_ENUMERATE
+    sex = Column(Integer, default=MODEL_SEX_UNKNOWN_INDEX)  # 性别：MODEL_SEX_ENUMERATE
     min_birth_year = Column(Integer, default=0)  # 最小出生年份
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
     min_weight = Column(Integer, default=0)  # 最小体重(kg)
@@ -31,7 +32,7 @@ class RequirementModel(BaseModel):
     education_id = Column(Integer, default=0)  # 学习信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
     max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
-    martial_status = Column(String, default=NO_LIMIT_STR)  # 婚姻现状：不限，未婚，离异
+    martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE

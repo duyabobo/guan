@@ -68,11 +68,11 @@ class UserHelper(object):
     def getUpdateParams(self, opType, value, column=None):
         updateParams = {}
         if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
-            updateParams['sex'] = SEX_CHOICE_LIST[value]
+            updateParams['sex'] = value
         elif opType == OP_TYPE_BIRTH_YEAR:
             updateParams['birth_year'] = BIRTH_YEAR_CHOICE_LIST[value]
         elif opType == OP_TYPE_MARTIAL_STATUS:
-            updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[value]
+            updateParams['martial_status'] = value
         elif opType == OP_TYPE_HEIGHT:
             updateParams['height'] = HEIGHT_CHOICE_LIST[value]
         elif opType == OP_TYPE_WEIGHT:

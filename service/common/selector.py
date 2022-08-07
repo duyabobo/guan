@@ -33,7 +33,7 @@ def selectorFactory(op_type, data):
     if op_type == OP_TYPE_VERIFY:
         return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], VERIFY_CHOICE_LIST[data.verify_type], op_type)
     elif op_type == OP_TYPE_SEX:
-        return SingleSelector("性别", data.sex, data.sex, op_type)
+        return SingleSelector("性别", SEX_CHOICE_LIST[data.sex], SEX_CHOICE_LIST[data.sex], op_type)
     elif op_type == OP_TYPE_BIRTH_YEAR:
         return SingleSelector("出生年份", data.birth_year, "出生于%d年" % data.birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT:
@@ -43,7 +43,7 @@ def selectorFactory(op_type, data):
     elif op_type == OP_TYPE_MONTH_PAY:
         return SingleSelector("税前月收入(元)", data.month_pay, "月收入(税前)%s元" % data.month_pay, op_type)
     elif op_type == OP_TYPE_MARTIAL_STATUS:
-        return SingleSelector("婚姻现状", data.martial_status, data.martial_status, op_type)
+        return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type)
     elif op_type == OP_BIRTH_YEAR_PERIOD:
         return MultiSelector("出生年份区间", data.min_birth_year, data.max_birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT_PERIOD:

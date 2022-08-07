@@ -48,6 +48,6 @@ class RequirementService(BaseService):
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and self.userInfo.sex == SEX_CHOICE_LIST[DEFAULT_SEX_INDEX]:
             return RESP_USER_SEX_FIRST_EDIT
-        if opType == OP_TYPE_SEX and value == SEX_CHOICE_LIST.index(self.userInfo.sex):
+        if opType == OP_TYPE_SEX and value == self.userInfo.sex:
             return RESP_REQUIREMENT_SEX_ERROR
         # todo 其他修改限制半年一次修改机会

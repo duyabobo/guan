@@ -30,3 +30,5 @@ create table region (
 alter table user drop column has_fill_finish;
 alter table requirement add column verify_type tinyint unsigned not null default 0 comment '认证类型：MODEL_VERIFY_TYPE' after id;
 alter table requirement drop column min_education, drop column max_education;
+alter table user drop column sex, add column sex tinyint unsigned not null default 0 comment '性别：MODEL_SEX_ENUMERATE' after id, drop column martial_status, add column martial_status tinyint unsigned not null default 0 comment '婚姻状态：MODEL_MARTIAL_STATUS_ENUMERATE' after max_month_pay;
+alter table requirement drop column sex, add column sex tinyint unsigned not null default 0 comment '性别：MODEL_SEX_ENUMERATE' after id, drop column martial_status, add column martial_status tinyint unsigned not null default 0 comment '婚姻状态：MODEL_MARTIAL_STATUS_ENUMERATE' after max_month_pay;

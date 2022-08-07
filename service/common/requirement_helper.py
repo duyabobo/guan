@@ -68,12 +68,12 @@ class RequirementHelper(object):
         if opType == OP_TYPE_VERIFY:
             updateParams['verify_type'] = value
         elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
-            updateParams['sex'] = SEX_CHOICE_LIST[value]
+            updateParams['sex'] = value
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
             updateParams['max_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_MARTIAL_STATUS:
-            updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[value]
+            updateParams['martial_status'] = value
         elif opType == OP_TYPE_WEIGHT_PERIOD:
             updateParams['min_weight'] = WEIGHT_CHOICE_LIST[value[0]]
             updateParams['max_weight'] = WEIGHT_CHOICE_LIST[value[1]]
