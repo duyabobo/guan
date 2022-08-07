@@ -22,9 +22,9 @@ def selectorFactory(op_type, data):
     elif op_type == OP_BIRTH_YEAR_PERIOD:
         return MultiSelector("出生年份区间", data.min_birth_year, data.max_birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT_PERIOD:
-        return MultiSelector("周六时间区间(小时)", data.min_height, data.max_height, op_type)
+        return MultiSelector("周六时间区间", data.min_height, data.max_height, op_type)
     elif op_type == OP_TYPE_WEIGHT_PERIOD:
-        return MultiSelector("周日时间区间(小时)", data.min_weight, data.max_weight, op_type)
+        return MultiSelector("周日时间区间", data.min_weight, data.max_weight, op_type)
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
         return MultiSelector("税前月收入区间(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_PERIOD:
