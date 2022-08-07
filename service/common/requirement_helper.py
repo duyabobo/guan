@@ -6,10 +6,10 @@ from service.common.selector import selectorFactory
 from util.const.match import *
 
 OP_FUNCS = [  # 真正生效的期望条件字段变更方法名列表
-    OP_TYPE_SEX,
+    # OP_TYPE_SEX,
     # OP_BIRTH_YEAR_PERIOD,
-    # OP_TYPE_HEIGHT_PERIOD,
-    # OP_TYPE_WEIGHT_PERIOD,
+    OP_TYPE_HEIGHT_PERIOD,
+    OP_TYPE_WEIGHT_PERIOD,
     # OP_TYPE_MONTH_PAY_PERIOD,
     # OP_TYPE_EDUCATION_PERIOD,
     # OP_TYPE_MARTIAL_STATUS,
