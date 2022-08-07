@@ -18,7 +18,6 @@ class UserModel(BaseModel):
     """用户信息"""
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)  # 自增
-    has_fill_finish = Column(SmallInteger, default=0)  # 是否完善信息结束
     passport_id = Column(Integer, default=0)  # passport_id
     sex = Column(String, default=UNKNOWN_STR)  # 性别：MODEL_SEX_ENUMERATE
     birth_year = Column(Integer, default=0)  # 出生年份

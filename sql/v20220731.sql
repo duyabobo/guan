@@ -26,3 +26,7 @@ create table region (
     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近修改时间',
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='省市区信息';
+
+alter table user drop column has_fill_finish;
+alter table requirement add column verify_type tinyint unsigned not null default 0 comment '认证类型：MODEL_VERIFY_TYPE' after id;
+alter table requirement drop column min_education, drop column max_education;

@@ -18,6 +18,7 @@ class RequirementModel(BaseModel):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer)  # passport_id
+    verify_type = Column(Integer, default=0)  # 认证类型：MODEL_VERIFY_TYPE
     sex = Column(String, default=UNKNOWN_STR)  # 性别：MODEL_SEX_ENUMERATE
     min_birth_year = Column(Integer, default=0)  # 最小出生年份
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
@@ -33,8 +34,6 @@ class RequirementModel(BaseModel):
     martial_status = Column(String, default=NO_LIMIT_STR)  # 婚姻现状：不限，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
-    min_education = Column(String, default=NO_LIMIT_STR)  # 最低学历
-    max_education = Column(String, default=NO_LIMIT_STR)  # 最高学历
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间

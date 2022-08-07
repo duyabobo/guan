@@ -9,6 +9,7 @@ from service.common.pickerMultiExtra import getFirstChoiceList, getSecondChoiceL
 
 
 VALUE_TYPE_DICT = {
+    OP_TYPE_VERIFY: int,
     OP_TYPE_SEX: int,
     OP_TYPE_BIRTH_YEAR: int,
     OP_TYPE_HEIGHT: int,
@@ -29,7 +30,9 @@ VALUE_TYPE_DICT = {
 
 
 def selectorFactory(op_type, data):
-    if op_type == OP_TYPE_SEX:
+    if op_type == OP_TYPE_VERIFY:
+        return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], VERIFY_CHOICE_LIST[data.verify_type], op_type)
+    elif op_type == OP_TYPE_SEX:
         return SingleSelector("性别", data.sex, data.sex, op_type)
     elif op_type == OP_TYPE_BIRTH_YEAR:
         return SingleSelector("出生年份", data.birth_year, "出生于%d年" % data.birth_year, op_type)

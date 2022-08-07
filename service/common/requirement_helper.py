@@ -10,6 +10,7 @@ from util.const.match import *
 
 OP_FUNCS_DICT = {
     MODEL_MAIL_TYPE_UNKNOWN: [
+        OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
         OP_TYPE_HEIGHT_PERIOD,
@@ -20,6 +21,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
+        OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
         OP_TYPE_HEIGHT_PERIOD,
@@ -30,6 +32,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_WORK: [
+        OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
         OP_TYPE_HEIGHT_PERIOD,
@@ -62,7 +65,9 @@ class RequirementHelper(object):
 
     def getUpdateParams(self, opType, value, column=None):
         updateParams = {}
-        if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
+        if opType == OP_TYPE_VERIFY:
+            updateParams['verify_type'] = value
+        elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             updateParams['sex'] = SEX_CHOICE_LIST[value]
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
