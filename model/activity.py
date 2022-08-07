@@ -33,8 +33,8 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
-            cls.start_time > datetime.datetime.now().date()
-        ).all()
+            cls.start_time > datetime.datetime.now()
+        ).order_by(cls.start_time.asc()).all()
 
     @classmethod
     def getById(cls, activityId):

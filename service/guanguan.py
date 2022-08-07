@@ -21,13 +21,20 @@ class GuanguanService(BaseService):
 
     def match(self, activity, userMap):
         """筛选掉不符合期望的，筛选掉已完成匹配但是没有当前用户参与的"""
-        # todo 资料/预期对比排除
         inv_pid = activity.girl_passport_id
         ac_pid = activity.boy_passport_id
-        if inv_pid and ac_pid and self.passportId not in [inv_pid, ac_pid]:
-            return False
-
-        return True
+        # 已完成见面的
+        if inv_pid and ac_pid:
+            if self.passportId in [inv_pid, ac_pid]:  # 自己参与的，展示
+                return True
+            else:  # 没有参与的，不展示
+                return False
+        # 未完成见面的
+        else:
+            if True:  # todo 发起人符合自己预期的，或者没有发起人的，需要展示
+                return True
+            else:
+                return False
 
     def getUserMap(self, passportIds):
         return []
@@ -80,7 +87,7 @@ class GuanguanService(BaseService):
         addressMap[address.id] = address
 
     def getGuanguanList(self, longitude, latitude):
-        """优先展示有邀请人的，其次没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
+        """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
         addressMap = self.getAddressMap(longitude, latitude)
         activityList = self.getActivityList(addressMap.keys())  # todo next 自己参与过的，后期还有流程环节要做
 

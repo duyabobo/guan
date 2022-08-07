@@ -13,7 +13,7 @@ SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
 GUANINFO_PAGE = '/page/guan_info/guan_info?guan_id={guan_id}'  # 活动详情页
 MYINFORMATION_PAGE = '/page/my_information/my_information?title=我的资料'  # 我的资料
 MYINFORMATION_PAGE_WITH_ERRMSG = '/page/my_information/my_information?title=我的资料&errMsg=请完善个人信息'  # 我的资料
-MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=见面条件'  # 见面条件
+MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=我的期望'  # 我的期望
 WORKVERIFY_PAGE = '/page/work_verify/work_verify'  # 工作认证
 GUANINFO_SHORT_PAGE = 'guan_info/guan_info?guan_id={guan_id}'  # 活动详情页
 SUBSCRIBE_ACTIVITY_START_NOTI_TID = '0LeRGd69AHugmAOYDLHxut1DBZhpkZUdZb5f57DeD3g'  # 活动开始前推送的模板消息
