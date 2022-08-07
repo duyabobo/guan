@@ -6,7 +6,7 @@ from model.verify import VerifyModel
 from ral import user
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_WORK_VERIFY_STATUS_YES, OP_TYPE_SEX, SEX_CHOICE_LIST, \
+from util.const.match import MODEL_WORK_VERIFY_STATUS_YES, OP_TYPE_SEX, SHENHE_CHOICE_LIST, \
     DEFAULT_SEX_INDEX
 from util.const.response import RESP_SEX_CANOT_EDIT
 
@@ -86,7 +86,7 @@ class UserInfoService(BaseService):
 
     def checkBeforeUpdate(self, opType, valueIndex):
         if opType == OP_TYPE_SEX and \
-                self.userInfo.sex != SEX_CHOICE_LIST[DEFAULT_SEX_INDEX] and\
-                self.userInfo.sex != SEX_CHOICE_LIST[int(valueIndex)]:
+                self.userInfo.sex != SHENHE_CHOICE_LIST[DEFAULT_SEX_INDEX] and\
+                self.userInfo.sex != SHENHE_CHOICE_LIST[int(valueIndex)]:
             return RESP_SEX_CANOT_EDIT
         # todo 其他修改限制半年一次修改机会

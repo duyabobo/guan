@@ -32,7 +32,7 @@ class RequirementHelper(object):
     def getUpdateParams(self, opType, valueIndex):
         updateParams = {}
         if opType == OP_TYPE_SEX and int(valueIndex) != MODEL_SEX_UNKNOWN_INDEX:
-            updateParams['sex'] = SEX_CHOICE_LIST[int(valueIndex)]
+            updateParams['sex'] = SHENHE_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_BIRTH_YEAR_PERIOD:
             value = json.loads(valueIndex)
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
@@ -41,12 +41,12 @@ class RequirementHelper(object):
             updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_TYPE_WEIGHT_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_weight'] = SEX_CHOICE_LIST[value[0]]
-            updateParams['max_weight'] = SEX_CHOICE_LIST[value[1]]
+            updateParams['min_weight'] = SHENHE_CHOICE_LIST[value[0]]
+            updateParams['max_weight'] = SHENHE_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_HEIGHT_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_height'] = SEX_CHOICE_LIST[value[0]]
-            updateParams['max_height'] = SEX_CHOICE_LIST[value[1]]
+            updateParams['min_height'] = SHENHE_CHOICE_LIST[value[0]]
+            updateParams['max_height'] = SHENHE_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_MONTH_PAY_PERIOD:
             value = json.loads(valueIndex)
             updateParams['min_month_pay'] = MONTH_PAY_CHOICE_LIST[value[0]]

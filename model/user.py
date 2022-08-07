@@ -63,6 +63,6 @@ class UserModel(BaseModel):
     @property
     def sexIndex(self):
         try:
-            return match.SEX_CHOICE_LIST.index(self.sex)
+            return match.SHENHE_CHOICE_LIST.index(self.sex)
         except:
             return 0
