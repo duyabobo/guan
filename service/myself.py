@@ -3,6 +3,7 @@
 from common.myself_helper import UserHelper
 from model.user import UserModel
 from model.verify import VerifyModel
+from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK
 from ral import user
 from service import BaseService
 from util.class_helper import lazy_property
@@ -47,10 +48,16 @@ class UserInfoService(BaseService):
     def userInfoIsFilled(self):
         return self.isVerified and self.infoIsFilled
 
-    def getWork(self):
+    def getVerify(self):
+        verifyType = "未认证"
+        if self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES:
+            if self.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL:
+                verifyType = "教育认证"
+            elif self.verify.mail_type == MODEL_MAIL_TYPE_WORK:
+                verifyType = "工作认证"
         return {
-            "desc": "教育认证",
-            "value": "已认证" if self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES else "未认证",
+            "desc": "认证",
+            "value": verifyType,
             "is_student": self.verify.mail_type
         }
 
@@ -70,8 +77,8 @@ class UserInfoService(BaseService):
         return {
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
-            "workVerify": self.getWork(),
-            "obtainWorkEmailPlaceHolder": "输入您的学校邮箱",
+            "workVerify": self.getVerify(),
+            "obtainWorkEmailPlaceHolder": "输入您的大学邮箱或工作邮箱",
             "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
         }
 
