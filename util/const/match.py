@@ -105,7 +105,7 @@ MATCH_INFO_DICT = {
         "COLUMN_CHANGE_FUNC": "heightPeriodColumnChange"
     },
     OP_TYPE_WEIGHT_PERIOD: {
-        "CHOICE_LIST": WEIGHT_CHOICE_LIST,
+        "CHOICE_LIST": SEX_CHOICE_LIST,
         "DEFAULT_INDEX": DEFAULT_WEIGHT_INDEX,
         "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
         "COLUMN_CHANGE_FUNC": "weightPeriodColumnChange"

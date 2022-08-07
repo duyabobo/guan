@@ -42,9 +42,9 @@ class UserHelper(object):
         elif opType == OP_TYPE_MARTIAL_STATUS:
             updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_TYPE_HEIGHT:
-            updateParams['height'] = HEIGHT_CHOICE_LIST[int(valueIndex)]
+            updateParams['height'] = SEX_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_TYPE_WEIGHT:
-            updateParams['weight'] = WEIGHT_CHOICE_LIST[int(valueIndex)]
+            updateParams['weight'] = SEX_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_TYPE_MONTH_PAY:
             updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_TYPE_EDUCATION:

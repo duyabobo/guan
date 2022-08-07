@@ -41,12 +41,12 @@ class RequirementHelper(object):
             updateParams['martial_status'] = MARTIAL_STATUS_CHOICE_LIST[int(valueIndex)]
         elif opType == OP_TYPE_WEIGHT_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_weight'] = WEIGHT_CHOICE_LIST[value[0]]
-            updateParams['max_weight'] = WEIGHT_CHOICE_LIST[value[1]]
+            updateParams['min_weight'] = SEX_CHOICE_LIST[value[0]]
+            updateParams['max_weight'] = SEX_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_HEIGHT_PERIOD:
             value = json.loads(valueIndex)
-            updateParams['min_height'] = HEIGHT_CHOICE_LIST[value[0]]
-            updateParams['max_height'] = HEIGHT_CHOICE_LIST[value[1]]
+            updateParams['min_height'] = SEX_CHOICE_LIST[value[0]]
+            updateParams['max_height'] = SEX_CHOICE_LIST[value[1]]
         elif opType == OP_TYPE_MONTH_PAY_PERIOD:
             value = json.loads(valueIndex)
             updateParams['min_month_pay'] = MONTH_PAY_CHOICE_LIST[value[0]]
