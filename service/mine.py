@@ -13,7 +13,7 @@ class MainFuncObj(object):
         self.index = index
         self.url = url
         self.name = name
-        self.bindFuncName = bindFuncName
+        self.bindFuncName = bindFuncName  # 小程序的点击触发方法名
         self.needLogin = needLogin
         self.openType = openType
         self.desc = desc
@@ -35,13 +35,14 @@ class MineService(BaseService):
             [
                 MainFuncObj(1, 0, MYINFORMATION_PAGE, "我的资料", "clickMine"),
                 MainFuncObj(2, 1, MYREQUIREMENT_PAGE, "我的期望", "clickMine"),
+                MainFuncObj(3, 2, MYDATE_PAGE, "我的见面", "clickMine"),
             ],
             [
-                MainFuncObj(3, 0, SUGGESTION_PAGE, "客服", "handleContact", needLogin=False, openType="contact"),
-                MainFuncObj(4, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share", desc="近水楼台先得月"),
+                MainFuncObj(4, 0, SUGGESTION_PAGE, "客服", "handleContact", needLogin=False, openType="contact"),
+                MainFuncObj(5, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share", desc="近水楼台先得月"),
             ],
             [
-                MainFuncObj(5, 0, SECRET_PAGE, "隐私条款", "clickMine", needLogin=False),
-                MainFuncObj(6, 1, ABOUT_PAGE, "关于我们", "clickMine", needLogin=False),
+                MainFuncObj(6, 0, SECRET_PAGE, "隐私条款", "clickMine", needLogin=False),
+                MainFuncObj(7, 1, ABOUT_PAGE, "关于我们", "clickMine", needLogin=False),
             ]
         ]
