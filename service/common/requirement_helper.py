@@ -88,13 +88,13 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
             updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            education = getPickerMultiExtraValueBySubmit(EDUCATION_MULTI_LIST, self.requirement.study_region.city, value)
+            education = getPickerMultiExtraValueBySubmit(EDUCATION_MULTI_LIST, self.requirement.study_city, value)
             updateParams['education_id'] = EducationModel.getIdByEducation(*education)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
             _oldEducation = self.requirement.education
             oldEducation = [_oldEducation.school, _oldEducation.level, _oldEducation.major] if _oldEducation else [ALL_STR, ALL_STR, ALL_STR]
             education = getPickerMultiExtraByColumnChange(
-                EDUCATION_MULTI_LIST, self.requirement.study_region.city,
+                EDUCATION_MULTI_LIST, self.requirement.study_city,
                 oldEducation, value, column
             )
             updateParams['education_id'] = EducationModel.getIdByEducation(*education)

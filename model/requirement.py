@@ -64,8 +64,32 @@ class RequirementModel(BaseModel):
         return RegionModel.getById(self.home_region_id)
 
     @property
+    def home_province(self):
+        return self.home_region.province if self.home_region else ALL_STR
+
+    @property
+    def home_city(self):
+        return self.home_region.city if self.home_region else ALL_STR
+
+    @property
+    def home_area(self):
+        return self.home_region.area if self.home_region else ALL_STR
+
+    @property
     def study_region(self):
         return RegionModel.getById(self.study_region_id)
+
+    @property
+    def study_province(self):
+        return self.study_region.province if self.study_region else ALL_STR
+
+    @property
+    def study_city(self):
+        return self.study_region.city if self.study_region else ALL_STR
+
+    @property
+    def study_area(self):
+        return self.study_region.area if self.study_region else ALL_STR
 
     @property
     def education(self):
