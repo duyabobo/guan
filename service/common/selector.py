@@ -51,7 +51,7 @@ def selectorFactory(op_type, data):
     elif op_type == OP_TYPE_WEIGHT_PERIOD:
         return MultiSelector("体重区间(kg)", data.min_weight, data.max_weight, op_type)
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
-        return MultiSelector("税前月收入区间(元)", data.min_month_pay, data.max_month_pay, op_type)
+        return MultiSelector("税前月收入(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         return MultiSelectorExtra("教育信息", data.study_city, data.school, data.level, data.major, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
