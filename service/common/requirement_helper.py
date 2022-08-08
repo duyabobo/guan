@@ -3,7 +3,7 @@
 from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
-from service.common.pickerMultiExtra import getPickerMultiExtraValueBySubmit, getPickerMultiExtraByColumnChange
+from service.common.picker_multi_extra import getPickerMultiExtraValueBySubmit, getPickerMultiExtraByColumnChange
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
@@ -15,6 +15,7 @@ OP_FUNCS_DICT = {
         OP_BIRTH_YEAR_PERIOD,
         OP_TYPE_HEIGHT_PERIOD,
         OP_TYPE_WEIGHT_PERIOD,
+        OP_TYPE_MONTH_PAY_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
         OP_TYPE_STUDY_REGION_PERIOD,
         OP_TYPE_EDUCATION_MULTI,

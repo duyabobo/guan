@@ -42,6 +42,6 @@ class MineService(BaseService):
             ],
             [
                 MainFuncObj(5, 0, SECRET_PAGE, "隐私条款", "clickMine", needLogin=False),
-                MainFuncObj(6, 1, ABOUT_PAGE, "关于我们", "clickMine"),
+                MainFuncObj(6, 1, ABOUT_PAGE, "关于我们", "clickMine", needLogin=False),
             ]
         ]

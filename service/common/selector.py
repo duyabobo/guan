@@ -4,7 +4,7 @@ from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
-from service.common.pickerMultiExtra import getFirstChoiceList, getSecondChoiceList, getThirdChoiceList,\
+from service.common.picker_multi_extra import getFirstChoiceList, getSecondChoiceList, getThirdChoiceList,\
     getFirstList, getSecondList
 
 
