@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
-from service.common.picker_multi_extra import getPickerMultiExtraValueBySubmit, getPickerMultiExtraByColumnChange
+from service.common.multi_picker_helper import EducationHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
@@ -84,15 +83,7 @@ class UserHelper(object):
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION:
             updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
-        elif opType == OP_TYPE_EDUCATION_MULTI:
-            education = getPickerMultiExtraValueBySubmit(EDUCATION_MULTI_LIST, self.user.study_city, value)
-            updateParams['education_id'] = EducationModel.getIdByEducation(*education)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            _oldEducation = self.user.education
-            oldEducation = [_oldEducation.school, _oldEducation.level, _oldEducation.major] if _oldEducation else [ALL_STR, ALL_STR, ALL_STR]
-            education = getPickerMultiExtraByColumnChange(
-                EDUCATION_MULTI_LIST, self.user.study_city,
-                oldEducation, value, column
-            )
-            updateParams['education_id'] = EducationModel.getIdByEducation(*education)
+            updateParams['education_id'] = EducationHelper(self.user.study_region).\
+                getChoiceIdAfterColumnChanged(self.user.education, column, value)
         return updateParams

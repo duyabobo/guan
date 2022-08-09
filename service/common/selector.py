@@ -1,12 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from service.common.multi_picker_helper import EducationHelper
 from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
-from service.common.picker_multi_extra import getFirstChoiceList, getSecondChoiceList, getThirdChoiceList,\
-    getFirstList, getSecondList
-
 
 VALUE_TYPE_DICT = {
     OP_TYPE_VERIFY: int,
@@ -122,19 +120,19 @@ class MultiSelectorExtra(object):  # 三项选择器
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
-                return self.firstChoiceList.index(self.firstValue) or self.defaultIndex
+                return self.multiChoiceList[0].index(self.firstValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectSecondIndex():
             try:
-                return self.secondChoiceList.index(self.secondValue) or self.defaultIndex
+                return self.multiChoiceList[1].index(self.secondValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectThirdIndex():
             try:
-                return self.thirdChoiceList.index(self.thirdValue) or self.defaultIndex
+                return self.multiChoiceList[2].index(self.thirdValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
@@ -146,19 +144,12 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.thirdValue = thirdValue
 
         matchInfo = MATCH_INFO_DICT[self.bindChange]
-        self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围
+        self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围，废弃
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
-        zeroList = self.choiceList
-        firstList = getFirstList(zeroList, zeroValue)
-        secondList = getSecondList(firstList, firstValue)
-
-        self.firstChoiceList = getFirstChoiceList(zeroList, zeroValue)
-        self.secondChoiceList = getSecondChoiceList(firstList, firstValue)
-        self.thirdChoiceList = getThirdChoiceList(secondList, secondValue)
+        self.multiChoiceList = EducationHelper(zeroValue).getMultiChoiceList(firstValue, secondValue, thirdValue)  # todo 以后扩展，根据bindChange进行工厂函数扩展
         self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
-        self.multiChoiceList = [self.firstChoiceList, self.secondChoiceList, self.thirdChoiceList]
         self.hasFilled = [self.firstValue] != DEFAULT_EDUCATION_MULTI_CHOICE_LIST  # 当前值是否已完善
 
 

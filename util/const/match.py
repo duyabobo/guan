@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 from util.const.base import *
-from util.const.education import EDUCATION_MULTI_LIST, DEFAULT_EDUCATION_MULTI_INDEX
+from util.const.education import DEFAULT_EDUCATION_MULTI_INDEX
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR
 
 # model
@@ -131,7 +131,7 @@ MATCH_INFO_DICT = {
         "COLUMN_CHANGE_FUNC": "weightPeriodColumnChange"
     },
     OP_TYPE_EDUCATION_MULTI: {
-        "CHOICE_LIST": EDUCATION_MULTI_LIST,
+        "CHOICE_LIST": [],
         "DEFAULT_INDEX": DEFAULT_EDUCATION_MULTI_INDEX,
         "PICKER_TYPE": PICKER_TYPE_MULTI_SELECTOR,
         "COLUMN_CHANGE_FUNC": "updateEducationMultiColumnChange",
