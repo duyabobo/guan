@@ -51,7 +51,7 @@ class EducationHelper(MultiPickerHelper):
                 if s.school not in _schoolSet:
                     _schoolSet.add(s.school)
                     schoolChoiceList.append(s.school)
-        return schoolChoiceList
+        return schoolChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 
     def getLevelChoiceList(self, school, schoolChoiceList):
         # 学历列表
@@ -63,7 +63,7 @@ class EducationHelper(MultiPickerHelper):
                 if l.level not in _levelSet:
                     _levelSet.add(l.level)
                     levelChoiceList.append(l.level)
-        return levelChoiceList
+        return levelChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 
     def getMajorChoiceList(self, school, level, levelChoiceList):
         # 专业列表
@@ -75,7 +75,7 @@ class EducationHelper(MultiPickerHelper):
                 if m.major not in _majorSet:
                     _majorSet.add(m.major)
                     majorChoiceList.append(m.major)
-        return majorChoiceList
+        return majorChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 
     def getMultiChoiceList(self, school, level, major):
         if self.zeroValue.province == ALL_STR:  # 省份都没选择，不让选择学校
@@ -85,6 +85,25 @@ class EducationHelper(MultiPickerHelper):
         levelChoiceList = self.getLevelChoiceList(school, schoolChoiceList)
         majorChoiceList = self.getMajorChoiceList(school, level, levelChoiceList)
         return [schoolChoiceList, levelChoiceList, majorChoiceList]
+
+    def getChoiceIdAfterConfirm(self, oldEducationValue, choiceIndexList):
+        schoolIndex, levelIndex, majorIndex = choiceIndexList
+        # 查询选择的学校值
+        schoolChoiceList = self.getSchoolChoiceList()
+        if schoolIndex >= len(schoolChoiceList):
+            return oldEducationValue.id
+        school = schoolChoiceList[schoolIndex]
+        # 查询选择的学历值
+        levelChoiceList = self.getLevelChoiceList(school, schoolChoiceList)
+        if levelIndex >= len(levelChoiceList):
+            return oldEducationValue.id
+        level = levelChoiceList[levelIndex]
+        # 查询选择的专业值
+        majorChoiceList = self.getMajorChoiceList(school, level, levelChoiceList)
+        if majorIndex >= len(majorChoiceList):
+            return oldEducationValue.id
+        major = majorChoiceList[majorIndex]
+        return EducationModel.getIdByEducation(school, level, major)
 
     def getChoiceIdAfterColumnChanged(self, oldEducationValue, column, choiceValueIndex):
         schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(

@@ -83,6 +83,9 @@ class UserHelper(object):
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION:
             updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
+        elif opType == OP_TYPE_EDUCATION_MULTI:
+            updateParams['education_id'] = EducationHelper(self.user.study_region).\
+                getChoiceIdAfterConfirm(self.user.education, value)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
             updateParams['education_id'] = EducationHelper(self.user.study_region).\
                 getChoiceIdAfterColumnChanged(self.user.education, column, value)
