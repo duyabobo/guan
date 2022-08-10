@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from model.education import EducationModel
+from model.region import RegionModel
+from util.const.base import ALL_STR
+from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+
 
 class MultiPickerHelper(object):  # 扩展用
     def __init__(self, zeroValue):
@@ -24,8 +29,79 @@ class MultiPickerHelper(object):  # 扩展用
 
 class EducationHelper(MultiPickerHelper):
 
-    def getMultiChoiceList(self, firstValue, secondValue, thirdValue):
-        return []
+    def getSchoolChoiceList(self):
+        province = self.zeroValue.province
+        city = self.zeroValue.city
+        area = self.zeroValue.area
 
-    def getChoiceIdAfterColumnChanged(self, oldValue, column, valueIndex):
-        return 0
+        if city == ALL_STR:  # 只选择了省份
+            regions = RegionModel.listByProvince(province)
+        elif area == ALL_STR:  # 只选择了省份和城市
+            regions = RegionModel.listByProvinceAndCity(province, city)
+        else:  # 选择了省市区
+            regions = RegionModel.listByProvinceAndCityAndArea(province, city, area)
+
+        schoolChoiceList = []
+        # 学校选择列表
+        regionIds = [r.id for r in regions]
+        if regionIds:
+            schools = EducationModel.getSchoolsByRegionIds(regionIds)
+            _schoolSet = set()
+            for s in schools:
+                if s.school not in _schoolSet:
+                    _schoolSet.add(s.school)
+                    schoolChoiceList.append(s.school)
+        return schoolChoiceList
+
+    def getLevelChoiceList(self, school, schoolChoiceList):
+        # 学历列表
+        levelChoiceList = []
+        if school in schoolChoiceList:  # 没有修改城市
+            levels = EducationModel.getLevelsBySchool(school)
+            _levelSet = set()
+            for l in levels:
+                if l.level not in _levelSet:
+                    _levelSet.add(l.level)
+                    levelChoiceList.append(l.level)
+        return levelChoiceList
+
+    def getMajorChoiceList(self, school, level, levelChoiceList):
+        # 专业列表
+        majorChoiceList = []
+        if level in levelChoiceList:
+            majors = EducationModel.getMajorsBySchoolAndLevel(school, level)
+            _majorSet = set()
+            for m in majors:
+                if m.major not in _majorSet:
+                    _majorSet.add(m.major)
+                    majorChoiceList.append(m.major)
+        return majorChoiceList
+
+    def getMultiChoiceList(self, school, level, major):
+        if self.zeroValue.province == ALL_STR:  # 省份都没选择，不让选择学校
+            return [DEFAULT_EDUCATION_MULTI_CHOICE_LIST] * 3
+
+        schoolChoiceList = self.getSchoolChoiceList()
+        levelChoiceList = self.getLevelChoiceList(school, schoolChoiceList)
+        majorChoiceList = self.getMajorChoiceList(school, level, levelChoiceList)
+        return [schoolChoiceList, levelChoiceList, majorChoiceList]
+
+    def getChoiceIdAfterColumnChanged(self, oldEducationValue, column, choiceValueIndex):
+        schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(
+            oldEducationValue.school, oldEducationValue.level, oldEducationValue.major)
+
+        school, level, major = oldEducationValue.school, oldEducationValue.level, oldEducationValue.major
+        if column == 0 and choiceValueIndex < len(schoolChoiceList):  # 修改了学校
+            school = schoolChoiceList[choiceValueIndex]
+            level = ALL_STR
+            major = ALL_STR
+        elif column == 1 and choiceValueIndex < len(levelChoiceList):  # 修改了学历
+            school = oldEducationValue.school
+            level = levelChoiceList[choiceValueIndex]
+            major = ALL_STR
+        elif column == 2 and choiceValueIndex < len(majorChoiceList):  # 修改了专业
+            school = oldEducationValue.school
+            level = oldEducationValue.level
+            major = majorChoiceList[choiceValueIndex]
+
+        return EducationModel.getIdByEducation(school, level, major)

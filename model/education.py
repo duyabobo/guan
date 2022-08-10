@@ -56,9 +56,15 @@ class EducationModel(BaseModel):
         return getDbSession().query(cls).filter(cls.region_id.in_(region_ids)).order_by(cls.seq)
 
     @classmethod
-    def getBySchool(cls, school):
-        return getDbSession().query(cls).filter(cls.school == school).order_by(cls.seq)
+    def getLevelsBySchool(cls, school):
+        return getDbSession().query(cls.level).filter(cls.school == school).order_by(cls.seq)
 
     @classmethod
-    def getBySchoolAndLevel(cls, school, level):
-        return getDbSession().query(cls).filter(cls.school == school, cls.level == level).order_by(cls.seq)
+    def getMajorsBySchoolAndLevel(cls, school, level):
+        return getDbSession().query(cls.major).filter(cls.school == school, cls.level == level).order_by(cls.seq)
+
+    @classmethod
+    def getSchoolsByRegionIds(cls, region_ids):
+        if not region_ids:
+            return []
+        return getDbSession().query(cls.school).filter(cls.region_id.in_(region_ids)).order_by(cls.seq)

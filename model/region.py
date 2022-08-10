@@ -45,3 +45,15 @@ class RegionModel(BaseModel):
         if not r:
             r = cls.addOne(province, city, area)
         return r.id
+
+    @classmethod
+    def listByProvince(cls, province):
+        return getDbSession().query(cls).filter(cls.province == province, cls.status == MODEL_STATUS_YES)
+
+    @classmethod
+    def listByProvinceAndCity(cls, province, city):
+        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.status == MODEL_STATUS_YES)
+
+    @classmethod
+    def listByProvinceAndCityAndArea(cls, province, city, area):
+        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES)
