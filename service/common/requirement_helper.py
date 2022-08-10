@@ -88,7 +88,9 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_HOME_REGION_PERIOD:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
-            updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
+            study_region_id = RegionModel.getIdByRegion(*value)
+            updateParams['study_region_id'] = study_region_id
+            updateParams['education_id'] = EducationHelper.getDefaultEducationId(study_region_id)
         elif opType == OP_TYPE_EDUCATION_MULTI:
             updateParams['education_id'] = EducationHelper(self.redis, self.requirement.study_region).\
                 getChoiceIdAfterConfirm(self.requirement.education, value)
