@@ -78,7 +78,7 @@ class EducationHelper(MultiPickerHelper):
         return majorChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 
     def getMultiChoiceList(self, school, level, major):
-        if self.zeroValue.province == ALL_STR:  # 省份都没选择，不让选择学校
+        if not self.zeroValue or self.zeroValue.province == ALL_STR:  # 省份都没选择，不让选择学校
             return [DEFAULT_EDUCATION_MULTI_CHOICE_LIST] * 3
 
         schoolChoiceList = self.getSchoolChoiceList()
@@ -87,6 +87,8 @@ class EducationHelper(MultiPickerHelper):
         return [schoolChoiceList, levelChoiceList, majorChoiceList]
 
     def getChoiceIdAfterConfirm(self, oldEducationValue, choiceIndexList):
+        if not oldEducationValue:
+            return 0
         schoolIndex, levelIndex, majorIndex = choiceIndexList
         # 查询选择的学校值
         schoolChoiceList = self.getSchoolChoiceList()
@@ -106,10 +108,12 @@ class EducationHelper(MultiPickerHelper):
         return EducationModel.getIdByEducation(school, level, major)
 
     def getChoiceIdAfterColumnChanged(self, oldEducationValue, column, choiceValueIndex):
-        schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(
-            oldEducationValue.school, oldEducationValue.level, oldEducationValue.major)
+        if oldEducationValue:
+            school, level, major = oldEducationValue.school, oldEducationValue.level, oldEducationValue.major
+        else:
+            school, level, major = ALL_STR, ALL_STR, ALL_STR
 
-        school, level, major = oldEducationValue.school, oldEducationValue.level, oldEducationValue.major
+        schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(school, level, major)
         if column == 0 and choiceValueIndex < len(schoolChoiceList):  # 修改了学校
             school = schoolChoiceList[choiceValueIndex]
             level = ALL_STR
