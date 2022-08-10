@@ -31,9 +31,11 @@ class MultiPickerHelper(object):  # 扩展用
 
 class EducationHelper(MultiPickerHelper):
 
-    def getEducationWithCache(self, data, readColumnChangedData):
-        """结合数据库数据，以及缓存的用户临时选择数据，返回渲染教育多重选择器应该返回的教育数据"""
-        school, level, major = data.school, data.level, data.major
+    def getEducationFromCache(self, data, readColumnChangedData):
+        """结合缓存和数据库，返回用户选择器数据"""
+        school, level, major = ALL_STR, ALL_STR, ALL_STR
+        if data.education:
+            school, level, major = data.education.school, data.education.level, data.education.major
         if not readColumnChangedData:
             return school, level, major
         educationId = getEducationIdAfterColumnChange(self.redis, data.passport_id)
@@ -123,7 +125,7 @@ class EducationHelper(MultiPickerHelper):
         return EducationModel.getIdByEducation(school, level, major)
 
     def getChoiceIdAfterColumnChanged(self, data, column, choiceValueIndex):
-        school, level, major = self.getEducationWithCache(data, readColumnChangedData=True)
+        school, level, major = self.getEducationFromCache(data, readColumnChangedData=True)
         schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(school, level, major)
         if column == 0 and choiceValueIndex < len(schoolChoiceList):  # 修改了学校
             school = schoolChoiceList[choiceValueIndex]

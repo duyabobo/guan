@@ -51,8 +51,9 @@ def selectorFactory(redis, op_type, data, readColumnChangedData):
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
         return MultiSelector("税前月收入(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_MULTI:
-        school, level, major = EducationHelper(redis, data.study_region).getEducationWithCache(data, readColumnChangedData)
-        return MultiSelectorExtra(redis, "教育信息", data.study_region, school, level, major, op_type)
+        education = data.school, data.level, data.major
+        educationCache = EducationHelper(redis, data.study_region).getEducationFromCache(data, readColumnChangedData)
+        return MultiSelectorExtra(redis, "教育信息", data.study_region, education, educationCache, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
@@ -117,33 +118,32 @@ class MultiSelector(object):  # 两项选择器
 
 
 class MultiSelectorExtra(object):  # 三项选择器
-    def __init__(self, redis, desc, zeroValue, firstValue, secondValue, thirdValue, bindChange):
+    def __init__(self, redis, desc, zeroValue, valueList, valueListCache, bindChange):
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
-                return self.multiChoiceList[0].index(self.firstValue) or self.defaultIndex
+                return self.multiChoiceList[0].index(firstValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectSecondIndex():
             try:
-                return self.multiChoiceList[1].index(self.secondValue) or self.defaultIndex
+                return self.multiChoiceList[1].index(secondValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectThirdIndex():
             try:
-                return self.multiChoiceList[2].index(self.thirdValue) or self.defaultIndex
+                return self.multiChoiceList[2].index(thirdValue) or self.defaultIndex
             except:
                 return self.defaultIndex
 
         self.desc = desc
         self.pickerType = PICKER_TYPE_MULTI_EXTRA_SELECTOR  # 选择器类型：多项
         self.bindChange = bindChange
-        self.firstValue = firstValue
-        self.secondValue = secondValue
-        self.thirdValue = thirdValue
+        self.firstValue, self.secondValue, self.thirdValue = valueList
 
+        firstValue, secondValue, thirdValue = valueListCache
         matchInfo = MATCH_INFO_DICT[self.bindChange]
         self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围，废弃
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
