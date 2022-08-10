@@ -18,7 +18,7 @@ class UserInfoService(BaseService):
         self.redis = redis
         self.currentPassport = currentPassport
         self.passportId = currentPassport.get('id', 0)
-        self.userHelper = UserHelper(self.userInfo)
+        self.userHelper = UserHelper(redis, self.userInfo)
         super(UserInfoService, self).__init__(redis)
 
     @lazy_property
@@ -69,10 +69,10 @@ class UserInfoService(BaseService):
 
     def reloaduserHelper(self):
         userInfo = UserModel.getByPassportId(self.passportId)
-        self.userHelper = UserHelper(userInfo)
+        self.userHelper = UserHelper(self.redis, userInfo)
 
-    def getMyselfInfo(self):
-        informationList = self.userHelper.getInformationList()
+    def getMyselfInfo(self, readColumnChangedData=False):
+        informationList = self.userHelper.getInformationList(readColumnChangedData)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(informationList)}
         return {
             "informationList": informationList,
@@ -83,14 +83,16 @@ class UserInfoService(BaseService):
         }
 
     def updateMyselfInfo(self, opType, value, column=None):
+        readColumnChangedData = True
         updateParams = self.userHelper.getUpdateParams(opType, value, column)
         if updateParams:
+            readColumnChangedData = False
             UserModel.updateByPassportId(self.passportId, **updateParams)
             # todo next
             self.reloaduserHelper()
             if self.userHelper.hasFillFinish:
                 user.addFillFinishSet(self.redis, self.passportId)
-        return self.getMyselfInfo()
+        return self.getMyselfInfo(readColumnChangedData)
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and \

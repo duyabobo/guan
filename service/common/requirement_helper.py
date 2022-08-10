@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from model.region import RegionModel
 from model.verify import VerifyModel
+from ral.education import setEducationIdAfterColumnChange, delEducationIdAfterConfirm
 from service.common.multi_picker_helper import EducationHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
@@ -48,17 +49,18 @@ OP_FUNCS_DICT = {
 
 class RequirementHelper(object):
 
-    def __init__(self, requirement):
+    def __init__(self, redis, requirement):
+        self.redis = redis
         self.requirement = requirement
 
     @lazy_property
     def verify_record(self):
         return VerifyModel.getByPassportId(self.requirement.passport_id)
         
-    def getRequirementList(self):
+    def getRequirementList(self, readColumnChangedData=False):
         requirementList = []
         for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
-            requirement = selectorFactory(op_func, self.requirement)
+            requirement = selectorFactory(self.redis, op_func, self.requirement, readColumnChangedData)
             if requirement:
                 requirementList.append(requirement)
         return requirementList
@@ -88,9 +90,11 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
             updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = EducationHelper(self.requirement.study_region).\
+            updateParams['education_id'] = EducationHelper(self.redis, self.requirement.study_region).\
                 getChoiceIdAfterConfirm(self.requirement.education, value)
+            delEducationIdAfterConfirm(self.redis, self.requirement.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            updateParams['education_id'] = EducationHelper(self.requirement.study_region).\
-                getChoiceIdAfterColumnChanged(self.requirement.education, column, value)
+            education_id = EducationHelper(self.redis, self.requirement.study_region).\
+                getChoiceIdAfterColumnChanged(self.requirement, column, value)
+            setEducationIdAfterColumnChange(self.redis, self.requirement.passport_id, education_id)
         return updateParams

@@ -27,7 +27,7 @@ VALUE_TYPE_DICT = {
 }
 
 
-def selectorFactory(op_type, data):
+def selectorFactory(redis, op_type, data, readColumnChangedData):
     if op_type == OP_TYPE_VERIFY:
         return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], VERIFY_CHOICE_LIST[data.verify_type], op_type)
     elif op_type == OP_TYPE_SEX:
@@ -51,7 +51,8 @@ def selectorFactory(op_type, data):
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
         return MultiSelector("税前月收入(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_MULTI:
-        return MultiSelectorExtra("教育信息", data.study_region, data.school, data.level, data.major, op_type)
+        school, level, major = EducationHelper(redis, data.study_region).getEducationWithCache(data, readColumnChangedData)
+        return MultiSelectorExtra(redis, "教育信息", data.study_region, school, level, major, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
@@ -116,7 +117,7 @@ class MultiSelector(object):  # 两项选择器
 
 
 class MultiSelectorExtra(object):  # 三项选择器
-    def __init__(self, desc, zeroValue, firstValue, secondValue, thirdValue, bindChange):
+    def __init__(self, redis, desc, zeroValue, firstValue, secondValue, thirdValue, bindChange):
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
@@ -148,7 +149,7 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
-        self.multiChoiceList = EducationHelper(zeroValue).getMultiChoiceList(firstValue, secondValue, thirdValue)  # todo 以后扩展，根据bindChange进行工厂函数扩展
+        self.multiChoiceList = EducationHelper(redis, zeroValue).getMultiChoiceList(firstValue, secondValue, thirdValue)  # todo 以后扩展，根据bindChange进行工厂函数扩展
         self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
         self.hasFilled = [self.firstValue] != DEFAULT_EDUCATION_MULTI_CHOICE_LIST  # 当前值是否已完善
 

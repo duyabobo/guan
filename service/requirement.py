@@ -14,7 +14,7 @@ class RequirementService(BaseService):
     def __init__(self, redis, passportId):
         self.redis = redis
         self.passportId = passportId
-        self.requirementHelper = RequirementHelper(self.requirementInfo)
+        self.requirementHelper = RequirementHelper(self.redis, self.requirementInfo)
         super(RequirementService, self).__init__(redis)
 
     @lazy_property
@@ -27,10 +27,13 @@ class RequirementService(BaseService):
 
     def reloadMatchHelper(self):
         requirementInfo = RequirementModel.getByPassportId(self.passportId)
-        self.requirementHelper = RequirementHelper(requirementInfo)
+        self.requirementHelper = RequirementHelper(self.redis, requirementInfo)
 
-    def getRequirementInfo(self):
-        requirementList = self.requirementHelper.getRequirementList()
+    def getRequirementInfo(self, readColumnChangedData=False):
+        """
+        readColumnChangedCache：是否要读取多重选择器用户临时选择的数据
+        """
+        requirementList = self.requirementHelper.getRequirementList(readColumnChangedData)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(requirementList)}
         return {
             "requirementList": requirementList,
@@ -39,11 +42,13 @@ class RequirementService(BaseService):
         }
 
     def updateRequirementInfo(self, opType, value, column=None):
+        readColumnChangedData = True
         updateParams = self.requirementHelper.getUpdateParams(opType, value, column)
         if updateParams:
+            readColumnChangedData = False
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
             self.reloadMatchHelper()
-        return self.getRequirementInfo()  # todo 可以扩展需要支持返回成功+提醒的code码
+        return self.getRequirementInfo(readColumnChangedData)  # todo 可以扩展需要支持返回成功+提醒的code码
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and self.userInfo.sex == SEX_CHOICE_LIST[DEFAULT_SEX_INDEX]:

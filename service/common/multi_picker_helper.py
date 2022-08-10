@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 from model.education import EducationModel
 from model.region import RegionModel
+from ral.education import getEducationIdAfterColumnChange
 from util.const.base import ALL_STR
 from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 
 
 class MultiPickerHelper(object):  # 扩展用
-    def __init__(self, zeroValue):
+    def __init__(self, redis, zeroValue):
         """
         zeroValue是用来计算firstValue的
         """
+        self.redis = redis
         self.zeroValue = zeroValue
 
     def getMultiChoiceList(self, firstValue, secondValue, thirdValue):  # 查询多重选择列表
@@ -28,6 +30,19 @@ class MultiPickerHelper(object):  # 扩展用
 
 
 class EducationHelper(MultiPickerHelper):
+
+    def getEducationWithCache(self, data, readColumnChangedData):
+        """结合数据库数据，以及缓存的用户临时选择数据，返回渲染教育多重选择器应该返回的教育数据"""
+        school, level, major = data.school, data.level, data.major
+        if not readColumnChangedData:
+            return school, level, major
+        educationId = getEducationIdAfterColumnChange(self.redis, data.passport_id)
+        if not educationId:
+            return school, level, major
+        education = EducationModel.getById(educationId)
+        if not education:
+            return school, level, major
+        return education.school, education.level, education.major
 
     def getSchoolChoiceList(self):
         province = self.zeroValue.province
@@ -107,24 +122,17 @@ class EducationHelper(MultiPickerHelper):
         major = majorChoiceList[majorIndex]
         return EducationModel.getIdByEducation(school, level, major)
 
-    def getChoiceIdAfterColumnChanged(self, oldEducationValue, column, choiceValueIndex):
-        if oldEducationValue:
-            school, level, major = oldEducationValue.school, oldEducationValue.level, oldEducationValue.major
-        else:
-            school, level, major = ALL_STR, ALL_STR, ALL_STR
-
+    def getChoiceIdAfterColumnChanged(self, data, column, choiceValueIndex):
+        school, level, major = self.getEducationWithCache(data, readColumnChangedData=True)
         schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(school, level, major)
         if column == 0 and choiceValueIndex < len(schoolChoiceList):  # 修改了学校
             school = schoolChoiceList[choiceValueIndex]
             level = ALL_STR
             major = ALL_STR
         elif column == 1 and choiceValueIndex < len(levelChoiceList):  # 修改了学历
-            school = oldEducationValue.school
             level = levelChoiceList[choiceValueIndex]
             major = ALL_STR
         elif column == 2 and choiceValueIndex < len(majorChoiceList):  # 修改了专业
-            school = oldEducationValue.school
-            level = oldEducationValue.level
             major = majorChoiceList[choiceValueIndex]
 
         return EducationModel.getIdByEducation(school, level, major)

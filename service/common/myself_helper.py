@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from model.region import RegionModel
 from model.verify import VerifyModel
+from ral.education import setEducationIdAfterColumnChange, delEducationIdAfterConfirm
 from service.common.multi_picker_helper import EducationHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
@@ -45,17 +46,18 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
 
 class UserHelper(object):
 
-    def __init__(self, user):
+    def __init__(self, redis, user):
+        self.redis = redis
         self.user = user
 
     @lazy_property
     def verify_record(self):
         return VerifyModel.getByPassportId(self.user.passport_id)
 
-    def getInformationList(self):
+    def getInformationList(self, readColumnChangedData=False):
         informationList = []
         for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
-            info = selectorFactory(op_func, self.user)
+            info = selectorFactory(self.redis, op_func, self.user, readColumnChangedData)
             if info:
                 informationList.append(info)
         return informationList
@@ -84,9 +86,11 @@ class UserHelper(object):
         elif opType == OP_TYPE_STUDY_REGION:
             updateParams['study_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = EducationHelper(self.user.study_region).\
+            updateParams['education_id'] = EducationHelper(self.redis, self.user.study_region).\
                 getChoiceIdAfterConfirm(self.user.education, value)
+            delEducationIdAfterConfirm(self.redis, self.user.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            updateParams['education_id'] = EducationHelper(self.user.study_region).\
-                getChoiceIdAfterColumnChanged(self.user.education, column, value)
+            education_id = EducationHelper(self.redis, self.user.study_region).\
+                getChoiceIdAfterColumnChanged(self.user, column, value)
+            setEducationIdAfterColumnChange(self.redis, self.user.passport_id, education_id)
         return updateParams
