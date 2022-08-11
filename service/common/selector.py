@@ -27,7 +27,7 @@ VALUE_TYPE_DICT = {
 }
 
 
-def selectorFactory(redis, op_type, data, readColumnChangedData):
+def selectorFactory(op_type, data, readColumnChangedData):
     if op_type == OP_TYPE_VERIFY:
         return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], VERIFY_CHOICE_LIST[data.verify_type], op_type)
     elif op_type == OP_TYPE_SEX:
@@ -52,8 +52,8 @@ def selectorFactory(redis, op_type, data, readColumnChangedData):
         return MultiSelector("税前月收入(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         education = data.school, data.level, data.major
-        educationCache = EducationHelper(redis, data.study_region).getEducationFromCache(data, readColumnChangedData)
-        return MultiSelectorExtra(redis, "教育信息", data.study_region, education, educationCache, op_type)
+        educationCache = EducationHelper(data.study_region).getEducationFromCache(data, readColumnChangedData)
+        return MultiSelectorExtra("教育信息", data.study_region, education, educationCache, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
@@ -118,7 +118,7 @@ class MultiSelector(object):  # 两项选择器
 
 
 class MultiSelectorExtra(object):  # 三项选择器
-    def __init__(self, redis, desc, zeroValue, valueList, valueListCache, bindChange):
+    def __init__(self, desc, zeroValue, valueList, valueListCache, bindChange):
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
@@ -149,7 +149,7 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
-        self.multiChoiceList = EducationHelper(redis, zeroValue).getMultiChoiceList(firstValue, secondValue, thirdValue)  # todo 以后扩展，根据bindChange进行工厂函数扩展
+        self.multiChoiceList = EducationHelper(zeroValue).getMultiChoiceList(firstValue, secondValue, thirdValue)  # todo 以后扩展，根据bindChange进行工厂函数扩展
         self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
         self.hasFilled = [self.firstValue] != DEFAULT_EDUCATION_MULTI_CHOICE_LIST  # 当前值是否已完善
 

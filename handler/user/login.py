@@ -18,11 +18,11 @@ class LoginHandler(BaseHandler):
         """微信登录注册接口
         """
         jsCode = self.getRequestParameter('code')
-        openid = WxHelper(self.redis).getOpenidByCode(jsCode)
+        openid = WxHelper().getOpenidByCode(jsCode)
         if not openid:
             return self.response(respNormal=RESP_NEED_LOGIN)
 
-        accessToken, currentUserInfo = LoginService(self.redis).login(openid)
+        accessToken, currentUserInfo = LoginService().login(openid)
         return self.response(
             respData={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
         )
@@ -31,5 +31,5 @@ class LoginHandler(BaseHandler):
     def put(self, *args, **kwargs):
         """用户退出登录
         """
-        delSession(self.redis, self.accessToken)
+        delSession(self.accessToken)
         return self.response()

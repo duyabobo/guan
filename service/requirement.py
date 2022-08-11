@@ -11,11 +11,10 @@ from util.const.response import RESP_USER_SEX_FIRST_EDIT, RESP_REQUIREMENT_SEX_E
 
 class RequirementService(BaseService):
 
-    def __init__(self, redis, passportId):
-        self.redis = redis
+    def __init__(self, passportId):
         self.passportId = passportId
-        self.requirementHelper = RequirementHelper(self.redis, self.requirementInfo)
-        super(RequirementService, self).__init__(redis)
+        self.requirementHelper = RequirementHelper(self.requirementInfo)
+        super(RequirementService, self).__init__()
 
     @lazy_property
     def userInfo(self):
@@ -27,7 +26,7 @@ class RequirementService(BaseService):
 
     def reloadMatchHelper(self):
         requirementInfo = RequirementModel.getByPassportId(self.passportId)
-        self.requirementHelper = RequirementHelper(self.redis, requirementInfo)
+        self.requirementHelper = RequirementHelper(requirementInfo)
 
     def getRequirementInfo(self, readColumnChangedData=False):
         """

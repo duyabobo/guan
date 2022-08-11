@@ -8,11 +8,10 @@ from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
 
 
 class MultiPickerHelper(object):  # 扩展用
-    def __init__(self, redis, zeroValue):
+    def __init__(self, zeroValue):
         """
         zeroValue是用来计算firstValue的
         """
-        self.redis = redis
         self.zeroValue = zeroValue
 
     def getMultiChoiceList(self, firstValue, secondValue, thirdValue):  # 查询多重选择列表
@@ -42,7 +41,7 @@ class EducationHelper(MultiPickerHelper):
             school, level, major = data.education.school, data.education.level, data.education.major
         if not readColumnChangedData:
             return school, level, major
-        educationId = getEducationIdAfterColumnChange(self.redis, data.passport_id)
+        educationId = getEducationIdAfterColumnChange(data.passport_id)
         if not educationId:
             return school, level, major
         education = EducationModel.getById(educationId)

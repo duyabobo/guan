@@ -12,8 +12,7 @@ from util.const.mini_program import WX_MINIPROGRAM_CODE_TO_SESSION, WX_MINIPROGR
 
 
 class WxHelper(object):
-    def __init__(self, redis):
-        self.redis = redis
+    def __init__(self):
         self.appid = util.config.get("weixin", "appid")
         self.secret = util.config.get("weixin", "secret")
 
@@ -34,14 +33,14 @@ class WxHelper(object):
 
     def getMiniProgramToken(self):
         """获取小程序请求所需的access_token，有效期目前为 2 个小时，需定时刷新"""
-        localToken = wx.getToken(self.redis)
+        localToken = wx.getToken()
         if localToken:
             return localToken
         getTokenUrl = WX_MINIPROGRAM_GET_TEKEN.format(appid=self.appid, secret=self.secret)
         tokenRes = requests.get(getTokenUrl, timeout=3).json()
         accessToken = tokenRes.get("access_token", "")
         if accessToken:
-            wx.setToken(self.redis, accessToken)
+            wx.setToken(accessToken)
         return accessToken
 
     def sendSubscribeMsg(self, openId, templateId, page, data, miniprogramState):

@@ -3,23 +3,21 @@
 from common.myself_helper import UserHelper
 from model.user import UserModel
 from model.verify import VerifyModel
-from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK
 from ral import user
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, SEX_CHOICE_LIST, \
-    DEFAULT_SEX_INDEX
+from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK
+from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX
 from util.const.response import RESP_SEX_CANOT_EDIT
 
 
 class UserInfoService(BaseService):
 
-    def __init__(self, redis, currentPassport):
-        self.redis = redis
+    def __init__(self, currentPassport):
         self.currentPassport = currentPassport
         self.passportId = currentPassport.get('id', 0)
-        self.userHelper = UserHelper(redis, self.userInfo)
-        super(UserInfoService, self).__init__(redis)
+        self.userHelper = UserHelper(self.userInfo)
+        super(UserInfoService, self).__init__()
 
     @lazy_property
     def userInfo(self):
@@ -28,7 +26,7 @@ class UserInfoService(BaseService):
     @property
     def infoFinishCnt(self):
         # 已完成信息完善的用户数量
-        return user.getFillFinishCnt(self.redis)
+        return user.getFillFinishCnt()
 
     @property
     def verify(self):
@@ -69,7 +67,7 @@ class UserInfoService(BaseService):
 
     def reloaduserHelper(self):
         userInfo = UserModel.getByPassportId(self.passportId)
-        self.userHelper = UserHelper(self.redis, userInfo)
+        self.userHelper = UserHelper(userInfo)
 
     def getMyselfInfo(self, readColumnChangedData=False):
         informationList = self.userHelper.getInformationList(readColumnChangedData)
@@ -91,7 +89,7 @@ class UserInfoService(BaseService):
             # todo next
             self.reloaduserHelper()
             if self.userHelper.hasFillFinish:
-                user.addFillFinishSet(self.redis, self.passportId)
+                user.addFillFinishSet(self.passportId)
         return self.getMyselfInfo(readColumnChangedData)
 
     def checkBeforeUpdate(self, opType, value):

@@ -46,8 +46,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
 
 class UserHelper(object):
 
-    def __init__(self, redis, user):
-        self.redis = redis
+    def __init__(self, user):
         self.user = user
 
     @lazy_property
@@ -57,7 +56,7 @@ class UserHelper(object):
     def getInformationList(self, readColumnChangedData=False):
         informationList = []
         for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
-            info = selectorFactory(self.redis, op_func, self.user, readColumnChangedData)
+            info = selectorFactory(op_func, self.user, readColumnChangedData)
             if info:
                 informationList.append(info)
         return informationList
@@ -88,11 +87,11 @@ class UserHelper(object):
             updateParams['study_region_id'] = study_region_id
             updateParams['education_id'] = EducationHelper.getDefaultEducationId(study_region_id)
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = EducationHelper(self.redis, self.user.study_region).\
+            updateParams['education_id'] = EducationHelper(self.user.study_region).\
                 getChoiceIdAfterConfirm(self.user.education, value)
-            delEducationIdAfterConfirm(self.redis, self.user.passport_id)
+            delEducationIdAfterConfirm(self.user.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            education_id = EducationHelper(self.redis, self.user.study_region).\
+            education_id = EducationHelper(self.user.study_region).\
                 getChoiceIdAfterColumnChanged(self.user, column, value)
-            setEducationIdAfterColumnChange(self.redis, self.user.passport_id, education_id)
+            setEducationIdAfterColumnChange(self.user.passport_id, education_id)
         return updateParams

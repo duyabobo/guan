@@ -1,29 +1,31 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from util.redis_conn import redisConn
+
 
 def getKey(passportId):
     return "education:educationId:afterColumnChange:{}".format(passportId)
 
 
-def setEducationIdAfterColumnChange(redis, passportId, educationId):
+def setEducationIdAfterColumnChange(passportId, educationId):
     """
     临时存储用户修改教育多重选择器的结果
     """
     key = getKey(passportId)
-    return redis.set(key, educationId, ex=7200)
+    return redisConn.set(key, educationId, ex=7200)
 
 
-def getEducationIdAfterColumnChange(redis, passportId):
+def getEducationIdAfterColumnChange(passportId):
     """
     返回临时修改的教育多重选择结果
     """
     key = getKey(passportId)
-    return redis.get(key)
+    return redisConn.get(key)
 
 
-def delEducationIdAfterConfirm(redis, passportId):
+def delEducationIdAfterConfirm(passportId):
     """
     确认重新选择教育信息，删除临时选择结果
     """
     key = getKey(passportId)
-    return redis.delete(key)
+    return redisConn.delete(key)

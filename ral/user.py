@@ -1,15 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from util.redis_conn import redisConn
+
 
 def getKey():
     return "wx:miniprogram:user:fill_finish:set"
 
 
-def getFillFinishCnt(redis):
+def getFillFinishCnt():
     key = getKey()
-    return redis.scard(key) or 0
+    return redisConn.scard(key) or 0
 
 
-def addFillFinishSet(redis, passport_id):
+def addFillFinishSet(passport_id):
     key = getKey()
-    return redis.sadd(key, passport_id)
+    return redisConn.sadd(key, passport_id)

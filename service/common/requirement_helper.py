@@ -49,8 +49,7 @@ OP_FUNCS_DICT = {
 
 class RequirementHelper(object):
 
-    def __init__(self, redis, requirement):
-        self.redis = redis
+    def __init__(self, requirement):
         self.requirement = requirement
 
     @lazy_property
@@ -60,7 +59,7 @@ class RequirementHelper(object):
     def getRequirementList(self, readColumnChangedData=False):
         requirementList = []
         for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
-            requirement = selectorFactory(self.redis, op_func, self.requirement, readColumnChangedData)
+            requirement = selectorFactory(op_func, self.requirement, readColumnChangedData)
             if requirement:
                 requirementList.append(requirement)
         return requirementList
@@ -92,11 +91,11 @@ class RequirementHelper(object):
             updateParams['study_region_id'] = study_region_id
             updateParams['education_id'] = EducationHelper.getDefaultEducationId(study_region_id)
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = EducationHelper(self.redis, self.requirement.study_region).\
+            updateParams['education_id'] = EducationHelper(self.requirement.study_region).\
                 getChoiceIdAfterConfirm(self.requirement.education, value)
-            delEducationIdAfterConfirm(self.redis, self.requirement.passport_id)
+            delEducationIdAfterConfirm(self.requirement.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            education_id = EducationHelper(self.redis, self.requirement.study_region).\
+            education_id = EducationHelper(self.requirement.study_region).\
                 getChoiceIdAfterColumnChanged(self.requirement, column, value)
-            setEducationIdAfterColumnChange(self.redis, self.requirement.passport_id, education_id)
+            setEducationIdAfterColumnChange(self.requirement.passport_id, education_id)
         return updateParams

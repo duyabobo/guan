@@ -8,14 +8,12 @@ import json
 import pika
 # 这个并发库, python3 自带, python2 需要: pip install futures
 # from concurrent.futures import ThreadPoolExecutor
-import tornado
 from sqlalchemy.orm import sessionmaker
 # from tornado.concurrent import run_on_executor
 from tornado.web import RequestHandler
 
 import util.config
 from ral import passport
-from util import redis_conn
 from util.const.base import EXCHANGE_NAME
 from util.const.response import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.ctx import LocalContext
@@ -38,7 +36,6 @@ def packaging_response_data(fn):
 class BaseHandler(RequestHandler):
     def __init__(self, application, request, **kwargs):
         self.application = application
-        self.redis = redis_conn.redisConn
         self._accessToken = None
         self._sign = None
         self._timestamp = None
@@ -129,7 +126,7 @@ class BaseHandler(RequestHandler):
         """
         if hasattr(self, '_currentPassport') and self._currentPassport:
             return self._currentPassport
-        self._currentPassport = passport.getSession(self.redis, self.accessToken)
+        self._currentPassport = passport.getSession(self.accessToken)
         self._currentPassport['id'] = int(self._currentPassport.get('id', 0))  # redis取出来都是str，这里转一下
         return self._currentPassport
 

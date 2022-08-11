@@ -12,23 +12,22 @@ from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
     MODEL_MEET_RESULT_MAP
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST
 from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG, \
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST
 from util.const.qiniu_img import CDN_QINIU_TIME_IMG, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_UNKNOWN_HEAD_IMG, \
     CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG, CDN_QINIU_ADDRESS_URL
 from util.const.response import RESP_OK, RESP_NEED_FILL_INFO, RESP_JOIN_ACTIVITY_FAILED, RESP_HAS_ONGOING_ACTIVITY
 
 
 class GuanInfoService(BaseService):
-    def __init__(self, redis, activityId, passport):
-        self.redis = redis
+    def __init__(self, activityId, passport):
         self.activityId = activityId
         self.passport = passport
         self.passportId = passport.get('id', 0)
         self.activityRecord = None
         self.reloadActivityRecord()
-        super(GuanInfoService, self).__init__(redis)
+        super(GuanInfoService, self).__init__()
 
     @lazy_property
     def addressRecord(self):
@@ -119,7 +118,7 @@ class GuanInfoService(BaseService):
         if not self.oppositeUserRecord:
             return []
 
-        informationList = UserHelper(self.redis, self.oppositeUserRecord).getInformationList()
+        informationList = UserHelper(self.oppositeUserRecord).getInformationList()
         return [i.infoStr for i in informationList if i.infoStr]
 
     def getMeetResult(self):
@@ -166,7 +165,7 @@ class GuanInfoService(BaseService):
 
     def activityOprete(self, opType):
         """对活动进行操作"""
-        uis = UserInfoService(self.redis, self.passport)
+        uis = UserInfoService(self.passport)
         if not uis.userInfoIsFilled:
             return RESP_NEED_FILL_INFO
         if opType != self.opType:

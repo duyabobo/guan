@@ -10,10 +10,9 @@ from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, C
 
 class GuanguanService(BaseService):
 
-    def __init__(self, redis, passportId):
-        self.redis = redis
+    def __init__(self, passportId):
         self.passportId = passportId
-        super(GuanguanService, self).__init__(redis)
+        super(GuanguanService, self).__init__()
 
     @lazy_property
     def userInfo(self):

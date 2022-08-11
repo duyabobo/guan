@@ -2,6 +2,7 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
+from util.redis_conn import redisConn
 
 
 def getLoginKey(accessToken):
@@ -12,10 +13,9 @@ def getLoginKey(accessToken):
     return 'accessToken:' + accessToken
 
 
-def putSession(redis, accessToken, passport):
+def putSession(accessToken, passport):
     """
     把当前登录用户的基本信息放到 redis, 如果 redis 已有记录, 就更新, 如果没有, 就新增
-    :param redis:
     :param accessToken:
     :param passport:
     :return:
@@ -26,25 +26,23 @@ def putSession(redis, accessToken, passport):
         for k in currentUserInfoJson
         if k in ['id', 'phone', 'openid']
     }
-    redis.hmset(getLoginKey(accessToken), currentUserInfoJson)
+    redisConn.hmset(getLoginKey(accessToken), currentUserInfoJson)
     return currentUserInfoJson
 
 
-def delSession(redis, accessToken):
+def delSession(accessToken):
     """
     删除登录的用户信息
-    :param redis:
     :param accessToken:
     :return:
     """
-    redis.delete(getLoginKey(accessToken))
+    redisConn.delete(getLoginKey(accessToken))
 
 
-def getSession(redis, accessToken):
+def getSession(accessToken):
     """
     从 redis 获取当前登录用户的信息
-    :param redis:
     :param accessToken:
     :return:
     """
-    return redis.hgetall(getLoginKey(accessToken))
+    return redisConn.hgetall(getLoginKey(accessToken))

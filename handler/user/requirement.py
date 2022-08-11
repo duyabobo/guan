@@ -9,7 +9,7 @@ from util.monitor import superMonitor
 class RequirementHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
-        ris = RequirementService(self.redis, self.currentPassportId)
+        ris = RequirementService(self.currentPassportId)
         return self.response(
             respData=ris.getRequirementInfo()
         )
@@ -21,7 +21,7 @@ class RequirementHandler(BaseHandler):
         valueType = VALUE_TYPE_DICT[opType]
         value = self.getRequestParameter('value', paraType=valueType)
 
-        ris = RequirementService(self.redis, self.currentPassportId)
+        ris = RequirementService(self.currentPassportId)
         ret = ris.checkBeforeUpdate(opType, value)
         if ret:
             return self.response(

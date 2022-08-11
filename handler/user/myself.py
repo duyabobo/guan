@@ -9,7 +9,7 @@ from util.monitor import superMonitor
 class MyselfHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
-        uis = UserInfoService(self.redis, self.currentPassport)
+        uis = UserInfoService(self.currentPassport)
         return self.response(
             respData=uis.getMyselfInfo()
         )
@@ -21,7 +21,7 @@ class MyselfHandler(BaseHandler):
         valueType = VALUE_TYPE_DICT[opType]
         value = self.getRequestParameter('value', paraType=valueType)
 
-        uis = UserInfoService(self.redis, self.currentPassport)
+        uis = UserInfoService(self.currentPassport)
         ret = uis.checkBeforeUpdate(opType, value)
         if ret:
             return self.response(
