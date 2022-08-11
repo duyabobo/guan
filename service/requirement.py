@@ -28,11 +28,11 @@ class RequirementService(BaseService):
         requirementInfo = RequirementModel.getByPassportId(self.passportId)
         self.requirementHelper = RequirementHelper(requirementInfo)
 
-    def getRequirementInfo(self, readColumnChangedData=False):
+    def getRequirementInfo(self, checkDynamicData=False):
         """
-        readColumnChangedCache：是否要读取多重选择器用户临时选择的数据
+        checkDynamicData：是否要读取多重选择器用户临时选择的数据
         """
-        requirementList = self.requirementHelper.getRequirementList(readColumnChangedData)
+        requirementList = self.requirementHelper.getRequirementList(checkDynamicData)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(requirementList)}
         return {
             "requirementList": requirementList,
@@ -41,13 +41,13 @@ class RequirementService(BaseService):
         }
 
     def updateRequirementInfo(self, opType, value, column=None):
-        readColumnChangedData = True
+        checkDynamicData = True
         updateParams = self.requirementHelper.getUpdateParams(opType, value, column)
         if updateParams:
-            readColumnChangedData = False
+            checkDynamicData = False
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
             self.reloadMatchHelper()
-        return self.getRequirementInfo(readColumnChangedData)  # todo 可以扩展需要支持返回成功+提醒的code码
+        return self.getRequirementInfo(checkDynamicData)  # todo 可以扩展需要支持返回成功+提醒的code码
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and self.userInfo.sex == SEX_CHOICE_LIST[DEFAULT_SEX_INDEX]:

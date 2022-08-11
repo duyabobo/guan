@@ -53,17 +53,18 @@ class UserHelper(object):
     def verify_record(self):
         return VerifyModel.getByPassportId(self.user.passport_id)
 
-    def getInformationList(self, readColumnChangedData=False):
+    def getInformationList(self, checkDynamicData):
         informationList = []
         for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
-            info = selectorFactory(op_func, self.user, readColumnChangedData)
+            info = selectorFactory(op_func, self.user, checkDynamicData)
             if info:
                 informationList.append(info)
         return informationList
 
     @property
     def hasFillFinish(self):
-        informationList = self.getInformationList()
+        checkDynamicData = False
+        informationList = self.getInformationList(checkDynamicData)
         return reduce(lambda x, y: x and y, [i.hasFilled for i in informationList])
 
     def getUpdateParams(self, opType, value, column=None):

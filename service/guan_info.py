@@ -118,7 +118,8 @@ class GuanInfoService(BaseService):
         if not self.oppositeUserRecord:
             return []
 
-        informationList = UserHelper(self.oppositeUserRecord).getInformationList()
+        checkDynamicData = False
+        informationList = UserHelper(self.oppositeUserRecord).getInformationList(checkDynamicData)
         return [i.infoStr for i in informationList if i.infoStr]
 
     def getMeetResult(self):

@@ -27,7 +27,7 @@ VALUE_TYPE_DICT = {
 }
 
 
-def selectorFactory(op_type, data, readColumnChangedData):
+def selectorFactory(op_type, data, checkDynamicData):
     if op_type == OP_TYPE_VERIFY:
         return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], VERIFY_CHOICE_LIST[data.verify_type], op_type)
     elif op_type == OP_TYPE_SEX:
@@ -52,8 +52,8 @@ def selectorFactory(op_type, data, readColumnChangedData):
         return MultiSelector("税前月收入(元)", data.min_month_pay, data.max_month_pay, op_type)
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         education = data.school, data.level, data.major
-        educationCache = EducationHelper(data.study_region).getEducationFromCache(data, readColumnChangedData)
-        return MultiSelectorExtra("教育信息", data.study_region, education, educationCache, op_type)
+        educationDynamic = EducationHelper(data.study_region).getEducationFromDynamic(data, checkDynamicData)
+        return MultiSelectorExtra("教育信息", data.study_region, education, educationDynamic, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
@@ -118,7 +118,7 @@ class MultiSelector(object):  # 两项选择器
 
 
 class MultiSelectorExtra(object):  # 三项选择器
-    def __init__(self, desc, zeroValue, valueList, valueListCache, bindChange):
+    def __init__(self, desc, zeroValue, valueList, valueListDynamic, bindChange):
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
@@ -143,7 +143,7 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.bindChange = bindChange
         self.firstValue, self.secondValue, self.thirdValue = valueList
 
-        firstValue, secondValue, thirdValue = valueListCache
+        firstValue, secondValue, thirdValue = valueListDynamic
         matchInfo = MATCH_INFO_DICT[self.bindChange]
         self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围，废弃
         self.defaultIndex = matchInfo['DEFAULT_INDEX']

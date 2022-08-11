@@ -69,8 +69,8 @@ class UserInfoService(BaseService):
         userInfo = UserModel.getByPassportId(self.passportId)
         self.userHelper = UserHelper(userInfo)
 
-    def getMyselfInfo(self, readColumnChangedData=False):
-        informationList = self.userHelper.getInformationList(readColumnChangedData)
+    def getMyselfInfo(self, checkDynamicData=False):
+        informationList = self.userHelper.getInformationList(checkDynamicData)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(informationList)}
         return {
             "informationList": informationList,
@@ -81,16 +81,16 @@ class UserInfoService(BaseService):
         }
 
     def updateMyselfInfo(self, opType, value, column=None):
-        readColumnChangedData = True
+        checkDynamicData = True
         updateParams = self.userHelper.getUpdateParams(opType, value, column)
         if updateParams:
-            readColumnChangedData = False
+            checkDynamicData = False
             UserModel.updateByPassportId(self.passportId, **updateParams)
             # todo next
             self.reloaduserHelper()
             if self.userHelper.hasFillFinish:
                 user.addFillFinishSet(self.passportId)
-        return self.getMyselfInfo(readColumnChangedData)
+        return self.getMyselfInfo(checkDynamicData)
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and \

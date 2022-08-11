@@ -34,12 +34,12 @@ class EducationHelper(MultiPickerHelper):
     def getDefaultEducationId(cls, study_region_id):
         return EducationModel.getIdByEducation(study_region_id, ALL_STR, ALL_STR, ALL_STR)
 
-    def getEducationFromCache(self, data, readColumnChangedData):
+    def getEducationFromDynamic(self, data, checkDynamicData):
         """结合缓存和数据库，返回用户选择器数据"""
         school, level, major = ALL_STR, ALL_STR, ALL_STR
         if data.education:
             school, level, major = data.education.school, data.education.level, data.education.major
-        if not readColumnChangedData:
+        if not checkDynamicData:
             return school, level, major
         educationId = getEducationIdAfterColumnChange(data.passport_id)
         if not educationId:
@@ -107,28 +107,31 @@ class EducationHelper(MultiPickerHelper):
         return [schoolChoiceList, levelChoiceList, majorChoiceList]
 
     def getChoiceIdAfterConfirm(self, oldEducationValue, choiceIndexList):
-        if not oldEducationValue:
-            return 0
+        choiceId = oldEducationValue.id if oldEducationValue else 0
+
         schoolIndex, levelIndex, majorIndex = choiceIndexList
+        if schoolIndex < 0 or levelIndex < 0 or majorIndex < 0:
+            return choiceId
         # 查询选择的学校值
         schoolChoiceList = self.getSchoolChoiceList()
         if schoolIndex >= len(schoolChoiceList):
-            return oldEducationValue.id
+            return choiceId
         school = schoolChoiceList[schoolIndex]
         # 查询选择的学历值
         levelChoiceList = self.getLevelChoiceList(school, schoolChoiceList)
         if levelIndex >= len(levelChoiceList):
-            return oldEducationValue.id
+            return choiceId
         level = levelChoiceList[levelIndex]
         # 查询选择的专业值
         majorChoiceList = self.getMajorChoiceList(school, level, levelChoiceList)
         if majorIndex >= len(majorChoiceList):
-            return oldEducationValue.id
+            return choiceId
         major = majorChoiceList[majorIndex]
+
         return EducationModel.getIdByEducation(self.zeroValue.id, school, level, major)
 
     def getChoiceIdAfterColumnChanged(self, data, column, choiceValueIndex):
-        school, level, major = self.getEducationFromCache(data, readColumnChangedData=True)
+        school, level, major = self.getEducationFromDynamic(data, checkDynamicData=True)
         schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(school, level, major)
         if column == 0 and choiceValueIndex < len(schoolChoiceList):  # 修改了学校
             school = schoolChoiceList[choiceValueIndex]

@@ -56,10 +56,10 @@ class RequirementHelper(object):
     def verify_record(self):
         return VerifyModel.getByPassportId(self.requirement.passport_id)
         
-    def getRequirementList(self, readColumnChangedData=False):
+    def getRequirementList(self, checkDynamicData):
         requirementList = []
         for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
-            requirement = selectorFactory(op_func, self.requirement, readColumnChangedData)
+            requirement = selectorFactory(op_func, self.requirement, checkDynamicData)
             if requirement:
                 requirementList.append(requirement)
         return requirementList
