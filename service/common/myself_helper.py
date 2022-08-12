@@ -8,6 +8,15 @@ from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
 
+INFORMATION_PAIR_LIST = [  # 活动详情页，邀请人信息展示顺序
+    [OP_TYPE_SEX, OP_TYPE_BIRTH_YEAR],
+    [OP_TYPE_HEIGHT, OP_TYPE_WEIGHT],
+    [OP_TYPE_MONTH_PAY, OP_TYPE_MARTIAL_STATUS],
+    [OP_TYPE_HOME_REGION],
+    [OP_TYPE_STUDY_REGION],
+    [OP_TYPE_EDUCATION_MULTI],
+]
+
 OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
     MODEL_MAIL_TYPE_UNKNOWN: [
         OP_TYPE_SEX,

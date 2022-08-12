@@ -7,7 +7,7 @@ from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.user import UserModel
 from service import BaseService
-from service.common.myself_helper import UserHelper
+from service.common.myself_helper import UserHelper, INFORMATION_PAIR_LIST
 from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
@@ -54,7 +54,7 @@ class GuanInfoService(BaseService):
         return CDN_QINIU_ADDRESS_IMG
 
     @property
-    def peopleImg(self):
+    def oppositeImg(self):
         if not self.oppositeUserRecord:
             return CDN_QINIU_UNKNOWN_HEAD_IMG
 
@@ -114,13 +114,26 @@ class GuanInfoService(BaseService):
         }.get(self.opType, "参加")
 
     @property
-    def oppositePeopleInfos(self):
+    def oppositeDataPairs(self):
         if not self.oppositeUserRecord:
             return []
 
         checkDynamicData = False
         informationList = UserHelper(self.oppositeUserRecord).getInformationList(checkDynamicData)
-        return [i.infoStr for i in informationList if i.infoStr]
+        opTypeMapInformation = {i.bindChange: i for i in informationList}
+        pairs = []
+        for opTypes in INFORMATION_PAIR_LIST:
+            pair = []
+            for opType in opTypes:
+                information = opTypeMapInformation[opType]
+                pair.append({
+                    "desc": information.desc + ":",
+                    "subDesc": information.subDesc,
+                    "value": information.fullValue,
+                })
+            pairs.append(pair)
+
+        return pairs
 
     def getMeetResult(self):
         return {
@@ -135,26 +148,27 @@ class GuanInfoService(BaseService):
         else:
             subscribeTemplateIds = [SUBSCRIBE_ACTIVITY_START_NOTI_TID]
         return {
-            "img": self.img,
-            "address": self.address,
-            "addressDesc": self.addressDesc,
-            "time": self.time,
-            "timeDesc": self.timeDesc,
             "guanId": self.activityId,
-            "oppositePeopleInfos": self.oppositePeopleInfos,
-            "opDesc": self.opDesc,
-            "opType": self.opType,
-            "timeImg": self.timeIcon,
-            "addressImg": self.addressIcon,
-            "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
-            "meetResultDesc": "点评内容只会被自己看到",
-            "meetResult": self.getMeetResult(),
-            "peopleImg": self.peopleImg,
-            "people": "见面对象",
-            "subscribeTemplateIds": subscribeTemplateIds,
-            "myRequirementPage": MYREQUIREMENT_PAGE,
-            "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
-            "requirementResult": "3人满足见面条件"  # todo
+            "activity": {
+                "img": self.img,
+                "time": self.time,
+                "address": self.address,
+            },
+            "opposite": {  # 发邀请的对象信息
+                "oppositeImg": self.oppositeImg,
+                "oppositeDataPairs": self.oppositeDataPairs,
+            },
+            "operate": {  # 操作信息
+                "opDesc": self.opDesc,
+                "opType": self.opType,
+                "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
+                "meetResultDesc": "点评内容只会被自己看到",
+                "meetResult": self.getMeetResult(),
+                "subscribeTemplateIds": subscribeTemplateIds,
+                "myRequirementPage": MYREQUIREMENT_PAGE,
+                "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
+                "requirementResult": "3人满足见面条件"  # todo
+            },
         }
 
     def reloadActivityRecord(self):
