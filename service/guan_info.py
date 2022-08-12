@@ -135,26 +135,27 @@ class GuanInfoService(BaseService):
         else:
             subscribeTemplateIds = [SUBSCRIBE_ACTIVITY_START_NOTI_TID]
         return {
-            "img": self.img,
-            "address": self.address,
-            "addressDesc": self.addressDesc,
-            "time": self.time,
-            "timeDesc": self.timeDesc,
             "guanId": self.activityId,
-            # "oppositePeopleInfos": self.oppositePeopleInfos,
-            "opDesc": self.opDesc,
-            "opType": self.opType,
-            "timeImg": self.timeIcon,
-            "addressImg": self.addressIcon,
-            "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
-            "meetResultDesc": "点评内容只会被自己看到",
-            "meetResult": self.getMeetResult(),
-            "peopleImg": self.peopleImg,
-            "people": "见面对象",
-            "subscribeTemplateIds": subscribeTemplateIds,
-            "myRequirementPage": MYREQUIREMENT_PAGE,
-            "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
-            "requirementResult": "3人满足具体时间"  # todo
+            "activity": {
+                "img": self.img,
+                "time": self.time,
+                "address": self.address,
+            },
+            "opposite": {  # 发邀请的对象信息
+                "oppositeImg": "",
+                "oppositeDataPairs": [],
+            },
+            "operate": {  # 操作信息
+                "opDesc": self.opDesc,
+                "opType": self.opType,
+                "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
+                "meetResultDesc": "点评内容只会被自己看到",
+                "meetResult": self.getMeetResult(),
+                "subscribeTemplateIds": subscribeTemplateIds,
+                "myRequirementPage": MYREQUIREMENT_PAGE,
+                "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
+                "requirementResult": "3人满足见面条件"  # todo
+            },
         }
 
     def reloadActivityRecord(self):
