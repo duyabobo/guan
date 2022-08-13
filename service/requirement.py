@@ -3,6 +3,7 @@
 from common.requirement_helper import RequirementHelper
 from model.requirement import RequirementModel
 from model.user import UserModel
+from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
 from util.const.match import OP_TYPE_SEX, SEX_CHOICE_LIST, DEFAULT_SEX_INDEX
@@ -28,6 +29,7 @@ class RequirementService(BaseService):
         requirementInfo = RequirementModel.getByPassportId(self.passportId)
         self.requirementHelper = RequirementHelper(requirementInfo)
 
+    @checkCache("RequirementService:{passportId}")
     def getRequirementInfo(self, checkDynamicData=False):
         """
         checkDynamicData：是否要读取多重选择器用户临时选择的数据
@@ -40,6 +42,7 @@ class RequirementService(BaseService):
             "requirementResult": "3人满足见面条件"  # todo next
         }
 
+    @deleteCache(["RequirementService:{passportId}"])
     def updateRequirementInfo(self, opType, value, column=None):
         checkDynamicData = True
         updateParams = self.requirementHelper.getUpdateParams(opType, value, column)

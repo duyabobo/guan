@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # 二级缓存
+import copy
 import pickle
-
+import re
 from util.redis_conn import redisConn
 
 
@@ -23,9 +24,15 @@ def checkInconsistentCache(prefix, ex=60):
     return wrap
 
 
-def get_cache_key(key, **kwargs):
+def get_cache_key(key, *args, **kwargs):
+    _self = args[0]
+    params = re.split('[{}]', key)
+    _kwargs = copy.deepcopy(kwargs)
+    for p in params:
+        if hasattr(_self, p):
+            _kwargs[p] = getattr(_self, p)
     try:
-        return key.format(**kwargs)
+        return key.format(**_kwargs)
     except:
         return None
 
@@ -33,11 +40,11 @@ def get_cache_key(key, **kwargs):
 def checkCache(key, ex=3600):
     """
     需要一致性要求的缓存，需要配套deleteCache使用。
-    要求：key必须使用显示format表示的字符串，比如 prefix:{arg1}:{args}，被用到的arg1也必须是关键字参数传递。
+    要求：key必须使用显示format表示的字符串，比如 prefix:{arg1}:{args}，被用到的arg1也必须是关键字参数传递，或者能够从 self里获取（即args[0])
     """
     def wrap(fn):
         def __inner__(*args, **kwargs):
-            cache_key = get_cache_key(key, **kwargs)
+            cache_key = get_cache_key(key, *args, **kwargs)
             if cache_key:
                 val = redisConn.get(cache_key)
                 if val is not None:  # 缓存查询到数据
@@ -53,11 +60,11 @@ def checkCache(key, ex=3600):
 
 
 def deleteCache(keys):
-    """要求：key必须使用显示format表示的字符串，比如 prefix:{arg1}:{args}，被用到的arg1也必须是关键字参数传递。"""
+    """要求：key必须使用显示format表示的字符串，比如 prefix:{arg1}:{args}，被用到的arg1也必须是关键字参数传递，或者能够从 self里获取（即args[0])"""
     def wrap(fn):
         def __inner__(*args, **kwargs):
             for key in keys:
-                cache_key = get_cache_key(key, **kwargs)
+                cache_key = get_cache_key(key, *args, **kwargs)
                 if cache_key:
                     redisConn.delete(cache_key)
             return fn(*args, **kwargs)

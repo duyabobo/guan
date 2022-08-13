@@ -4,6 +4,7 @@ from common.myself_helper import UserHelper
 from model.user import UserModel
 from model.verify import VerifyModel
 from ral import user
+from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
 from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK
@@ -69,6 +70,7 @@ class UserInfoService(BaseService):
         userInfo = UserModel.getByPassportId(self.passportId)
         self.userHelper = UserHelper(userInfo)
 
+    @checkCache("UserInfoService:{passportId}")
     def getMyselfInfo(self, checkDynamicData=False):
         informationList = self.userHelper.getInformationList(checkDynamicData)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(informationList)}
@@ -80,6 +82,7 @@ class UserInfoService(BaseService):
             "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
         }
 
+    @deleteCache(["UserInfoService:{passportId}"])
     def updateMyselfInfo(self, opType, value, column=None):
         checkDynamicData = True
         updateParams = self.userHelper.getUpdateParams(opType, value, column)
