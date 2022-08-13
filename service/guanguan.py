@@ -57,7 +57,7 @@ class GuanguanService(BaseService):
         return activityList
 
     def getAddressMap(self, longitude, latitude):
-        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查出activity
+        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查出activity，todo 需要对经纬度进行模糊处理，使得位置相近的人查询使用相同的经纬度
         return {
             a.id: a for a in addressList
         }

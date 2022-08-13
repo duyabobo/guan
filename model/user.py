@@ -8,6 +8,7 @@ from sqlalchemy import func
 from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
+from ral.cache import checkCache
 from util.const import match
 from util.const.base import ALL_STR
 from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
@@ -35,6 +36,7 @@ class UserModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
+    @checkCache("UserModel:{passportId}")
     def getByPassportId(cls, passportId):
         return getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
 
@@ -53,7 +55,8 @@ class UserModel(BaseModel):
         return user
 
     @classmethod
-    def updateByPassportId(cls, passportId, **updateParams):
+    @checkCache("UserModel:{passportId}")
+    def updateByPassportId(cls, passportId=0, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
 

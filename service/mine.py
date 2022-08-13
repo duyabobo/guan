@@ -22,7 +22,7 @@ class MainFuncObj(object):
 class MineService(BaseService):
 
     def getHeadImg(self, passportId):
-        user = UserModel.getByPassportId(passportId)
+        user = UserModel.getByPassportId(passportId=passportId)
         sexIndex = user.sexIndex if user else MODEL_SEX_UNKNOWN_INDEX
         return {
             MODEL_SEX_MALE_INDEX: CDN_QINIU_BOY_HEAD_IMG,

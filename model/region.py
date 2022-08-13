@@ -6,6 +6,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from ral.cache import checkInconsistentCache
 from util.const.base import EMPTY_STR
 from util.const.match import MODEL_STATUS_YES
 from util.ctx import getDbSession
@@ -38,6 +39,7 @@ class RegionModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id == reginId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
+    @checkInconsistentCache("RegionModel", ex=24 * 3600)
     def getIdByRegion(cls, province, city, area):
         r = getDbSession().query(cls).filter(
             cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES
@@ -47,13 +49,16 @@ class RegionModel(BaseModel):
         return r.id
 
     @classmethod
+    @checkInconsistentCache("RegionModel", ex=24 * 3600)
     def listByProvince(cls, province):
-        return getDbSession().query(cls).filter(cls.province == province, cls.status == MODEL_STATUS_YES)
+        return getDbSession().query(cls).filter(cls.province == province, cls.status == MODEL_STATUS_YES).all()
 
     @classmethod
+    @checkInconsistentCache("RegionModel", ex=24 * 3600)
     def listByProvinceAndCity(cls, province, city):
-        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.status == MODEL_STATUS_YES)
+        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.status == MODEL_STATUS_YES).all()
 
     @classmethod
+    @checkInconsistentCache("RegionModel", ex=24 * 3600)
     def listByProvinceAndCityAndArea(cls, province, city, area):
-        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES)
+        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES).all()

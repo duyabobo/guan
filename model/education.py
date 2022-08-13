@@ -6,6 +6,7 @@ from sqlalchemy import String
 from sqlalchemy import TIMESTAMP
 
 from model import BaseModel
+from ral.cache import checkInconsistentCache
 from util.const.base import EMPTY_STR
 from util.const.match import MODEL_STATUS_YES
 from util.ctx import getDbSession
@@ -41,6 +42,7 @@ class EducationModel(BaseModel):
         return record
 
     @classmethod
+    @checkInconsistentCache("EducationModel", ex=24*3600)
     def getIdByEducation(cls, region_id, school, level, major):
         r = getDbSession().query(cls).filter(
             cls.region_id == region_id,
@@ -58,12 +60,14 @@ class EducationModel(BaseModel):
         return getDbSession().query(cls).filter(cls.region_id.in_(region_ids)).order_by(cls.seq)
 
     @classmethod
+    @checkInconsistentCache("EducationModel", ex=24 * 3600)
     def getLevelsBySchool(cls, school):
-        return getDbSession().query(cls.level).filter(cls.school == school).order_by(cls.seq)
+        return getDbSession().query(cls.level).filter(cls.school == school).order_by(cls.seq).all()
 
     @classmethod
+    @checkInconsistentCache("EducationModel", ex=24 * 3600)
     def getMajorsBySchoolAndLevel(cls, school, level):
-        return getDbSession().query(cls.major).filter(cls.school == school, cls.level == level).order_by(cls.seq)
+        return getDbSession().query(cls.major).filter(cls.school == school, cls.level == level).order_by(cls.seq).all()
 
     @classmethod
     def getSchoolsByRegionIds(cls, region_ids):

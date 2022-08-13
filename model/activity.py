@@ -9,6 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.sql import or_
 
 from model import BaseModel
+from ral.cache import checkInconsistentCache
 from util.const import match
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
@@ -58,6 +59,7 @@ class ActivityModel(BaseModel):
         getDbSession().flush()
 
     @classmethod
+    @checkInconsistentCache("ActivityModel")
     def getOngoingActivity(cls, passportId):
         return getDbSession().query(cls).filter(
             or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)

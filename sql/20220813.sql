@@ -1,0 +1,1 @@
+alter table passport add index idx_openid (`openid`);
