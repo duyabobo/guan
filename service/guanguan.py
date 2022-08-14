@@ -3,8 +3,10 @@
 from model.activity import ActivityModel
 from model.address import AddressModel
 from model.user import UserModel
+from ral.cache import checkCache
 from service import BaseService
 from util.class_helper import lazy_property
+from util.const.match import MODEL_SEX_MALE_INDEX
 from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
 
 
@@ -19,48 +21,53 @@ class GuanguanService(BaseService):
         return UserModel.getByPassportId(self.passportId)
 
     def match(self, activity, userMap):
-        """筛选掉不符合期望的，筛选掉已完成匹配但是没有当前用户参与的"""
+        """筛选掉不符合期望的"""
         inv_pid = activity.girl_passport_id
         ac_pid = activity.boy_passport_id
-        # 已完成见面的
-        if inv_pid and ac_pid:
-            if self.passportId in [inv_pid, ac_pid]:  # 自己参与的，展示
-                return True
-            else:  # 没有参与的，不展示
-                return False
-        # 未完成见面的
-        else:
-            if True:  # todo 发起人符合自己预期的，或者没有发起人的，需要展示
-                return True
-            else:
-                return False
+        return True  # todo 发起人符合自己预期的，或者没有发起人的，需要展示
 
     def getUserMap(self, passportIds):
-        return []
+        if not passportIds:
+            return {}
+        userList = UserModel.getByPassportIds(passportIds)
+        return {u.passport_id: u for u in userList}
 
-    def getActivityList(self, addressIds):
-        """
-        1. 筛选掉已经完成的，已经过期的
-        2. 筛选掉不符合邀请人期望的
-        """
+    def getActivityList(self, longitude, latitude):
+        addressIds = self.getAddressIds(longitude, latitude)
         if not addressIds:
-            return []
-
-        _activityList = ActivityModel.listByAddressIds(addressIds)  # 筛选掉已经已经过期的
-        passportIds = []  # todo 所有涉及到的passportId列表，包括自己的passportid，以及活动里已参与的passportid
-        userMap = self.getUserMap(passportIds)
-        activityList = []  # 筛选掉不符合邀请人期望的，以及已完成的（但是保留自己参与的）
-        for a in _activityList:
-            if self.match(a, userMap):
-                activityList.append(a)
-
+            addressIds = [0]
+        # 选择时空合适，时间倒序
+        # 1. 符合空间条件的
+        # 2. 符合时间未过期的
+        # 3. 尚未邀请成功的
+        activityList = ActivityModel.listByAddressIds(addressIds)
         return activityList
 
-    def getAddressMap(self, longitude, latitude):
-        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查出activity，todo 需要对经纬度进行模糊处理，使得位置相近的人查询使用相同的经纬度
-        return {
-            a.id: a for a in addressList
-        }
+    @checkCache("GuanguanService:{passportId}", ex=60)
+    def getMatchedActivityIdList(self, activityList=None, userMap=None, longitude="", latitude="", forceRefreshCache=False):  # todo 搞个离线脚本，异步定时循环每个passportid调用用这个方法，计算好
+        """
+        1. 按照邀请状态，以及时间倒排序
+        2. 筛选掉不符合邀请人期望的
+        """
+        if activityList is None:
+            activityList = self.getActivityList(longitude, latitude)
+        if userMap is None:
+            oppositePassportIds = [a.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else a.boy_passport_id for a in activityList]
+            userMap = self.getUserMap(list(set(oppositePassportIds)))
+        # 筛选掉不符合邀请人期望的
+        matchedActivityIdList = []
+        for a in activityList:
+            if self.match(a, userMap):
+                matchedActivityIdList.append(a.id)
+
+        return matchedActivityIdList
+
+    def getLimitMatchedActivityList(self, activityIds, limit=20):
+        return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
+
+    def getAddressIds(self, longitude, latitude):
+        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查
+        return [a.id for a in addressList]
 
     def getState(self, activity):
         girl_pid = activity.girl_passport_id
@@ -72,31 +79,24 @@ class GuanguanService(BaseService):
         else:
             return "见面邀请"
 
-    def reSortActivityList(self, activityList, ongoingActivity):
-        for a in activityList:
-            if a.id == ongoingActivity.id:
-                activityList.remove(a)
-                break
-        activityList.insert(0, ongoingActivity)
-
-    def fillAddressMap(self, addressMap, addressId):
-        if addressId in addressMap:
-            return
-        address = AddressModel.getById(addressId)
-        addressMap[address.id] = address
+    def getAddressMapByIds(self, addressIds):
+        if not addressIds:
+            return {}
+        addressList = AddressModel.listByIds(addressIds)
+        return {a.id: a for a in addressList}
 
     def getGuanguanList(self, longitude, latitude):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
-        addressMap = self.getAddressMap(longitude, latitude)
-        activityList = self.getActivityList(addressMap.keys())  # todo next 自己参与过的，后期还有流程环节要做
-
+        matchedActivityIdList = self.getMatchedActivityIdList(longitude=longitude, latitude=latitude)
+        matchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdList)
+        # todo 按照经纬度，对matchedActivityList进行排序
         ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
         if ongoingActivity:  # 进行中的永远在第一位
-            self.reSortActivityList(activityList, ongoingActivity)
-            self.fillAddressMap(addressMap, ongoingActivity.address_id)
+            matchedActivityList.insert(0, ongoingActivity)
+        addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
 
         guanguanList = []
-        for activity in activityList[:20]:
+        for activity in matchedActivityList:
             address = addressMap[activity.address_id]
             guanguanList.append(
                 {

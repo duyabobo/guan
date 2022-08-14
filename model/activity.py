@@ -10,6 +10,7 @@ from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util.const import match
+from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
 from util.util_time import datetime2str
@@ -23,6 +24,7 @@ class ActivityModel(BaseModel):
     start_time = Column(TIMESTAMP, default="1970-01-01")  # 开始时间
     girl_passport_id = Column(Integer, default=0)  # 女孩passport_id
     boy_passport_id = Column(Integer, default=0)  # 男孩passport_id
+    state = Column(Integer, default=0)  # 活动状态：MODEL_ACTIVITY_STATE
     meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
@@ -30,11 +32,19 @@ class ActivityModel(BaseModel):
 
     @classmethod
     def listByAddressIds(cls, addressIds):
-        return getDbSession().query(cls).filter(
+        return getDbSession().query(cls.id, cls.boy_passport_id, cls.girl_passport_id).filter(
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
-            cls.start_time > datetime.datetime.now()
-        ).order_by(cls.start_time.asc()).all()
+            cls.start_time > datetime.datetime.now(),
+            cls.state.in_([MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING])
+        ).order_by(cls.state.desc(), cls.start_time.asc()).all()
+
+    @classmethod
+    def listActivity(cls, activityIds, limit, exceptPassportId):
+        return getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES, cls.id.in_(activityIds),
+            cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId
+        )
 
     @classmethod
     def getById(cls, activityId):
@@ -62,7 +72,7 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls).filter(
             or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
         ).filter(
-            cls.start_time > datetime.datetime.now()
+            cls.start_time > datetime.datetime.now().date()
         ).first()
 
     @classmethod

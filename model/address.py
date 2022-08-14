@@ -8,7 +8,6 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
-from ral.cache import checkInconsistentCache
 from util.const import match
 from util.const.base import EMPTY_STR
 from util.ctx import getDbSession
@@ -29,13 +28,18 @@ class AddressModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    @checkInconsistentCache("AddressModel")
-    def listByLongitudeLatitude(cls, _longitude, latitude):  # todo
+    def listByLongitudeLatitude(cls, longitude, latitude):  # todo
         return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).all()
 
     @classmethod
     def getById(cls, addressId):
         return getDbSession().query(cls).filter(cls.id == addressId, cls.status == match.MODEL_STATUS_YES).first()
+
+    @classmethod
+    def listByIds(cls, addressIds):
+        if not addressIds:
+            return []
+        return getDbSession().query(cls).filter(cls.id.in_(addressIds), cls.status == match.MODEL_STATUS_YES)
 
     @classmethod
     def getLastAddress(cls):
