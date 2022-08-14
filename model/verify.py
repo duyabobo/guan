@@ -7,6 +7,7 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
+from ral.cache import deleteCache
 from util.const import match
 from util.const.base import EMPTY_STR
 from util.ctx import getDbSession
@@ -46,6 +47,7 @@ class VerifyModel(BaseModel):
             return match.MODEL_MAIL_TYPE_WORK
 
     @classmethod
+    @deleteCache(["UserInfoService:{passportId}"])
     def updateVerifyStatus(cls, passportId, email):
         getDbSession().query(cls).filter(cls.passport_id == passportId).\
             update({"mail": email, "mail_type": cls.getMailType(email), "mail_verify_status": match.MODEL_MAIL_VERIFY_STATUS_YES})

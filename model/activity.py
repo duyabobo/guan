@@ -44,7 +44,7 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES, cls.id.in_(activityIds),
             cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId
-        ).order_by(cls.state.desc(), cls.start_time.asc()).limit(limit)
+        ).order_by(cls.state.desc(), cls.start_time.asc()).limit(limit).all()
 
     @classmethod
     def getById(cls, activityId):
