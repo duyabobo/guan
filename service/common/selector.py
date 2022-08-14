@@ -56,10 +56,14 @@ def selectorFactory(op_type, data, checkDynamicData):
         return MultiSelectorExtra("教育信息", data.study_region, education, educationDynamic, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
+    elif op_type == OP_TYPE_WORK_REGION_PERIOD:
+        return RegionSelector("工作地址范围", data.work_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
         return RegionSelector("学校地址范围", data.study_region, op_type)
     elif op_type == OP_TYPE_HOME_REGION:
         return RegionSelector("籍贯", data.home_region, op_type)
+    elif op_type == OP_TYPE_WORK_REGION:
+        return RegionSelector("工作地址", data.work_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION:
         return RegionSelector("学校地址", data.study_region, op_type)
 
