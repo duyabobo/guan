@@ -22,13 +22,13 @@ class ActivityAutoCreater(object):
         self.dbSession = sessionmaker(bind=engine)()
 
     def hasFreeActivity(self):
-        return bool(ActivityModel.getLastFreeActivity(self.dbSession))
+        return bool(ActivityModel.getLastFreeActivity())
 
     def getAvaliableAddress(self):
-        return AddressModel.getLastAddress(self.dbSession)
+        return AddressModel.getLastAddress()
 
     def getLastActivity(self):
-        return ActivityModel.getLastActivity(self.dbSession)
+        return ActivityModel.getLastActivity()
 
     def getNextTime(self):
         lastActivity = self.getLastActivity()

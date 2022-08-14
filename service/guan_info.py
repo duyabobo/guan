@@ -148,7 +148,7 @@ class GuanInfoService(BaseService):
             "operate": {  # 操作信息
                 "opDesc": self.opDesc,
                 "opType": self.opType,
-                "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
+                "isAfterMeet": 0,  # int(self.activityRecord.start_time < datetime.datetime.now()),
                 "meetResultDesc": "点评内容只会被自己看到",
                 "meetResult": self.getMeetResult(),
                 "subscribeTemplateIds": subscribeTemplateIds,
