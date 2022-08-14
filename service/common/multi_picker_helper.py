@@ -6,23 +6,29 @@ from model.work import WorkModel
 from ral.multi_picker import getDataIdAfterColumnChange
 from util.const.base import ALL_STR
 from util.const.education import DEFAULT_MULTI_CHOICE_LIST
-from util.const.match import OP_TYPE_EDUCATION_MULTI, OP_TYPE_WORK_MULTI
+from util.const.match import OP_TYPE_EDUCATION_MULTI, OP_TYPE_WORK_MULTI, OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE, OP_TYPE_WORK_MULTI_COLUMN_CHANGE
+
+education_config = {
+    "model": EducationModel,
+    "dataName": "education",
+    "firstName": "school",
+    "secondName": "level",
+    "thirdName": "major"
+}
+
+work_config = {
+    "model": WorkModel,
+    "dataName": "work",
+    "firstName": "profession",
+    "secondName": "industry",
+    "thirdName": "position"
+}
 
 multi_picker_config = {
-    OP_TYPE_EDUCATION_MULTI: {
-        "model": EducationModel,
-        "dataName": "education",
-        "firstName": "school",
-        "secondName": "level",
-        "thirdName": "major"
-    },
-    OP_TYPE_WORK_MULTI: {
-        "model": WorkModel,
-        "dataName": "work",
-        "firstName": "school",
-        "secondName": "level",
-        "thirdName": "major"
-    }
+    OP_TYPE_EDUCATION_MULTI: education_config,
+    OP_TYPE_WORK_MULTI_COLUMN_CHANGE: education_config,
+    OP_TYPE_WORK_MULTI: work_config,
+    OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE: work_config,
 }
 
 
@@ -33,12 +39,13 @@ class MultiPickerHelperABC(object):  # 扩展用
         """
         self.region = region
         self.opType = opType
-        config = multi_picker_config[opType]
-        self.dataName = config['dataName']   # education/work
-        self.model = config['model']  # EducationModel/WorkModel
-        self.firstName = config['firstName']  # school/profession
-        self.secondName = config['secondName']  # level/industry
-        self.thirdName = config['thirdName']  # major/position
+        config = multi_picker_config.get(opType, None)
+        if config:
+            self.dataName = config['dataName']   # education/work
+            self.model = config['model']  # EducationModel/WorkModel
+            self.firstName = config['firstName']  # school/profession
+            self.secondName = config['secondName']  # level/industry
+            self.thirdName = config['thirdName']  # major/position
 
     def getMultiChoiceList(self, firstValue, secondValue, thirdValue):  # 查询多重选择列表
         """返回一个长度3的二维数组"""
@@ -55,10 +62,6 @@ class MultiPickerHelperABC(object):  # 扩展用
 
 
 class MultiPickerHelper(MultiPickerHelperABC):
-
-    def getDefaultId(self, region_id):
-        return self.model.getIdByData(region_id, ALL_STR, ALL_STR, ALL_STR)
-
     def getDataFromDynamic(self, data, checkDynamicData):
         """结合缓存和数据库，返回用户选择器数据"""
         # 默认值

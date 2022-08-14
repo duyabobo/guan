@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
@@ -97,7 +98,7 @@ class UserHelper(object):
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
-            updateParams['education_id'] = MultiPickerHelper(None, opType).getDefaultId(study_region_id)
+            updateParams['education_id'] = EducationModel.getIdByData(study_region_id, ALL_STR, ALL_STR, ALL_STR)
         elif opType == OP_TYPE_EDUCATION_MULTI:
             updateParams['education_id'] = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterConfirm(self.user.education, value)
