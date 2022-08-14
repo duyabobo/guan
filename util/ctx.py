@@ -5,6 +5,8 @@
 
 from tornado.stack_context import StackContext, _state
 
+from util.database import mysql_offline_session
+
 
 class LocalContext(StackContext):
     """继承自StackContext，StackContext基于线程号维护了状态对象即_state，_state里有一个内容栈。
@@ -27,4 +29,7 @@ class LocalContext(StackContext):
 
 
 def getDbSession():
-    return LocalContext.current_data()
+    dbSession = LocalContext.current_data()
+    if not dbSession:
+        dbSession = mysql_offline_session
+    return dbSession
