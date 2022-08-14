@@ -8,6 +8,7 @@ from sqlalchemy import func
 from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
+from model.work import WorkModel
 from util.const import match
 from util.const.base import ALL_STR
 from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
@@ -30,6 +31,7 @@ class RequirementModel(BaseModel):
     home_region_id = Column(Integer, default=0)  # 籍贯地点id
     study_region_id = Column(Integer, default=0)  # 学习地点id
     education_id = Column(Integer, default=0)  # 学习信息id
+    work_id = Column(Integer, default=0)  # 工作信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
     max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
@@ -110,3 +112,19 @@ class RequirementModel(BaseModel):
     @property
     def major(self):
         return self.education.major if self.education else ALL_STR
+
+    @property
+    def work(self):
+        return WorkModel.getById(self.work_id)
+
+    @property
+    def profession(self):
+        return self.work.profession if self.work else ALL_STR
+
+    @property
+    def industry(self):
+        return self.work.industry if self.work else ALL_STR
+
+    @property
+    def position(self):
+        return self.work.position if self.work else ALL_STR

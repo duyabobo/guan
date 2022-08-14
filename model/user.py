@@ -9,6 +9,7 @@ from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
+from model.work import WorkModel
 from ral.cache import checkCache
 from util.const import match
 from util.const.base import ALL_STR
@@ -29,6 +30,7 @@ class UserModel(BaseModel):
     study_region_id = Column(Integer, default=0)  # 学习地点id
     study_from_year = Column(Integer, default=0)  # 入学年份
     education_id = Column(Integer, default=0)  # 学习信息id
+    work_id = Column(Integer, default=0)  # 工作信息id
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
     month_pay = Column(Integer, default=0)  # 月收入(元)
     is_fall_in_love = Column(Integer, default=0)  # 是否坠入爱河
@@ -118,3 +120,19 @@ class UserModel(BaseModel):
     @property
     def major(self):
         return self.education.major if self.education else ALL_STR
+
+    @property
+    def work(self):
+        return WorkModel.getById(self.work_id)
+
+    @property
+    def profession(self):
+        return self.work.profession if self.work else ALL_STR
+
+    @property
+    def industry(self):
+        return self.work.industry if self.work else ALL_STR
+
+    @property
+    def position(self):
+        return self.work.position if self.work else ALL_STR
