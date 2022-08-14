@@ -12,7 +12,8 @@ from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
     MODEL_MEET_RESULT_MAP
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST, \
+    MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
 from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG, \
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
 from util.const.qiniu_img import CDN_QINIU_TIME_IMG, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_UNKNOWN_HEAD_IMG, \
@@ -189,11 +190,19 @@ class GuanInfoService(BaseService):
                 opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY
 
+        updateParams = {}
         if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:
             passportId = self.passportId
+            if self.activityRecord.state == MODEL_ACTIVITY_STATE_EMPTY:
+                updateParams['state'] = MODEL_ACTIVITY_STATE_INVITING
+            elif self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITING:
+                updateParams['state'] = MODEL_ACTIVITY_STATE_INVITE_SUCCESS
         else:
             passportId = 0
-        updateParams = {}
+            if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITING:
+                updateParams['state'] = MODEL_ACTIVITY_STATE_EMPTY
+            elif self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
+                updateParams['state'] = MODEL_ACTIVITY_STATE_INVITING
         if uis.userInfo.sexIndex == MODEL_SEX_MALE_INDEX:
             updateParams['boy_passport_id'] = passportId
         elif uis.userInfo.sexIndex == MODEL_SEX_FEMALE_INDEX:
