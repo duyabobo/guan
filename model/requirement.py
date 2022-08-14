@@ -31,6 +31,7 @@ class RequirementModel(BaseModel):
     home_region_id = Column(Integer, default=0)  # 籍贯地点id
     study_region_id = Column(Integer, default=0)  # 学习地点id
     education_id = Column(Integer, default=0)  # 学习信息id
+    work_region_id = Column(Integer, default=0)  # 学习地点id
     work_id = Column(Integer, default=0)  # 工作信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
     max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
@@ -128,3 +129,20 @@ class RequirementModel(BaseModel):
     @property
     def position(self):
         return self.work.position if self.work else ALL_STR
+
+    @property
+    def work_region(self):
+        """home_address_id"""
+        return RegionModel.getById(self.work_region_id)
+
+    @property
+    def work_province(self):
+        return self.work_region.province if self.work_region else ALL_STR
+
+    @property
+    def work_city(self):
+        return self.work_region.city if self.work_region else ALL_STR
+
+    @property
+    def work_area(self):
+        return self.work_region.area if self.work_region else ALL_STR

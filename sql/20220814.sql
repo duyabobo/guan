@@ -8,3 +8,7 @@ create table work (
     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近修改时间',
     PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作信息';
+alter table user add column work_region_id bigint unsigned not null default 0 comment '工作地点id' after education_id;
+alter table user add column work_id bigint unsigned not null default 0 comment '工作信息id' after work_region_id;
+alter table requirement add column work_region_id bigint unsigned not null default 0 comment '工作地点id' after education_id;
+alter table requirement add column work_id bigint unsigned not null default 0 comment '工作信息id' after work_region_id;

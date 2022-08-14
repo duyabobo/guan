@@ -30,6 +30,7 @@ class UserModel(BaseModel):
     study_region_id = Column(Integer, default=0)  # 学习地点id
     study_from_year = Column(Integer, default=0)  # 入学年份
     education_id = Column(Integer, default=0)  # 学习信息id
+    work_region_id = Column(Integer, default=0)  # 学习地点id
     work_id = Column(Integer, default=0)  # 工作信息id
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
     month_pay = Column(Integer, default=0)  # 月收入(元)
@@ -136,3 +137,20 @@ class UserModel(BaseModel):
     @property
     def position(self):
         return self.work.position if self.work else ALL_STR
+
+    @property
+    def work_region(self):
+        """home_address_id"""
+        return RegionModel.getById(self.work_region_id)
+
+    @property
+    def work_province(self):
+        return self.work_region.province if self.work_region else ALL_STR
+
+    @property
+    def work_city(self):
+        return self.work_region.city if self.work_region else ALL_STR
+
+    @property
+    def work_area(self):
+        return self.work_region.area if self.work_region else ALL_STR
