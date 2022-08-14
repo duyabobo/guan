@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 from model.activity import ActivityModel
 from model.address import AddressModel
+from model.requirement import RequirementModel
 from model.user import UserModel
 from ral.cache import checkCache
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_SEX_MALE_INDEX
+from util.const.base import ALL_STR
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_MAIL_TYPE_UNKNOWN
 from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
 
 
@@ -20,17 +22,63 @@ class GuanguanService(BaseService):
     def userInfo(self):
         return UserModel.getByPassportId(self.passportId)
 
-    def match(self, activity, userMap):
-        """筛选掉不符合期望的"""
-        inv_pid = activity.girl_passport_id
-        ac_pid = activity.boy_passport_id
-        return True  # todo 发起人符合自己预期的，或者没有发起人的，需要展示
+    def match(self, requirement):
+        """对比 requirement 和 self.userInfo，进行一个匹配与否的判断"""
+        # 1，如果 requirement为None，可以匹配
+        if requirement is None:
+            return True
+        # 2，对比 requirement的每一个字段，只有所有字段要求，当前用户都符合，才算匹配
+        if self.userInfo.sex != requirement.sex:
+            return False
+        if self.userInfo.martial_status != requirement.martial_status:
+            return False
+        if self.userInfo.birth_year < requirement.min_birth_year or self.userInfo.birth_year > requirement.max_birth_year:
+            return False
+        if self.userInfo.height < requirement.min_height or self.userInfo.height > requirement.max_height:
+            return False
+        if self.userInfo.weight < requirement.min_weight or self.userInfo.weight > requirement.max_weight:
+            return False
+        if self.userInfo.month_pay < requirement.min_month_pay or self.userInfo.month_pay > requirement.max_month_pay:
+            return False
+        if self.userInfo.home_province != requirement.home_province and requirement.home_province != ALL_STR:
+            return False
+        if self.userInfo.home_city != requirement.home_city and requirement.home_city != ALL_STR:
+            return False
+        if self.userInfo.home_area != requirement.home_area and requirement.home_area != ALL_STR:
+            return False
+        if self.userInfo.study_province != requirement.study_province and requirement.study_province != ALL_STR:
+            return False
+        if self.userInfo.study_city != requirement.study_city and requirement.study_city != ALL_STR:
+            return False
+        if self.userInfo.study_area != requirement.study_area and requirement.study_area != ALL_STR:
+            return False
+        if self.userInfo.school != requirement.school and requirement.school != ALL_STR:
+            return False
+        if self.userInfo.level != requirement.level and requirement.level != ALL_STR:
+            return False
+        if self.userInfo.major != requirement.major and requirement.major != ALL_STR:
+            return False
+        if self.userInfo.verify_type != requirement.verify_type and requirement.verify_type != MODEL_MAIL_TYPE_UNKNOWN:
+            return False
+        return True
 
-    def getUserMap(self, passportIds):
+    def getRequirementMap(self, activityList):
+        getPid = lambda x: a.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else a.boy_passport_id
+        passportIds = [getPid(a) for a in activityList]
         if not passportIds:
             return {}
-        userList = UserModel.getByPassportIds(passportIds)
-        return {u.passport_id: u for u in userList}
+        requirementList = RequirementModel.getByPassportIds(list(set(passportIds)))
+        passportIdMapRequirement = {r.passport_id: r for r in requirementList}
+        activityIdMapPassportId = {a.id: getPid(a) for a in activityList}
+        return {aid: passportIdMapRequirement.get(activityIdMapPassportId[aid], None) for aid in activityIdMapPassportId}
+
+    def filterActivityIdList(self, activityList, activityIdMapRequirement):
+        """筛选匹配满足的"""
+        matchedActivityIdList = []
+        for a in activityList:
+            if self.match(activityIdMapRequirement.get(a.id, None)):
+                matchedActivityIdList.append(a.id)
+        return matchedActivityIdList
 
     def getActivityList(self, longitude, latitude):
         addressIds = self.getAddressIds(longitude, latitude)
@@ -44,23 +92,18 @@ class GuanguanService(BaseService):
         return activityList
 
     @checkCache("GuanguanService:{passportId}", ex=60)
-    def getMatchedActivityIdList(self, activityList=None, userMap=None, longitude="", latitude="", forceRefreshCache=False):  # todo 搞个离线脚本，异步定时循环每个passportid调用用这个方法，计算好
+    def getMatchedActivityIdList(self, activityList=None, longitude="", latitude="", forceRefreshCache=False):  # todo 搞个离线脚本，异步定时循环每个passportid调用用这个方法，计算好
         """
         1. 按照邀请状态，以及时间倒排序
         2. 筛选掉不符合邀请人期望的
         """
+        # 异步任务调用时，会强制刷新缓存，并且会对每个用户都传进来可能的活动。
+        # 接口调用时，如果异步计算的缓存没有命中，就会根据用户当前的经纬度进行一个位置匹配查询可能的活动。
         if activityList is None:
             activityList = self.getActivityList(longitude, latitude)
-        if userMap is None:
-            oppositePassportIds = [a.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else a.boy_passport_id for a in activityList]
-            userMap = self.getUserMap(list(set(oppositePassportIds)))
         # 筛选掉不符合邀请人期望的
-        matchedActivityIdList = []
-        for a in activityList:
-            if self.match(a, userMap):
-                matchedActivityIdList.append(a.id)
-
-        return matchedActivityIdList
+        activityIdMapRequirement = self.getRequirementMap(activityList)
+        return self.filterActivityIdList(activityList, activityIdMapRequirement)
 
     def getLimitMatchedActivityList(self, activityIds, limit=20):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)

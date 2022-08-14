@@ -52,7 +52,7 @@ OP_TYPE_STUDY_REGION_PERIOD = 'updateStudyRegionPeriod'
 OP_TYPE_HOME_REGION = 'updateHomeRegion'
 OP_TYPE_STUDY_REGION = 'updateStudyRegion'
 # CHOICE_LIST and DEFAULT_INDEX
-VERIFY_CHOICE_LIST = [u"不要求认证", u"教育或工作认证", u"教育认证", u"工作认证"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
+VERIFY_CHOICE_LIST = [u"不要求认证", u"教育认证", u"工作认证"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
 DEFAULT_VERIFY_INDEX = 0
 
 SEX_CHOICE_LIST = [u"未知", u"男", u"女"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标

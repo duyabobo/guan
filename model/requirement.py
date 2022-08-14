@@ -44,6 +44,10 @@ class RequirementModel(BaseModel):
         return getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
+    def getByPassportIds(cls, passportIds):
+        return getDbSession().query(cls).filter(cls.passport_id.in_(passportIds), cls.status == match.MODEL_STATUS_YES)
+
+    @classmethod
     def addByPassportId(cls, passportId):
         user = cls(
             passport_id=passportId,

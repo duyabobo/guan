@@ -8,10 +8,11 @@ from sqlalchemy import func
 from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
+from model.verify import VerifyModel
 from ral.cache import checkCache
 from util.const import match
 from util.const.base import ALL_STR
-from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
+from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_MAIL_TYPE_UNKNOWN
 from util.ctx import getDbSession
 
 
@@ -59,6 +60,11 @@ class UserModel(BaseModel):
     def updateByPassportId(cls, passportId=0, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
+
+    @property
+    def verify_type(self):
+        verify = VerifyModel.getByPassportId(self.passport_id)
+        return verify.mail_type if verify else MODEL_MAIL_TYPE_UNKNOWN
 
     @property
     def sexIndex(self):
