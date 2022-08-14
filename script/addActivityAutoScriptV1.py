@@ -14,13 +14,9 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current_dir))
 from model.activity import ActivityModel
 from model.address import AddressModel
-from util.database import engine
 
 
 class ActivityAutoCreater(object):
-    def __init__(self):
-        self.dbSession = sessionmaker(bind=engine)()
-
     def hasFreeActivity(self):
         return bool(ActivityModel.getLastFreeActivity())
 

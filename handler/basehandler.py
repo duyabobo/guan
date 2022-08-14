@@ -29,7 +29,7 @@ def packaging_response_data(fn):
         # 不管是否异步函数都统一用request_context封装
         wrap_self.dbSession.__enter__ = lambda: None
         wrap_self.dbSession.__exit__ = lambda type, value, traceback: None
-        with LocalContext(lambda: wrap_):
+        with LocalContext(lambda: wrap_self.dbSession):
             ret = fn(*args, **kwargs)
         return ret
     return _wrap

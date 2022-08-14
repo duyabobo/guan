@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 # 利用tornado的 StackContext，构造一个线程全局变量栈。
 # 主要解决每次请求都可以随时使用到同一个 dbSession 和 redisConn。
-
+from sqlalchemy.orm import sessionmaker
 from tornado.stack_context import StackContext, _state
+
+from util.database import engine
 
 
 class LocalContext(StackContext):
@@ -27,4 +29,7 @@ class LocalContext(StackContext):
 
 
 def getDbSession():
-    return LocalContext.current_data()
+    dbSession = LocalContext.current_data()
+    if not dbSession:
+        dbSession = sessionmaker(bind=engine)()
+    return dbSession
