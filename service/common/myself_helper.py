@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 from model.region import RegionModel
 from model.verify import VerifyModel
-from ral.education import setEducationIdAfterColumnChange, delEducationIdAfterConfirm
-from service.common.multi_picker_helper import EducationHelper
+from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
+from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
@@ -27,6 +27,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_HOME_REGION,
         OP_TYPE_STUDY_REGION,
         OP_TYPE_EDUCATION_MULTI,
+        OP_TYPE_WORK_REGION,
         OP_TYPE_WORK_MULTI,
         OP_TYPE_MARTIAL_STATUS,
     ],
@@ -36,7 +37,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
         OP_TYPE_HOME_REGION,
-        OP_TYPE_STUDY_REGION,
+        OP_TYPE_STUDY_REGION,  # todo 入学年份
         OP_TYPE_EDUCATION_MULTI,
         OP_TYPE_MARTIAL_STATUS,
     ],
@@ -47,8 +48,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_WEIGHT,
         OP_TYPE_MONTH_PAY,
         OP_TYPE_HOME_REGION,
-        OP_TYPE_STUDY_REGION,
-        OP_TYPE_EDUCATION_MULTI,
+        OP_TYPE_WORK_REGION,
         OP_TYPE_WORK_MULTI,
         OP_TYPE_MARTIAL_STATUS,
     ]
@@ -97,13 +97,13 @@ class UserHelper(object):
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
-            updateParams['education_id'] = EducationHelper.getDefaultEducationId(study_region_id)
+            updateParams['education_id'] = MultiPickerHelper(None, opType).getDefaultId(study_region_id)
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = EducationHelper(self.user.study_region).\
+            updateParams['education_id'] = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterConfirm(self.user.education, value)
-            delEducationIdAfterConfirm(self.user.passport_id)
+            delDataIdAfterConfirm(opType, self.user.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            education_id = EducationHelper(self.user.study_region).\
+            education_id = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterColumnChanged(self.user, column, value)
-            setEducationIdAfterColumnChange(self.user.passport_id, education_id)
+            setDataIdAfterColumnChange(opType, self.user.passport_id, education_id)
         return updateParams

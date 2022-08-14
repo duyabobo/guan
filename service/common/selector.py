@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from service.common.multi_picker_helper import EducationHelper
-from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+from service.common.multi_picker_helper import MultiPickerHelper
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
@@ -52,8 +51,12 @@ def selectorFactory(op_type, data, checkDynamicData):
         return MultiSelector("税前月收入", data.min_month_pay, data.max_month_pay, op_type, "(元)")
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         education = data.school, data.level, data.major
-        educationDynamic = EducationHelper(data.study_region).getEducationFromDynamic(data, checkDynamicData)
+        educationDynamic = MultiPickerHelper(data.study_region, op_type).getDataFromDynamic(data, checkDynamicData)
         return MultiSelectorExtra("教育信息", data.study_region, education, educationDynamic, op_type)
+    elif op_type == OP_TYPE_WORK_MULTI:
+        work = data.profession, data.industry, data.position
+        workDynamic = MultiPickerHelper(data.study_region, op_type).getDataFromDynamic(data, checkDynamicData)
+        return MultiSelectorExtra("工作信息", data.work_region, work, workDynamic, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
         return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_WORK_REGION_PERIOD:
@@ -157,9 +160,10 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
-        self.multiChoiceList = EducationHelper(zeroValue).getMultiChoiceList(firstValue, secondValue, thirdValue)  # todo 以后扩展，根据bindChange进行工厂函数扩展
+        multiPickerHelper = MultiPickerHelper(zeroValue, bindChange)
+        self.multiChoiceList = multiPickerHelper.getMultiChoiceList(firstValue, secondValue, thirdValue)
         self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
-        self.hasFilled = [self.firstValue] != DEFAULT_EDUCATION_MULTI_CHOICE_LIST  # 当前值是否已完善
+        self.hasFilled = self.firstValue != ALL_STR  # 当前值是否已完善
 
 
 class RegionSelector(object):  # 省市区选择器

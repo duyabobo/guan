@@ -2,17 +2,43 @@
 # -*- coding: utf-8 -*-
 from model.education import EducationModel
 from model.region import RegionModel
-from ral.education import getEducationIdAfterColumnChange
+from model.work import WorkModel
+from ral.multi_picker import getDataIdAfterColumnChange
 from util.const.base import ALL_STR
-from util.const.education import DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+from util.const.education import DEFAULT_MULTI_CHOICE_LIST
+from util.const.match import OP_TYPE_EDUCATION_MULTI, OP_TYPE_WORK_MULTI
+
+multi_picker_config = {
+    OP_TYPE_EDUCATION_MULTI: {
+        "model": EducationModel,
+        "dataName": "education",
+        "firstName": "school",
+        "secondName": "level",
+        "thirdName": "major"
+    },
+    OP_TYPE_WORK_MULTI: {
+        "model": WorkModel,
+        "dataName": "work",
+        "firstName": "school",
+        "secondName": "level",
+        "thirdName": "major"
+    }
+}
 
 
-class MultiPickerHelper(object):  # 扩展用
-    def __init__(self, zeroValue):
+class MultiPickerHelperABC(object):  # 扩展用
+    def __init__(self, region, opType):
         """
-        zeroValue是用来计算firstValue的
+        region是用来计算firstValue的
         """
-        self.zeroValue = zeroValue
+        self.region = region
+        self.opType = opType
+        config = multi_picker_config[opType]
+        self.dataName = config['dataName']   # education/work
+        self.model = config['model']  # EducationModel/WorkModel
+        self.firstName = config['firstName']  # school/profession
+        self.secondName = config['secondName']  # level/industry
+        self.thirdName = config['thirdName']  # major/position
 
     def getMultiChoiceList(self, firstValue, secondValue, thirdValue):  # 查询多重选择列表
         """返回一个长度3的二维数组"""
@@ -28,31 +54,34 @@ class MultiPickerHelper(object):  # 扩展用
         return 0
 
 
-class EducationHelper(MultiPickerHelper):
+class MultiPickerHelper(MultiPickerHelperABC):
 
-    @classmethod
-    def getDefaultEducationId(cls, study_region_id):
-        return EducationModel.getIdByEducation(study_region_id, ALL_STR, ALL_STR, ALL_STR)
+    def getDefaultId(self, region_id):
+        return self.model.getIdByData(region_id, ALL_STR, ALL_STR, ALL_STR)
 
-    def getEducationFromDynamic(self, data, checkDynamicData):
+    def getDataFromDynamic(self, data, checkDynamicData):
         """结合缓存和数据库，返回用户选择器数据"""
-        school, level, major = ALL_STR, ALL_STR, ALL_STR
-        if data.education:
-            school, level, major = data.education.school, data.education.level, data.education.major
+        # 默认值
+        firstValue, secondValue, thirdValue = ALL_STR, ALL_STR, ALL_STR
+        # 不需要查询动态数据（用户修改了选择器，但是没有提交确认，这些数据缓存在redis，称为动态数据）
+        pickerData = getattr(data, self.dataName)
+        if pickerData:
+            firstValue, secondValue, thirdValue = getattr(pickerData, self.firstName), getattr(pickerData, self.secondName), getattr(pickerData, self.thirdName)
         if not checkDynamicData:
-            return school, level, major
-        educationId = getEducationIdAfterColumnChange(data.passport_id)
-        if not educationId:
-            return school, level, major
-        education = EducationModel.getById(educationId)
-        if not education:
-            return school, level, major
-        return education.school, education.level, education.major
+            return firstValue, secondValue, thirdValue
+        # 需要查询动态数据
+        dataId = getDataIdAfterColumnChange(self.opType, data.passport_id)
+        if not dataId:
+            return firstValue, secondValue, thirdValue
+        pickerData = self.model.getById(dataId)
+        if pickerData:
+            firstValue, secondValue, thirdValue = getattr(pickerData, self.firstName), getattr(pickerData, self.secondName), getattr(pickerData, self.thirdName)
+        return firstValue, secondValue, thirdValue
 
-    def getSchoolChoiceList(self):
-        province = self.zeroValue.province
-        city = self.zeroValue.city
-        area = self.zeroValue.area
+    def getFirstChoiceList(self):
+        province = self.region.province
+        city = self.region.city
+        area = self.region.area
 
         if city == ALL_STR:  # 只选择了省份
             regions = RegionModel.listByProvince(province)
@@ -61,86 +90,89 @@ class EducationHelper(MultiPickerHelper):
         else:  # 选择了省市区
             regions = RegionModel.listByProvinceAndCityAndArea(province, city, area)
 
-        schoolChoiceList = []
-        # 学校选择列表
+        firstChoiceList = []
+        # 一级选择列表
         regionIds = [r.id for r in regions]
         if regionIds:
-            schools = EducationModel.getSchoolsByRegionIds(regionIds)
-            _schoolSet = set()
-            for s in schools:
-                if s.school not in _schoolSet:
-                    _schoolSet.add(s.school)
-                    schoolChoiceList.append(s.school)
-        return schoolChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+            _firsts = self.model.getFirstsByRegionids(regionIds)
+            _firstSet = set()
+            for _f in _firsts:
+                f = getattr(_f, self.firstName)
+                if f not in _firstSet:
+                    _firstSet.add(f)
+                    firstChoiceList.append(f)
+        return firstChoiceList or DEFAULT_MULTI_CHOICE_LIST
 
-    def getLevelChoiceList(self, school, schoolChoiceList):
-        # 学历列表
-        levelChoiceList = []
-        if school in schoolChoiceList:  # 没有修改城市
-            levels = EducationModel.getLevelsBySchool(school)
-            _levelSet = set()
-            for l in levels:
-                if l.level not in _levelSet:
-                    _levelSet.add(l.level)
-                    levelChoiceList.append(l.level)
-        return levelChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+    def getSecondChoiceList(self, first, firstChoiceList):
+        # 二级列表
+        secondChoiceList = []
+        if first in firstChoiceList:  # 没有修改城市
+            _seconds = self.model.getSecondsByFirst(first)
+            _secondSet = set()
+            for _s in _seconds:
+                s = getattr(_s, self.secondName)
+                if s not in _secondSet:
+                    _secondSet.add(s)
+                    secondChoiceList.append(s)
+        return secondChoiceList or DEFAULT_MULTI_CHOICE_LIST
 
-    def getMajorChoiceList(self, school, level, levelChoiceList):
-        # 专业列表
-        majorChoiceList = []
-        if level in levelChoiceList:
-            majors = EducationModel.getMajorsBySchoolAndLevel(school, level)
-            _majorSet = set()
-            for m in majors:
-                if m.major not in _majorSet:
-                    _majorSet.add(m.major)
-                    majorChoiceList.append(m.major)
-        return majorChoiceList or DEFAULT_EDUCATION_MULTI_CHOICE_LIST
+    def getThirdChoiceList(self, first, second, secondChoiceList):
+        # 三级列表
+        thirdChoiceList = []
+        if second in secondChoiceList:
+            _thirds = self.model.getThirdsByFirstAndSecond(first, second)
+            _thirdSet = set()
+            for _t in _thirds:
+                t = getattr(_t, self.thirdName)
+                if t not in _thirdSet:
+                    _thirdSet.add(t)
+                    thirdChoiceList.append(t)
+        return thirdChoiceList or DEFAULT_MULTI_CHOICE_LIST
 
-    def getMultiChoiceList(self, school, level, major):
-        if not self.zeroValue or self.zeroValue.province == ALL_STR:  # 省份都没选择，不让选择学校
-            return [DEFAULT_EDUCATION_MULTI_CHOICE_LIST] * 3
+    def getMultiChoiceList(self, firstValue, secondValue, thirdValue):
+        if not self.region or self.region.province == ALL_STR:  # 省份都没选择，不让选择多重选择数据
+            return [DEFAULT_MULTI_CHOICE_LIST] * 3
 
-        schoolChoiceList = self.getSchoolChoiceList()
-        levelChoiceList = self.getLevelChoiceList(school, schoolChoiceList)
-        majorChoiceList = self.getMajorChoiceList(school, level, levelChoiceList)
-        return [schoolChoiceList, levelChoiceList, majorChoiceList]
+        firstChoiceList = self.getFirstChoiceList()
+        secondChoiceList = self.getSecondChoiceList(firstValue, firstChoiceList)
+        thirdChoiceList = self.getThirdChoiceList(firstValue, secondValue, secondChoiceList)
+        return [firstChoiceList, secondChoiceList, thirdChoiceList]
 
-    def getChoiceIdAfterConfirm(self, oldEducationValue, choiceIndexList):
-        choiceId = oldEducationValue.id if oldEducationValue else 0
+    def getChoiceIdAfterConfirm(self, oldValue, choiceIndexList):
+        choiceId = oldValue.id if oldValue else 0
 
-        schoolIndex, levelIndex, majorIndex = choiceIndexList
-        if schoolIndex < 0 or levelIndex < 0 or majorIndex < 0:
+        firstIndex, secondIndex, thirdIndex = choiceIndexList
+        if firstIndex < 0 or secondIndex < 0 or thirdIndex < 0:
             return choiceId
-        # 查询选择的学校值
-        schoolChoiceList = self.getSchoolChoiceList()
-        if schoolIndex >= len(schoolChoiceList):
+        # 查询选择的一级数据值
+        firstChoiceList = self.getFirstChoiceList()
+        if firstIndex >= len(firstChoiceList):
             return choiceId
-        school = schoolChoiceList[schoolIndex]
-        # 查询选择的学历值
-        levelChoiceList = self.getLevelChoiceList(school, schoolChoiceList)
-        if levelIndex >= len(levelChoiceList):
+        firstValue = firstChoiceList[firstIndex]
+        # 查询选择的二级值
+        secondChoiceList = self.getSecondChoiceList(firstValue, firstChoiceList)
+        if secondIndex >= len(secondChoiceList):
             return choiceId
-        level = levelChoiceList[levelIndex]
-        # 查询选择的专业值
-        majorChoiceList = self.getMajorChoiceList(school, level, levelChoiceList)
-        if majorIndex >= len(majorChoiceList):
+        secondValue = secondChoiceList[secondIndex]
+        # 查询选择的三级值
+        thirdChoiceList = self.getThirdChoiceList(firstValue, secondValue, secondChoiceList)
+        if thirdIndex >= len(thirdChoiceList):
             return choiceId
-        major = majorChoiceList[majorIndex]
+        thirdValue = thirdChoiceList[thirdIndex]
 
-        return EducationModel.getIdByEducation(self.zeroValue.id, school, level, major)
+        return self.model.getIdByData(self.region.id, firstValue, secondValue, thirdValue)
 
     def getChoiceIdAfterColumnChanged(self, data, column, choiceValueIndex):
-        school, level, major = self.getEducationFromDynamic(data, checkDynamicData=True)
-        schoolChoiceList, levelChoiceList, majorChoiceList = self.getMultiChoiceList(school, level, major)
-        if column == 0 and choiceValueIndex < len(schoolChoiceList):  # 修改了学校
-            school = schoolChoiceList[choiceValueIndex]
-            level = ALL_STR
-            major = ALL_STR
-        elif column == 1 and choiceValueIndex < len(levelChoiceList):  # 修改了学历
-            level = levelChoiceList[choiceValueIndex]
-            major = ALL_STR
-        elif column == 2 and choiceValueIndex < len(majorChoiceList):  # 修改了专业
-            major = majorChoiceList[choiceValueIndex]
+        firstValue, secondValue, thirdValue = self.getDataFromDynamic(data, checkDynamicData=True)
+        firstChoiceList, secondChoiceList, thirdChoiceList = self.getMultiChoiceList(firstValue, secondValue, thirdValue)
+        if column == 0 and choiceValueIndex < len(firstChoiceList):  # 修改了学校
+            firstValue = firstChoiceList[choiceValueIndex]
+            secondValue = ALL_STR
+            thirdValue = ALL_STR
+        elif column == 1 and choiceValueIndex < len(secondChoiceList):  # 修改了学历
+            secondValue = secondChoiceList[choiceValueIndex]
+            thirdValue = ALL_STR
+        elif column == 2 and choiceValueIndex < len(thirdChoiceList):  # 修改了专业
+            thirdValue = thirdChoiceList[choiceValueIndex]
 
-        return EducationModel.getIdByEducation(self.zeroValue.id, school, level, major)
+        return self.model.getIdByData(self.region.id, firstValue, secondValue, thirdValue)
