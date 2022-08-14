@@ -37,14 +37,14 @@ class ActivityModel(BaseModel):
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now(),
             cls.state.in_([MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING])
-        ).order_by(cls.state.desc(), cls.start_time.asc()).all()
+        )
 
     @classmethod
     def listActivity(cls, activityIds, limit, exceptPassportId):
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES, cls.id.in_(activityIds),
             cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId
-        )
+        ).order_by(cls.state.desc(), cls.start_time.asc()).limit(limit)
 
     @classmethod
     def getById(cls, activityId):

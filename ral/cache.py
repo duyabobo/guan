@@ -24,7 +24,7 @@ def checkInconsistentCache(prefix, ex=60):
     return wrap
 
 
-def getCache(key, *args, **kwargs):
+def getCacheKey(key, *args, **kwargs):
     _self = args[0]
     params = re.split('[{}]', key)
     _kwargs = copy.deepcopy(kwargs)
@@ -45,16 +45,16 @@ def checkCache(key, ex=3600):
     def wrap(fn):
         def __inner__(*args, **kwargs):
             forceRefreshCache = kwargs.get("forceRefreshCache", False)
-            cache = getCache(key, *args, **kwargs)
-            if cache and not forceRefreshCache:
-                val = redisConn.get(cache)
+            cacheKey = getCacheKey(key, *args, **kwargs)
+            if cacheKey and not forceRefreshCache:
+                val = redisConn.get(cacheKey)
                 if val is not None:  # 缓存查询到数据
                     return pickle.loads(val)
 
             ret = fn(*args, **kwargs)
             val = pickle.dumps(ret)
-            if cache:
-                redisConn.set(cache, val, ex=ex)
+            if cacheKey:
+                redisConn.set(cacheKey, val, ex=ex)
             return ret
         return __inner__
     return wrap
@@ -65,9 +65,9 @@ def deleteCache(keys):
     def wrap(fn):
         def __inner__(*args, **kwargs):
             for key in keys:
-                cache = getCache(key, *args, **kwargs)
-                if cache:
-                    redisConn.delete(cache)
+                cacheKey = getCacheKey(key, *args, **kwargs)
+                if cacheKey:
+                    redisConn.delete(cacheKey)
             return fn(*args, **kwargs)
         return __inner__
     return wrap

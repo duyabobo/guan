@@ -72,11 +72,13 @@ class GuanguanService(BaseService):
         activityIdMapPassportId = {a.id: getPid(a) for a in activityList}
         return {aid: passportIdMapRequirement.get(activityIdMapPassportId[aid], None) for aid in activityIdMapPassportId}
 
-    def filterActivityIdList(self, activityList, activityIdMapRequirement):
+    def filterActivityIdList(self, activityList):
         """筛选匹配满足的"""
+        activityIdMapRequirement = self.getRequirementMap(activityList)
         matchedActivityIdList = []
         for a in activityList:
-            if self.match(activityIdMapRequirement.get(a.id, None)):
+            requirement = activityIdMapRequirement.get(a.id, None)
+            if self.match(requirement):
                 matchedActivityIdList.append(a.id)
         return matchedActivityIdList
 
@@ -102,8 +104,7 @@ class GuanguanService(BaseService):
         if activityList is None:
             activityList = self.getActivityList(longitude, latitude)
         # 筛选掉不符合邀请人期望的
-        activityIdMapRequirement = self.getRequirementMap(activityList)
-        return self.filterActivityIdList(activityList, activityIdMapRequirement)
+        return self.filterActivityIdList(activityList)
 
     def getLimitMatchedActivityList(self, activityIds, limit=20):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
