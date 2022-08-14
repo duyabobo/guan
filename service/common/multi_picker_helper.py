@@ -26,9 +26,9 @@ work_config = {
 
 multi_picker_config = {
     OP_TYPE_EDUCATION_MULTI: education_config,
-    OP_TYPE_WORK_MULTI_COLUMN_CHANGE: education_config,
+    OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE: education_config,
+    OP_TYPE_WORK_MULTI_COLUMN_CHANGE: work_config,
     OP_TYPE_WORK_MULTI: work_config,
-    OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE: work_config,
 }
 
 
@@ -73,7 +73,7 @@ class MultiPickerHelper(MultiPickerHelperABC):
         if not checkDynamicData:
             return firstValue, secondValue, thirdValue
         # 需要查询动态数据
-        dataId = getDataIdAfterColumnChange(self.opType, data.passport_id)
+        dataId = getDataIdAfterColumnChange(self.dataName, data.passport_id)
         if not dataId:
             return firstValue, secondValue, thirdValue
         pickerData = self.model.getById(dataId)
@@ -168,14 +168,14 @@ class MultiPickerHelper(MultiPickerHelperABC):
     def getChoiceIdAfterColumnChanged(self, data, column, choiceValueIndex):
         firstValue, secondValue, thirdValue = self.getDataFromDynamic(data, checkDynamicData=True)
         firstChoiceList, secondChoiceList, thirdChoiceList = self.getMultiChoiceList(firstValue, secondValue, thirdValue)
-        if column == 0 and choiceValueIndex < len(firstChoiceList):  # 修改了学校
+        if column == 0 and choiceValueIndex < len(firstChoiceList):  # 修改了一级对象
             firstValue = firstChoiceList[choiceValueIndex]
             secondValue = ALL_STR
             thirdValue = ALL_STR
-        elif column == 1 and choiceValueIndex < len(secondChoiceList):  # 修改了学历
+        elif column == 1 and choiceValueIndex < len(secondChoiceList):  # 修改了二级
             secondValue = secondChoiceList[choiceValueIndex]
             thirdValue = ALL_STR
-        elif column == 2 and choiceValueIndex < len(thirdChoiceList):  # 修改了专业
+        elif column == 2 and choiceValueIndex < len(thirdChoiceList):  # 修改了三级
             thirdValue = thirdChoiceList[choiceValueIndex]
 
         return self.model.getIdByData(self.region.id, firstValue, secondValue, thirdValue)

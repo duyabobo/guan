@@ -24,12 +24,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
-        OP_TYPE_MONTH_PAY,
         OP_TYPE_HOME_REGION,
-        OP_TYPE_STUDY_REGION,
-        OP_TYPE_EDUCATION_MULTI,
-        OP_TYPE_WORK_REGION,
-        OP_TYPE_WORK_MULTI,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
@@ -95,6 +90,8 @@ class UserHelper(object):
             updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
         elif opType == OP_TYPE_HOME_REGION:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
+        elif opType == OP_TYPE_WORK_REGION:
+            updateParams['work_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
@@ -102,9 +99,9 @@ class UserHelper(object):
         elif opType == OP_TYPE_EDUCATION_MULTI:
             updateParams['education_id'] = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterConfirm(self.user.education, value)
-            delDataIdAfterConfirm(opType, self.user.passport_id)
+            delDataIdAfterConfirm("education", self.user.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
             education_id = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterColumnChanged(self.user, column, value)
-            setDataIdAfterColumnChange(opType, self.user.passport_id, education_id)
+            setDataIdAfterColumnChange("education", self.user.passport_id, education_id)
         return updateParams
