@@ -25,6 +25,9 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
         OP_TYPE_HOME_REGION,
+        OP_TYPE_STUDY_REGION,
+        OP_TYPE_EDUCATION_MULTI,
+        OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
@@ -33,8 +36,9 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_HEIGHT,
         OP_TYPE_WEIGHT,
         OP_TYPE_HOME_REGION,
-        OP_TYPE_STUDY_REGION,  # todo 入学年份
+        OP_TYPE_STUDY_REGION,
         OP_TYPE_EDUCATION_MULTI,
+        OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_MARTIAL_STATUS,
     ],
     MODEL_MAIL_TYPE_WORK: [

@@ -67,6 +67,10 @@ def selectorFactory(op_type, data, checkDynamicData):
         return RegionSelector("籍贯", data.home_region, op_type)
     elif op_type == OP_TYPE_WORK_REGION:
         return RegionSelector("工作地址", data.work_region, op_type)
+    elif op_type == OP_TYPE_STUDY_FROM_YEAR:
+        return SingleSelector("入学时间", data.study_from_year, op_type)
+    elif op_type == OP_TYPE_STUDY_FROM_YEAR_PERIOD:
+        return MultiSelector("入学时间区间", data.min_study_from_year, data.max_study_from_year, op_type)
     elif op_type == OP_TYPE_STUDY_REGION:
         return RegionSelector("学校地址", data.study_region, op_type)
 
