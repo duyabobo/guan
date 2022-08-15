@@ -3,6 +3,7 @@
 from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
+from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.selector import selectorFactory
@@ -68,10 +69,12 @@ class RequirementHelper(object):
 
     def getUpdateParams(self, opType, value, column=None):
         updateParams = {}
+        # 单项选择器类型
         if opType == OP_TYPE_VERIFY:
             updateParams['verify_type'] = value
         elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             updateParams['sex'] = value
+        # 双项选择器类型
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
             updateParams['max_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[1]]
@@ -86,20 +89,35 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_MONTH_PAY_PERIOD:
             updateParams['min_month_pay'] = MONTH_PAY_CHOICE_LIST[value[0]]
             updateParams['max_month_pay'] = MONTH_PAY_CHOICE_LIST[value[1]]
+        elif opType == OP_TYPE_STUDY_FROM_YEAR_PERIOD:
+            updateParams['min_study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value[0]]
+            updateParams['max_study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value[1]]
+        # region地址选择器类型
         elif opType == OP_TYPE_HOME_REGION_PERIOD:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
-        elif opType == OP_TYPE_WORK_REGION_PERIOD:
-            updateParams['work_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
             updateParams['education_id'] = EducationModel.getIdByData(study_region_id, ALL_STR, ALL_STR, ALL_STR)
+        elif opType == OP_TYPE_WORK_REGION_PERIOD:
+            work_region_id = RegionModel.getIdByRegion(*value)
+            updateParams['work_region_id'] = work_region_id
+            updateParams['work_id'] = WorkModel.getIdByData(work_region_id, ALL_STR, ALL_STR, ALL_STR)
+        # 三项选择器类型
         elif opType == OP_TYPE_EDUCATION_MULTI:
             updateParams['education_id'] = MultiPickerHelper(self.requirement.study_region, opType).\
                 getChoiceIdAfterConfirm(self.requirement.education, value)
-            delDataIdAfterConfirm("education", self.requirement.passport_id)
+            delDataIdAfterConfirm(opType, self.requirement.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
             education_id = MultiPickerHelper(self.requirement.study_region, opType).\
                 getChoiceIdAfterColumnChanged(self.requirement, column, value)
-            setDataIdAfterColumnChange("education", self.requirement.passport_id, education_id)
+            setDataIdAfterColumnChange(opType, self.requirement.passport_id, education_id)
+        elif opType == OP_TYPE_WORK_MULTI:
+            updateParams['work_id'] = MultiPickerHelper(self.requirement.work_region, opType).\
+                getChoiceIdAfterConfirm(self.requirement.education, value)
+            delDataIdAfterConfirm(opType, self.requirement.passport_id)
+        elif opType == OP_TYPE_WORK_MULTI_COLUMN_CHANGE:
+            work_id = MultiPickerHelper(self.requirement.work_region, opType).\
+                getChoiceIdAfterColumnChanged(self.requirement, column, value)
+            setDataIdAfterColumnChange(opType, self.requirement.passport_id, work_id)
         return updateParams

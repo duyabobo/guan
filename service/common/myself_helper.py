@@ -3,6 +3,7 @@
 from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
+from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.selector import selectorFactory
@@ -80,6 +81,7 @@ class UserHelper(object):
 
     def getUpdateParams(self, opType, value, column=None):
         updateParams = {}
+        # 单项选择器
         if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             updateParams['sex'] = value
         elif opType == OP_TYPE_BIRTH_YEAR:
@@ -92,20 +94,34 @@ class UserHelper(object):
             updateParams['weight'] = WEIGHT_CHOICE_LIST[value]
         elif opType == OP_TYPE_MONTH_PAY:
             updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
+        elif opType == OP_TYPE_STUDY_FROM_YEAR:
+            updateParams['study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value]
+        # region地址选择器类型
         elif opType == OP_TYPE_HOME_REGION:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
-        elif opType == OP_TYPE_WORK_REGION:
-            updateParams['work_region_id'] = RegionModel.getIdByRegion(*value)
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
             updateParams['education_id'] = EducationModel.getIdByData(study_region_id, ALL_STR, ALL_STR, ALL_STR)
+        elif opType == OP_TYPE_WORK_REGION:
+            work_region_id = RegionModel.getIdByRegion(*value)
+            updateParams['work_region_id'] = work_region_id
+            updateParams['work_id'] = WorkModel.getIdByData(work_region_id, ALL_STR, ALL_STR, ALL_STR)
+        # 三项选择器类型
         elif opType == OP_TYPE_EDUCATION_MULTI:
             updateParams['education_id'] = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterConfirm(self.user.education, value)
-            delDataIdAfterConfirm("education", self.user.passport_id)
+            delDataIdAfterConfirm(opType, self.user.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
             education_id = MultiPickerHelper(self.user.study_region, opType).\
                 getChoiceIdAfterColumnChanged(self.user, column, value)
-            setDataIdAfterColumnChange("education", self.user.passport_id, education_id)
+            setDataIdAfterColumnChange(opType, self.user.passport_id, education_id)
+        elif opType == OP_TYPE_WORK_MULTI:
+            updateParams['work_id'] = MultiPickerHelper(self.user.work_region, opType).\
+                getChoiceIdAfterConfirm(self.user.work, value)
+            delDataIdAfterConfirm(opType, self.user.passport_id)
+        elif opType == OP_TYPE_WORK_MULTI_COLUMN_CHANGE:
+            work_id = MultiPickerHelper(self.user.work_region, opType).\
+                getChoiceIdAfterColumnChanged(self.user, column, value)
+            setDataIdAfterColumnChange(opType, self.user.passport_id, work_id)
         return updateParams

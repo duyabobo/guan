@@ -1,35 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from model.education import EducationModel
 from model.region import RegionModel
-from model.work import WorkModel
-from ral.multi_picker import getDataIdAfterColumnChange
+from ral.multi_picker import getDataIdAfterColumnChange, getCacheKeyPrefix, multi_picker_config
 from util.const.base import ALL_STR
 from util.const.education import DEFAULT_MULTI_CHOICE_LIST
-from util.const.match import OP_TYPE_EDUCATION_MULTI, OP_TYPE_WORK_MULTI, OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE, OP_TYPE_WORK_MULTI_COLUMN_CHANGE
-
-education_config = {
-    "model": EducationModel,
-    "dataName": "education",
-    "firstName": "school",
-    "secondName": "level",
-    "thirdName": "major"
-}
-
-work_config = {
-    "model": WorkModel,
-    "dataName": "work",
-    "firstName": "profession",
-    "secondName": "industry",
-    "thirdName": "position"
-}
-
-multi_picker_config = {
-    OP_TYPE_EDUCATION_MULTI: education_config,
-    OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE: education_config,
-    OP_TYPE_WORK_MULTI_COLUMN_CHANGE: work_config,
-    OP_TYPE_WORK_MULTI: work_config,
-}
 
 
 class MultiPickerHelperABC(object):  # 扩展用
@@ -41,7 +15,7 @@ class MultiPickerHelperABC(object):  # 扩展用
         self.opType = opType
         config = multi_picker_config.get(opType, None)
         if config:
-            self.dataName = config['dataName']   # education/work
+            self.dataName = getCacheKeyPrefix(opType)   # education/work
             self.model = config['model']  # EducationModel/WorkModel
             self.firstName = config['firstName']  # school/profession
             self.secondName = config['secondName']  # level/industry

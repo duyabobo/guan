@@ -21,12 +21,17 @@ VALUE_TYPE_DICT = {
     OP_TYPE_STUDY_REGION_PERIOD: list,
     OP_TYPE_HOME_REGION: list,
     OP_TYPE_STUDY_REGION: list,
+    OP_TYPE_WORK_REGION: list,
     OP_TYPE_EDUCATION_MULTI: list,
+    OP_TYPE_WORK_MULTI: list,
     OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE: int,
+    OP_TYPE_STUDY_FROM_YEAR: int,
+    OP_TYPE_STUDY_FROM_YEAR_PERIOD: list,
 }
 
 
 def selectorFactory(op_type, data, checkDynamicData):
+    # 单项选择器
     if op_type == OP_TYPE_VERIFY:
         return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], op_type)
     elif op_type == OP_TYPE_SEX:
@@ -41,6 +46,9 @@ def selectorFactory(op_type, data, checkDynamicData):
         return SingleSelector("税前月收入", data.month_pay, op_type, "(元)")
     elif op_type == OP_TYPE_MARTIAL_STATUS:
         return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type)
+    elif op_type == OP_TYPE_STUDY_FROM_YEAR:
+        return SingleSelector("入学时间", data.study_from_year, op_type)
+    # 双项选择器
     elif op_type == OP_BIRTH_YEAR_PERIOD:
         return MultiSelector("出生年份区间", data.min_birth_year, data.max_birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT_PERIOD:
@@ -49,6 +57,9 @@ def selectorFactory(op_type, data, checkDynamicData):
         return MultiSelector("体重区间", data.min_weight, data.max_weight, op_type, "(kg)")
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
         return MultiSelector("税前月收入", data.min_month_pay, data.max_month_pay, op_type, "(元)")
+    elif op_type == OP_TYPE_STUDY_FROM_YEAR_PERIOD:
+        return MultiSelector("入学时间区间", data.min_study_from_year, data.max_study_from_year, op_type)
+    # 三项选择器
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         education = data.school, data.level, data.major
         educationDynamic = MultiPickerHelper(data.study_region, op_type).getDataFromDynamic(data, checkDynamicData)
@@ -57,22 +68,19 @@ def selectorFactory(op_type, data, checkDynamicData):
         work = data.profession, data.industry, data.position
         workDynamic = MultiPickerHelper(data.study_region, op_type).getDataFromDynamic(data, checkDynamicData)
         return MultiSelectorExtra("工作信息", data.work_region, work, workDynamic, op_type)
-    elif op_type == OP_TYPE_HOME_REGION_PERIOD:
-        return RegionSelector("籍贯范围", data.home_region, op_type)
-    elif op_type == OP_TYPE_WORK_REGION_PERIOD:
-        return RegionSelector("工作地址范围", data.work_region, op_type)
-    elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
-        return RegionSelector("学校地址范围", data.study_region, op_type)
+    # 地址选择器
     elif op_type == OP_TYPE_HOME_REGION:
         return RegionSelector("籍贯", data.home_region, op_type)
-    elif op_type == OP_TYPE_WORK_REGION:
-        return RegionSelector("工作地址", data.work_region, op_type)
-    elif op_type == OP_TYPE_STUDY_FROM_YEAR:
-        return SingleSelector("入学时间", data.study_from_year, op_type)
-    elif op_type == OP_TYPE_STUDY_FROM_YEAR_PERIOD:
-        return MultiSelector("入学时间区间", data.min_study_from_year, data.max_study_from_year, op_type)
+    elif op_type == OP_TYPE_HOME_REGION_PERIOD:
+        return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION:
         return RegionSelector("学校地址", data.study_region, op_type)
+    elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
+        return RegionSelector("学校地址范围", data.study_region, op_type)
+    elif op_type == OP_TYPE_WORK_REGION:
+        return RegionSelector("工作地址", data.work_region, op_type)
+    elif op_type == OP_TYPE_WORK_REGION_PERIOD:
+        return RegionSelector("工作地址范围", data.work_region, op_type)
 
 
 class SingleSelector(object):  # 单项选择器
