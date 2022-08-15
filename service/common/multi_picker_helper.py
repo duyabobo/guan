@@ -47,7 +47,7 @@ class MultiPickerHelper(MultiPickerHelperABC):
         if not checkDynamicData:
             return firstValue, secondValue, thirdValue
         # 需要查询动态数据
-        dataId = getDataIdAfterColumnChange(self.dataName, data.passport_id)
+        dataId = getDataIdAfterColumnChange(self.opType, data.passport_id)
         if not dataId:
             return firstValue, secondValue, thirdValue
         pickerData = self.model.getById(dataId)

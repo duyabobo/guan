@@ -32,7 +32,7 @@ MODEL_VERIFY_TYPE_NO_NEED_VERIFY = 0
 MODEL_VERIFY_TYPE_ALL_VERIFY = 1
 MODEL_VERIFY_TYPE_SCHOOL = 2
 MODEL_VERIFY_TYPE_WORK = 3
-# OP_TYPE_ENUMERATE  如果更改，需要同步小程序对应枚举
+# OP_TYPE_ENUMERATE  如果更改，需要同步小程序对应枚举。新增枚举类型，就是在这里增加，然后项目里其他用到枚举的地方都增加支持。最后小程序里对应增加同名的js方法。
 OP_TYPE_VERIFY = 'updateVerify'
 OP_TYPE_SEX = 'updateSex'
 OP_TYPE_BIRTH_YEAR = 'updateBirthYear'
