@@ -6,9 +6,9 @@ from model.requirement import RequirementModel
 from model.user import UserModel
 from ral.cache import checkCache
 from service import BaseService
+from service.common.match import MatchHelper
 from util.class_helper import lazy_property
-from util.const.base import ALL_STR
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_MAIL_TYPE_UNKNOWN
+from util.const.match import MODEL_SEX_MALE_INDEX
 from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
 
 
@@ -21,73 +21,6 @@ class GuanguanService(BaseService):
     @lazy_property
     def userInfo(self):
         return UserModel.getByPassportId(self.passportId)
-
-    def match(self, requirement):
-        """对比 requirement 和 self.userInfo，进行一个匹配与否的判断"""
-        # 1，如果 requirement为None，可以匹配
-        if requirement is None:
-            return True
-        # 2，未登录，全部返回匹配
-        if self.userInfo is None:
-            return True
-        # 3，对比 requirement的每一个字段，只有所有字段要求，当前用户都符合，才算匹配
-        # 性别
-        if self.userInfo.sex != requirement.sex:
-            return False
-        # 婚姻
-        if self.userInfo.martial_status != requirement.martial_status:
-            return False
-        # 出生年份
-        if self.userInfo.birth_year < requirement.min_birth_year or self.userInfo.birth_year > requirement.max_birth_year:
-            return False
-        # 身高
-        if self.userInfo.height < requirement.min_height or self.userInfo.height > requirement.max_height:
-            return False
-        # 体重
-        if self.userInfo.weight < requirement.min_weight or self.userInfo.weight > requirement.max_weight:
-            return False
-        # 月收入
-        if self.userInfo.month_pay < requirement.min_month_pay or self.userInfo.month_pay > requirement.max_month_pay:
-            return False
-        # 籍贯
-        if self.userInfo.home_province != requirement.home_province and requirement.home_province != ALL_STR:
-            return False
-        if self.userInfo.home_city != requirement.home_city and requirement.home_city != ALL_STR:
-            return False
-        if self.userInfo.home_area != requirement.home_area and requirement.home_area != ALL_STR:
-            return False
-        # 学校地址
-        if self.userInfo.study_province != requirement.study_province and requirement.study_province != ALL_STR:
-            return False
-        if self.userInfo.study_city != requirement.study_city and requirement.study_city != ALL_STR:
-            return False
-        if self.userInfo.study_area != requirement.study_area and requirement.study_area != ALL_STR:
-            return False
-        # 学校
-        if self.userInfo.school != requirement.school and requirement.school != ALL_STR:
-            return False
-        if self.userInfo.level != requirement.level and requirement.level != ALL_STR:
-            return False
-        if self.userInfo.major != requirement.major and requirement.major != ALL_STR:
-            return False
-        # 认证类型
-        if self.userInfo.verify_type != requirement.verify_type and requirement.verify_type != MODEL_MAIL_TYPE_UNKNOWN:
-            return False
-        # 工作地址
-        if self.userInfo.work_province != requirement.work_province and requirement.work_province != ALL_STR:
-            return False
-        if self.userInfo.work_city != requirement.work_city and requirement.work_city != ALL_STR:
-            return False
-        if self.userInfo.work_area != requirement.work_area and requirement.work_area != ALL_STR:
-            return False
-        # 职业
-        if self.userInfo.profession != requirement.profession and requirement.profession != ALL_STR:
-            return False
-        if self.userInfo.industry != requirement.industry and requirement.industry != ALL_STR:
-            return False
-        if self.userInfo.position != requirement.position and requirement.position != ALL_STR:
-            return False
-        return True
 
     def getRequirementMap(self, activityList):
         if not self.userInfo:
@@ -107,7 +40,7 @@ class GuanguanService(BaseService):
         matchedActivityIdList = []
         for a in activityList:
             requirement = activityIdMapRequirement.get(a.id, None)
-            if self.match(requirement):
+            if MatchHelper.match(self.userInfo, requirement):
                 matchedActivityIdList.append(a.id)
         return matchedActivityIdList
 

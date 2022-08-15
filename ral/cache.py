@@ -37,6 +37,21 @@ def getCacheKey(key, *args, **kwargs):
         return None
 
 
+def lock(key, failRet=None, ex=10):
+    """分布式锁"""
+    def wrap(fn):
+        def __inner__(*args, **kwargs):
+            cacheKey = getCacheKey(key, *args, **kwargs)
+            if redisConn.set(cacheKey, 1, nx=1, ex=ex):
+                ret = fn(*args, **kwargs)
+                redisConn.delete(cacheKey)
+                return ret
+            else:
+                return failRet
+        return __inner__
+    return wrap
+
+
 def checkCache(key, ex=3600):
     """
     需要一致性要求的缓存，需要配套deleteCache使用。

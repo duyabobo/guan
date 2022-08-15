@@ -5,8 +5,11 @@ import datetime
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
+from model.requirement import RequirementModel
 from model.user import UserModel
+from ral.cache import lock
 from service import BaseService
+from service.common.match import MatchHelper
 from service.common.myself_helper import UserHelper, INFORMATION_PAIR_LIST
 from service.myself import UserInfoService
 from util.class_helper import lazy_property
@@ -179,35 +182,63 @@ class GuanInfoService(BaseService):
     def hasOngoingActivity(self):
         return bool(ActivityModel.getOngoingActivity(self.passportId))
 
+    def matchCheck(self):
+        """是否匹配"""
+        if self.passport.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:
+            return False
+        if self.passport.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:
+            return False
+        invitePid = self.activityRecord.girl_passport_id if self.passport.sex == MODEL_SEX_MALE_INDEX else self.activityRecord.boy_passport_id
+        if not invitePid:
+            return True
+        requirement = RequirementModel.getByPassportId(invitePid)
+        if not requirement:
+            return True
+        return MatchHelper.match(self.passport, requirement)
+
+    @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)  # 加一个分布式锁
     def activityOprete(self, opType):
         """对活动进行操作"""
+        # 参加前检查
         uis = UserInfoService(self.passport)
         if not uis.userInfoIsFilled:
             return RESP_NEED_FILL_INFO
+        if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
+            return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
         if self.hasOngoingActivity and \
                 opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY
-
+        if opType == GUAN_INFO_OP_TYPE_JOIN and not self.matchCheck():
+            return RESP_JOIN_ACTIVITY_FAILED
+        # 操作执行结果入库
         updateParams = {}
+        whereParams = []
         if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:
             passportId = self.passportId
             if self.activityRecord.state == MODEL_ACTIVITY_STATE_EMPTY:
                 updateParams['state'] = MODEL_ACTIVITY_STATE_INVITING
+                whereParams.append(ActivityModel.state == MODEL_ACTIVITY_STATE_EMPTY)
             elif self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITING:
                 updateParams['state'] = MODEL_ACTIVITY_STATE_INVITE_SUCCESS
+                whereParams.append(ActivityModel.state == MODEL_ACTIVITY_STATE_INVITING)
         else:
             passportId = 0
             if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITING:
                 updateParams['state'] = MODEL_ACTIVITY_STATE_EMPTY
+                whereParams.append(ActivityModel.state == MODEL_ACTIVITY_STATE_INVITING)
             elif self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
                 updateParams['state'] = MODEL_ACTIVITY_STATE_INVITING
+                whereParams.append(ActivityModel.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS)
         if uis.userInfo.sexIndex == MODEL_SEX_MALE_INDEX:
             updateParams['boy_passport_id'] = passportId
         elif uis.userInfo.sexIndex == MODEL_SEX_FEMALE_INDEX:
             updateParams['girl_passport_id'] = passportId
-        ActivityModel.updateById(self.activityId, **updateParams)
+        ret = ActivityModel.updateById(self.activityId, *whereParams, **updateParams)
+        if not ret:
+            return RESP_JOIN_ACTIVITY_FAILED
         ActivityChangeRecordModel.addOne(self.activityId, self.passportId, opType)
+        # 重载一下活动信息
         self.reloadActivityRecord()
         return RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI

@@ -10,7 +10,7 @@ from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util.const import match
-from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING
+from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
 from util.util_time import datetime2str
@@ -36,13 +36,13 @@ class ActivityModel(BaseModel):
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now(),
-            cls.state.in_([MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING])
+            cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST)
         )
 
     @classmethod
     def listActivity(cls, activityIds, limit, exceptPassportId):
         return getDbSession().query(cls).filter(
-            cls.status == match.MODEL_STATUS_YES, cls.id.in_(activityIds),
+            cls.status == match.MODEL_STATUS_YES, cls.id.in_(activityIds), cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST),
             cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId
         ).order_by(cls.state.desc(), cls.start_time.asc()).limit(limit).all()
 
@@ -63,9 +63,10 @@ class ActivityModel(BaseModel):
         return CDN_QINIU_GIRL_HEAD_IMG if self.girl_passport_id else ""
 
     @classmethod
-    def updateById(cls, activityId, **updateParams):
-        getDbSession().query(cls).filter(cls.id == activityId).update(updateParams)
-        getDbSession().flush()
+    def updateById(cls, activityId, *whereParams, **updateParams):
+        ret = getDbSession().query(cls).filter(cls.id == activityId, *whereParams).update(updateParams)
+        getDbSession().commit()
+        return ret
 
     @classmethod
     def getOngoingActivity(cls, passportId):
