@@ -27,7 +27,10 @@ class GuanguanService(BaseService):
         # 1，如果 requirement为None，可以匹配
         if requirement is None:
             return True
-        # 2，对比 requirement的每一个字段，只有所有字段要求，当前用户都符合，才算匹配
+        # 2，未登录，全部返回匹配
+        if self.userInfo is None:
+            return True
+        # 3，对比 requirement的每一个字段，只有所有字段要求，当前用户都符合，才算匹配
         # 性别
         if self.userInfo.sex != requirement.sex:
             return False
@@ -87,6 +90,8 @@ class GuanguanService(BaseService):
         return True
 
     def getRequirementMap(self, activityList):
+        if not self.userInfo:
+            return {}
         getPid = lambda x: a.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else a.boy_passport_id
         passportIds = [getPid(a) for a in activityList]
         if not passportIds:
@@ -155,7 +160,8 @@ class GuanguanService(BaseService):
 
     def getGuanguanList(self, longitude, latitude):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
-        matchedActivityIdList = self.getMatchedActivityIdList(longitude=longitude, latitude=latitude)
+        forceRefreshCache = True if self.userInfo is None else False  # todo 未登录状态，可能有性能问题
+        matchedActivityIdList = self.getMatchedActivityIdList(longitude=longitude, latitude=latitude, forceRefreshCache=forceRefreshCache)
         matchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdList)
         # todo 按照经纬度，对matchedActivityList进行排序
         ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
