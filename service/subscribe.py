@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from tornado import gen
+
 from service import BaseService
 from util.const.mini_program import GUANINFO_SHORT_PAGE
 from util.wx_mini import WxHelper
@@ -13,6 +15,7 @@ class SubscribeService(BaseService):
         self.miniprogramState = miniprogram_state
         super(SubscribeService, self).__init__()
 
+    @gen.coroutine
     def sendActivityStartMsg(self):
         page = GUANINFO_SHORT_PAGE.format(guan_id=1)  # todo guan_id 需要查询
         data = {
@@ -29,4 +32,5 @@ class SubscribeService(BaseService):
               "value": "2022-02-22 14:00"
           }
         }
-        return WxHelper().sendSubscribeMsg(self.openId, self.templateId, page, data, self.miniprogramState)
+        yield WxHelper().sendSubscribeMsg(self.openId, self.templateId, page, data, self.miniprogramState)
+        return
