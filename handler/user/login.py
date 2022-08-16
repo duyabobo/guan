@@ -6,7 +6,7 @@ from handler.basehandler import BaseHandler
 from ral.passport import delSession
 from service.login import LoginService
 from util.const.response import RESP_NEED_LOGIN
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 from util.wx_mini import WxHelper
 
 
@@ -20,11 +20,11 @@ class LoginHandler(BaseHandler):
         jsCode = self.getRequestParameter('code')
         openid = WxHelper().getOpenidByCode(jsCode)
         if not openid:
-            return self.response(respNormal=RESP_NEED_LOGIN)
+            return Response(msg=RESP_NEED_LOGIN)
 
         accessToken, currentUserInfo = LoginService().login(openid)
-        return self.response(
-            respData={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
+        return Response(
+            data={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}
         )
 
     @superMonitor
@@ -32,4 +32,4 @@ class LoginHandler(BaseHandler):
         """用户退出登录
         """
         delSession(self.accessToken)
-        return self.response()
+        return Response()

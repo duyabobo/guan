@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
 from service.mine import MineService
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class MineHandler(BaseHandler):
@@ -15,10 +15,8 @@ class MineHandler(BaseHandler):
         hasLogin = False
         if self.accessToken:
             hasLogin = True
-        return self.response(
-            respData={
-                'headImg': headImg,
-                'hasLogin': hasLogin,
-                'mainGroupList': mainGroupList,
-            }
-        )
+        return Response(data={
+            'headImg': headImg,
+            'hasLogin': hasLogin,
+            'mainGroupList': mainGroupList,
+        })

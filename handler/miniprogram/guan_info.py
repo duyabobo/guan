@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
 from service.guan_info import GuanInfoService
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class GuanInfoHandler(BaseHandler):
@@ -11,7 +11,7 @@ class GuanInfoHandler(BaseHandler):
     def get(self):
         activityId = self.getRequestParameter('guanId', paraType=int)
         gis = GuanInfoService(activityId, self.currentPassport)
-        return self.response(gis.getGuanInfo())
+        return Response(data=gis.getGuanInfo())
 
     @superMonitor
     def put(self, *args, **kwargs):
@@ -19,4 +19,4 @@ class GuanInfoHandler(BaseHandler):
         opType = self.getRequestParameter('opType', paraType=int)
         gis = GuanInfoService(activityId, self.currentPassport)
         ret = gis.activityOprete(opType)
-        return self.response(gis.getGuanInfo(), respNormal=ret)
+        return Response(data=gis.getGuanInfo(), msg=ret)

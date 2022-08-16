@@ -4,6 +4,7 @@
 # __created_at__ = '2020/1/1'
 import functools
 import json
+import time
 
 import pika
 # 这个并发库, python3 自带, python2 需要: pip install futures
@@ -17,7 +18,7 @@ from ral import passport
 from util.const.base import EXCHANGE_NAME
 from util.const.response import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.ctx import LocalContext
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 from util.obj_util import object_2_dict
 
 
@@ -36,9 +37,9 @@ def packaging_response_data(fn):
 class BaseHandler(RequestHandler):
     def __init__(self, application, request, **kwargs):
         self.application = application
+        self.timestamp = time.time()
         self._accessToken = None
         self._sign = None
-        self._timestamp = None
         self._dbSession = None
         self._currentPassport = None
         self._mqConnection = None
@@ -97,6 +98,10 @@ class BaseHandler(RequestHandler):
         return self._accessToken
 
     @property
+    def secret(self):
+        return self.currentPassport.get('secret', 'secret')
+
+    @property
     def sign(self):
         """
         获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
@@ -106,17 +111,6 @@ class BaseHandler(RequestHandler):
             return self._sign
         self._sign = self.getRequestParameter('sign', None)
         return self._sign
-
-    @property
-    def timestamp(self):
-        """
-        获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
-        :return:
-        """
-        if hasattr(self, '_timestamp') and self._timestamp:
-            return self._timestamp
-        self._timestamp = self.getRequestParameter('timestamp', None)
-        return self._timestamp
 
     @property
     def currentPassport(self):
@@ -173,15 +167,16 @@ class BaseHandler(RequestHandler):
         except:
             return default
 
-    def response(self, respData=None, respNormal=RESP_OK):
+    def response(self, response):
+        respData = response.data
         if not respData:
             respData = {}
         resp = {
             'data': object_2_dict(respData),
         }
-        resp.update(respNormal)
+        resp.update(response.msg)
         self.write(json.dumps(resp))
-        self.finishDbOperation(respNormal)
+        self.finishDbOperation(response.msg)
         if self._mqConnection:
             self._mqConnection.close()
         return resp

@@ -1,87 +1,52 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
-import hashlib
-import time
+import functools
 
 from log import monitor_logger
-from util.const.response import RESP_TOP_MONITOR_ERROR
+from util.auth import Checker
+from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
 
 monitorLogger = monitor_logger('superMonitor')
 
 
-LOGIN_API = "/login"  # 白名单api，可以直接绕过签名校验
+class Response(object):
+    def __init__(self, data=None, msg=RESP_OK):
+        self.data = data
+        self.msg = msg
 
 
-class SignChecker(object):
-    def __init__(self, handler):
-        self.request = handler.request
-        self.token = handler.accessToken
-        self.sign = handler.sign
-        self.timestamp = handler.timestamp
-        self.currentPassportId = handler.currentPassportId
-
-    def checkSignWithoutToken(self):
-        # 登录接口签名验证
-        return hashlib.md5(self.timestamp).hexdigest().upper() == self.sign
-
-    def checkSignWithToken(self, requestContent):
-        if not self.currentPassportId:
-            return False
-        return hashlib.md5(requestContent).hexdigest().upper() == self.sign
-
-    @property
-    def signIsValid(self):
-        """
-        签名校验: 如果通过就返回true，如果不通过就返回false
-        """
-        # 必传参数校验
-        if not self.sign:
-            return False
-        if not self.timestamp:
-            return False
-
-        if time.time() - self.timestamp > 10:  # 10s前的请求
-            return False
-        # 防重放 todo
-
-        if self.request.path == LOGIN_API:  # 登录接口
-            return self.checkSignWithoutToken()
-
-        requestContent = '%s:%s' % (self.request.uri, self.request.body)
-        return self.checkSignWithToken(requestContent)
+def httpReturn(handler, response, err=None):
+    logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s, result: %s, error: %s' % \
+             (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(handler.request.body),
+              handler.accessToken, response.msg, err)
+    if err is None:
+        monitorLogger.info(logMsg)
+    else:
+        monitorLogger.exception(logMsg)
+    return handler.response(response)
 
 
-def superMonitor(method):
-    def wrapper(self, *args, **kwargs):
-        # if not SignChecker(self).signIsValid:
-        #     # 安全校验失败
-        #     resp = RESP_SIGN_INVALID
-        #     monitorLogger.error(
-        #         'method: %s, uri: %s, body: %s, accessToken: %s, result: %s' %
-        #         (self.request.method, str(self.request.uri), str(self.request.body),
-        #          self.accessToken, resp)
-        #     )
-        #     self.response(respNormal=resp)
-        #     return
+def superMonitor(func):
+    @functools.wraps(func)
+    def wrapper(handler, *args, **kwargs):
+        # 处理前校验
+        checker = Checker(handler)
         try:
-            start = time.time()
-            ret = method(self, *args, **kwargs)
-            end = time.time()
-            # 正常日志
-            monitorLogger.info(
-                'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s, ret: %s, request_time: %s' %
-                (self.currentPassportId, self.request.method, str(self.request.uri), str(self.request.body),
-                 self.accessToken, ret, (end - start))
-            )
+            pass
+            #checker.check()  todo
+        except Exception as e:  # 校验失败
+            checker.fail()
+            httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
             return
-        except Exception as e:
-            # 出错日志
-            resp = RESP_TOP_MONITOR_ERROR
-            monitorLogger.exception(
-                'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s, result: %s, error: %s' %
-                (self.currentPassportId, self.request.method, str(self.request.uri), str(self.request.body),
-                 self.accessToken, resp, e)
-            )
-            self.response(respNormal=resp)
+        else:  # 校验成功
+            checker.success()
+        # 开始处理请求
+        try:
+            response = func(handler, *args, **kwargs)
+        except Exception as e:  # 处理失败
+            httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
+            return
+        else:  # 处理成功
+            httpReturn(handler, response)
             return
     return wrapper

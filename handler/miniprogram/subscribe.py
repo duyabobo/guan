@@ -3,7 +3,7 @@
 from handler.basehandler import BaseHandler
 from service.subscribe import SubscribeService
 from util.const.mini_program import SUBSCRIBE_ACTIVITY_START_NOTI_TID
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class SubscribeCBHandler(BaseHandler):
@@ -21,4 +21,4 @@ class SendMsgHandler(BaseHandler):
         miniprogramState = self.getRequestParameter('miniprogramState', 'trial')  # formal/developer/trial
         ss = SubscribeService(openId, templateId, miniprogramState)
         ret = ss.sendActivityStartMsg()
-        return self.response(respData=ret)
+        return Response(msg=ret)

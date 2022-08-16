@@ -3,7 +3,7 @@
 from handler.basehandler import BaseHandler
 from ral.email_verify import EmailVerifyService
 from service.myself import UserInfoService
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class EmailVerifyHandler(BaseHandler):

@@ -54,6 +54,12 @@ def generate_access_token(login_user_id):
     return hashlib.md5(timestamp+str(login_user_id)).hexdigest()
 
 
+def generate_secret(accessToken):
+    """"""
+    timestamp = str(time.time())
+    return hashlib.md5(timestamp + str(accessToken)).hexdigest()
+
+
 def generate_encrypted_password(password):
     """
     md5 生成加密密码

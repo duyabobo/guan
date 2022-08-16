@@ -3,16 +3,14 @@
 from handler.basehandler import BaseHandler
 from service.common.selector import VALUE_TYPE_DICT
 from service.myself import UserInfoService
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class MyselfHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
         uis = UserInfoService(self.currentPassport)
-        return self.response(
-            respData=uis.getMyselfInfo()
-        )
+        return Response(data=uis.getMyselfInfo())
 
     @superMonitor
     def put(self, *args, **kwargs):
@@ -24,9 +22,5 @@ class MyselfHandler(BaseHandler):
         uis = UserInfoService(self.currentPassport)
         ret = uis.checkBeforeUpdate(opType, value)
         if ret:
-            return self.response(
-                respNormal=ret
-            )
-        return self.response(
-            respData=uis.updateMyselfInfo(opType, value, column=column)
-        )
+            return Response(msg=ret)
+        return Response(data=uis.updateMyselfInfo(opType, value, column=column))

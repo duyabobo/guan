@@ -3,16 +3,14 @@
 from handler.basehandler import BaseHandler
 from service.common.selector import VALUE_TYPE_DICT
 from service.requirement import RequirementService
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class RequirementHandler(BaseHandler):
     @superMonitor
     def get(self, *args, **kwargs):
         ris = RequirementService(self.currentPassportId)
-        return self.response(
-            respData=ris.getRequirementInfo()
-        )
+        return Response(data=ris.getRequirementInfo())
 
     @superMonitor
     def put(self, *args, **kwargs):
@@ -24,9 +22,5 @@ class RequirementHandler(BaseHandler):
         ris = RequirementService(self.currentPassportId)
         ret = ris.checkBeforeUpdate(opType, value)
         if ret:
-            return self.response(
-                respNormal=ret
-            )
-        return self.response(
-            respData=ris.updateRequirementInfo(opType, value, column)
-        )
+            return Response(msg=ret)
+        return Response(data=ris.updateRequirementInfo(opType, value, column))

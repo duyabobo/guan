@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class PhoneVerifyHandler(BaseHandler):

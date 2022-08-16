@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
 from service.guanguan import GuanguanService
-from util.monitor import superMonitor
+from util.monitor import superMonitor, Response
 
 
 class GuanguanHandler(BaseHandler):
@@ -12,8 +12,6 @@ class GuanguanHandler(BaseHandler):
         longitude = self.getRequestParameter('longitude', paraType=float)
         latitude = self.getRequestParameter('latitude', paraType=float)
         ggs = GuanguanService(self.currentPassportId)
-        return self.response(
-            {
-                "guanguanList": ggs.getGuanguanList(longitude, latitude),
-            }
-        )
+        return Response(data={
+            "guanguanList": ggs.getGuanguanList(longitude, latitude),
+        })
