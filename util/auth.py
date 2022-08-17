@@ -5,6 +5,7 @@
 # 不怕密钥泄漏，密钥不会传输，不怕被抓取。如果用户主动伪造攻击，可以对 uid 进行频次监控。
 # 不怕加密算法泄漏，因为一人一密。
 # 可以防止重放攻击。
+import base64
 import json
 
 import hashlib
@@ -55,6 +56,21 @@ class Checker(object):
         """校验成功处理"""
         setSuccessCnt(self.accessToken)
 
+    def transferJsObj(self, obj):
+        if type(obj) == str:
+            return obj
+        if type(obj) == unicode:
+            return obj.encode('utf8')
+        if type(obj) == int:
+            return str(obj)
+        if type(obj) == float:
+            return str(obj)
+        if type(obj) == list:  # todo以后支持更多的比如dict类型的js对象，先处理一下再加密
+            _obj = []
+            for i in obj:
+                _obj.append(self.transferJsObj(i))
+            return ','.join(_obj)
+
     def check_sign(self, secret):
         """签名认证"""
         # 处理参数
@@ -72,5 +88,5 @@ class Checker(object):
             }
             requestParams.update(queryParams)
         # 加密校验
-        content = '|'.join(['|'.join(i) for i in sorted(requestParams.items(), key=lambda x: x[0])])
+        content = "|".join(["|".join([base64.b64encode(self.transferJsObj(j)) for j in i]) for i in sorted(requestParams.items(), key=lambda x: x[0])])
         assert self.sign == hashlib.md5(content).hexdigest(), '签名验证失败'
