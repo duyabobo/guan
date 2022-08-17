@@ -64,9 +64,8 @@ def getSession(accessToken):
     return redisConn.hgetall(getLoginKey(accessToken))
 
 
-def checkUnique(accessToken, exp):
-    key = UNIQUE_EXP_KEY.format(accessToken=accessToken, exp=exp)
-    assert exp < time.time() + 60, 'exp is too big'
+def checkUnique(accessToken, requestSeq):
+    key = UNIQUE_EXP_KEY.format(accessToken=accessToken, exp=requestSeq)
     ret = redisConn.set(key, 1, nx=True, ex=60)
     assert int(ret), 'set unique error'
 
@@ -91,13 +90,13 @@ def checkFailedCnt(remote_ip):
     """失败频次检查"""
     failed_key = FAILED_CNT_ONE_MINUTE.format(remote_ip=remote_ip)
     failed_cnt = redisConn.get(failed_key) or 0
-    assert failed_cnt < FAILED_CNT_LIMIT_ONE_MINUTE, 'failed too frequent'
+    assert int(failed_cnt) < FAILED_CNT_LIMIT_ONE_MINUTE, 'failed too frequent'
 
 
 def checkSuccessCnt(accessToken):
     """成功频次检查"""
-    success_cnt_key = SUCCESS_CNT_ONE_MINUTE.format(user_id=accessToken)
+    success_cnt_key = SUCCESS_CNT_ONE_MINUTE.format(accessToken=accessToken)
     success_cnt = redisConn.get(success_cnt_key) or 0
-    if success_cnt > SUCCESS_CNT_LIMIT_ONE_MINUTE:
+    if int(success_cnt) > SUCCESS_CNT_LIMIT_ONE_MINUTE:
         redisConn.delete(success_cnt_key)
         raise Exception('success too frequent')

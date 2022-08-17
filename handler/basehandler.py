@@ -40,6 +40,7 @@ class BaseHandler(RequestHandler):
         self.timestamp = time.time()
         self._accessToken = None
         self._sign = None
+        self._requestSeq = None
         self._dbSession = None
         self._currentPassport = None
         self._mqConnection = None
@@ -104,13 +105,23 @@ class BaseHandler(RequestHandler):
     @property
     def sign(self):
         """
-        获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
+        header获取
         :return:
         """
         if hasattr(self, '_sign') and self._sign:
             return self._sign
-        self._sign = self.getRequestParameter('sign', None)
+        self._sign = self.request.headers.get('sign')
         return self._sign
+
+    @property
+    def requestSeq(self):
+        """
+        每次请求都有一个公共参数，请求序列号，后台可以依次防重放攻击
+        """
+        if hasattr(self, '_requestSeq') and self._requestSeq:
+            return self._requestSeq
+        self._requestSeq = self.getRequestParameter('requestSeq', None)
+        return self._requestSeq
 
     @property
     def currentPassport(self):

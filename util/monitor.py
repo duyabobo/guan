@@ -32,8 +32,7 @@ def superMonitor(func):
         # 处理前校验
         checker = Checker(handler)
         try:
-            pass
-            #checker.check()  todo
+            checker.check()
         except Exception as e:  # 校验失败
             checker.fail()
             httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)

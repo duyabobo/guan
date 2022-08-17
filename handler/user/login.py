@@ -26,7 +26,11 @@ class LoginHandler(BaseHandler):
             return
 
         accessToken, currentUserInfo = LoginService().login(openid)
-        self.response(Response(data={'accessToken': accessToken, 'currentUserInfo': currentUserInfo}))
+        self.response(Response(data={
+            'accessToken': accessToken,
+            'secret': currentUserInfo['secret'],
+            'currentUserInfo': currentUserInfo}
+        ))
         return
 
     @superMonitor

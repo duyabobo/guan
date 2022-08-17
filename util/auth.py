@@ -5,12 +5,12 @@
 # 不怕密钥泄漏，密钥不会传输，不怕被抓取。如果用户主动伪造攻击，可以对 uid 进行频次监控。
 # 不怕加密算法泄漏，因为一人一密。
 # 可以防止重放攻击。
-import jwt
+import json
 
+import hashlib
 from ral.passport import checkUnique, setFailCnt, setSuccessCnt, checkFailedCnt, checkSuccessCnt
 
 ALGORITHM_SIGN = 'HS256'
-WHITE_PATH_LIST = ['/login']  # 绕过签名 todo 后期简单校验
 
 # 下面是限流方案。滑动窗口算法实现，更精准，但也更复杂，姑且不考虑。如有意，可以加多个限流标准：比如现在建立的是分钟级别的，可以增加十分钟级别的，半小时级别的...。
 # nginx ngx_http_limit_req_module 进行频率限制，也可以应用程序结合 redis 进行频率监控。
@@ -28,23 +28,24 @@ WHITE_PATH_LIST = ['/login']  # 绕过签名 todo 后期简单校验
 
 class Checker(object):
     def __init__(self, handler):
-        self.timestamp = handler.timestamp
         self.remote_ip = handler.request.remote_ip
         self.path = handler.request.path
+        self.method = handler.request.method
+        self.query = handler.request.query
+        self.body = handler.request.body
+        self.requestSeq = handler.requestSeq
         self.currentPassport = handler.currentPassport
         self.accessToken = self.currentPassport.get('accessToken', '')
-        self.sign = self.currentPassport.get('sign', '')
+        self.sign = handler.sign
         self.secret = self.currentPassport.get('secret', '')
 
     def check(self):
         """对请求进行检查，拦截无效/非法/恶意的请求。
         攻击是不能完全防控的，还需要监控日志识别恶意ip和虚假user，并进行管控和清理。"""
-        if self.path in WHITE_PATH_LIST:
-            return
         checkFailedCnt(self.remote_ip)  # 有爬取用户信息攻击行为时放开，1次redis查询操作
         checkSuccessCnt(self.accessToken)  # 有消耗服务资源攻击行为时放开，1～3次redis操作
-        exp = self.check_sign(self.secret)  # 1次解密操作
-        checkUnique(self.accessToken, exp)  # 1～2次redis写入操作
+        self.check_sign(self.secret)  # 1次解密操作
+        checkUnique(self.accessToken, self.requestSeq)  # 1～2次redis写入操作
 
     def fail(self):
         """校验失败处理"""
@@ -56,5 +57,20 @@ class Checker(object):
 
     def check_sign(self, secret):
         """签名认证"""
-        data = jwt.decode(self.sign, secret, algorithm=ALGORITHM_SIGN)  # 完成有效期校验和 secret 校验，具体加密方式多种多样不一定jwt
-        return data['exp']  # 过期时间戳，精确到微秒，假设不会有两个请求的 exp 是一样的
+        # 处理参数
+        requestParams = {
+            'secret': secret,
+            'path': self.path,
+            'method': self.method,
+        }
+        if self.body:
+            requestParams.update(json.loads(self.body))
+        if self.query:
+            queryParams = self.query.split('&')
+            queryParams = {
+                k: v for k, v in [p.split('=') for p in queryParams]
+            }
+            requestParams.update(queryParams)
+        # 加密校验
+        content = '|'.join(['|'.join(i) for i in sorted(requestParams.items(), key=lambda x: x[0])])
+        assert self.sign == hashlib.md5(content).hexdigest(), '签名验证失败'
