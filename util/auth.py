@@ -56,20 +56,23 @@ class Checker(object):
         """校验成功处理"""
         setSuccessCnt(self.accessToken)
 
-    def transferJsObj(self, obj):
-        if type(obj) == str:
-            return obj
-        if type(obj) == unicode:
-            return obj.encode('utf8')
-        if type(obj) == int:
-            return str(obj)
-        if type(obj) == float:
-            return str(obj)
-        if type(obj) == list:  # todo以后支持更多的比如dict类型的js对象，先处理一下再加密
-            _obj = []
-            for i in obj:
-                _obj.append(self.transferJsObj(i))
-            return ','.join(_obj)
+    def getContentFromQuery(self, data, sep):
+        if type(data) == str:
+            return base64.b64encode(data)
+        if type(data) == unicode:
+            return base64.b64encode(data.encode('utf8'))
+        if type(data) == int:
+            return base64.b64encode(str(data))
+        if type(data) == float:
+            return base64.b64encode(str(data))
+        if type(data) == dict:
+            sortedItems = sorted(data.items(), key=lambda x: x[0])
+            contentList = [self.getContentFromQuery(k, sep) + sep + self.getContentFromQuery(v, sep) for k, v in sortedItems]
+            return sep.join(contentList)
+        if type(data) == list:
+            contentList = [self.getContentFromQuery(d, sep) for d in data]
+            return sep.join(contentList)
+        return ""
 
     def check_sign(self, secret):
         """签名认证"""
@@ -88,5 +91,5 @@ class Checker(object):
             }
             requestParams.update(queryParams)
         # 加密校验
-        content = "|".join(["|".join([base64.b64encode(self.transferJsObj(j)) for j in i]) for i in sorted(requestParams.items(), key=lambda x: x[0])])
+        content = self.getContentFromQuery(requestParams, "|")
         assert self.sign == hashlib.md5(content).hexdigest(), '签名验证失败'
