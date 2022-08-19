@@ -9,6 +9,8 @@ import base64
 import json
 
 import hashlib
+import urlparse
+
 from ral.passport import checkUnique, setFailCnt, setSuccessCnt, checkFailedCnt, checkSuccessCnt
 
 ALGORITHM_SIGN = 'HS256'
@@ -85,10 +87,7 @@ class Checker(object):
         if self.body:
             requestParams.update(json.loads(self.body))
         if self.query:
-            queryParams = self.query.split('&')
-            queryParams = {
-                k: v for k, v in [p.split('=') for p in queryParams]
-            }
+            queryParams = {k: v for k, v in urlparse.parse_qsl(self.query)}
             requestParams.update(queryParams)
         # 加密校验
         content = self.getContentFromQuery(requestParams, "|")

@@ -48,12 +48,13 @@ class VerifyModel(BaseModel):
 
     @classmethod
     @deleteCache(["UserInfoService:{passportId}"])
-    def updateVerifyStatus(cls, passportId, email):
+    def updateVerifyStatus(cls, passportId, encryptedMail, mailType):
         getDbSession().query(cls).filter(cls.passport_id == passportId).\
-            update({"mail": email, "mail_type": cls.getMailType(email), "mail_verify_status": match.MODEL_MAIL_VERIFY_STATUS_YES})
+            update({"mail": encryptedMail, "mail_type": mailType,
+                    "mail_verify_status": match.MODEL_MAIL_VERIFY_STATUS_YES})
         getDbSession().commit()
 
     @classmethod
-    def fillWorkMail(cls, passportId, email):
-        getDbSession().query(cls).filter(cls.passport_id == passportId).update({"mail": email})
+    def fillWorkMail(cls, passportId, encryptedMail):
+        getDbSession().query(cls).filter(cls.passport_id == passportId).update({"mail": encryptedMail})
         getDbSession().commit()
