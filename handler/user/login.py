@@ -25,12 +25,12 @@ class LoginHandler(BaseHandler):
             self.response(Response(msg=RESP_NEED_LOGIN))
             return
 
-        accessToken, currentUserInfo = LoginService().login(openid)
+        accessToken, secret = LoginService().login(openid)
         self.response(Response(data={
             'accessToken': accessToken,
-            'secret': currentUserInfo['secret'],
-            'currentUserInfo': currentUserInfo}
-        ))
+            'secret': secret,
+            'openid': openid,
+        }))
         return
 
     @superMonitor

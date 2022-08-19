@@ -21,5 +21,5 @@ class LoginService(BaseService):
             VerifyModel.addByPassportId(passport.id)
 
         accessToken = generate_access_token(passport.id)
-        currentUserInfoJson = putSession(accessToken, passport)
-        return accessToken, currentUserInfoJson
+        secret = putSession(accessToken)
+        return accessToken, secret

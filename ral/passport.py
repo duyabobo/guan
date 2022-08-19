@@ -22,28 +22,20 @@ def getLoginKey(accessToken):
     return 'accessToken:' + accessToken
 
 
-def putSession(accessToken, passport):
+def putSession(accessToken):
     """
     把当前登录用户的基本信息放到 redis, 如果 redis 已有记录, 就更新, 如果没有, 就新增
     :param accessToken:
-    :param passport:
     :return:
     """
+    secret = generate_secret(accessToken)  # 签名校验的密钥
     currentUserInfoJson = {
-        "accessToken": accessToken,
-        "secret": generate_secret(accessToken),  # 签名校验的密钥
-        "success_cnt": 1,
-        "success_from_time": time.time(),
+        "secret": secret,
     }
-    currentUserInfoJson.update({
-        k: passport.__dict__[k]
-        for k in passport.__dict__
-        if k in ['id', 'phone', 'openid']
-    })
     loginKey = getLoginKey(accessToken)
     redisConn.hmset(loginKey, currentUserInfoJson)
     redisConn.expire(loginKey, 3*30*24*3600)
-    return currentUserInfoJson
+    return secret
 
 
 def delSession(accessToken):

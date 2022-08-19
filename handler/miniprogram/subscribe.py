@@ -11,6 +11,9 @@ from util.monitor import superMonitor, Response
 class SubscribeCBHandler(BaseHandler):
     @superMonitor
     def post(self, *args, **kwargs):  # todo 用户订阅消息的操作处理回调，用以记录用户对订阅消息的操作类型和操作结果
+        openId = self.getRequestParameter('openid', '')
+        guanId = self.getRequestParameter('guanId', 0)
+        subscribeRes = self.getRequestParameter('subscribeRes', 0)
         return Response()
 
 
