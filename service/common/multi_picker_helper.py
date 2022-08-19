@@ -56,9 +56,9 @@ class MultiPickerHelper(MultiPickerHelperABC):
         return firstValue, secondValue, thirdValue
 
     def getFirstChoiceList(self):
-        province = self.region.province
-        city = self.region.city
-        area = self.region.area
+        province = self.region.province if self.region else ALL_STR
+        city = self.region.city if self.region else ALL_STR
+        area = self.region.area if self.region else ALL_STR
 
         if city == ALL_STR:  # 只选择了省份
             regions = RegionModel.listByProvince(province)
@@ -118,6 +118,8 @@ class MultiPickerHelper(MultiPickerHelperABC):
     def getChoiceIdAfterConfirm(self, oldValue, choiceIndexList):
         choiceId = oldValue.id if oldValue else 0
 
+        if not self.region:
+            return choiceId
         firstIndex, secondIndex, thirdIndex = choiceIndexList
         if firstIndex < 0 or secondIndex < 0 or thirdIndex < 0:
             return choiceId
