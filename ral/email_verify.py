@@ -45,7 +45,7 @@ class EmailVerifyService(BaseService):
         if redisConn.get(self.getVerifyCodeKey(encryptedMail)) != code:
             return RESP_HAS_EMAIL_VERIFY_FAILED
         mailType = VerifyModel.getMailType(email)
-        VerifyModel.updateVerifyStatus(self.passportId, encryptedMail, mailType)
+        VerifyModel.updateVerifyStatus(passportId=self.passportId, encryptedMail=encryptedMail, mailType=mailType)
         self.recordVerifyOperate()
         return RESP_OK
 
