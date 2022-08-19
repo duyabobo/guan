@@ -171,7 +171,7 @@ class BaseHandler(RequestHandler):
             if self.request.headers.get("Content-Type") == 'application/json' and self.request.body:
                 return json.loads(self.request.body).get(paraName)
         requestParameter = self.get_argument(paraName, default=default)
-        if requestParameter is None:
+        if not requestParameter:
             requestParameter = __getParameterFromBody()
         try:
             return paraType(requestParameter)

@@ -40,7 +40,7 @@ class EmailVerifyService(BaseService):
     def setCodeToCache(self, email, code):
         redisConn.set(self.getVerifyCodeKey(email), code, ex=5*60)
 
-    def checkCodeWithCache(self, email, code):
+    def checkCodeWithCache(self, openid, email, code):
         if redisConn.get(self.getVerifyCodeKey(email)) != code:
             return RESP_HAS_EMAIL_VERIFY_FAILED
         VerifyModel.updateVerifyStatus(self.passportId, email)
@@ -55,7 +55,7 @@ class EmailVerifyService(BaseService):
             return True
         return False
 
-    def sendVerifyEmail(self, email):
+    def sendVerifyEmail(self, openid, email):
         if not self.emailIsCompany(email):
             return RESP_HAS_EMAIL_IS_NOT_COMPANY
         if self.hasVerifiedRecently:

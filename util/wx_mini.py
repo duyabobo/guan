@@ -48,14 +48,14 @@ class WxHelper(object):
         raise gen.Return(localToken)
 
     @gen.coroutine
-    def sendSubscribeMsg(self, openId, templateId, page, data, miniprogramState):
+    def sendSubscribeMsg(self, openid, templateId, page, data, miniprogramState):
         """发送用户订阅消息"""
         access_token = yield self.getMiniProgramToken()
         sendSmsUrl = WX_MINIPROGRAM_SEND_SUBSCRIBE_MSG.format(access_token=access_token)
         res = yield asyncRequest(
             sendSmsUrl,
             {
-                "touser": openId,
+                "touser": openid,
                 "template_id": templateId,
                 "page": page,
                 "data": data,

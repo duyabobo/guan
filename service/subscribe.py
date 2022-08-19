@@ -9,8 +9,8 @@ from util.wx_mini import WxHelper
 
 class SubscribeService(BaseService):
 
-    def __init__(self, openId, templateId, miniprogram_state):
-        self.openId = openId
+    def __init__(self, openid, templateId, miniprogram_state):
+        self.openid = openid
         self.templateId = templateId
         self.miniprogramState = miniprogram_state
         super(SubscribeService, self).__init__()
@@ -32,5 +32,5 @@ class SubscribeService(BaseService):
               "value": "2022-02-22 14:00"
           }
         }
-        yield WxHelper().sendSubscribeMsg(self.openId, self.templateId, page, data, self.miniprogramState)
+        yield WxHelper().sendSubscribeMsg(self.openid, self.templateId, page, data, self.miniprogramState)
         return
