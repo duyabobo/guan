@@ -70,7 +70,7 @@ class Checker(object):
             contentList = [self.getContentFromQuery(k, sep) + sep + self.getContentFromQuery(v, sep) for k, v in sortedItems]
             return sep.join(contentList)
         if type(data) == list:
-            contentList = [self.getContentFromQuery(data.index(d), sep) + sep + self.getContentFromQuery(d, sep) for d in data]
+            contentList = [self.getContentFromQuery(i, sep) + sep + self.getContentFromQuery(data[i], sep) for i in range(len(data))]
             return sep.join(contentList)
         return ""
 

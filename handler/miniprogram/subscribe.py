@@ -11,7 +11,7 @@ from util.monitor import superMonitor, Response
 class SubscribeCBHandler(BaseHandler):
     @superMonitor
     def post(self, *args, **kwargs):  # todo 用户订阅消息的操作处理回调，用以记录用户对订阅消息的操作类型和操作结果
-        pass
+        return Response()
 
 
 class SendMsgHandler(BaseHandler):
