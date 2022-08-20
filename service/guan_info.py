@@ -212,6 +212,7 @@ class GuanInfoService(BaseService):
             return RESP_HAS_ONGOING_ACTIVITY
         if opType == GUAN_INFO_OP_TYPE_JOIN and not self.matchCheck():
             return RESP_JOIN_ACTIVITY_FAILED
+        # todo next：加入邀请，需要至少邀请注册一个新用户。if opType == GUAN_INFO_OP_TYPE_JOIN and
         # 操作执行结果入库
         updateParams = {}
         whereParams = []
