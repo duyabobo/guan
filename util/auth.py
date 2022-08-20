@@ -87,7 +87,7 @@ class Checker(object):
         if self.body:
             requestParams.update(json.loads(self.body))
         if self.query:
-            queryParams = {k: v for k, v in urlparse.parse_qsl(self.query)}
+            queryParams = {k: v for k, v in urlparse.parse_qsl(self.query, keep_blank_values=1)}
             requestParams.update(queryParams)
         # 加密校验
         content = self.getContentFromQuery(requestParams, "|")
