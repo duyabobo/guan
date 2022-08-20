@@ -38,9 +38,9 @@ class BaseHandler(RequestHandler):
     def __init__(self, application, request, **kwargs):
         self.application = application
         self.timestamp = time.time()
-        self._accessToken = None
-        self._sign = None
-        self._requestSeq = None
+        self._accessToken = ''
+        self._sign = ''
+        self._requestSeq = ''
         self._dbSession = None
         self._currentPassport = None
         self._mqConnection = None
@@ -95,7 +95,7 @@ class BaseHandler(RequestHandler):
         """
         if hasattr(self, '_accessToken') and self._accessToken:
             return self._accessToken
-        self._accessToken = self.getRequestParameter('accessToken', None)
+        self._accessToken = self.getRequestParameter('accessToken', '')
         return self._accessToken
 
     @property
@@ -120,7 +120,7 @@ class BaseHandler(RequestHandler):
         """
         if hasattr(self, '_requestSeq') and self._requestSeq:
             return self._requestSeq
-        self._requestSeq = self.getRequestParameter('requestSeq', None)
+        self._requestSeq = self.getRequestParameter('requestSeq', '')
         return self._requestSeq
 
     @property
@@ -159,7 +159,7 @@ class BaseHandler(RequestHandler):
             )
         )
 
-    def getRequestParameter(self, paraName, default=None, paraType=str):
+    def getRequestParameter(self, paraName, default='', paraType=str):
         """
         获取请求体中的参数，获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
         :param paraName:
@@ -169,7 +169,8 @@ class BaseHandler(RequestHandler):
         """
         def __getParameterFromBody():
             if self.request.headers.get("Content-Type") == 'application/json' and self.request.body:
-                return json.loads(self.request.body).get(paraName)
+                return json.loads(self.request.body).get(paraName, default)
+            return default
         requestParameter = self.get_argument(paraName, default=default)
         if not requestParameter:
             requestParameter = __getParameterFromBody()
