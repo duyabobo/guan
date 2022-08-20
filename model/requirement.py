@@ -15,7 +15,7 @@ class RequirementModel(BaseModel):
     __tablename__ = 'requirement'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer)  # passport_id
-    sex = Column(String, default='未知')  # 性别：MODEL_SEX_ENUMERATE
+    sex = Column(Integer, default=0)  # 性别：MODEL_SEX_ENUMERATE
     min_birth_year = Column(Integer, default=0)  # 最小出生年份
     max_birth_year = Column(Integer, default=0)  # 最大出生年份
     min_weight = Column(Integer, default=0)  # 最小体重(kg)
@@ -31,7 +31,7 @@ class RequirementModel(BaseModel):
     # major = Column(String, default="")  # 专业
     # study_from_year = Column(Integer, default=0)  # 入学年份 0不限
     # school_type = Column(String, default="")  # 学校类型985211双一流本科专科
-    martial_status = Column(String, default='不限')  # 婚姻现状：不限，未婚，离异
+    martial_status = Column(Integer, default=0)  # 婚姻现状：不限，未婚，离异
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     # min_education = Column(String, default='不限')  # 最低学历
