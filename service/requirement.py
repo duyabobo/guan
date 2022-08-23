@@ -39,7 +39,7 @@ class RequirementService(BaseService):
         return {
             "requirementList": requirementList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给requirementList的每个元素一个对应序号，用来小程序实时更新对应的picker值
-            "requirementResult": "3人满足你的期望"  # todo next
+            "requirementResult": "3人满足你的期望"  # todo next 搞个缓存计算，对每个用户都缓存一份数据，并且维护一致性。
         }
 
     @deleteCache(["RequirementService:{passportId}"])

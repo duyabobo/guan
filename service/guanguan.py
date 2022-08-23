@@ -56,7 +56,7 @@ class GuanguanService(BaseService):
         return activityList
 
     @checkCache("GuanguanService:{passportId}", ex=60)
-    def getMatchedActivityIdList(self, activityList=None, longitude="", latitude="", forceRefreshCache=False):  # todo 搞个离线脚本，异步定时循环每个passportid调用用这个方法，计算好
+    def getMatchedActivityIdList(self, activityList=None, longitude="", latitude="", forceRefreshCache=False):  # todo next 搞个离线脚本，异步定时循环每个passportid调用用这个方法，计算好
         """
         1. 按照邀请状态，以及时间倒排序
         2. 筛选掉不符合邀请人期望的

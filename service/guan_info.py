@@ -171,7 +171,7 @@ class GuanInfoService(BaseService):
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
-                "requirementResult": "3人满足你的期望"  # todo next
+                "requirementResult": "3人满足你的期望"  # todo next 搞个缓存计算，对每个用户都缓存一份数据，并且维护一致性。
             },
         }
 
