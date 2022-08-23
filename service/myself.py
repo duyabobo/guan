@@ -27,7 +27,7 @@ class UserInfoService(BaseService):
     @property
     def infoFinishCnt(self):
         # 已完成信息完善的用户数量
-        return user.getFillFinishCnt()
+        return UserModel.getFillFinishCnt()
 
     @property
     def verify(self):
@@ -79,7 +79,7 @@ class UserInfoService(BaseService):
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
             "workVerify": self.getVerify(),
             "obtainWorkEmailPlaceHolder": "输入您的大学邮箱或工作邮箱",
-            "informationResult": "已有%s人完善信息" % self.infoFinishCnt,
+            "informationResult": "%s人完善个人信息" % self.infoFinishCnt,
         }
 
     @deleteCache(["UserInfoService:{passportId}"])
@@ -88,11 +88,15 @@ class UserInfoService(BaseService):
         updateParams = self.userHelper.getUpdateParams(opType, value, column)
         if updateParams:
             checkDynamicData = False
-            UserModel.updateByPassportId(self.passportId, **updateParams)
-            # todo next
-            self.reloaduserHelper()
             if self.userHelper.hasFillFinish:
+                updateParams['info_has_filled'] = 1
                 user.addFillFinishSet(self.passportId)
+            else:
+                updateParams['info_has_filled'] = 0
+                user.delFillFinishSet(self.passportId)
+            # todo next 自动更新对应关联的用户信息和期望信息，并检查数据合法性。并且不允许用户降低信息的完善程度（已经完善的，不能再次选择未知）。
+            UserModel.updateByPassportId(self.passportId, **updateParams)
+            self.reloaduserHelper()
         return self.getMyselfInfo(checkDynamicData)
 
     def checkBeforeUpdate(self, opType, value):

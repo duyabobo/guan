@@ -11,6 +11,7 @@ from model.region import RegionModel
 from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.cache import checkCache, deleteCache
+from ral.user import finishCntKey
 from util.const import match
 from util.const.base import ALL_STR
 from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_MAIL_TYPE_UNKNOWN
@@ -35,6 +36,7 @@ class UserModel(BaseModel):
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
     month_pay = Column(Integer, default=0)  # 月收入(元)
     is_fall_in_love = Column(Integer, default=0)  # 是否坠入爱河
+    info_has_filled = Column(Integer, default=0)  # 是否完善信息：0否，1是
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
@@ -63,6 +65,11 @@ class UserModel(BaseModel):
     def updateByPassportId(cls, passportId=0, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
+
+    @classmethod
+    @checkCache(finishCntKey)
+    def getFillFinishCnt(cls):
+        return getDbSession().query(cls.id).filter(cls.info_has_filled == match.MODEL_STATUS_YES).count()
 
     @property
     def verify_type(self):
