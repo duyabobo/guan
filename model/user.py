@@ -10,7 +10,7 @@ from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
 from model.work import WorkModel
-from ral.cache import checkCache
+from ral.cache import checkCache, deleteCache
 from util.const import match
 from util.const.base import ALL_STR
 from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_MAIL_TYPE_UNKNOWN
@@ -59,7 +59,7 @@ class UserModel(BaseModel):
         return user
 
     @classmethod
-    @checkCache("UserModel:{passportId}")
+    @deleteCache(["UserModel:{passportId}"])
     def updateByPassportId(cls, passportId=0, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
