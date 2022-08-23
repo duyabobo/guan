@@ -10,14 +10,18 @@ def getKey():
 
 
 def addFillFinishSet(passport_id):
-    redisConn.incr(finishCntKey)
-    redisConn.expire(finishCntKey, 3600)
     key = getKey()
-    return redisConn.sadd(key, passport_id)
+    redisConn.sadd(key, passport_id)
+    resetFinishCnt()
 
 
 def delFillFinishSet(passport_id):
-    redisConn.decr(finishCntKey)
-    redisConn.expire(finishCntKey, 3600)
     key = getKey()
-    return redisConn.srem(key, passport_id)
+    redisConn.srem(key, passport_id)
+    resetFinishCnt()
+
+
+def resetFinishCnt():
+    key = getKey()
+    finishCnt = redisConn.zcard(key)
+    redisConn.set(finishCntKey, finishCnt, ex=3600)
