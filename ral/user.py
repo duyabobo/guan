@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import pickle
+
 from util.redis_conn import redisConn
 
 finishCntKey = "UserModel:infoFinishCnt"
@@ -24,4 +26,4 @@ def delFillFinishSet(passport_id):
 def resetFinishCnt():
     key = getKey()
     finishCnt = redisConn.zcard(key)
-    redisConn.set(finishCntKey, finishCnt, ex=3600)
+    redisConn.set(finishCntKey, pickle.dumps(finishCnt), ex=3600)

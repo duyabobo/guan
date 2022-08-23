@@ -5,6 +5,9 @@ import copy
 import pickle
 import re
 from util.redis_conn import redisConn
+from util.log import monitor_logger
+
+monitorLogger = monitor_logger('superMonitor')
 
 
 def checkInconsistentCache(prefix, ex=60):
@@ -64,7 +67,10 @@ def checkCache(key, ex=3600):
             if cacheKey and not forceRefreshCache:
                 val = redisConn.get(cacheKey)
                 if val is not None:  # 缓存查询到数据
-                    return pickle.loads(val)
+                    try:
+                        return pickle.loads(val)
+                    except Exception as e:
+                        monitorLogger.exception(e)
 
             ret = fn(*args, **kwargs)
             val = pickle.dumps(ret)
