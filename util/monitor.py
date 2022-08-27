@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 import functools
+import time
 
 from log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
+from util.obj_util import object_2_dict
 
 monitorLogger = monitor_logger('superMonitor')
 
@@ -16,9 +18,10 @@ class Response(object):
 
 
 def httpReturn(handler, response, err=None):
-    logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s, result: %s, error: %s' % \
+    logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s,' \
+             ' respMsg: %s, respData: %s, tc: %s, error: %s' % \
              (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(handler.request.body),
-              handler.accessToken, response.msg, err)
+              handler.accessToken, response.msg, object_2_dict(response.data), time.time()-handler.timestamp, err)
     if err is None:
         monitorLogger.info(logMsg)
     else:
