@@ -77,21 +77,21 @@ class RequirementHelper(object):
         # 双项选择器类型
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
-            updateParams['max_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[1]]
+            updateParams['max_birth_year'] = max(BIRTH_YEAR_CHOICE_LIST[value[0]], BIRTH_YEAR_CHOICE_LIST[value[1]])
         elif opType == OP_TYPE_MARTIAL_STATUS:
             updateParams['martial_status'] = value
         elif opType == OP_TYPE_WEIGHT_PERIOD:
             updateParams['min_weight'] = WEIGHT_CHOICE_LIST[value[0]]
-            updateParams['max_weight'] = WEIGHT_CHOICE_LIST[value[1]]
+            updateParams['max_weight'] = max(WEIGHT_CHOICE_LIST[value[0]], WEIGHT_CHOICE_LIST[value[1]])
         elif opType == OP_TYPE_HEIGHT_PERIOD:
             updateParams['min_height'] = HEIGHT_CHOICE_LIST[value[0]]
-            updateParams['max_height'] = HEIGHT_CHOICE_LIST[value[1]]
+            updateParams['max_height'] = max(HEIGHT_CHOICE_LIST[value[0]], HEIGHT_CHOICE_LIST[value[1]])
         elif opType == OP_TYPE_MONTH_PAY_PERIOD:
             updateParams['min_month_pay'] = MONTH_PAY_CHOICE_LIST[value[0]]
-            updateParams['max_month_pay'] = MONTH_PAY_CHOICE_LIST[value[1]]
+            updateParams['max_month_pay'] = max(MONTH_PAY_CHOICE_LIST[value[0]], MONTH_PAY_CHOICE_LIST[value[1]])
         elif opType == OP_TYPE_STUDY_FROM_YEAR_PERIOD:
             updateParams['min_study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value[0]]
-            updateParams['max_study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value[1]]
+            updateParams['max_study_from_year'] = max(STUDY_FROM_YEAR_CHOICE_LIST[value[0]], STUDY_FROM_YEAR_CHOICE_LIST[value[1]])
         # region地址选择器类型
         elif opType == OP_TYPE_HOME_REGION_PERIOD:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
