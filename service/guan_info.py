@@ -27,7 +27,7 @@ from util.const.response import RESP_OK, RESP_NEED_FILL_STUDY_FROM_YEAR, RESP_JO
     RESP_HAS_ONGOING_ACTIVITY, \
     RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
     RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_HOME_REGION, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_EDUCATION, \
-    RESP_NEED_FILL_MARTIAL_STATUS
+    RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_INFO
 
 
 class GuanInfoService(BaseService):
@@ -36,6 +36,7 @@ class GuanInfoService(BaseService):
         self.passport = passport
         self.passportId = passport.get('id', 0)
         self.activityRecord = None
+        self.myInformationPage = MYINFORMATION_PAGE_WITH_ERRMSG
         self.reloadActivityRecord()
         super(GuanInfoService, self).__init__()
 
@@ -176,7 +177,7 @@ class GuanInfoService(BaseService):
                 "meetResult": self.getMeetResult(),
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
-                "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
+                "myInformationPage": self.myInformationPage,
                 "requirementResult": "3人满足你的期望"  # todo next 搞个缓存计算，对每个用户都缓存一份数据，并且维护一致性。
             },
         }
@@ -226,6 +227,10 @@ class GuanInfoService(BaseService):
         elif sexIndex == MODEL_SEX_FEMALE_INDEX:
             updateParams['girl_passport_id'] = passportId
         return updateParams, whereParams
+
+    def updateMyInformationPage(self, ret):
+        if ret['code'] == RESP_NEED_FILL_INFO['code']:
+            self.myInformationPage = self.myInformationPage + ret['errMsg']
 
     @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)  # 加一个分布式锁
     def activityOprete(self, opType):
