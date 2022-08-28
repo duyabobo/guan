@@ -6,7 +6,6 @@ from model.verify import VerifyModel
 from ral import user
 from ral.cache import checkCache, deleteCache
 from service import BaseService
-from service.requirement import RequirementService
 from util.class_helper import lazy_property
 from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS, \
     DEFAULT_MARTIAL_STATUS_INDEX
