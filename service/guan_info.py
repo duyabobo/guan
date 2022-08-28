@@ -136,6 +136,8 @@ class GuanInfoService(BaseService):
         for opTypes in INFORMATION_PAIR_LIST:
             pair = []
             for opType in opTypes:
+                if opType not in opTypeMapInformation:
+                    continue
                 information = opTypeMapInformation[opType]
                 pair.append({
                     "desc": information.desc + ":",
