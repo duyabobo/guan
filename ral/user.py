@@ -25,5 +25,5 @@ def delFillFinishSet(passport_id):
 
 def resetFinishCnt():
     key = getKey()
-    finishCnt = redisConn.zcard(key)
+    finishCnt = redisConn.scard(key)
     redisConn.set(finishCntKey, pickle.dumps(finishCnt), ex=3600)
