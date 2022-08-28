@@ -15,6 +15,7 @@ RESP_HAS_SEND_EMAIL = {'code': 0, 'errMsg': '您已发送过认证邮件，请�
 RESP_SEX_CANOT_EDIT = {'code': 1010, 'errMsg': '不能修改性别，请联系客服'}
 RESP_USER_SEX_FIRST_EDIT = {'code': 1011, 'errMsg': '请先完善个人信息里的性别'}
 RESP_REQUIREMENT_SEX_ERROR = {'code': 1012, 'errMsg': '期望性别不能与自己相同'}
+RESP_MARTIAL_STATUS_CANOT_EDIT = {'code': 1013, 'errMsg': '请完善真实的婚姻现状'}
 RESP_NEED_VERIFY = {'code': 1003, 'errMsg': '请完成认证'}
 RESP_NEED_FILL_SEX = {'code': 1003, 'errMsg': '请完善性别'}
 RESP_NEED_FILL_BIRTH_YEAR = {'code': 1003, 'errMsg': '请完善出生年份'}

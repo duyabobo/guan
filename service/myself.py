@@ -6,10 +6,12 @@ from model.verify import VerifyModel
 from ral import user
 from ral.cache import checkCache, deleteCache
 from service import BaseService
+from service.requirement import RequirementService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK
+from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS, \
+    DEFAULT_MARTIAL_STATUS_INDEX
 from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX
-from util.const.response import RESP_SEX_CANOT_EDIT
+from util.const.response import RESP_SEX_CANOT_EDIT, RESP_MARTIAL_STATUS_CANOT_EDIT
 
 
 class UserInfoService(BaseService):
@@ -94,7 +96,6 @@ class UserInfoService(BaseService):
             else:
                 updateParams['info_has_filled'] = 0
                 user.delFillFinishSet(self.passportId)
-            # todo next 自动更新对应关联的用户信息和期望信息，并检查数据合法性。并且不允许用户降低信息的完善程度（已经完善的，不能再次选择未知）。
             UserModel.updateByPassportId(self.passportId, **updateParams)
             self.reloaduserHelper()
         return self.getMyselfInfo(checkDynamicData)
@@ -103,4 +104,7 @@ class UserInfoService(BaseService):
         if opType == OP_TYPE_SEX and \
                 self.userInfo.sex != DEFAULT_SEX_INDEX and self.userInfo.sex != value:
             return RESP_SEX_CANOT_EDIT
-        # todo 其他修改限制半年一次修改机会
+        if opType == OP_TYPE_MARTIAL_STATUS and self.userInfo.martial_status != DEFAULT_MARTIAL_STATUS_INDEX \
+                and value == DEFAULT_MARTIAL_STATUS_INDEX:
+            return RESP_MARTIAL_STATUS_CANOT_EDIT
+        # todo 其他修改限制，比如一月一次修改工作地址的机会
