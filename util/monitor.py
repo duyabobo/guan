@@ -3,6 +3,8 @@
 import functools
 import time
 
+from tornado import gen
+
 from log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
@@ -45,6 +47,33 @@ def superMonitor(func):
         # 开始处理请求
         try:
             response = func(handler, *args, **kwargs)
+        except Exception as e:  # 处理失败
+            httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
+            return
+        else:  # 处理成功
+            httpReturn(handler, response)
+            return
+    return wrapper
+
+
+def superGenMonitor(func):
+    # 要放到@gen.coroutine上面装饰
+    @functools.wraps(func)
+    @gen.coroutine
+    def wrapper(handler, *args, **kwargs):
+        # 处理前校验
+        checker = Checker(handler)
+        try:
+            checker.check()
+        except Exception as e:  # 校验失败
+            checker.fail()
+            httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
+            return
+        else:  # 校验成功
+            checker.success()
+        # 开始处理请求
+        try:
+            response = yield func(handler, *args, **kwargs)
         except Exception as e:  # 处理失败
             httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
             return

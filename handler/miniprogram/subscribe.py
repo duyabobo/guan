@@ -5,7 +5,7 @@ from tornado import gen
 from handler.basehandler import BaseHandler
 from service.subscribe import SubscribeService
 from util.const.mini_program import SUBSCRIBE_ACTIVITY_START_NOTI_TID
-from util.monitor import superMonitor, Response
+from util.monitor import superMonitor, Response, superGenMonitor
 
 
 class SubscribeCBHandler(BaseHandler):
@@ -19,12 +19,12 @@ class SubscribeCBHandler(BaseHandler):
 
 class SendMsgHandler(BaseHandler):
 
+    @superGenMonitor
     @gen.coroutine
     def get(self):
         openid = self.getRequestParameter('openid', '')
         templateId = self.getRequestParameter('templateId', SUBSCRIBE_ACTIVITY_START_NOTI_TID)
         miniprogramState = self.getRequestParameter('miniprogramState', 'trial')  # formal/developer/trial
         ss = SubscribeService(openid, templateId, miniprogramState)
-        ss.sendActivityStartMsg()
-        self.response(Response())
-        return
+        yield ss.sendActivityStartMsg()
+        raise gen.Return(Response())
