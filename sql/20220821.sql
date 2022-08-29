@@ -6,5 +6,6 @@ create table share (
     `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近修改时间',
     PRIMARY KEY (`id`),
-    index idx_region_id (`region_id`)
+    index idx_share_passport_id (`share_passport_id`),
+    index idx_accept_passport_id (`accept_passport_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='邀请信息';

@@ -6,6 +6,7 @@ from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.requirement import RequirementModel
+from model.share import ShareModel
 from model.user import UserModel
 from ral.cache import lock
 from service import BaseService
@@ -27,7 +28,7 @@ from util.const.response import RESP_OK, RESP_NEED_FILL_STUDY_FROM_YEAR, RESP_JO
     RESP_HAS_ONGOING_ACTIVITY, \
     RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
     RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_HOME_REGION, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_EDUCATION, \
-    RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_INFO
+    RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_INFO, RESP_NEED_INVITE_OR_MEMBER
 
 
 class GuanInfoService(BaseService):
@@ -268,7 +269,9 @@ class GuanInfoService(BaseService):
             return RESP_HAS_ONGOING_ACTIVITY
         if opType == GUAN_INFO_OP_TYPE_JOIN and not self.matchCheck():
             return RESP_JOIN_ACTIVITY_FAILED
-        # todo next：加入邀请，需要至少邀请注册一个新用户。if opType == GUAN_INFO_OP_TYPE_JOIN and
+        # todo 这个开关，前期可以不开。因为让用户帮我们拉新，是需要一定的吸引力和号召力的，前期不行。前期还得需要我们主动去推广，去营销，不得偷懒。
+        # if opType == GUAN_INFO_OP_TYPE_JOIN and not ShareModel.getAcceptCnt(self.passportId):
+        #     return RESP_NEED_INVITE_OR_MEMBER
         # 操作执行结果入库
         updateParams, whereParams = self.parseUpdataParams(opType, uis.userInfo.sexIndex)
         ret = ActivityModel.updateById(self.activityId, *whereParams, **updateParams)

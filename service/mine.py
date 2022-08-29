@@ -39,7 +39,7 @@ class MineService(BaseService):
             ],
             [
                 MainFuncObj(4, 0, SUGGESTION_PAGE, "客服", "handleContact", needLogin=False, openType="contact"),
-                MainFuncObj(5, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share", desc="近水楼台先得月"),  # todo next 如果有邀请数据，需要用邀请人数/成功注册人数替代这个desc
+                MainFuncObj(5, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share", desc="近水楼台先得月"),
             ],
             [
                 MainFuncObj(6, 0, SECRET_PAGE, "隐私条款", "clickMine", needLogin=False),

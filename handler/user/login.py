@@ -20,13 +20,13 @@ class LoginHandler(BaseHandler):
         """微信登录注册接口
         """
         jsCode = self.getRequestParameter('code')
-        shareOpenid = self.getRequestParameter('shareOpenid')  # todo next：需要记录下这个用户的邀请信息。
+        shareOpenid = self.getRequestParameter('shareOpenid')
         openid = yield WxHelper().getOpenidByCode(jsCode)
         if not openid:
             self.response(Response(msg=RESP_NEED_LOGIN))
             return
 
-        accessToken, secret = LoginService().login(openid)
+        accessToken, secret = LoginService().login(openid, shareOpenid)
         self.response(Response(data={
             'accessToken': accessToken,
             'secret': secret,
