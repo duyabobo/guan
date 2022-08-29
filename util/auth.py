@@ -90,5 +90,11 @@ class Checker(object):
             queryParams = {k: v for k, v in urlparse.parse_qsl(self.query, keep_blank_values=1)}
             requestParams.update(queryParams)
         # 加密校验
+        popKeys = []
+        for k in requestParams:
+            if requestParams[k] == 'undefined':
+                popKeys.append(k)
+        for k in popKeys:
+            requestParams.pop(k)
         content = self.getContentFromQuery(requestParams, "|")
         assert self.sign == hashlib.md5(content).hexdigest(), '签名验证失败'
