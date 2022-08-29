@@ -10,8 +10,6 @@ from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
 from util.obj_util import object_2_dict
 
-monitorLogger = monitor_logger('superMonitor')
-
 
 class Response(object):
     def __init__(self, data=None, msg=RESP_OK):
@@ -25,9 +23,9 @@ def httpReturn(handler, response, err=None):
              (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(handler.request.body),
               handler.accessToken, response.msg, object_2_dict(response.data), time.time()-handler.timestamp, err)
     if err is None:
-        monitorLogger.info(logMsg)
+        monitor_logger.info(logMsg)
     else:
-        monitorLogger.exception(logMsg)
+        monitor_logger.exception(logMsg)
     return handler.response(response)
 
 

@@ -7,8 +7,6 @@ import re
 from util.redis_conn import redisConn
 from util.log import monitor_logger
 
-monitorLogger = monitor_logger('superMonitor')
-
 
 def checkInconsistentCache(prefix, ex=60):
     """允许不一致数据的缓存（不需要配套deleteCache"""
@@ -70,7 +68,7 @@ def checkCache(key, ex=3600):
                     try:
                         return pickle.loads(val)
                     except Exception as e:
-                        monitorLogger.exception(e)
+                        monitor_logger.exception(e)
 
             ret = fn(*args, **kwargs)
             val = pickle.dumps(ret)

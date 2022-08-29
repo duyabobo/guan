@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 
 
-def monitor_logger(logger_name):
+def get_monitor_logger(logger_name):
     formatter = logging.Formatter('%(asctime)s - %(message)s')
     log_file = '/tmp/logs/monitor.log'
     fh = logging.handlers.TimedRotatingFileHandler(
@@ -44,3 +44,6 @@ def offline_script_logger(logger_name):
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fh)
     return logger
+
+
+monitor_logger = get_monitor_logger("monitor")
