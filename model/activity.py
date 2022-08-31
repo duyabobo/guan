@@ -16,10 +16,6 @@ from util.ctx import getDbSession
 from util.util_time import datetime2str
 
 
-# todo 安全：
-#  由于openid和email都可以得到很好的保护，活动的时间地点信息是我们最需要保护的。
-#  同时passport/user/requirement/verify/activity五元组数据，需要插入一些假数据。这些数据不是为了让数据好看，而是混淆数据攻击者，防止攻击者对我们用户数据和活动数据进行数据分析。
-#  最近太累了，休息一段时间，再维护这个项目。
 class ActivityModel(BaseModel):
     """活动"""
     __tablename__ = 'activity'
@@ -29,7 +25,8 @@ class ActivityModel(BaseModel):
     girl_passport_id = Column(Integer, default=0)  # 女孩passport_id
     boy_passport_id = Column(Integer, default=0)  # 男孩passport_id
     state = Column(Integer, default=0)  # 活动状态：MODEL_ACTIVITY_STATE
-    meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
+    girl_meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
+    boy_meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
