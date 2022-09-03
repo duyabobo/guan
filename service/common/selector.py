@@ -166,11 +166,20 @@ class MultiSelectorExtra(object):  # 三项选择器
             except:
                 return self.defaultIndex
 
+        def _getValue():
+            if bindChange == OP_TYPE_WORK_MULTI:
+                return valueList[2][:12] + '...'
+            elif bindChange == OP_TYPE_EDUCATION_MULTI:
+                return valueList[0][:12] + '...'
+            else:
+                return ""
+
         self.desc = desc
         self.subDesc = ""
         self.pickerType = PICKER_TYPE_MULTI_EXTRA_SELECTOR  # 选择器类型：多项
         self.bindChange = bindChange
         self.firstValue, self.secondValue, self.thirdValue = valueList
+        self.value = _getValue()
         self.fullValue = self.firstValue + self.secondValue + self.thirdValue  # 当前值可读字符串
 
         firstValue, secondValue, thirdValue = valueListDynamic
