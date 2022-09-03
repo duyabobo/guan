@@ -29,11 +29,12 @@ class WorkModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id == workId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
-    def addOne(cls, profession, industry, position):
+    def addOne(cls, profession, industry, position, seq=0):
         record = cls(
             profession=profession,
             industry=industry,
             position=position,
+            seq=seq,
         )
         getDbSession().add(record)
         getDbSession().flush()

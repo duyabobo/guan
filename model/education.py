@@ -29,11 +29,12 @@ class EducationModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id == educationId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
-    def addOne(cls, category, disciplines, major):
+    def addOne(cls, category, disciplines, major, seq=0):
         record = cls(
             category=category,
             disciplines=disciplines,
             major=major,
+            seq=seq,
         )
         getDbSession().add(record)
         getDbSession().flush()

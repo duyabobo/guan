@@ -35,3 +35,5 @@ create table company (
     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近修改时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司';
+alter table education add unique key uk_edu (`category`, `disciplines`, `major`);
+alter table work add unique key uk_work (`profession`, `industry`, `position`);
