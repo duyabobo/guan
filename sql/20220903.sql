@@ -37,3 +37,5 @@ create table company (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司';
 alter table education add unique key uk_edu (`category`, `disciplines`, `major`);
 alter table work add unique key uk_work (`profession`, `industry`, `position`);
+alter table work modify column `seq` int unsigned NOT NULL DEFAULT '0' COMMENT '序号越小越靠前';
+alter table education modify column `seq` int unsigned NOT NULL DEFAULT '0' COMMENT '序号越小越靠前';

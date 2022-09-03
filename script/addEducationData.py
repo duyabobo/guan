@@ -24,7 +24,7 @@ def getPageData():
         print json.dumps(data, ensure_ascii=False)
         data_list.append(data)
     for e in data_list[1:]:
-        EducationModel.addOne(e[1], e[2], e[4], e[0])
+        EducationModel.getIdByData(e[1], e[2], e[4], e[0])
     getDbSession().commit()
 
 

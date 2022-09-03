@@ -42,13 +42,13 @@ class WorkModel(BaseModel):
 
     @classmethod
     @checkInconsistentCache("WorkModel", ex=24*3600)
-    def getIdByData(cls, profession, industry, position):
+    def getIdByData(cls, profession, industry, position, seq=0):
         r = getDbSession().query(cls).filter(
             cls.profession == profession, cls.industry == industry,
             cls.position == position, cls.status == MODEL_STATUS_YES
         ).first()
         if not r:
-            r = cls.addOne(profession, industry, position)
+            r = cls.addOne(profession, industry, position, seq)
         return r.id
 
     @classmethod

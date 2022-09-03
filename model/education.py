@@ -42,13 +42,13 @@ class EducationModel(BaseModel):
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24*3600)
-    def getIdByData(cls, category, disciplines, major):
+    def getIdByData(cls, category, disciplines, major, seq=0):
         r = getDbSession().query(cls).filter(
             cls.category == category, cls.disciplines == disciplines,
             cls.major == major, cls.status == MODEL_STATUS_YES
         ).first()
         if not r:
-            r = cls.addOne(category, disciplines, major)
+            r = cls.addOne(category, disciplines, major, seq)
         return r.id
 
     @classmethod
