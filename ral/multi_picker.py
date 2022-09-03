@@ -10,8 +10,8 @@ from util.redis_conn import redisConn
 education_config = {
     "model": EducationModel,
     "dataName": "education",
-    "firstName": "school",
-    "secondName": "level",
+    "firstName": "category",
+    "secondName": "disciplines",
     "thirdName": "major"
 }
 

@@ -11,7 +11,7 @@ from util.class_helper import lazy_property
 from util.const.match import *
 
 OP_FUNCS_DICT = {
-    MODEL_MAIL_TYPE_UNKNOWN: [
+    MODEL_VERIFY_TYPE_NO_NEED_VERIFY: [
         OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
@@ -23,7 +23,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_STUDY_FROM_YEAR_PERIOD,
         OP_TYPE_MARTIAL_STATUS,
     ],
-    MODEL_MAIL_TYPE_SCHOOL: [
+    MODEL_VERIFY_TYPE_SCHOOL: [
         OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
@@ -35,7 +35,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_STUDY_FROM_YEAR_PERIOD,
         OP_TYPE_MARTIAL_STATUS,
     ],
-    MODEL_MAIL_TYPE_WORK: [
+    MODEL_VERIFY_TYPE_WORK: [
         OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_BIRTH_YEAR_PERIOD,
@@ -61,7 +61,7 @@ class RequirementHelper(object):
         
     def getRequirementList(self, checkDynamicData):
         requirementList = []
-        for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
+        for op_func in OP_FUNCS_DICT.get(self.requirement.verify_type, []):
             requirement = selectorFactory(op_func, self.requirement, checkDynamicData)
             if requirement:
                 requirementList.append(requirement)

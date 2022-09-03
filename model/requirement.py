@@ -109,12 +109,12 @@ class RequirementModel(BaseModel):
         return EducationModel.getById(self.education_id)
 
     @property
-    def school(self):
-        return self.education.school if self.education else ALL_STR
+    def category(self):
+        return self.education.category if self.education else ALL_STR
 
     @property
-    def level(self):
-        return self.education.level if self.education else ALL_STR
+    def disciplines(self):
+        return self.education.disciplines if self.education else ALL_STR
 
     @property
     def major(self):

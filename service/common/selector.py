@@ -68,7 +68,7 @@ def selectorFactory(op_type, data, checkDynamicData):
         return MultiSelector("入学时间区间", data.min_study_from_year, data.max_study_from_year, op_type)
     # 三项选择器
     elif op_type == OP_TYPE_EDUCATION_MULTI:
-        education = data.school, data.level, data.major
+        education = data.category, data.disciplines, data.major
         educationDynamic = MultiPickerHelper(op_type).getDataFromDynamic(data, checkDynamicData)
         return MultiSelectorExtra("教育信息", education, educationDynamic, op_type)
     elif op_type == OP_TYPE_WORK_MULTI:
