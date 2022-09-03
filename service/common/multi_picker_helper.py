@@ -7,11 +7,10 @@ from util.const.education import DEFAULT_MULTI_CHOICE_LIST
 
 
 class MultiPickerHelperABC(object):  # 扩展用
-    def __init__(self, region, opType):
+    def __init__(self, opType):
         """
         region是用来计算firstValue的
         """
-        self.region = region
         self.opType = opType
         config = multi_picker_config.get(opType, None)
         if config:
@@ -56,28 +55,15 @@ class MultiPickerHelper(MultiPickerHelperABC):
         return firstValue, secondValue, thirdValue
 
     def getFirstChoiceList(self):
-        province = self.region.province if self.region else ALL_STR
-        city = self.region.city if self.region else ALL_STR
-        area = self.region.area if self.region else ALL_STR
-
-        if city == ALL_STR:  # 只选择了省份
-            regions = RegionModel.listByProvince(province)
-        elif area == ALL_STR:  # 只选择了省份和城市
-            regions = RegionModel.listByProvinceAndCity(province, city)
-        else:  # 选择了省市区
-            regions = RegionModel.listByProvinceAndCityAndArea(province, city, area)
-
         firstChoiceList = []
         # 一级选择列表
-        regionIds = [r.id for r in regions]
-        if regionIds:
-            _firsts = self.model.getFirstsByRegionids(regionIds)
-            _firstSet = set()
-            for _f in _firsts:
-                f = getattr(_f, self.firstName)
-                if f not in _firstSet:
-                    _firstSet.add(f)
-                    firstChoiceList.append(f)
+        _firsts = self.model.getFirstsByRegionids()
+        _firstSet = set()
+        for _f in _firsts:
+            f = getattr(_f, self.firstName)
+            if f not in _firstSet:
+                _firstSet.add(f)
+                firstChoiceList.append(f)
         return firstChoiceList or DEFAULT_MULTI_CHOICE_LIST
 
     def getSecondChoiceList(self, first, firstChoiceList):
@@ -107,9 +93,6 @@ class MultiPickerHelper(MultiPickerHelperABC):
         return thirdChoiceList or DEFAULT_MULTI_CHOICE_LIST
 
     def getMultiChoiceList(self, firstValue, secondValue, thirdValue):
-        if not self.region or self.region.province == ALL_STR:  # 省份都没选择，不让选择多重选择数据
-            return [DEFAULT_MULTI_CHOICE_LIST] * 3
-
         firstChoiceList = self.getFirstChoiceList()
         secondChoiceList = self.getSecondChoiceList(firstValue, firstChoiceList)
         thirdChoiceList = self.getThirdChoiceList(firstValue, secondValue, secondChoiceList)
@@ -117,9 +100,6 @@ class MultiPickerHelper(MultiPickerHelperABC):
 
     def getChoiceIdAfterConfirm(self, oldValue, choiceIndexList):
         choiceId = oldValue.id if oldValue else 0
-
-        if not self.region:
-            return choiceId
         firstIndex, secondIndex, thirdIndex = choiceIndexList
         if firstIndex < 0 or secondIndex < 0 or thirdIndex < 0:
             return choiceId
@@ -139,7 +119,7 @@ class MultiPickerHelper(MultiPickerHelperABC):
             return choiceId
         thirdValue = thirdChoiceList[thirdIndex]
 
-        return self.model.getIdByData(self.region.id, firstValue, secondValue, thirdValue)
+        return self.model.getIdByData(firstValue, secondValue, thirdValue)
 
     def getChoiceIdAfterColumnChanged(self, data, column, choiceValueIndex):
         firstValue, secondValue, thirdValue = self.getDataFromDynamic(data, checkDynamicData=True)
@@ -154,4 +134,4 @@ class MultiPickerHelper(MultiPickerHelperABC):
         elif column == 2 and choiceValueIndex < len(thirdChoiceList):  # 修改了三级
             thirdValue = thirdChoiceList[choiceValueIndex]
 
-        return self.model.getIdByData(self.region.id, firstValue, secondValue, thirdValue)
+        return self.model.getIdByData(firstValue, secondValue, thirdValue)

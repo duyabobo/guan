@@ -69,12 +69,12 @@ def selectorFactory(op_type, data, checkDynamicData):
     # 三项选择器
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         education = data.school, data.level, data.major
-        educationDynamic = MultiPickerHelper(data.study_region, op_type).getDataFromDynamic(data, checkDynamicData)
-        return MultiSelectorExtra("教育信息", data.study_region, education, educationDynamic, op_type)
+        educationDynamic = MultiPickerHelper(op_type).getDataFromDynamic(data, checkDynamicData)
+        return MultiSelectorExtra("教育信息", education, educationDynamic, op_type)
     elif op_type == OP_TYPE_WORK_MULTI:
         work = data.profession, data.industry, data.position
-        workDynamic = MultiPickerHelper(data.study_region, op_type).getDataFromDynamic(data, checkDynamicData)
-        return MultiSelectorExtra("工作信息", data.work_region, work, workDynamic, op_type)
+        workDynamic = MultiPickerHelper(op_type).getDataFromDynamic(data, checkDynamicData)
+        return MultiSelectorExtra("工作信息", work, workDynamic, op_type)
     # 地址选择器
     elif op_type == OP_TYPE_HOME_REGION:
         return RegionSelector("籍贯", data.home_region, op_type)
@@ -146,7 +146,7 @@ class MultiSelector(object):  # 两项选择器
 
 
 class MultiSelectorExtra(object):  # 三项选择器
-    def __init__(self, desc, zeroValue, valueList, valueListDynamic, bindChange):
+    def __init__(self, desc, valueList, valueListDynamic, bindChange):
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
@@ -179,7 +179,7 @@ class MultiSelectorExtra(object):  # 三项选择器
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
-        multiPickerHelper = MultiPickerHelper(zeroValue, bindChange)
+        multiPickerHelper = MultiPickerHelper(bindChange)
         self.multiChoiceList = multiPickerHelper.getMultiChoiceList(firstValue, secondValue, thirdValue)
         self.multiSelectValueIndex = [_selectFirstIndex(), _selectSecondIndex(), _selectThirdIndex()]
         self.hasFilled = self.firstValue != ALL_STR  # 当前值是否已完善

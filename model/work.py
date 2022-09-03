@@ -29,9 +29,8 @@ class WorkModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id == workId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
-    def addOne(cls, region_id, profession, industry, position):
+    def addOne(cls, profession, industry, position):
         record = cls(
-            region_id=region_id,
             profession=profession,
             industry=industry,
             position=position,
@@ -42,15 +41,19 @@ class WorkModel(BaseModel):
 
     @classmethod
     @checkInconsistentCache("WorkModel", ex=24*3600)
-    def getIdByData(cls, region_id, profession, industry, position):
+    def getIdByData(cls, profession, industry, position):
         r = getDbSession().query(cls).filter(
-            cls.region_id == region_id,
             cls.profession == profession, cls.industry == industry,
             cls.position == position, cls.status == MODEL_STATUS_YES
         ).first()
         if not r:
-            r = cls.addOne(region_id, profession, industry, position)
+            r = cls.addOne(profession, industry, position)
         return r.id
+
+    @classmethod
+    @checkInconsistentCache("WorkModel", ex=24 * 3600)
+    def getFirstsByRegionids(cls):
+        return getDbSession().query(cls.profession).order_by(cls.seq).all()
 
     @classmethod
     @checkInconsistentCache("WorkModel", ex=24 * 3600)
@@ -61,10 +64,3 @@ class WorkModel(BaseModel):
     @checkInconsistentCache("WorkModel", ex=24 * 3600)
     def getThirdsByFirstAndSecond(cls, profession, industry):
         return getDbSession().query(cls.position).filter(cls.profession == profession, cls.industry == industry).order_by(cls.seq).all()
-
-    @classmethod
-    @checkInconsistentCache("WorkModel", ex=24 * 3600)
-    def getFirstsByRegionids(cls, region_ids):
-        if not region_ids:
-            return []
-        return getDbSession().query(cls.profession).filter(cls.region_id.in_(region_ids)).order_by(cls.seq).all()

@@ -29,11 +29,10 @@ class EducationModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id == educationId, cls.status == MODEL_STATUS_YES).first()
 
     @classmethod
-    def addOne(cls, region_id, school, level, major):
+    def addOne(cls, category, disciplines, major):
         record = cls(
-            region_id=region_id,
-            school=school,
-            level=level,
+            category=category,
+            disciplines=disciplines,
             major=major,
         )
         getDbSession().add(record)
@@ -42,29 +41,26 @@ class EducationModel(BaseModel):
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24*3600)
-    def getIdByData(cls, region_id, school, level, major):
+    def getIdByData(cls, category, disciplines, major):
         r = getDbSession().query(cls).filter(
-            cls.region_id == region_id,
-            cls.school == school, cls.level == level,
+            cls.category == category, cls.disciplines == disciplines,
             cls.major == major, cls.status == MODEL_STATUS_YES
         ).first()
         if not r:
-            r = cls.addOne(region_id, school, level, major)
+            r = cls.addOne(category, disciplines, major)
         return r.id
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24 * 3600)
-    def getSecondsByFirst(cls, school):
-        return getDbSession().query(cls.level).filter(cls.school == school).order_by(cls.seq).all()
+    def getFirstsByRegionids(cls):
+        return getDbSession().query(cls.category).order_by(cls.seq).all()
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24 * 3600)
-    def getThirdsByFirstAndSecond(cls, school, level):
-        return getDbSession().query(cls.major).filter(cls.school == school, cls.level == level).order_by(cls.seq).all()
+    def getSecondsByFirst(cls, category):
+        return getDbSession().query(cls.disciplines).filter(cls.category == category).order_by(cls.seq).all()
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24 * 3600)
-    def getFirstsByRegionids(cls, region_ids):
-        if not region_ids:
-            return []
-        return getDbSession().query(cls.school).filter(cls.region_id.in_(region_ids)).order_by(cls.seq).all()
+    def getThirdsByFirstAndSecond(cls, category, disciplines):
+        return getDbSession().query(cls.major).filter(cls.category == category, cls.disciplines == disciplines).order_by(cls.seq).all()

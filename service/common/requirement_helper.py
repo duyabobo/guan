@@ -98,26 +98,22 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
-            updateParams['education_id'] = EducationModel.getIdByData(study_region_id, ALL_STR, ALL_STR, ALL_STR)
+            updateParams['education_id'] = EducationModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
         elif opType == OP_TYPE_WORK_REGION_PERIOD:
             work_region_id = RegionModel.getIdByRegion(*value)
             updateParams['work_region_id'] = work_region_id
-            updateParams['work_id'] = WorkModel.getIdByData(work_region_id, ALL_STR, ALL_STR, ALL_STR)
+            updateParams['work_id'] = WorkModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
         # 三项选择器类型
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = MultiPickerHelper(self.requirement.study_region, opType).\
-                getChoiceIdAfterConfirm(self.requirement.education, value)
+            updateParams['education_id'] = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.requirement.education, value)
             delDataIdAfterConfirm(opType, self.requirement.passport_id)
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
-            education_id = MultiPickerHelper(self.requirement.study_region, opType).\
-                getChoiceIdAfterColumnChanged(self.requirement, column, value)
+            education_id = MultiPickerHelper(opType).getChoiceIdAfterColumnChanged(self.requirement, column, value)
             setDataIdAfterColumnChange(opType, self.requirement.passport_id, education_id)
         elif opType == OP_TYPE_WORK_MULTI:
-            updateParams['work_id'] = MultiPickerHelper(self.requirement.work_region, opType).\
-                getChoiceIdAfterConfirm(self.requirement.education, value)
+            updateParams['work_id'] = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.requirement.education, value)
             delDataIdAfterConfirm(opType, self.requirement.passport_id)
         elif opType == OP_TYPE_WORK_MULTI_COLUMN_CHANGE:
-            work_id = MultiPickerHelper(self.requirement.work_region, opType).\
-                getChoiceIdAfterColumnChanged(self.requirement, column, value)
+            work_id = MultiPickerHelper(opType).getChoiceIdAfterColumnChanged(self.requirement, column, value)
             setDataIdAfterColumnChange(opType, self.requirement.passport_id, work_id)
         return updateParams
