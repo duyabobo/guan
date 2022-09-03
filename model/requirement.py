@@ -29,12 +29,18 @@ class RequirementModel(BaseModel):
     min_height = Column(Integer, default=0)  # 最小身高(cm)
     max_height = Column(Integer, default=0)  # 最大身高(cm)
     home_region_id = Column(Integer, default=0)  # 籍贯地点id
-    study_region_id = Column(Integer, default=0)  # 学习地点id
-    education_id = Column(Integer, default=0)  # 学习信息id
-    work_region_id = Column(Integer, default=0)  # 学习地点id
-    work_id = Column(Integer, default=0)  # 工作信息id
     min_study_from_year = Column(Integer, default=0)  # 最早入学年份
     max_study_from_year = Column(Integer, default=0)  # 最晚入学年份
+    # 学习信息
+    study_region_id = Column(Integer, default=0)  # 学习地点id
+    school_id = Column(Integer, default=0)  # 学校id
+    education_level = Column(Integer, default=0)  # 学历：EDUCATION_LEVEL
+    education_id = Column(Integer, default=0)  # 学习信息id
+    # 工作信息
+    work_region_id = Column(Integer, default=0)  # 工作地点id
+    company_id = Column(Integer, default=0)  # 公司id
+    work_id = Column(Integer, default=0)  # 工作信息id
+    # 婚姻
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
