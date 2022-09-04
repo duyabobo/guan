@@ -28,8 +28,8 @@ class UserModel(BaseModel):
     height = Column(Integer, default=0)  # 身高(厘米)
     weight = Column(Integer, default=0)  # 体重(公斤)
     home_region_id = Column(Integer, default=0)  # 籍贯地点id
-    study_from_year = Column(Integer, default=0)  # 入学年份
     # 学习信息
+    study_from_year = Column(Integer, default=0)  # 入学年份
     study_region_id = Column(Integer, default=0)  # 学习地点id
     school_id = Column(Integer, default=0)  # 学校id
     education_level = Column(Integer, default=0)  # 学历：EDUCATION_LEVEL
@@ -38,9 +38,10 @@ class UserModel(BaseModel):
     work_region_id = Column(Integer, default=0)  # 工作地点id
     company_id = Column(Integer, default=0)  # 公司id
     work_id = Column(Integer, default=0)  # 工作信息id
+    work_level = Column(Integer, default=0)  # 职级：WORK_LEVEL
+    month_pay = Column(Integer, default=0)  # 月收入(元)
     # 婚姻
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
-    month_pay = Column(Integer, default=0)  # 月收入(元)
     is_fall_in_love = Column(Integer, default=0)  # 是否坠入爱河
     info_has_filled = Column(Integer, default=0)  # 是否完善信息：0否，1是
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
