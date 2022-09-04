@@ -13,7 +13,7 @@ from util.ctx import getDbSession
 
 
 class EducationModel(BaseModel):
-    """教育信息"""
+    """专业信息"""
     __tablename__ = 'education'
     id = Column(Integer, primary_key=True)  # id
     category = Column(String, default=EMPTY_STR)  # 专业门类

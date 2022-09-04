@@ -14,7 +14,7 @@ create table education (
     `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近修改时间',
     PRIMARY KEY (`id`)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='教育信息';
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='专业信息';
 
 create table region (
     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',

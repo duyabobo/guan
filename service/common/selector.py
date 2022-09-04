@@ -70,7 +70,7 @@ def selectorFactory(op_type, data, checkDynamicData):
     elif op_type == OP_TYPE_EDUCATION_MULTI:
         education = data.category, data.disciplines, data.major
         educationDynamic = MultiPickerHelper(op_type).getDataFromDynamic(data, checkDynamicData)
-        return MultiSelectorExtra("教育信息", education, educationDynamic, op_type)
+        return MultiSelectorExtra("专业信息", education, educationDynamic, op_type)
     elif op_type == OP_TYPE_WORK_MULTI:
         work = data.profession, data.industry, data.position
         workDynamic = MultiPickerHelper(op_type).getDataFromDynamic(data, checkDynamicData)
