@@ -8,9 +8,23 @@ from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
 from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS, \
-    DEFAULT_MARTIAL_STATUS_INDEX
+    DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
 from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX
+from util.const.response import RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
+    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_STUDY_FROM_YEAR, \
+    RESP_NEED_FILL_EDUCATION, RESP_NEED_FILL_EDUCATION_LEVEL, RESP_NEED_FILL_WORK, RESP_NEED_FILL_WORK_REGION, \
+    RESP_NEED_FILL_MONEY_PAY
 from util.const.response import RESP_SEX_CANOT_EDIT, RESP_MARTIAL_STATUS_CANOT_EDIT
+
+DEFAULT_VERIFY_TYPE = "未认证"
+EDUCATION_VERIFY_TYPE = "教育认证"
+WORK_VERIFY_TYPE = "工作认证"
+VERIFY_TYPE_DICT = {
+    MODEL_MAIL_VERIFY_STATUS_YES: {
+        MODEL_MAIL_TYPE_SCHOOL: EDUCATION_VERIFY_TYPE,
+        MODEL_MAIL_TYPE_WORK: WORK_VERIFY_TYPE
+    },
+}
 
 
 class UserInfoService(BaseService):
@@ -37,27 +51,62 @@ class UserInfoService(BaseService):
     @property
     def isVerified(self):
         return self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES
+    
+    @property
+    def verifyType(self):
+        return VERIFY_TYPE_DICT.get(self.verify.mail_verify_status, {}).\
+            get(self.verify.mail_type, DEFAULT_VERIFY_TYPE)
 
     @property
     def infoIsFilled(self):
-        return self.userInfo.sex and self.userInfo.birth_year \
-               and self.userInfo.martial_status and self.userInfo.height \
-               and self.userInfo.weight and self.userInfo.education
+        if self.verifyType == EDUCATION_VERIFY_TYPE:
+            return self.userInfo.sex and self.userInfo.birth_year \
+                   and self.userInfo.martial_status and self.userInfo.height and self.userInfo.weight \
+                   and self.userInfo.education and self.userInfo.study_region and self.userInfo.education_level
+        elif self.verifyType == WORK_VERIFY_TYPE:
+            return self.userInfo.sex and self.userInfo.birth_year \
+                   and self.userInfo.martial_status and self.userInfo.height and self.userInfo.weight \
+                   and self.userInfo.work_region and self.userInfo.work
+        else:
+            return False
 
-    @property
-    def userInfoIsFilled(self):
-        return self.isVerified and self.infoIsFilled
+    def userInfoNeedFilled(self):
+        # 返回细化提示信息
+        if not self.isVerified:
+            return RESP_NEED_VERIFY
+        elif not self.userInfo.sex:
+            return RESP_NEED_FILL_SEX
+        elif not self.userInfo.birth_year:
+            return RESP_NEED_FILL_BIRTH_YEAR
+        elif not self.userInfo.height:
+            return RESP_NEED_FILL_HEIGHT
+        elif not self.userInfo.weight:
+            return RESP_NEED_FILL_WEIGHT
+        elif self.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL:  # 学校认证
+            if not self.userInfo.study_region_id:
+                return RESP_NEED_FILL_STUDY_REGION
+            elif not self.userInfo.study_from_year:
+                return RESP_NEED_FILL_STUDY_FROM_YEAR
+            elif not self.userInfo.education_level:
+                return RESP_NEED_FILL_EDUCATION_LEVEL
+            elif not self.userInfo.education_id:
+                return RESP_NEED_FILL_EDUCATION
+        elif self.verify.mail_type == MODEL_MAIL_TYPE_WORK:  # 工作认证
+            if not self.userInfo.work_region_id:
+                return RESP_NEED_FILL_WORK_REGION
+            elif not self.userInfo.work_id:
+                return RESP_NEED_FILL_WORK
+            elif not self.userInfo.month_pay:
+                return RESP_NEED_FILL_MONEY_PAY
+        elif self.userInfo.martial_status == MODEL_MARTIAL_STATUS_UNKNOWN:
+            return RESP_NEED_FILL_MARTIAL_STATUS
+        else:
+            return None
 
-    def getVerify(self):
-        verifyType = "未认证"
-        if self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES:
-            if self.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL:
-                verifyType = "教育认证"
-            elif self.verify.mail_type == MODEL_MAIL_TYPE_WORK:
-                verifyType = "工作认证"
+    def getVerify(self): 
         return {
             "desc": "认证",
-            "value": verifyType,
+            "value": self.verifyType,
             "is_student": self.verify.mail_type
         }
 
@@ -89,7 +138,7 @@ class UserInfoService(BaseService):
         updateParams = self.userHelper.getUpdateParams(opType, value, column)
         if updateParams:
             checkDynamicData = False
-            if self.userInfoIsFilled:
+            if not self.userInfoNeedFilled():
                 updateParams['info_has_filled'] = 1
                 user.addFillFinishSet(self.passportId)
             else:

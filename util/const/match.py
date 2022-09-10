@@ -43,6 +43,7 @@ OP_TYPE_WORK_REGION = 'updateWorkRegion'
 OP_TYPE_HOME_REGION = 'updateHomeRegion'
 OP_TYPE_STUDY_REGION = 'updateStudyRegion'
 OP_TYPE_STUDY_FROM_YEAR = 'updateStudyFromYear'
+OP_TYPE_EDUCATION_LEVEL = 'updateEducationLevel'
 OP_TYPE_STUDY_FROM_YEAR_PERIOD = 'updateStudyFromYearPeriod'
 # CHOICE_LIST and DEFAULT_INDEX
 # MODEL_VERIFY_TYPE

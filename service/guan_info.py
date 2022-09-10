@@ -15,8 +15,6 @@ from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
     MODEL_MEET_RESULT_MAP
-from util.const.match import MODEL_MAIL_TYPE_SCHOOL
-from util.const.match import MODEL_MARTIAL_STATUS_UNKNOWN
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST, \
     MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
 from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG, \
@@ -25,8 +23,7 @@ from util.const.qiniu_img import CDN_QINIU_TIME_IMG, CDN_QINIU_ADDRESS_IMG, CDN_
     CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG, CDN_QINIU_ADDRESS_URL
 from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
-    RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
-    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_INFO
+    RESP_NEED_FILL_INFO
 from util.log import monitor_logger
 
 
@@ -246,28 +243,9 @@ class GuanInfoService(BaseService):
         """对活动进行操作"""
         # 参加前检查
         uis = UserInfoService(self.passport)
-        if not uis.userInfoIsFilled:  # 个人信息完善程度检查不通过
-            # 细化提示信息
-            if not uis.isVerified:
-                return RESP_NEED_VERIFY
-            if not uis.userInfo.sex:
-                return RESP_NEED_FILL_SEX
-            if not uis.userInfo.birth_year:
-                return RESP_NEED_FILL_BIRTH_YEAR
-            if not uis.userInfo.height:
-                return RESP_NEED_FILL_HEIGHT
-            if not uis.userInfo.weight:
-                return RESP_NEED_FILL_WEIGHT
-            if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.study_region_id:
-                return RESP_NEED_FILL_STUDY_REGION
-            if uis.userInfo.martial_status == MODEL_MARTIAL_STATUS_UNKNOWN:
-                return RESP_NEED_FILL_MARTIAL_STATUS
-        # if not uis.userInfo.home_region_id:
-        #     return RESP_NEED_FILL_HOME_REGION
-        # if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.study_from_year:
-        #     return RESP_NEED_FILL_STUDY_FROM_YEAR
-        # if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.education_id:
-        #     return RESP_NEED_FILL_EDUCATION
+        needFilled = uis.userInfoNeedFilled()  # 个人信息完善程度检查不通过
+        if needFilled:
+            return needFilled
         if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
             return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
