@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from service.common.multi_picker_helper import MultiPickerHelper
+from util.const.education import EDUCATION_LEVEL
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
@@ -53,6 +54,8 @@ def selectorFactory(op_type, data, checkDynamicData):
         return SingleSelector("税前月收入", data.month_pay, op_type, "(元)")
     elif op_type == OP_TYPE_MARTIAL_STATUS:
         return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type)
+    elif op_type == OP_TYPE_EDUCATION_LEVEL:
+        return SingleSelector("学历", EDUCATION_LEVEL[data.education_level], op_type)
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
     # 双项选择器
