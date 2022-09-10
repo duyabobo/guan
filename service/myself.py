@@ -42,7 +42,7 @@ class UserInfoService(BaseService):
     def infoIsFilled(self):
         return self.userInfo.sex and self.userInfo.birth_year \
                and self.userInfo.martial_status and self.userInfo.height \
-               and self.userInfo.weight
+               and self.userInfo.weight and self.userInfo.education
 
     @property
     def userInfoIsFilled(self):
@@ -89,7 +89,7 @@ class UserInfoService(BaseService):
         updateParams = self.userHelper.getUpdateParams(opType, value, column)
         if updateParams:
             checkDynamicData = False
-            if self.userHelper.hasFillFinish:
+            if self.userInfoIsFilled:
                 updateParams['info_has_filled'] = 1
                 user.addFillFinishSet(self.passportId)
             else:

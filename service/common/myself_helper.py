@@ -27,8 +27,8 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_WEIGHT,
         OP_TYPE_MARTIAL_STATUS,
         OP_TYPE_HOME_REGION,
-        OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_STUDY_REGION,
+        OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_EDUCATION_MULTI,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
@@ -38,8 +38,8 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_WEIGHT,
         OP_TYPE_MARTIAL_STATUS,
         OP_TYPE_HOME_REGION,
-        OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_STUDY_REGION,
+        OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_EDUCATION_MULTI,
     ],
     MODEL_MAIL_TYPE_WORK: [
@@ -72,12 +72,6 @@ class UserHelper(object):
             if info:
                 informationList.append(info)
         return informationList
-
-    @property
-    def hasFillFinish(self):
-        checkDynamicData = False
-        informationList = self.getInformationList(checkDynamicData)
-        return reduce(lambda x, y: x and y, [i.hasFilled for i in informationList])
 
     def getUpdateParams(self, opType, value, column=None):
         updateParams = {}

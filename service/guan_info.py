@@ -6,7 +6,6 @@ from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.requirement import RequirementModel
-from model.share import ShareModel
 from model.user import UserModel
 from ral.cache import lock
 from service import BaseService
@@ -24,11 +23,11 @@ from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
 from util.const.qiniu_img import CDN_QINIU_TIME_IMG, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_UNKNOWN_HEAD_IMG, \
     CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG, CDN_QINIU_ADDRESS_URL
-from util.const.response import RESP_OK, RESP_NEED_FILL_STUDY_FROM_YEAR, RESP_JOIN_ACTIVITY_FAILED, \
+from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
     RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
-    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_HOME_REGION, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_EDUCATION, \
-    RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_INFO, RESP_NEED_INVITE_OR_MEMBER
+    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_INFO
+from util.log import monitor_logger
 
 
 class GuanInfoService(BaseService):
@@ -150,9 +149,16 @@ class GuanInfoService(BaseService):
         return pairs
 
     def getMeetResult(self):
+        if self.passportId == self.activityRecord.boy_passport_id:
+            meet_result = self.activityRecord.boy_meet_result
+        elif self.passportId == self.activityRecord.girl_passport_id:
+            meet_result = self.activityRecord.girl_meet_result
+        else:
+            monitor_logger.error("活动见面结果有误 activityId=%s", self.activityId)
+            meet_result = 0
         return {
-            "value": MODEL_MEET_RESULT_MAP[self.activityRecord.meet_result],
-            "selectValueIndex": self.activityRecord.meet_result,
+            "value": MODEL_MEET_RESULT_MAP[meet_result],
+            "selectValueIndex": meet_result,
             "choiceList": MODEL_MEET_RESULT_CHOICE_LIST,
         }
     
@@ -240,26 +246,28 @@ class GuanInfoService(BaseService):
         """对活动进行操作"""
         # 参加前检查
         uis = UserInfoService(self.passport)
-        if not uis.isVerified:
-            return RESP_NEED_VERIFY
-        if not uis.userInfo.sex:
-            return RESP_NEED_FILL_SEX
-        if not uis.userInfo.birth_year:
-            return RESP_NEED_FILL_BIRTH_YEAR
-        if not uis.userInfo.height:
-            return RESP_NEED_FILL_HEIGHT
-        if not uis.userInfo.weight:
-            return RESP_NEED_FILL_WEIGHT
-        if not uis.userInfo.home_region_id:
-            return RESP_NEED_FILL_HOME_REGION
-        if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.study_region_id:
-            return RESP_NEED_FILL_STUDY_REGION
-        if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.study_from_year:
-            return RESP_NEED_FILL_STUDY_FROM_YEAR
-        if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.education_id:
-            return RESP_NEED_FILL_EDUCATION
-        if uis.userInfo.martial_status == MODEL_MARTIAL_STATUS_UNKNOWN:
-            return RESP_NEED_FILL_MARTIAL_STATUS
+        if not uis.userInfoIsFilled:  # 个人信息完善程度检查不通过
+            # 细化提示信息
+            if not uis.isVerified:
+                return RESP_NEED_VERIFY
+            if not uis.userInfo.sex:
+                return RESP_NEED_FILL_SEX
+            if not uis.userInfo.birth_year:
+                return RESP_NEED_FILL_BIRTH_YEAR
+            if not uis.userInfo.height:
+                return RESP_NEED_FILL_HEIGHT
+            if not uis.userInfo.weight:
+                return RESP_NEED_FILL_WEIGHT
+            if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.study_region_id:
+                return RESP_NEED_FILL_STUDY_REGION
+            if uis.userInfo.martial_status == MODEL_MARTIAL_STATUS_UNKNOWN:
+                return RESP_NEED_FILL_MARTIAL_STATUS
+        # if not uis.userInfo.home_region_id:
+        #     return RESP_NEED_FILL_HOME_REGION
+        # if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.study_from_year:
+        #     return RESP_NEED_FILL_STUDY_FROM_YEAR
+        # if uis.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL and not uis.userInfo.education_id:
+        #     return RESP_NEED_FILL_EDUCATION
         if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
             return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
