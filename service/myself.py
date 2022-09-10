@@ -42,7 +42,7 @@ class UserInfoService(BaseService):
     def infoIsFilled(self):
         return self.userInfo.sex and self.userInfo.birth_year \
                and self.userInfo.martial_status and self.userInfo.height \
-               and self.userInfo.weight and self.userInfo.education
+               and self.userInfo.weight
 
     @property
     def userInfoIsFilled(self):
