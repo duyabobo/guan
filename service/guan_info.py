@@ -10,7 +10,7 @@ from model.user import UserModel
 from ral.cache import lock
 from service import BaseService
 from service.common.match import MatchHelper
-from service.common.myself_helper import UserHelper, INFORMATION_PAIR_LIST
+from service.common.myself_helper import UserHelper
 from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
@@ -127,10 +127,11 @@ class GuanInfoService(BaseService):
             return []
 
         checkDynamicData = False
-        informationList = UserHelper(self.oppositeUserRecord).getInformationList(checkDynamicData)
+        uh = UserHelper(self.oppositeUserRecord)
+        informationList = uh.getInformationList(checkDynamicData)
         opTypeMapInformation = {i.bindChange: i for i in informationList}
         pairs = []
-        for opTypes in INFORMATION_PAIR_LIST:
+        for opTypes in uh.getInformationPariList():
             pair = []
             for opType in opTypes:
                 if opType not in opTypeMapInformation:
