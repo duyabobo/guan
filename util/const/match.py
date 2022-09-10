@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 from util.const.base import *
-from util.const.education import DEFAULT_MULTI_INDEX
+from util.const.education import DEFAULT_MULTI_INDEX, EDUCATION_LEVEL, DEFAULT_EDUCATION_INDEX
 
 # model
 # MODEL_STATUS_ENUMERATE
@@ -151,6 +151,11 @@ MATCH_INFO_DICT = {
     OP_TYPE_STUDY_FROM_YEAR: {
         "CHOICE_LIST": STUDY_FROM_YEAR_CHOICE_LIST,
         "DEFAULT_INDEX": DEFAULT_STUDY_FROM_YEAR_INDEX,
+        "COLUMN_CHANGE_FUNC": ""
+    },
+    OP_TYPE_EDUCATION_LEVEL: {
+        "CHOICE_LIST": EDUCATION_LEVEL,
+        "DEFAULT_INDEX": DEFAULT_EDUCATION_INDEX,
         "COLUMN_CHANGE_FUNC": ""
     },
     OP_TYPE_STUDY_FROM_YEAR_PERIOD: {

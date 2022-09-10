@@ -77,6 +77,8 @@ class RequirementHelper(object):
             updateParams['verify_type'] = value
         elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             updateParams['sex'] = value
+        elif opType == OP_TYPE_EDUCATION_LEVEL:
+            updateParams['education_level'] = value
         # 双项选择器类型
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]

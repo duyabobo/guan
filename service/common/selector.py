@@ -15,6 +15,7 @@ VALUE_TYPE_DICT = {
     OP_TYPE_WEIGHT: int,
     OP_TYPE_MONTH_PAY: int,
     OP_TYPE_STUDY_FROM_YEAR: int,
+    OP_TYPE_EDUCATION_LEVEL: int,
     # 双项选择器
     OP_BIRTH_YEAR_PERIOD: list,
     OP_TYPE_MARTIAL_STATUS: int,

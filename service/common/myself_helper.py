@@ -114,6 +114,8 @@ class UserHelper(object):
             updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
         elif opType == OP_TYPE_STUDY_FROM_YEAR:
             updateParams['study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value]
+        elif opType == OP_TYPE_EDUCATION_LEVEL:
+            updateParams['education_level'] = value
         # region地址选择器类型
         elif opType == OP_TYPE_HOME_REGION:
             updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
