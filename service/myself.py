@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from common.myself_helper import UserHelper
+from model.requirement import RequirementModel
 from model.user import UserModel
 from model.verify import VerifyModel
 from ral import user
@@ -135,18 +136,24 @@ class UserInfoService(BaseService):
     @deleteCache(["UserInfoService:{passportId}"])
     def updateMyselfInfo(self, opType, value, column=None):
         checkDynamicData = True
-        updateParams = self.userHelper.getUpdateParams(opType, value, column)
-        if updateParams:
+        userUpdateParams, requirementUpdateParams = self.userHelper.getUpdateParams(opType, value, column)
+        if userUpdateParams:
             checkDynamicData = False
             if not self.userInfoNeedFilled():
-                updateParams['info_has_filled'] = 1
+                userUpdateParams['info_has_filled'] = 1
                 user.addFillFinishSet(self.passportId)
             else:
-                updateParams['info_has_filled'] = 0
+                userUpdateParams['info_has_filled'] = 0
                 user.delFillFinishSet(self.passportId)
-            UserModel.updateByPassportId(self.passportId, **updateParams)
+            UserModel.updateByPassportId(self.passportId, **userUpdateParams)
+            self.autoFillRequirement(**requirementUpdateParams)  # 自动填充期望信息，只会首次填写某个用户信息时才会自动填充期望，后续更新用户信息，不会更新期望
             self.reloaduserHelper()
         return self.getMyselfInfo(checkDynamicData)
+
+    @deleteCache(["RequirementService:{passportId}"])
+    def autoFillRequirement(self, **requirementUpdateParams):
+        if requirementUpdateParams:
+            RequirementModel.updateByPassportId(self.passportId, **requirementUpdateParams)
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and \

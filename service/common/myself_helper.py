@@ -98,46 +98,88 @@ class UserHelper(object):
         return INFORMATION_PAIR_LIST_DICT.get(self.verify_record.mail_type, [])
 
     def getUpdateParams(self, opType, value, column=None):
-        updateParams = {}
+        userUpdateParams = {}
+        requirementUpdateParams = {}
         # 单项选择器
         if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
-            updateParams['sex'] = value
+            userUpdateParams['sex'] = value
+            if self.user.sex == MODEL_SEX_UNKNOWN_INDEX:  # 首次更新用户信息- sex。下同
+                if value == MODEL_SEX_MALE_INDEX:
+                    requirementUpdateParams['sex'] = MODEL_SEX_FEMALE_INDEX
+                elif value == MODEL_SEX_FEMALE_INDEX:
+                    requirementUpdateParams['sex'] = MODEL_SEX_MALE_INDEX
         elif opType == OP_TYPE_BIRTH_YEAR:
-            updateParams['birth_year'] = BIRTH_YEAR_CHOICE_LIST[value]
+            userUpdateParams['birth_year'] = BIRTH_YEAR_CHOICE_LIST[value]
+            if not self.user.birth_year:
+                requirementUpdateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[max(value-2, 0)]
+                requirementUpdateParams['max_birth_year'] = BIRTH_YEAR_CHOICE_LIST[min(value+2, len(BIRTH_YEAR_CHOICE_LIST)-1)]
         elif opType == OP_TYPE_MARTIAL_STATUS:
-            updateParams['martial_status'] = value
+            userUpdateParams['martial_status'] = value
+            requirementUpdateParams['martial_status'] = value
         elif opType == OP_TYPE_HEIGHT:
-            updateParams['height'] = HEIGHT_CHOICE_LIST[value]
+            userUpdateParams['height'] = HEIGHT_CHOICE_LIST[value]
+            if not self.user.height:
+                requirementUpdateParams['min_height'] = HEIGHT_CHOICE_LIST[value-5]
+                requirementUpdateParams['max_height'] = HEIGHT_CHOICE_LIST[value+5]
         elif opType == OP_TYPE_WEIGHT:
-            updateParams['weight'] = WEIGHT_CHOICE_LIST[value]
+            userUpdateParams['weight'] = WEIGHT_CHOICE_LIST[value]
+            if not self.user.weight:
+                requirementUpdateParams['min_weight'] = WEIGHT_CHOICE_LIST[value-5]
+                requirementUpdateParams['max_weight'] = WEIGHT_CHOICE_LIST[value+5]
         elif opType == OP_TYPE_MONTH_PAY:
-            updateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
+            userUpdateParams['month_pay'] = MONTH_PAY_CHOICE_LIST[value]
+            if not self.user.month_pay:
+                requirementUpdateParams['min_month_pay'] = MONTH_PAY_CHOICE_LIST[value-5]
+                requirementUpdateParams['max_month_pay'] = MONTH_PAY_CHOICE_LIST[value+5]
         elif opType == OP_TYPE_STUDY_FROM_YEAR:
-            updateParams['study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value]
+            userUpdateParams['study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value]
+            if not self.user.study_from_year:
+                requirementUpdateParams['min_study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value-1]
+                requirementUpdateParams['max_study_from_year'] = STUDY_FROM_YEAR_CHOICE_LIST[value+1]
         elif opType == OP_TYPE_EDUCATION_LEVEL:
-            updateParams['education_level'] = value
+            userUpdateParams['education_level'] = value
+            requirementUpdateParams['education_level'] = value
         # region地址选择器类型
         elif opType == OP_TYPE_HOME_REGION:
-            updateParams['home_region_id'] = RegionModel.getIdByRegion(*value)
+            home_region_id = RegionModel.getIdByRegion(*value)
+            userUpdateParams['home_region_id'] = home_region_id
+            if not self.user.home_region_id:
+                requirementUpdateParams['home_region_id'] = home_region_id
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
-            updateParams['study_region_id'] = study_region_id
-            updateParams['education_id'] = EducationModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
+            education_id = EducationModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
+            userUpdateParams['study_region_id'] = study_region_id
+            userUpdateParams['education_id'] = education_id
+            if not self.user.study_region_id:
+                requirementUpdateParams['study_region_id'] = study_region_id
+            if not self.user.education_id:
+                requirementUpdateParams['education_id'] = education_id
         elif opType == OP_TYPE_WORK_REGION:
             work_region_id = RegionModel.getIdByRegion(*value)
-            updateParams['work_region_id'] = work_region_id
-            updateParams['work_id'] = WorkModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
+            work_id = WorkModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
+            userUpdateParams['work_region_id'] = work_region_id
+            userUpdateParams['work_id'] = work_id
+            if not self.user.work_region_id:
+                requirementUpdateParams['work_region_id'] = work_region_id
+            if not self.user.work_id:
+                requirementUpdateParams['work_id'] = work_id
         # 三项选择器类型
         elif opType == OP_TYPE_EDUCATION_MULTI:
-            updateParams['education_id'] = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.user.education, value)
+            education_id = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.user.education, value)
+            userUpdateParams['education_id'] = education_id
             delDataIdAfterConfirm(opType, self.user.passport_id)
+            if not self.user.education_id:
+                requirementUpdateParams['education_id'] = education_id
         elif opType == OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE:
             education_id = MultiPickerHelper(opType).getChoiceIdAfterColumnChanged(self.user, column, value)
             setDataIdAfterColumnChange(opType, self.user.passport_id, education_id)
         elif opType == OP_TYPE_WORK_MULTI:
-            updateParams['work_id'] = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.user.work, value)
+            work_id = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.user.work, value)
+            userUpdateParams['work_id'] = work_id
             delDataIdAfterConfirm(opType, self.user.passport_id)
+            if not self.user.work_id:
+                requirementUpdateParams['work_id'] = work_id
         elif opType == OP_TYPE_WORK_MULTI_COLUMN_CHANGE:
             work_id = MultiPickerHelper(opType).getChoiceIdAfterColumnChanged(self.user, column, value)
             setDataIdAfterColumnChange(opType, self.user.passport_id, work_id)
-        return updateParams
+        return userUpdateParams, requirementUpdateParams
