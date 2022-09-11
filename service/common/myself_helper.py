@@ -147,22 +147,14 @@ class UserHelper(object):
                 requirementUpdateParams['home_region_id'] = home_region_id
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
-            education_id = EducationModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
             userUpdateParams['study_region_id'] = study_region_id
-            userUpdateParams['education_id'] = education_id
             if not self.user.study_region_id:
                 requirementUpdateParams['study_region_id'] = study_region_id
-            if not self.user.education_id:
-                requirementUpdateParams['education_id'] = education_id
         elif opType == OP_TYPE_WORK_REGION:
             work_region_id = RegionModel.getIdByRegion(*value)
-            work_id = WorkModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
             userUpdateParams['work_region_id'] = work_region_id
-            userUpdateParams['work_id'] = work_id
             if not self.user.work_region_id:
                 requirementUpdateParams['work_region_id'] = work_region_id
-            if not self.user.work_id:
-                requirementUpdateParams['work_id'] = work_id
         # 三项选择器类型
         elif opType == OP_TYPE_EDUCATION_MULTI:
             education_id = MultiPickerHelper(opType).getChoiceIdAfterConfirm(self.user.education, value)
