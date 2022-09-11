@@ -161,10 +161,7 @@ class GuanInfoService(BaseService):
         }
     
     def getGuanInfo(self):
-        if self.opType != GUAN_INFO_OP_TYPE_QUIT:  # opType 是下一步操作类型
-            subscribeTemplateIds = []
-        else:
-            subscribeTemplateIds = [SUBSCRIBE_ACTIVITY_START_NOTI_TID]
+        subscribeTemplateIds = [SUBSCRIBE_ACTIVITY_START_NOTI_TID]  # 尽最大可能搜集订阅消息
         return {
             "guanId": self.activityId,
             "activity": {
