@@ -14,7 +14,8 @@ from ral.cache import checkCache, deleteCache
 from ral.user import finishCntKey
 from util.const import match
 from util.const.base import ALL_STR
-from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_MAIL_TYPE_UNKNOWN
+from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_MAIL_TYPE_UNKNOWN, \
+    MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK
 from util.ctx import getDbSession
 
 
@@ -77,6 +78,45 @@ class UserModel(BaseModel):
     @checkCache(finishCntKey)
     def getFillFinishCnt(cls):
         return getDbSession().query(cls.id).filter(cls.info_has_filled == match.MODEL_STATUS_YES).count()
+
+    @classmethod
+    def getMatchCnt(cls, requirement):
+        filterParms = [cls.sex == requirement.sex, cls.status == match.MODEL_STATUS_YES]
+        if requirement.min_birth_year:
+            filterParms.append(cls.birth_year >= requirement.min_birth_year)
+        if requirement.max_birth_year:
+            filterParms.append(cls.birth_year <= requirement.max_birth_year)
+        if requirement.min_height:
+            filterParms.append(cls.height >= requirement.min_height)
+        if requirement.max_height:
+            filterParms.append(cls.height <= requirement.max_height)
+        if requirement.min_weight:
+            filterParms.append(cls.weight >= requirement.min_weight)
+        if requirement.max_weight:
+            filterParms.append(cls.weight <= requirement.max_weight)
+        if requirement.martial_status:
+            filterParms.append(cls.martial_status == requirement.martial_status)
+        if requirement.verify_type in [MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_UNKNOWN]:
+            if requirement.min_study_from_year:
+                filterParms.append(cls.study_from_year >= requirement.min_study_from_year)
+            if requirement.max_study_from_year:
+                filterParms.append(cls.study_from_year <= requirement.max_study_from_year)
+            if requirement.study_region_id:
+                filterParms.append(cls.study_region_id == requirement.study_region_id)
+            if requirement.education_level:
+                filterParms.append(cls.education_level == requirement.education_level)
+            if requirement.education_id:
+                filterParms.append(cls.education_id == requirement.education_id)
+        elif requirement.verify_type == MODEL_MAIL_TYPE_WORK:
+            if requirement.work_region_id:
+                filterParms.append(cls.work_region_id == requirement.work_region_id)
+            if requirement.work_id:
+                filterParms.append(cls.work_id == requirement.work_id)
+            if requirement.min_month_pay:
+                filterParms.append(cls.month_pay >= requirement.min_month_pay)
+            if requirement.max_month_pay:
+                filterParms.append(cls.month_pay <= requirement.max_month_pay)
+        return getDbSession().query(cls.id).filter(*filterParms).count()
 
     @property
     def verify_type(self):

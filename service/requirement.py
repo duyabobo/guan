@@ -5,6 +5,7 @@ from model.requirement import RequirementModel
 from model.user import UserModel
 from ral.cache import checkCache, deleteCache
 from service import BaseService
+from service.common.match import MatchHelper
 from util.class_helper import lazy_property
 from util.const.match import OP_TYPE_SEX, SEX_CHOICE_LIST, DEFAULT_SEX_INDEX
 from util.const.response import RESP_USER_SEX_FIRST_EDIT, RESP_REQUIREMENT_SEX_ERROR
@@ -39,10 +40,10 @@ class RequirementService(BaseService):
         return {
             "requirementList": requirementList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给requirementList的每个元素一个对应序号，用来小程序实时更新对应的picker值
-            "requirementResult": "3人满足你的期望"  # todo next 搞个缓存计算，对每个用户都缓存一份数据，并且维护一致性。
+            "requirementResult": "%d人满足你的期望" % MatchHelper.getMatchRequirementCnt(self.passportId)
         }
 
-    @deleteCache(["RequirementService:{passportId}"])
+    @deleteCache(["RequirementService:{passportId}", "MatchHelper:{passportId}"])
     def updateRequirementInfo(self, opType, value, column=None):
         checkDynamicData = True
         updateParams = self.requirementHelper.getUpdateParams(opType, value, column)

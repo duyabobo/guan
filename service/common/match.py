@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from model.requirement import RequirementModel
+from model.user import UserModel
+from ral.cache import checkCache
 from util.const.base import ALL_STR
 from util.const.match import MODEL_MAIL_TYPE_UNKNOWN
 
@@ -71,3 +74,9 @@ class MatchHelper(object):
         if userInfo.position != requirement.position and requirement.position != ALL_STR:
             return False
         return True
+
+    @staticmethod
+    @checkCache("MatchHelper:{passportId}")  # 匹配计数，todo 后期可以放入celery异步计算
+    def getMatchRequirementCnt(passportId):
+        requirement = RequirementModel.getByPassportId(passportId)
+        return UserModel.getMatchCnt(requirement)

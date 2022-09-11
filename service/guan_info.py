@@ -182,7 +182,7 @@ class GuanInfoService(BaseService):
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
-                "requirementResult": "3人满足你的期望"  # todo next 搞个缓存计算，对每个用户都缓存一份数据，并且维护一致性。
+                "requirementResult": "%d人满足你的期望" % MatchHelper.getMatchRequirementCnt(self.passportId)
             },
         }
 
