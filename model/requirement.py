@@ -40,8 +40,6 @@ class RequirementModel(BaseModel):
     work_region_id = Column(Integer, default=0)  # 工作地点id
     company_id = Column(Integer, default=0)  # 公司id
     work_id = Column(Integer, default=0)  # 工作信息id
-    min_work_from_year = Column(Integer, default=0)  # 最早参加工作年份
-    max_work_from_year = Column(Integer, default=0)  # 最晚参加工作年份
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     # 婚姻
