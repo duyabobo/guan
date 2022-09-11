@@ -172,9 +172,9 @@ class MultiSelectorExtra(object):  # 三项选择器
 
         def _getValue():
             if bindChange == OP_TYPE_WORK_MULTI:
-                return valueList[2][:12] + '...'
+                return valueList[2][:12] + '...' if len(valueList[2]) > 12 else valueList[2]
             elif bindChange == OP_TYPE_EDUCATION_MULTI:
-                return valueList[0][:12] + '...'
+                return valueList[0][:12] + '...' if len(valueList[0]) > 12 else valueList[0]
             else:
                 return ""
 
