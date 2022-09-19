@@ -43,8 +43,8 @@ class AddressModel(BaseModel):
         return getDbSession().query(cls).filter(cls.id.in_(addressIds), cls.status == match.MODEL_STATUS_YES)
 
     @classmethod
-    def getLastAddress(cls):
-        return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).order_by(cls.id.desc()).first()
+    def getAddressList(cls):
+        return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES)
 
     @property
     def nameShort(self):

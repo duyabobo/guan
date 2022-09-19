@@ -28,14 +28,14 @@ class ActivityAutoCreater(object):
     def hasFreeActivity(self):
         return bool(ActivityModel.getLastFreeActivity())
 
-    def getAvaliableAddress(self):
-        return AddressModel.getLastAddress()
+    def getAvaliableAddressList(self):
+        return AddressModel.getAddressList()
 
-    def getLastActivity(self):
-        return ActivityModel.getLastActivity()
+    def getLastActivity(self, addressId):
+        return ActivityModel.getLastActivity(addressId)
 
-    def getNextTime(self):
-        lastActivity = self.getLastActivity()
+    def getNextTime(self, addressId):
+        lastActivity = self.getLastActivity(addressId)
         if lastActivity and lastActivity.start_time.weekday() > 4 and lastActivity.start_time.hour < 17:  # 最新的活动是周末
             nextTime = lastActivity.start_time + datetime.timedelta(minutes=30)
         else:
@@ -49,11 +49,13 @@ class ActivityAutoCreater(object):
         with LocalContext(lambda: self.dbSession):
             if self.hasFreeActivity():
                 return
-            address = self.getAvaliableAddress()
-            if not address:
+            addressList = self.getAvaliableAddressList()
+            if not addressList:
                 return
-            nextTime = self.getNextTime()
-            ActivityModel.addOne(address.id, nextTime)
+            for address in addressList:
+                addressId = address.id
+                nextTime = self.getNextTime(addressId)
+                ActivityModel.addOne(addressId, nextTime)
         return
 
 

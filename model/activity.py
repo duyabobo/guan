@@ -87,9 +87,10 @@ class ActivityModel(BaseModel):
         ).order_by(cls.id.desc()).first()
 
     @classmethod
-    def getLastActivity(cls):
+    def getLastActivity(cls, addressId):
         return getDbSession().query(cls).filter(
             cls.start_time > datetime.datetime.now(),
+            cls.address_id == addressId,
             cls.status == match.MODEL_STATUS_YES
         ).order_by(cls.id.desc()).first()
 
