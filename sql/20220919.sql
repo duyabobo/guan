@@ -1,0 +1,1 @@
+alter table address add column thumbnails_img varchar(32) not null default '' comment '缩略图';

@@ -20,6 +20,7 @@ class AddressModel(BaseModel):
     name = Column(String)  # name
     description = Column(String, default=EMPTY_STR)  # 地点描述(人均消费/吃喝玩乐推荐)
     img = Column(String, default=EMPTY_STR)
+    thumbnails_img = Column(String, default=EMPTY_STR)  # 缩略图
     region_id = Column(Integer, default=0)  # 省市区id
     longitude = Column(Float, default=0)  # 经度
     latitude = Column(Float, default=0)  # 纬度
