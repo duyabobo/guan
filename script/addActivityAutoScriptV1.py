@@ -25,8 +25,8 @@ class ActivityAutoCreater(object):
         self.dbSession.__enter__ = lambda: None
         self.dbSession.__exit__ = lambda type, value, traceback: None
 
-    def hasFreeActivity(self):
-        return bool(ActivityModel.getLastFreeActivity())
+    def hasFreeActivity(self, addressId):
+        return bool(ActivityModel.getLastFreeActivity(addressId))
 
     def getAvaliableAddressList(self):
         return AddressModel.getAddressList()
@@ -47,13 +47,13 @@ class ActivityAutoCreater(object):
 
     def createActivity(self):
         with LocalContext(lambda: self.dbSession):
-            if self.hasFreeActivity():
-                return
             addressList = self.getAvaliableAddressList()
             if not addressList:
                 return
             for address in addressList:
                 addressId = address.id
+                if self.hasFreeActivity(addressId):
+                    continue
                 nextTime = self.getNextTime(addressId)
                 ActivityModel.addOne(addressId, nextTime)
         return

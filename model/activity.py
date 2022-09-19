@@ -78,9 +78,10 @@ class ActivityModel(BaseModel):
         ).first()
 
     @classmethod
-    def getLastFreeActivity(cls):
+    def getLastFreeActivity(cls, addressId):
         return getDbSession().query(cls).filter(
             cls.start_time > datetime.datetime.now(),
+            cls.address_id == addressId,
             cls.girl_passport_id == 0,
             cls.boy_passport_id == 0,
             cls.status == match.MODEL_STATUS_YES
