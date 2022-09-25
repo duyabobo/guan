@@ -11,7 +11,7 @@ from util.ctx import getDbSession
 
 
 def readData():
-    fileName = '/Users/duyabo/work'
+    fileName = './work'
     workList = []
     with open(fileName, 'r') as f:
         for l in f.readlines():
