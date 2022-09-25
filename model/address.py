@@ -29,7 +29,9 @@ class AddressModel(BaseModel):
 
     @property
     def imgObjName(self):  # 图片对象存储名（对应七牛存储对象）
-        return pinyin.get(self.name, format="strip")
+        specialChars = "()（）*&^%$#@!~,./;'\"?-+[]{}【】|\\`·"
+        nameClean = ''.join([n for n in self.name if n not in specialChars])
+        return pinyin.get(nameClean, format="strip")
 
     @property
     def img(self):  # 图片url
