@@ -13,7 +13,7 @@ from util.const import match
 from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
-from util.util_time import datetime2str
+from util.util_time import datetime2hommization
 
 
 class ActivityModel(BaseModel):
@@ -53,7 +53,7 @@ class ActivityModel(BaseModel):
 
     @property
     def startTimeStr(self):
-        return datetime2str(self.start_time, fmt="%Y-%m-%d %H:%M")
+        return datetime2hommization(self.start_time)
 
     @property
     def boyImg(self):
