@@ -80,7 +80,7 @@ class ActivityModel(BaseModel):
     @classmethod
     def getLastFreeActivity(cls, addressId):
         return getDbSession().query(cls).filter(
-            cls.start_time > datetime.datetime.now(),
+            cls.start_time > datetime.datetime.now() + datetime.timedelta(days=14),
             cls.address_id == addressId,
             cls.girl_passport_id == 0,
             cls.boy_passport_id == 0,
