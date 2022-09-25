@@ -17,3 +17,4 @@ PyJWT==1.6.4
 pymysql==0.9.3
 aliyun-python-sdk-dysmsapi==2.1.2
 pyDes==2.0.1
+pinyin==0.4.0

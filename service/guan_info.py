@@ -75,7 +75,7 @@ class GuanInfoService(BaseService):
 
     @property
     def img(self):
-        return CDN_QINIU_ADDRESS_URL + self.addressRecord.img
+        return self.addressRecord.img
 
     @property
     def address(self):
