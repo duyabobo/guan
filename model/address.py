@@ -6,7 +6,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
-import pinyin
+
 from model import BaseModel
 from util.const import match
 from util.const.base import EMPTY_STR
@@ -23,23 +23,18 @@ class AddressModel(BaseModel):
     region_id = Column(Integer, default=0)  # 省市区id
     longitude = Column(Float, default=0)  # 经度
     latitude = Column(Float, default=0)  # 纬度
+    img_obj_name = Column(String, default="")  # oss的对象名，比如七牛
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @property
-    def imgObjName(self):  # 图片对象存储名（对应七牛存储对象）
-        specialChars = "()（）*&^%$#@!~,./;'\"?-+[]{}【】|\\`·"
-        nameClean = ''.join([n for n in self.name if n not in specialChars])
-        return pinyin.get(nameClean, format="strip")
-
-    @property
     def img(self):  # 图片url
-        return "{qiniuUrl}{objName}".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.imgObjName)
+        return "{qiniuUrl}{objName}".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
 
     @property
     def thumbnails_img(self):  # 缩略图url
-        return "{qiniuUrl}{objName}?imageMogr2/thumbnail/188x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.imgObjName)
+        return "{qiniuUrl}{objName}?imageMogr2/thumbnail/188x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
 
     @classmethod
     def listByLongitudeLatitude(cls, longitude, latitude):  # todo

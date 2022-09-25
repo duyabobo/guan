@@ -9,7 +9,7 @@ from service import BaseService
 from service.common.match import MatchHelper
 from util.class_helper import lazy_property
 from util.const.match import MODEL_SEX_MALE_INDEX
-from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
+from util.const.qiniu_img import CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
 
 
 class GuanguanService(BaseService):
