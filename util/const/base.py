@@ -48,6 +48,9 @@ MAX_STUDY_FROM_YEAR = CURRENT_YEAR
 # 另外：
 #   见面结论任何变更会通过icon同步给对方。0是头像icon，1是实心爱心，2是空心爱心，3/4/5/6是加油。
 #   如果双方都选择了1/2，则停止推荐新的活动。
+MODEL_MEET_RESULT_UNKNOWN = 0
+MODEL_MEET_RESULT_FIT_CHOICE = 1
+MODEL_MEET_RESULT_FIT_AUTO = 2
 MODEL_MEET_RESULT_MAP = {
     0: "尚未表达意向",
     1: "合适（主动选择意向）",

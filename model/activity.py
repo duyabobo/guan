@@ -10,6 +10,7 @@ from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util.const import match
+from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO
 from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
@@ -103,3 +104,25 @@ class ActivityModel(BaseModel):
         getDbSession().add(record)
         getDbSession().commit()
         return record
+
+    @classmethod
+    def closeBoyActivities(cls):
+        fromTime = datetime.datetime.now() - datetime.timedelta(days=30)
+        ret = getDbSession().query(cls).filter(
+            cls.start_time < fromTime,
+            cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+            cls.status == match.MODEL_STATUS_YES
+        ).update({cls.boy_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
+        getDbSession().commit()
+        return ret
+
+    @classmethod
+    def closeGirlActivities(cls):
+        fromTime = datetime.datetime.now() - datetime.timedelta(days=30)
+        ret = getDbSession().query(cls).filter(
+            cls.start_time < fromTime,
+            cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+            cls.status == match.MODEL_STATUS_YES
+        ).update({cls.girl_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
+        getDbSession().commit()
+        return ret
