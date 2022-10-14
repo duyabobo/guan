@@ -50,15 +50,22 @@ class RegionModel(BaseModel):
 
     @classmethod
     @checkInconsistentCache("RegionModel", ex=24 * 3600)
-    def listByProvince(cls, province):
-        return getDbSession().query(cls).filter(cls.province == province, cls.status == MODEL_STATUS_YES).all()
+    def getAllRegionIds(cls):
+        return getDbSession().query(cls.id).filter(cls.status == MODEL_STATUS_YES).all()
 
     @classmethod
     @checkInconsistentCache("RegionModel", ex=24 * 3600)
-    def listByProvinceAndCity(cls, province, city):
-        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.status == MODEL_STATUS_YES).all()
+    def getRegionIdsByRegionId(cls, regionId):
+        region = cls.getById(regionId)
+        if not region:
+            return []
 
-    @classmethod
-    @checkInconsistentCache("RegionModel", ex=24 * 3600)
-    def listByProvinceAndCityAndArea(cls, province, city, area):
-        return getDbSession().query(cls).filter(cls.province == province, cls.city == city, cls.area == area, cls.status == MODEL_STATUS_YES).all()
+        if region.area != EMPTY_STR:
+            regionList = [region]
+        elif region.city != EMPTY_STR:
+            regionList = getDbSession().query(cls.id).filter(cls.province == region.province, cls.city == region.city, cls.status == MODEL_STATUS_YES).all()
+        elif region.province != EMPTY_STR:
+            regionList = getDbSession().query(cls.id).filter(cls.province == region.province, cls.status == MODEL_STATUS_YES).all()
+        else:
+            regionList = cls.getAllRegionIds()
+        return [r.id for r in regionList]

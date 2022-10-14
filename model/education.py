@@ -54,14 +54,36 @@ class EducationModel(BaseModel):
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24 * 3600)
     def getFirstsByRegionids(cls):
-        return getDbSession().query(cls.category).order_by(cls.seq).all()
+        return getDbSession().query(cls.category).filter(cls.status == MODEL_STATUS_YES).order_by(cls.seq).all()
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24 * 3600)
     def getSecondsByFirst(cls, category):
-        return getDbSession().query(cls.disciplines).filter(cls.category == category).order_by(cls.seq).all()
+        return getDbSession().query(cls.disciplines).filter(cls.category == category, cls.status == MODEL_STATUS_YES).order_by(cls.seq).all()
 
     @classmethod
     @checkInconsistentCache("EducationModel", ex=24 * 3600)
     def getThirdsByFirstAndSecond(cls, category, disciplines):
-        return getDbSession().query(cls.major).filter(cls.category == category, cls.disciplines == disciplines).order_by(cls.seq).all()
+        return getDbSession().query(cls.major).filter(cls.category == category, cls.disciplines == disciplines, cls.status == MODEL_STATUS_YES).order_by(cls.seq).all()
+
+    @classmethod
+    @checkInconsistentCache("EducationModel", ex=24 * 3600)
+    def getAllEducationIds(cls):
+        return getDbSession().query(cls.id).filter(cls.status == MODEL_STATUS_YES).all()
+
+    @classmethod
+    @checkInconsistentCache("EducationModel", ex=24 * 3600)
+    def getEducationIdsByEducationId(cls, educationId):
+        education = cls.getById(educationId)
+        if not education:
+            return []
+
+        if education.major != EMPTY_STR:
+            educationList = [education]
+        elif education.disciplines != EMPTY_STR:
+            educationList = getDbSession().query(cls.id).filter(cls.category == education.category, cls.disciplines == education.disciplines, cls.status == MODEL_STATUS_YES).all()
+        elif education.category != EMPTY_STR:
+            educationList = getDbSession().query(cls.id).filter(cls.category == education.category, cls.status == MODEL_STATUS_YES).all()
+        else:
+            educationList = cls.getAllEducationIds()
+        return [e.id for e in educationList]

@@ -59,9 +59,31 @@ class WorkModel(BaseModel):
     @classmethod
     @checkInconsistentCache("WorkModel", ex=24 * 3600)
     def getSecondsByFirst(cls, profession):
-        return getDbSession().query(cls.industry).filter(cls.profession == profession).order_by(cls.seq).all()
+        return getDbSession().query(cls.industry).filter(cls.profession == profession, cls.status == MODEL_STATUS_YES).order_by(cls.seq).all()
 
     @classmethod
     @checkInconsistentCache("WorkModel", ex=24 * 3600)
     def getThirdsByFirstAndSecond(cls, profession, industry):
-        return getDbSession().query(cls.position).filter(cls.profession == profession, cls.industry == industry).order_by(cls.seq).all()
+        return getDbSession().query(cls.position).filter(cls.profession == profession, cls.industry == industry, cls.status == MODEL_STATUS_YES).order_by(cls.seq).all()
+
+    @classmethod
+    @checkInconsistentCache("WorkModel", ex=24 * 3600)
+    def getAllWorkIds(cls):
+        return getDbSession().query(cls.id).filter(cls.status == MODEL_STATUS_YES).all()
+
+    @classmethod
+    @checkInconsistentCache("WorkModel", ex=24 * 3600)
+    def getWorkIdsByWorkId(cls, workId):
+        work = cls.getById(workId)
+        if not work:
+            return []
+
+        if work.position != EMPTY_STR:
+            workList = [work]
+        elif work.industry != EMPTY_STR:
+            workList = getDbSession().query(cls.id).filter(cls.profession == work.profession, cls.industry == work.industry, cls.status == MODEL_STATUS_YES).all()
+        elif work.profession != EMPTY_STR:
+            workList = getDbSession().query(cls.id).filter(cls.profession == work.profession, cls.status == MODEL_STATUS_YES).all()
+        else:
+            workList = cls.getAllWorkIds()
+        return [w.id for w in workList]
