@@ -118,3 +118,11 @@ def changeRequirement(activity, oldRequirement, newRequirement):
         for v in set(oldRequirementRange) - set(newRequirementRange):
             remActivityId(pipeline, getKey(columnName, v), activity.id)
     pipeline.execute()
+
+
+# 查询某个用户匹配的活动id集合
+def getMatchedActivityIds(user):
+    matchedKeys = []
+    for columnName in COLUMN_MAP_USER_RANGE:
+        matchedKeys.append(getKey(columnName, getattr(user, columnName)))
+    return redisConn.sunion(matchedKeys)
