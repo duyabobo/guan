@@ -11,6 +11,8 @@ import sys
 
 from sqlalchemy.orm import sessionmaker
 
+from ral.activity import addByActivity
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current_dir))
 from model.activity import ActivityModel
@@ -55,7 +57,8 @@ class ActivityAutoCreater(object):
                 if self.hasFreeActivity(addressId):
                     continue
                 nextTime = self.getNextTime(addressId)
-                ActivityModel.addOne(addressId, nextTime)
+                activity = ActivityModel.addOne(addressId, nextTime)
+                addByActivity(activity)
         return
 
 

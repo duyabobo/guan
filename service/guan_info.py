@@ -5,8 +5,9 @@ import datetime
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
-from model.requirement import RequirementModel
+from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
 from model.user import UserModel
+from ral.activity import setByRequirement, cleanByRequirement, changeByRequirement
 from ral.cache import lock
 from service import BaseService
 from service.common.match import MatchHelper
@@ -193,19 +194,37 @@ class GuanInfoService(BaseService):
     def hasOngoingActivity(self):
         return bool(ActivityModel.getOngoingActivity(self.passportId))
 
-    def matchCheck(self):
-        """是否匹配"""
-        if self.passport.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:
-            return False
-        if self.passport.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:
-            return False
-        invitePid = self.activityRecord.girl_passport_id if self.passport.sex == MODEL_SEX_MALE_INDEX else self.activityRecord.boy_passport_id
-        if not invitePid:
-            return True
-        requirement = RequirementModel.getByPassportId(invitePid)
-        if not requirement:
-            return True
-        return MatchHelper.match(self.passport, requirement)
+    def getRequirement(self):
+        if self.opType == GUAN_INFO_OP_TYPE_INVITE:
+            return None
+        elif self.opType == GUAN_INFO_OP_TYPE_JOIN:
+            if self.passport.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:  # 加入了
+                return UNREACHABLE_REQUIREMENT
+            if self.passport.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:  # 加不了
+                return UNREACHABLE_REQUIREMENT
+            invitePid = self.activityRecord.girl_passport_id if self.passport.sex == MODEL_SEX_MALE_INDEX else self.activityRecord.boy_passport_id
+            if not invitePid:  # 有问题的活动
+                return UNREACHABLE_REQUIREMENT
+            return RequirementModel.getByPassportId(invitePid)
+        elif self.opType == GUAN_INFO_OP_TYPE_QUIT:
+            if self.activityRecord.boy_passport_id != 0 and self.activityRecord.girl_passport_id != 0:  # 退前，男女都已就位
+                return UNREACHABLE_REQUIREMENT
+            invitePid = 0
+            if self.passport.sex == MODEL_SEX_MALE_INDEX:
+                if self.activityRecord.boy_passport_id != 0:  # 退前
+                    invitePid = self.activityRecord.boy_passport_id
+                elif self.activityRecord.girl_passport_id != 0:  # 退后的活动，人不空
+                    invitePid = self.activityRecord.girl_passport_id
+            elif self.passport.sex == MODEL_SEX_FEMALE_INDEX:
+                if self.activityRecord.girl_passport_id != 0:  # 退前
+                    invitePid = self.activityRecord.girl_passport_id
+                elif self.activityRecord.boy_passport_id != 0:  # 退后的活动，人不空
+                    invitePid = self.activityRecord.boy_passport_id
+            if not invitePid:  # 有问题的活动
+                return UNREACHABLE_REQUIREMENT
+            return RequirementModel.getByPassportId(invitePid)
+        return UNREACHABLE_REQUIREMENT  # 有问题
+
 
     def parseUpdataParams(self, opType, sexIndex):
         updateParams = {}
@@ -251,7 +270,8 @@ class GuanInfoService(BaseService):
         if self.hasOngoingActivity and \
                 opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY
-        if opType == GUAN_INFO_OP_TYPE_JOIN and not self.matchCheck():
+        requirement = self.getRequirement()
+        if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.passport, requirement):
             return RESP_JOIN_ACTIVITY_FAILED
         # todo 这个开关，前期可以不开。因为让用户帮我们拉新，是需要一定的吸引力和号召力的，前期不行。前期还得需要我们主动去推广，去营销，不得偷懒。
         # if opType == GUAN_INFO_OP_TYPE_JOIN and not ShareModel.getAcceptCnt(self.passportId):
@@ -264,4 +284,6 @@ class GuanInfoService(BaseService):
         ActivityChangeRecordModel.addOne(self.activityId, self.passportId, opType)
         # 重载一下活动信息
         self.reloadActivityRecord()
+        # 更新活动id匹配缓存
+        changeByRequirement(self.activityRecord, requirement, self.getRequirement())
         return RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI

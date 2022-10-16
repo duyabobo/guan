@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from model.requirement import RequirementModel
+from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
 from model.user import UserModel
 from ral.cache import checkCache
 from util.const.base import ALL_STR
@@ -12,9 +12,11 @@ class MatchHelper(object):
     @staticmethod
     def match(userInfo, requirement):
         """对比 requirement 和 userInfo，进行一个匹配与否的判断"""
-        # 1，如果 requirement为None，可以匹配
+        # 1，如果 requirement为None，可以匹配；如果requirement为不可满足的期望，不可匹配
         if requirement is None:
             return True
+        if requirement is UNREACHABLE_REQUIREMENT:
+            return False
         # 2，未登录，全部返回匹配
         if userInfo is None:
             return True

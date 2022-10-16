@@ -3,6 +3,7 @@
 # 这里维护活动匹配列表逻辑
 from model.education import EducationModel
 from model.region import RegionModel
+from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
 from model.work import WorkModel
 from util.const.education import EDUCATION_LEVEL
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, BIRTH_YEAR_CHOICE_LIST, HEIGHT_CHOICE_LIST, \
@@ -61,7 +62,7 @@ def remActivityId(pipeline, key, activityId):
 
 
 # 新增活动，全覆盖key填充
-def addActivity(activity):
+def addByActivity(activity):
     pipeline = redisConn.pipeline()
     for columnName, valueRange in COLUMN_MAP_USER_RANGE.items():
         for v in valueRange:
@@ -69,60 +70,38 @@ def addActivity(activity):
     pipeline.execute()
 
 
-# 发起邀请，修剪
-def inviteActivity(activity, requirement):
-    pipeline = redisConn.pipeline()
-    for columnName, userValueRange in COLUMN_MAP_USER_RANGE.items():
-        requirementValueRange = COLUMN_MAP_RERQUIREMENT_RANGE_FUNC[columnName](requirement)
-        for v in set(userValueRange) - set(requirementValueRange):
-            remActivityId(pipeline, getKey(columnName, v), activity.id)
-    pipeline.execute()
-
-
-# 取消邀请
-def uninviteActivity(activity, requirement):
-    pipeline = redisConn.pipeline()
-    for columnName, userValueRange in COLUMN_MAP_USER_RANGE.items():
-        requirementValueRange = COLUMN_MAP_RERQUIREMENT_RANGE_FUNC[columnName](requirement)
-        for v in set(userValueRange) - set(requirementValueRange):
-            addActivityId(pipeline, getKey(columnName, v), activity.id)
-    pipeline.execute()
-
-
-# 接受邀请
-def acceptActivity(activity, requirement):
+# 修改期望
+def changeByRequirement(activity, oldRequirement, newRequirement):
     pipeline = redisConn.pipeline()
     for columnName, requirementValueRangeFunc in COLUMN_MAP_RERQUIREMENT_RANGE_FUNC.items():
-        for v in requirementValueRangeFunc(requirement):
-            remActivityId(pipeline, getKey(columnName, v), activity.id)
-    pipeline.execute()
+        if newRequirement is None:  # 期望为空
+            oldRequirementRange = COLUMN_MAP_USER_RANGE[columnName]
+        elif newRequirement is UNREACHABLE_REQUIREMENT:  # 期望不可达
+            oldRequirementRange = set()
+        else:
+            oldRequirementRange = requirementValueRangeFunc(oldRequirement)
 
+        if newRequirement is None:  # 期望为空
+            newRequirementRange = COLUMN_MAP_USER_RANGE[columnName]
+        elif newRequirement is UNREACHABLE_REQUIREMENT:  # 期望不可达
+            newRequirementRange = set()
+        else:
+            newRequirementRange = requirementValueRangeFunc(newRequirement)
 
-# 取消接受
-def unacceptActivity(activity, requirement):
-    pipeline = redisConn.pipeline()
-    for columnName, requirementValueRangeFunc in COLUMN_MAP_RERQUIREMENT_RANGE_FUNC.items():
-        for v in requirementValueRangeFunc(requirement):
-            addActivityId(pipeline, getKey(columnName, v), activity.id)
-    pipeline.execute()
-
-
-# 发起邀请后修改期望
-def changeRequirement(activity, oldRequirement, newRequirement):
-    pipeline = redisConn.pipeline()
-    for columnName, requirementValueRangeFunc in COLUMN_MAP_RERQUIREMENT_RANGE_FUNC.items():
-        oldRequirementRange = requirementValueRangeFunc(oldRequirement)
-        newRequirementRange = requirementValueRangeFunc(newRequirement)
         for v in set(newRequirementRange) - set(oldRequirementRange):
             addActivityId(pipeline, getKey(columnName, v), activity.id)
         for v in set(oldRequirementRange) - set(newRequirementRange):
             remActivityId(pipeline, getKey(columnName, v), activity.id)
     pipeline.execute()
 
-
-# 活动过期
-def expireActivity(activity, requirement):
-    acceptActivity(activity, requirement)
+    
+# 清空活动(活动过期处理)
+def cleanByActivity(activity):
+    pipeline = redisConn.pipeline()
+    for columnName, valueRange in COLUMN_MAP_USER_RANGE.items():
+        for v in valueRange:
+            remActivityId(pipeline, getKey(columnName, v), activity.id)
+    pipeline.execute()
 
 
 # 查询某个用户匹配的活动id集合

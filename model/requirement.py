@@ -152,3 +152,6 @@ class RequirementModel(BaseModel):
     @property
     def work_area(self):
         return self.work_region.area if self.work_region else ALL_STR
+
+
+UNREACHABLE_REQUIREMENT = RequirementModel()
