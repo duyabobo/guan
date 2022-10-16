@@ -7,7 +7,7 @@ from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
 from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
 from model.user import UserModel
-from ral.activity import setByRequirement, cleanByRequirement, changeByRequirement
+from ral.activity import changeByRequirement
 from ral.cache import lock
 from service import BaseService
 from service.common.match import MatchHelper
