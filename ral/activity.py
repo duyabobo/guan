@@ -3,7 +3,7 @@
 # 这里维护活动匹配列表逻辑
 from model.education import EducationModel
 from model.region import RegionModel
-from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
+from model.requirement import UNREACHABLE_REQUIREMENT
 from model.work import WorkModel
 from util.const.education import EDUCATION_LEVEL
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, BIRTH_YEAR_CHOICE_LIST, HEIGHT_CHOICE_LIST, \
@@ -32,8 +32,8 @@ COLUMN_MAP_USER_RANGE = {  # 每个维度对应的取值范围
 
 
 COLUMN_MAP_RERQUIREMENT_RANGE_FUNC = {
-    "mail_type": lambda x: [getattr(x, "verify_type"), getattr(x, "verify_type")],
-    "sex": lambda x: [getattr(x, "sex"), getattr(x, "sex")],
+    "mail_type": lambda x: [getattr(x, "verify_type")],
+    "sex": lambda x: [getattr(x, "sex")],
     "birth_year": lambda x: range(getattr(x, "min_birth_year"), getattr(x, "max_birth_year")),
     "height": lambda x: range(getattr(x, "min_height"), getattr(x, "max_height")),
     "weight": lambda x: range(getattr(x, "min_weight"), getattr(x, "max_weight")),
@@ -45,7 +45,7 @@ COLUMN_MAP_RERQUIREMENT_RANGE_FUNC = {
     "work_region_id": lambda x: RegionModel.getRegionIdsByRegionId(getattr(x, "home_region_id")),
     "work_id": lambda x: WorkModel.getWorkIdsByWorkId(getattr(x, "work_id")),
     "month_pay": lambda x: range(getattr(x, "min_month_pay"), getattr(x, "max_month_pay")),
-    "martial_status": lambda x: [getattr(x, "martial_status"), getattr(x, "martial_status")],
+    "martial_status": lambda x: [getattr(x, "martial_status")],
 }
 
 
