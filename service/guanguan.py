@@ -4,6 +4,7 @@ from model.activity import ActivityModel
 from model.address import AddressModel
 from model.requirement import RequirementModel
 from model.user import UserModel
+from ral.activity import getMatchedActivityIds
 from ral.cache import checkCache
 from service import BaseService
 from service.common.match import MatchHelper
@@ -44,29 +45,13 @@ class GuanguanService(BaseService):
                 matchedActivityIdList.append(a.id)
         return matchedActivityIdList
 
-    def getActivityList(self, longitude, latitude):
+    @checkCache("GuanguanService:{passportId}", ex=60)
+    def getActivityIdsByLocation(self, longitude, latitude):
         addressIds = self.getAddressIds(longitude, latitude)
         if not addressIds:
             addressIds = [0]
-        # 选择时空合适，时间倒序
-        # 1. 符合空间条件的
-        # 2. 符合时间未过期的
-        # 3. 尚未邀请成功的
-        activityList = ActivityModel.listByAddressIds(addressIds)
-        return activityList
-
-    @checkCache("GuanguanService:{passportId}", ex=60)
-    def getMatchedActivityIdList(self, activityList=None, longitude="", latitude="", forceRefreshCache=False):  # todo next 搞个离线脚本，异步定时循环每个passportid调用用这个方法，计算好。如果用户期望没有完善，会根据个人信息对应一个默认的期望条件。
-        """
-        1. 按照邀请状态，以及时间倒排序
-        2. 筛选掉不符合邀请人期望的
-        """
-        # 异步任务调用时，会强制刷新缓存，并且会对每个用户都传进来可能的活动。
-        # 接口调用时，如果异步计算的缓存没有命中，就会根据用户当前的经纬度进行一个位置匹配查询可能的活动。
-        if activityList is None:
-            activityList = self.getActivityList(longitude, latitude)
-        # 筛选掉不符合邀请人期望的
-        return self.filterActivityIdList(activityList)
+        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds)
+        return set(activityIds)
 
     def getLimitMatchedActivityList(self, activityIds, limit=20):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
@@ -92,16 +77,21 @@ class GuanguanService(BaseService):
         return {a.id: a for a in addressList}
 
     def getGuanguanList(self, longitude, latitude):
-        """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个，todo 如果超过20个满足，需要有一种轮训机制展示"""
-        forceRefreshCache = True if self.userInfo is None else False  # todo 未登录状态，可能有性能问题
-        matchedActivityIdList = self.getMatchedActivityIdList(longitude=longitude, latitude=latitude, forceRefreshCache=forceRefreshCache)
-        matchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdList)
-        # todo 按照经纬度，对matchedActivityList进行排序
+        """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
+        matchedActivityList = []
+        # 进行中的（且自己参与的）
         ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
         if ongoingActivity:  # 进行中的永远在第一位
-            matchedActivityList.insert(0, ongoingActivity)
+            matchedActivityList.append(ongoingActivity)
+        # 自己参与，但是没有闭环的
+        unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
+        matchedActivityList.extend(unfinishedActivities)
+        # 匹配的
+        matchedActivityIds = getMatchedActivityIds(self.userInfo)
+        matchedActivityIds = matchedActivityIds.union(self.getActivityIdsByLocation(longitude=longitude, latitude=latitude))  # 兜底的
+        matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds))  # 按照经纬度，对matchedActivityList进行排序--- 不太必要，同城即可，后期还会加上学校
+        # 封装
         addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
-
         guanguanList = []
         for activity in matchedActivityList:
             address = addressMap[activity.address_id]

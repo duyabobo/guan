@@ -33,8 +33,8 @@ class ActivityModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def listByAddressIds(cls, addressIds):
-        return getDbSession().query(cls.id, cls.boy_passport_id, cls.girl_passport_id).filter(
+    def listActivityIdsByAddressIds(cls, addressIds):
+        return getDbSession().query(cls.id).filter(
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now(),
@@ -45,7 +45,7 @@ class ActivityModel(BaseModel):
     def listActivity(cls, activityIds, limit, exceptPassportId):
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES, cls.id.in_(activityIds), cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST),
-            cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId
+            cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId, cls.start_time > datetime.datetime.now()
         ).order_by(cls.state.desc(), cls.start_time.asc()).limit(limit).all()
 
     @classmethod
@@ -134,3 +134,15 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls.id).filter(
             or_(cls.status == match.MODEL_STATUS_NO, (cls.start_time >= sevenDaysAgo, cls.start_time <= now))
         ).order_by(cls.id.desc())
+
+    @classmethod
+    def getUnfinishedActivities(cls, passportId):
+        return getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST),
+            or_(
+                (cls.girl_passport_id != passportId, cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN),
+                (cls.boy_passport_id != passportId, cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN)
+            ),
+            cls.start_time > datetime.datetime.now()
+        ).order_by(cls.state.desc(), cls.start_time.asc()).all()
