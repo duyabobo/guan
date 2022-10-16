@@ -120,6 +120,11 @@ def changeRequirement(activity, oldRequirement, newRequirement):
     pipeline.execute()
 
 
+# 活动过期
+def expireActivity(activity, requirement):
+    acceptActivity(activity, requirement)
+
+
 # 查询某个用户匹配的活动id集合
 def getMatchedActivityIds(user):
     matchedKeys = []
