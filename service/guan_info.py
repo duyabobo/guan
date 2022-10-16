@@ -43,11 +43,14 @@ class GuanInfoService(BaseService):
         return AddressModel.getById(self.activityRecord.address_id)
 
     @lazy_property
+    def userRecord(self):
+        return UserModel.getByPassportId(self.passportId)
+
+    @lazy_property
     def oppositeUserRecord(self):
-        user = UserModel.getByPassportId(self.passportId)
-        if not user:
+        if not self.userRecord:
             return None
-        elif user.sexIndex == MODEL_SEX_MALE_INDEX:
+        elif self.userRecord.sexIndex == MODEL_SEX_MALE_INDEX:
             passportId = self.activityRecord.girl_passport_id
         else:
             passportId = self.activityRecord.boy_passport_id
@@ -198,11 +201,11 @@ class GuanInfoService(BaseService):
         if self.opType == GUAN_INFO_OP_TYPE_INVITE:
             return None
         elif self.opType == GUAN_INFO_OP_TYPE_JOIN:
-            if self.passport.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:  # 加入了
+            if self.userRecord.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:  # 加入了
                 return UNREACHABLE_REQUIREMENT
-            if self.passport.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:  # 加不了
+            if self.userRecord.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:  # 加不了
                 return UNREACHABLE_REQUIREMENT
-            invitePid = self.activityRecord.girl_passport_id if self.passport.sex == MODEL_SEX_MALE_INDEX else self.activityRecord.boy_passport_id
+            invitePid = self.activityRecord.girl_passport_id if self.userRecord.sex == MODEL_SEX_MALE_INDEX else self.activityRecord.boy_passport_id
             if not invitePid:  # 有问题的活动
                 return UNREACHABLE_REQUIREMENT
             return RequirementModel.getByPassportId(invitePid)
@@ -210,12 +213,12 @@ class GuanInfoService(BaseService):
             if self.activityRecord.boy_passport_id != 0 and self.activityRecord.girl_passport_id != 0:  # 退前，男女都已就位
                 return UNREACHABLE_REQUIREMENT
             invitePid = 0
-            if self.passport.sex == MODEL_SEX_MALE_INDEX:
+            if self.userRecord.sex == MODEL_SEX_MALE_INDEX:
                 if self.activityRecord.boy_passport_id != 0:  # 退前
                     invitePid = self.activityRecord.boy_passport_id
                 elif self.activityRecord.girl_passport_id != 0:  # 退后的活动，人不空
                     invitePid = self.activityRecord.girl_passport_id
-            elif self.passport.sex == MODEL_SEX_FEMALE_INDEX:
+            elif self.userRecord.sex == MODEL_SEX_FEMALE_INDEX:
                 if self.activityRecord.girl_passport_id != 0:  # 退前
                     invitePid = self.activityRecord.girl_passport_id
                 elif self.activityRecord.boy_passport_id != 0:  # 退后的活动，人不空
