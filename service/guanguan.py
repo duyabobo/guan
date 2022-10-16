@@ -87,7 +87,7 @@ class GuanguanService(BaseService):
         unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
         matchedActivityList.extend(unfinishedActivities)
         # 匹配的
-        matchedActivityIds = getMatchedActivityIds(self.userInfo)
+        matchedActivityIds = getMatchedActivityIds(self.userInfo) if self.userInfo else set()
         matchedActivityIds = matchedActivityIds.union(self.getActivityIdsByLocation(longitude=longitude, latitude=latitude))  # 兜底的
         matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds))  # 按照经纬度，对matchedActivityList进行排序--- 不太必要，同城即可，后期还会加上学校
         # 封装
