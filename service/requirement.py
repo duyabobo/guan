@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from common.requirement_helper import RequirementHelper
+from model.activity import ActivityModel
 from model.requirement import RequirementModel
 from model.user import UserModel
+from ral.activity import changeByRequirement
 from ral.cache import checkCache, deleteCache
 from service import BaseService
 from service.common.match import MatchHelper
@@ -43,6 +45,11 @@ class RequirementService(BaseService):
             "requirementResult": "%d人满足你的期望" % MatchHelper.getMatchRequirementCnt(self.passportId)
         }
 
+    def updateMatchedActivityId(self, passportId, oldRequirement, newRequirement):
+        activityRecord = ActivityModel.getOngoingActivity(passportId)
+        if activityRecord:
+            changeByRequirement(activityRecord, oldRequirement, newRequirement)
+
     @deleteCache(["RequirementService:{passportId}", "MatchHelper:{passportId}"])
     def updateRequirementInfo(self, opType, value, column=None):
         checkDynamicData = True
@@ -50,7 +57,10 @@ class RequirementService(BaseService):
         if updateParams:
             checkDynamicData = False
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
+            oldRequirement = self.requirementHelper.requirement
             self.reloadMatchHelper()
+            # 更新活动id匹配缓存
+            self.updateMatchedActivityId(self.passportId, oldRequirement, self.requirementHelper.requirement)
         return self.getRequirementInfo(checkDynamicData)  # todo 可以扩展需要支持返回成功+提醒的code码
 
     def checkBeforeUpdate(self, opType, value):
