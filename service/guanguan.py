@@ -51,7 +51,7 @@ class GuanguanService(BaseService):
         if not addressIds:
             addressIds = [0]
         activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds)
-        return set(activityIds)
+        return set([a.id for a in activityIds])
 
     def getLimitMatchedActivityList(self, activityIds, limit=20):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)

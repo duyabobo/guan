@@ -14,7 +14,7 @@ from util.redis_conn import redisConn
 
 
 COLUMN_MAP_USER_RANGE = {  # 每个维度对应的取值范围
-    "mail_type": [MODEL_MAIL_TYPE_UNKNOWN, MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK],
+    "verify_type": [MODEL_MAIL_TYPE_UNKNOWN, MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK],
     "sex": [MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX],
     "birth_year": BIRTH_YEAR_CHOICE_LIST,
     "height": HEIGHT_CHOICE_LIST,
@@ -32,7 +32,7 @@ COLUMN_MAP_USER_RANGE = {  # 每个维度对应的取值范围
 
 
 COLUMN_MAP_RERQUIREMENT_RANGE_FUNC = {
-    "mail_type": lambda x: [getattr(x, "verify_type")],
+    "verify_type": lambda x: [getattr(x, "verify_type")],
     "sex": lambda x: [getattr(x, "sex")],
     "birth_year": lambda x: range(getattr(x, "min_birth_year"), getattr(x, "max_birth_year")),
     "height": lambda x: range(getattr(x, "min_height"), getattr(x, "max_height")),

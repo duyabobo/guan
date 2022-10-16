@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from sqlalchemy import Column
+from sqlalchemy import Column, and_
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
@@ -11,7 +11,7 @@ from sqlalchemy.sql import or_
 from model import BaseModel
 from util.const import match
 from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO
-from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST
+from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
 from util.util_time import datetime2hommization
@@ -132,17 +132,17 @@ class ActivityModel(BaseModel):
         now = datetime.datetime.now()
         sevenDaysAgo = now - datetime.timedelta(days=7)
         return getDbSession().query(cls.id).filter(
-            or_(cls.status == match.MODEL_STATUS_NO, (cls.start_time >= sevenDaysAgo, cls.start_time <= now))
+            or_(cls.status == match.MODEL_STATUS_NO, and_(cls.start_time >= sevenDaysAgo, cls.start_time <= now))
         ).order_by(cls.id.desc())
 
     @classmethod
     def getUnfinishedActivities(cls, passportId):
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
-            cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST),
+            cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             or_(
-                (cls.girl_passport_id != passportId, cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN),
-                (cls.boy_passport_id != passportId, cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN)
+                and_(cls.girl_passport_id != passportId, cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN),
+                and_(cls.boy_passport_id != passportId, cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN)
             ),
             cls.start_time > datetime.datetime.now()
         ).order_by(cls.state.desc(), cls.start_time.asc()).all()
