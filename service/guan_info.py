@@ -285,5 +285,5 @@ class GuanInfoService(BaseService):
         # 重载一下活动信息
         self.reloadActivityRecord()
         # 更新活动id匹配缓存
-        changeByRequirement(self.activityRecord, requirement, self.getRequirement())
+        changeByRequirement(self.activityRecord.id, requirement, self.getRequirement())
         return RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI

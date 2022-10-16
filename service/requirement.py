@@ -48,7 +48,7 @@ class RequirementService(BaseService):
     def updateMatchedActivityId(self, passportId, oldRequirement, newRequirement):
         activityRecord = ActivityModel.getOngoingActivity(passportId)
         if activityRecord:
-            changeByRequirement(activityRecord, oldRequirement, newRequirement)
+            changeByRequirement(activityRecord.id, oldRequirement, newRequirement)
 
     @deleteCache(["RequirementService:{passportId}", "MatchHelper:{passportId}"])
     def updateRequirementInfo(self, opType, value, column=None):

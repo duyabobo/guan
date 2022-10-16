@@ -58,7 +58,7 @@ class ActivityAutoCreater(object):
                     continue
                 nextTime = self.getNextTime(addressId)
                 activity = ActivityModel.addOne(addressId, nextTime)
-                addByActivity(activity)
+                addByActivity(activity.id)
         return
 
 

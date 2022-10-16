@@ -126,3 +126,11 @@ class ActivityModel(BaseModel):
         ).update({cls.girl_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
         getDbSession().commit()
         return ret
+
+    @classmethod
+    def getExpireActivityIdsIn7Days(cls):
+        now = datetime.datetime.now()
+        sevenDaysAgo = now - datetime.timedelta(days=7)
+        return getDbSession().query(cls.id).filter(
+            or_(cls.status == match.MODEL_STATUS_NO, (cls.start_time >= sevenDaysAgo, cls.start_time <= now))
+        ).order_by(cls.id.desc())

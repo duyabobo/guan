@@ -62,16 +62,16 @@ def remActivityId(pipeline, key, activityId):
 
 
 # 新增活动，全覆盖key填充
-def addByActivity(activity):
+def addByActivity(activityId):
     pipeline = redisConn.pipeline()
     for columnName, valueRange in COLUMN_MAP_USER_RANGE.items():
         for v in valueRange:
-            addActivityId(pipeline, getKey(columnName, v), activity.id)
+            addActivityId(pipeline, getKey(columnName, v), activityId)
     pipeline.execute()
 
 
 # 修改期望
-def changeByRequirement(activity, oldRequirement, newRequirement):
+def changeByRequirement(activityId, oldRequirement, newRequirement):
     pipeline = redisConn.pipeline()
     for columnName, requirementValueRangeFunc in COLUMN_MAP_RERQUIREMENT_RANGE_FUNC.items():
         if newRequirement is None:  # 期望为空
@@ -89,18 +89,18 @@ def changeByRequirement(activity, oldRequirement, newRequirement):
             newRequirementRange = requirementValueRangeFunc(newRequirement)
 
         for v in set(newRequirementRange) - set(oldRequirementRange):
-            addActivityId(pipeline, getKey(columnName, v), activity.id)
+            addActivityId(pipeline, getKey(columnName, v), activityId)
         for v in set(oldRequirementRange) - set(newRequirementRange):
-            remActivityId(pipeline, getKey(columnName, v), activity.id)
+            remActivityId(pipeline, getKey(columnName, v), activityId)
     pipeline.execute()
 
     
 # 清空活动(活动过期处理)
-def cleanByActivity(activity):
+def cleanByActivity(activityId):
     pipeline = redisConn.pipeline()
     for columnName, valueRange in COLUMN_MAP_USER_RANGE.items():
         for v in valueRange:
-            remActivityId(pipeline, getKey(columnName, v), activity.id)
+            remActivityId(pipeline, getKey(columnName, v), activityId)
     pipeline.execute()
 
 
