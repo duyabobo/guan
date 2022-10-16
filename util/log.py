@@ -6,7 +6,7 @@ import logging.handlers
 
 def get_monitor_logger(logger_name):
     formatter = logging.Formatter('%(asctime)s - %(message)s')
-    log_file = '/Users/duyabo/log/monitor.log'
+    log_file = '/home/guan/log/monitor.log'
     fh = logging.handlers.TimedRotatingFileHandler(
         log_file, when='midnight', interval=1, backupCount=40
     )
@@ -20,7 +20,7 @@ def get_monitor_logger(logger_name):
 
 def mq_logger(logger_name):
     formatter = logging.Formatter('%(asctime)s - %(message)s')
-    log_file = '/Users/duyabo/log/%s.log' % logger_name
+    log_file = '/home/guan/log/%s.log' % logger_name
     fh = logging.handlers.TimedRotatingFileHandler(
         log_file, when='midnight', interval=1, backupCount=40
     )
@@ -34,7 +34,7 @@ def mq_logger(logger_name):
 
 def offline_script_logger(logger_name):
     formatter = logging.Formatter('%(asctime)s - %(message)s')
-    log_file = '/Users/duyabo/log/%s.log' % logger_name
+    log_file = '/home/guan/log/%s.log' % logger_name
     fh = logging.handlers.TimedRotatingFileHandler(
         log_file, when='midnight', interval=1, backupCount=40
     )
