@@ -72,22 +72,19 @@ def addByActivity(activityId):
 
 # 修改期望
 def changeByRequirement(activityId, oldRequirement, newRequirement):
+    def _getRequirementRange(requirement):
+        if requirement is None:  # 期望为空
+            requirementRange = COLUMN_MAP_USER_RANGE[columnName]
+        elif requirement is UNREACHABLE_REQUIREMENT:  # 期望不可达
+            requirementRange = set()
+        else:
+            requirementRange = requirementValueRangeFunc(requirement)
+        return requirementRange
+
     pipeline = redisConn.pipeline()
     for columnName, requirementValueRangeFunc in COLUMN_MAP_RERQUIREMENT_RANGE_FUNC.items():
-        if newRequirement is None:  # 期望为空
-            oldRequirementRange = COLUMN_MAP_USER_RANGE[columnName]
-        elif newRequirement is UNREACHABLE_REQUIREMENT:  # 期望不可达
-            oldRequirementRange = set()
-        else:
-            oldRequirementRange = requirementValueRangeFunc(oldRequirement)
-
-        if newRequirement is None:  # 期望为空
-            newRequirementRange = COLUMN_MAP_USER_RANGE[columnName]
-        elif newRequirement is UNREACHABLE_REQUIREMENT:  # 期望不可达
-            newRequirementRange = set()
-        else:
-            newRequirementRange = requirementValueRangeFunc(newRequirement)
-
+        oldRequirementRange = _getRequirementRange(oldRequirement)
+        newRequirementRange = _getRequirementRange(newRequirement)
         for v in set(newRequirementRange) - set(oldRequirementRange):
             addActivityId(pipeline, getKey(columnName, v), activityId)
         for v in set(oldRequirementRange) - set(newRequirementRange):
