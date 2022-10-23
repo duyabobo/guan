@@ -154,6 +154,7 @@ class UserInfoService(BaseService):
     def autoFillRequirement(self, **requirementUpdateParams):
         if requirementUpdateParams:
             RequirementModel.updateByPassportId(self.passportId, **requirementUpdateParams)
+            UserModel.getMatchCnt(self.passportId, forceRefreshCache=True)
 
     def checkBeforeUpdate(self, opType, value):
         if opType == OP_TYPE_SEX and \

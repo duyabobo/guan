@@ -56,6 +56,7 @@ class RequirementService(BaseService):
         if updateParams:
             checkDynamicData = False
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
+            UserModel.getMatchCnt(self.passportId, forceRefreshCache=True)
             oldRequirement = self.requirementHelper.requirement
             self.reloadMatchHelper()
             # 更新活动id匹配缓存
