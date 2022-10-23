@@ -78,7 +78,7 @@ class MatchHelper(object):
         return True
 
     @staticmethod
-    @checkCache("MatchHelper:{passportId}")  # 匹配计数，todo 后期可以放入celery异步计算
+    @checkCache("MatchHelper:{passportId}")  # 匹配计数，每个小时缓存过期，重新计算。todo 后期可以离线跑脚本高频提前算好。
     def getMatchRequirementCnt(passportId):
         requirement = RequirementModel.getByPassportId(passportId)
         return UserModel.getMatchCnt(requirement)
