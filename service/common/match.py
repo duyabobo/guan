@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
-from model.user import UserModel
-from ral.cache import checkCache
+from model.requirement import UNREACHABLE_REQUIREMENT
 from util.const.base import ALL_STR
 from util.const.match import MODEL_MAIL_TYPE_UNKNOWN
 
@@ -76,9 +74,3 @@ class MatchHelper(object):
         if userInfo.position != requirement.position and requirement.position != ALL_STR:
             return False
         return True
-
-    @staticmethod
-    @checkCache("MatchHelper:{passportId}")  # 匹配计数，每个小时缓存过期，重新计算。todo 后期可以离线跑脚本高频提前算好。
-    def getMatchRequirementCnt(passportId):
-        requirement = RequirementModel.getByPassportId(passportId)
-        return UserModel.getMatchCnt(requirement)

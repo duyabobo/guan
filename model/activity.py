@@ -111,6 +111,7 @@ class ActivityModel(BaseModel):
         ret = getDbSession().query(cls).filter(
             cls.start_time < fromTime,
             cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+            cls.state == match.MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             cls.status == match.MODEL_STATUS_YES
         ).update({cls.boy_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
         getDbSession().commit()
@@ -122,6 +123,7 @@ class ActivityModel(BaseModel):
         ret = getDbSession().query(cls).filter(
             cls.start_time < fromTime,
             cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+            cls.state == match.MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             cls.status == match.MODEL_STATUS_YES
         ).update({cls.girl_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
         getDbSession().commit()

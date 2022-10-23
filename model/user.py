@@ -8,6 +8,7 @@ from sqlalchemy import func
 from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
+from model.requirement import RequirementModel
 from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.cache import checkCache, deleteCache
@@ -80,7 +81,9 @@ class UserModel(BaseModel):
         return getDbSession().query(cls.id).filter(cls.info_has_filled == match.MODEL_STATUS_YES).count()
 
     @classmethod
-    def getMatchCnt(cls, requirement):  # 这个方法可能查询会慢，后期会做成异步计算。当下就业形势不好，这个项目今天先来个小结，后续一段时间心思会放到学习量化方面，这个项目除非有特别大的bug或问题，会暂停一段时间。暂停到啥时候呢，疫情结束是个好时候。
+    @checkCache("UserModel:{passportId}")  # 匹配计数，每个小时缓存过期，重新计算。离线脚本定时高频计算，也调用这个方法，forceRefreshCache=true即可。
+    def getMatchCnt(cls, passportId, forceRefreshCache=False):
+        requirement = RequirementModel.getByPassportId(passportId)
         filterParms = [cls.sex == requirement.sex, cls.status == match.MODEL_STATUS_YES]
         if requirement.min_birth_year:
             filterParms.append(cls.birth_year >= requirement.min_birth_year)
