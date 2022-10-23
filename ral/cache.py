@@ -4,8 +4,9 @@
 import copy
 import pickle
 import re
-from util.redis_conn import redisConn
+
 from util.log import monitor_logger
+from util.redis_conn import redisConn
 
 
 def checkInconsistentCache(prefix, ex=60):
@@ -34,7 +35,8 @@ def getCacheKey(key, *args, **kwargs):
             _kwargs[p] = getattr(_self, p)
     try:
         return key.format(**_kwargs)
-    except:
+    except Exception as e:
+        monitor_logger.exception(e)
         return None
 
 

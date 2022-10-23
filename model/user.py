@@ -51,6 +51,10 @@ class UserModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
+    def getLimitUserList(cls, lastPassportId, limit=500):  # 性能可能会相对慢些，脚本使用。todo 后期用读库。
+        return getDbSession().query(cls.passport_id).filter(cls.passport_id > lastPassportId, cls.status == match.MODEL_STATUS_YES).limit(limit).all()
+
+    @classmethod
     @checkCache("UserModel:{passportId}")
     def getByPassportId(cls, passportId):
         return getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).first()
@@ -81,7 +85,7 @@ class UserModel(BaseModel):
         return getDbSession().query(cls.id).filter(cls.info_has_filled == match.MODEL_STATUS_YES).count()
 
     @classmethod
-    @checkCache("UserModel:MatchCnt:{passportId}")  # 匹配计数，每个小时缓存过期，重新计算。离线脚本定时高频计算，也调用这个方法，forceRefreshCache=true即可。
+    @checkCache("UserModel:MatchCnt:{passportId}", ex=600)  # 匹配计数，缓存过期重新计算。离线脚本定时高频计算，也调用这个方法，forceRefreshCache=true即可。
     def getMatchCnt(cls, passportId, forceRefreshCache=False):
         requirement = RequirementModel.getByPassportId(passportId)
         filterParms = [cls.sex == requirement.sex, cls.status == match.MODEL_STATUS_YES]
