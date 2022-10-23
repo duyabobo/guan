@@ -81,7 +81,7 @@ class UserModel(BaseModel):
         return getDbSession().query(cls.id).filter(cls.info_has_filled == match.MODEL_STATUS_YES).count()
 
     @classmethod
-    @checkCache("UserModel:{passportId}")  # 匹配计数，每个小时缓存过期，重新计算。离线脚本定时高频计算，也调用这个方法，forceRefreshCache=true即可。
+    @checkCache("UserModel:MatchCnt:{passportId}")  # 匹配计数，每个小时缓存过期，重新计算。离线脚本定时高频计算，也调用这个方法，forceRefreshCache=true即可。
     def getMatchCnt(cls, passportId, forceRefreshCache=False):
         requirement = RequirementModel.getByPassportId(passportId)
         filterParms = [cls.sex == requirement.sex, cls.status == match.MODEL_STATUS_YES]
