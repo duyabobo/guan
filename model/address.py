@@ -28,6 +28,10 @@ class AddressModel(BaseModel):
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
+    @property
+    def img(self):
+        return self.img_obj_name
+
     @classmethod
     def listByLongitudeLatitude(cls, _longitude, latitude):  # todo
         return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).all()
