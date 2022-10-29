@@ -20,7 +20,7 @@ class LoginService(BaseService):
             UserModel.addByPassportId(passport.id)
             RequirementModel.addByPassportId(passport.id)
             VerifyModel.addByPassportId(passport.id)
-            UserModel.getMatchCnt(passport.id, forceRefreshCache=True)
+            UserModel.getMatchCnt(passportId=passport.id, forceRefreshCache=True)
             # shareOpenid 的生命周期是：
             # 1, 分享者分享首页时带上当前用户的openid（为啥不是passportId呢？其实也行，但是客户端有token，就用不到passportId作为参数了）作为shareOpenid
             # 2, 领取者打开首页会在小程序本地保存这个shareOpenid

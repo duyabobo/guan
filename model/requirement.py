@@ -8,6 +8,7 @@ from sqlalchemy import func
 from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
+from model.requirement_change_record import RequirementChangeRecordModel
 from model.work import WorkModel
 from util.const import match
 from util.const.base import ALL_STR
@@ -70,6 +71,7 @@ class RequirementModel(BaseModel):
     def updateByPassportId(cls, passportId, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
+        RequirementChangeRecordModel.addRecords(passportId, **updateParams)  # 流水记录
 
     @property
     def home_region(self):

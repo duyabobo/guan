@@ -41,7 +41,7 @@ class RequirementService(BaseService):
         return {
             "requirementList": requirementList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给requirementList的每个元素一个对应序号，用来小程序实时更新对应的picker值
-            "requirementResult": "%d人满足你的期望" % UserModel.getMatchCnt(self.passportId)
+            "requirementResult": "%d人满足你的期望" % UserModel.getMatchCnt(passportId=self.passportId)
         }
 
     def updateMatchedActivityId(self, passportId, oldRequirement, newRequirement):
@@ -56,7 +56,7 @@ class RequirementService(BaseService):
         if updateParams:
             checkDynamicData = False
             RequirementModel.updateByPassportId(self.passportId, **updateParams)
-            UserModel.getMatchCnt(self.passportId, forceRefreshCache=True)
+            UserModel.getMatchCnt(passportId=self.passportId, forceRefreshCache=True)
             oldRequirement = self.requirementHelper.requirement
             self.reloadMatchHelper()
             # 更新活动id匹配缓存

@@ -9,6 +9,7 @@ from model import BaseModel
 from model.education import EducationModel
 from model.region import RegionModel
 from model.requirement import RequirementModel
+from model.user_change_record import UserChangeRecordModel
 from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.cache import checkCache, deleteCache
@@ -78,6 +79,7 @@ class UserModel(BaseModel):
     def updateByPassportId(cls, passportId=0, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
+        UserChangeRecordModel.addRecords(passportId, **updateParams)  # 流水记录
 
     @classmethod
     @checkCache(finishCntKey)
