@@ -18,7 +18,7 @@ class AddressModel(BaseModel):
     id = Column(Integer, primary_key=True)  # 自增
     name = Column(String)  # name
     description = Column(String, default="")  # 地点描述(人均消费/吃喝玩乐推荐)
-    img = Column(String, default="")
+    img_obj_name = Column(String, default="")
     # province = Column(String, default="")  # 省名
     # city = Column(String, default="")  # 市名
     # area = Column(String, default="")  # 地区名
