@@ -28,8 +28,13 @@ class LocalContext(StackContext):
                 return ctx.contexts[0]
 
 
+def getManager():
+    return LocalContext.current_data()
+
+
 def getDbSession():
-    dbSession = LocalContext.current_data()
-    if not dbSession:
-        dbSession = mysql_offline_session
-    return dbSession
+    manager = getManager()
+    if not manager:
+        return mysql_offline_session
+    else:
+        return manager.dbSession

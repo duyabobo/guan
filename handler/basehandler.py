@@ -16,22 +16,58 @@ from tornado.web import RequestHandler
 import util.config
 from ral import passport
 from util.const.base import EXCHANGE_NAME
-from util.const.response import RESP_OK, RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
+from util.const.response import RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.ctx import LocalContext
-from util.monitor import superMonitor, Response
+from util.monitor import superMonitor
 from util.obj_util import object_2_dict
 
 
 def packaging_response_data(fn):
     @functools.wraps(fn)
     def _wrap(wrap_self, *args, **kwargs):
-        # 不管是否异步函数都统一用request_context封装
-        wrap_self.dbSession.__enter__ = lambda: None
-        wrap_self.dbSession.__exit__ = lambda type, value, traceback: None
-        with LocalContext(lambda: wrap_self.dbSession):
+        # 不管是否异步函数都统一用request_context封装，后续在每次请求的任意地方，都可以通过 ctx.getManager 拿到 manager
+        with LocalContext(lambda: wrap_self.manager):
             ret = fn(*args, **kwargs)
         return ret
     return _wrap
+
+
+class Manager(object):
+    def __init__(self, dbSession):
+        self.dbSession = dbSession
+        self.timecost_tree = self.create_new_child('root')
+        self.child_filo = [self.timecost_tree]
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.tc_child_out()
+        return None
+
+    def get_cur_child(self):
+        return self.child_filo[-1]
+
+    @staticmethod
+    def create_new_child(step_name):
+        return [step_name, 0, [], time.time() * 1000]
+
+    def tc_child_in(self, step_name):
+        cur_child = self.get_cur_child()
+        new_child = self.create_new_child(step_name)
+        cur_child[2].append(new_child)
+        self.child_filo.append(new_child)
+
+    def tc_child_out(self):
+        cur_child = self.get_cur_child()
+        cur_child[1] = time.time() * 1000 - cur_child[3]
+        cur_child.pop()
+        self.child_filo.pop()
+
+    def tc_child_drop(self):
+        # 放弃这个child
+        self.child_filo[-2][2].pop()
+        self.child_filo.pop()
 
 
 class BaseHandler(RequestHandler):
@@ -52,6 +88,11 @@ class BaseHandler(RequestHandler):
             method = packaging_response_data(super(BaseHandler, self).__getattribute__(name))
             setattr(self, name, method.__get__(self, self.__class__))
         return super(BaseHandler, self).__getattribute__(name)
+
+    @property
+    def manager(self):
+        # 每次请求的一个全局上下文管理者
+        return Manager(self.dbSession)
 
     @property
     def dbSession(self):

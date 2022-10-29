@@ -145,7 +145,7 @@ class UserInfoService(BaseService):
             else:
                 userUpdateParams['info_has_filled'] = 0
                 user.delFillFinishSet(self.passportId)
-            UserModel.updateByPassportId(self.passportId, **userUpdateParams)
+            UserModel.updateByPassportId(passportId=self.passportId, **userUpdateParams)
             self.autoFillRequirement(**requirementUpdateParams)  # 自动填充期望信息，只会首次填写某个用户信息时才会自动填充期望，后续更新用户信息，不会更新期望
             self.reloaduserHelper()
         return self.getMyselfInfo(checkDynamicData)
