@@ -17,7 +17,7 @@ def refreshLimitUser(lastPassportId, limit):
     passportId = 0
     for u in users:
         passportId = u.passport_id
-        UserModel.getMatchCnt(passportId, forceRefreshCache=True)
+        UserModel.getMatchCnt(passportId=passportId, forceRefreshCache=True)
     return passportId
 
 

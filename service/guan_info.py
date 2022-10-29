@@ -83,7 +83,7 @@ class GuanInfoService(BaseService):
 
     @property
     def address(self):
-        return self.addressRecord.nameLong
+        return self.addressRecord.name
 
     @property
     def addressDesc(self):
@@ -156,7 +156,6 @@ class GuanInfoService(BaseService):
         elif self.passportId == self.activityRecord.girl_passport_id:
             meet_result = self.activityRecord.girl_meet_result
         else:
-            monitor_logger.error("活动见面结果有误 activityId=%s", self.activityId)
             meet_result = 0
         return {
             "value": MODEL_MEET_RESULT_MAP[meet_result],
@@ -186,7 +185,7 @@ class GuanInfoService(BaseService):
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
-                "requirementResult": "%d人满足你的期望" % UserModel.getMatchCnt(self.passportId)
+                "requirementResult": "%d人满足你的期望" % UserModel.getMatchCnt(passportId=self.passportId)
             },
         }
 
