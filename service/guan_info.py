@@ -25,7 +25,6 @@ from util.const.qiniu_img import CDN_QINIU_TIME_IMG, CDN_QINIU_ADDRESS_IMG, CDN_
 from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
     RESP_NEED_FILL_INFO
-from util.log import monitor_logger
 
 
 class GuanInfoService(BaseService):
@@ -273,7 +272,7 @@ class GuanInfoService(BaseService):
                 opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY
         requirement = self.getRequirement()
-        if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.passport, requirement):
+        if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.userRecord, requirement):
             return RESP_JOIN_ACTIVITY_FAILED
         # todo 这个开关，前期可以不开。因为让用户帮我们拉新，是需要一定的吸引力和号召力的，前期不行。前期还得需要我们主动去推广，去营销，不得偷懒。
         # if opType == GUAN_INFO_OP_TYPE_JOIN and not ShareModel.getAcceptCnt(self.passportId):
