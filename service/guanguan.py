@@ -21,7 +21,7 @@ class GuanguanService(BaseService):
 
     @lazy_property
     def userInfo(self):
-        return UserModel.getByPassportId(self.passportId)
+        return UserModel.getByPassportId(passportId=self.passportId)
 
     def getRequirementMap(self, activityList):
         if not self.userInfo:

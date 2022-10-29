@@ -44,7 +44,7 @@ class GuanInfoService(BaseService):
 
     @lazy_property
     def userRecord(self):
-        return UserModel.getByPassportId(self.passportId)
+        return UserModel.getByPassportId(passportId=self.passportId)
 
     @lazy_property
     def oppositeUserRecord(self):
@@ -55,7 +55,7 @@ class GuanInfoService(BaseService):
         else:
             passportId = self.activityRecord.boy_passport_id
 
-        return UserModel.getByPassportId(passportId)
+        return UserModel.getByPassportId(passportId=passportId)
 
     @property
     def timeIcon(self):

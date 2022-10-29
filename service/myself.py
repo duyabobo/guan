@@ -38,7 +38,7 @@ class UserInfoService(BaseService):
 
     @lazy_property
     def userInfo(self):
-        return UserModel.getByPassportId(self.passportId)
+        return UserModel.getByPassportId(passportId=self.passportId)
 
     @property
     def infoFinishCnt(self):
@@ -118,7 +118,7 @@ class UserInfoService(BaseService):
         }
 
     def reloaduserHelper(self):
-        userInfo = UserModel.getByPassportId(self.passportId)
+        userInfo = UserModel.getByPassportId(passportId=self.passportId)
         self.userHelper = UserHelper(userInfo)
 
     @checkCache("UserInfoService:{passportId}")

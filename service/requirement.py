@@ -21,7 +21,7 @@ class RequirementService(BaseService):
 
     @lazy_property
     def userInfo(self):
-        return UserModel.getByPassportId(self.passportId)
+        return UserModel.getByPassportId(passportId=self.passportId)
 
     @lazy_property
     def requirementInfo(self):
