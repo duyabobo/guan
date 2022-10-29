@@ -26,7 +26,8 @@ def packaging_response_data(fn):
     @functools.wraps(fn)
     def _wrap(wrap_self, *args, **kwargs):
         # 不管是否异步函数都统一用request_context封装，后续在每次请求的任意地方，都可以通过 ctx.getManager 拿到 manager
-        with LocalContext(lambda: wrap_self.manager):
+        manager = Manager(wrap_self.dbSession)
+        with LocalContext(lambda: manager):
             ret = fn(*args, **kwargs)
         return ret
     return _wrap
@@ -42,15 +43,16 @@ class Manager(object):
         return None
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.tc_child_out()
         return None
 
     def get_cur_child(self):
+        if not self.child_filo:
+            return []
         return self.child_filo[-1]
 
     @staticmethod
     def create_new_child(step_name):
-        return [step_name, 0, [], time.time() * 1000]
+        return [step_name, 0, [], time.time() * 1000]  # [当前函数名，耗时，[子调用], 当前时间戳]
 
     def tc_child_in(self, step_name):
         cur_child = self.get_cur_child()
@@ -60,6 +62,8 @@ class Manager(object):
 
     def tc_child_out(self):
         cur_child = self.get_cur_child()
+        if not cur_child:
+            return
         cur_child[1] = time.time() * 1000 - cur_child[3]
         cur_child.pop()
         self.child_filo.pop()
@@ -88,11 +92,6 @@ class BaseHandler(RequestHandler):
             method = packaging_response_data(super(BaseHandler, self).__getattribute__(name))
             setattr(self, name, method.__get__(self, self.__class__))
         return super(BaseHandler, self).__getattribute__(name)
-
-    @property
-    def manager(self):
-        # 每次请求的一个全局上下文管理者
-        return Manager(self.dbSession)
 
     @property
     def dbSession(self):

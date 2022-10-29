@@ -11,6 +11,7 @@ from service.common.match import MatchHelper
 from util.class_helper import lazy_property
 from util.const.match import MODEL_SEX_MALE_INDEX
 from util.const.qiniu_img import CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
+from util.time_cost import timecost
 
 
 class GuanguanService(BaseService):
@@ -45,6 +46,7 @@ class GuanguanService(BaseService):
                 matchedActivityIdList.append(a.id)
         return matchedActivityIdList
 
+    @timecost
     @checkCache("GuanguanService:{passportId}", ex=60)
     def getActivityIdsByLocation(self, longitude, latitude):
         addressIds = self.getAddressIds(longitude, latitude)
@@ -53,6 +55,7 @@ class GuanguanService(BaseService):
         activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds)
         return set([a.id for a in activityIds])
 
+    @timecost
     def getLimitMatchedActivityList(self, activityIds, limit=20):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
 
@@ -70,12 +73,14 @@ class GuanguanService(BaseService):
         else:
             return "见面邀请"
 
+    @timecost
     def getAddressMapByIds(self, addressIds):
         if not addressIds:
             return {}
         addressList = AddressModel.listByIds(addressIds)
         return {a.id: a for a in addressList}
 
+    @timecost
     def getGuanguanList(self, longitude, latitude):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
         matchedActivityList = []

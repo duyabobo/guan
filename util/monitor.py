@@ -5,6 +5,7 @@ import time
 
 from tornado import gen
 
+import util.ctx
 from log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
@@ -18,10 +19,13 @@ class Response(object):
 
 
 def httpReturn(handler, response, err=None):
+    manager = util.ctx.getManager()
+    manager.tc_child_out()
     logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s,' \
-             ' respMsg: %s, respData: %s, tc: %s, error: %s' % \
+             ' respMsg: %s, respData: %s, tc: %s, error: %s, tc_tree=%s' % \
              (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(handler.request.body),
-              handler.accessToken, response.msg, object_2_dict(response.data), time.time()-handler.timestamp, err)
+              handler.accessToken, response.msg, object_2_dict(response.data),
+              time.time()-handler.timestamp, err, manager.timecost_tree)
     if err is None:
         monitor_logger.info(logMsg)
     else:

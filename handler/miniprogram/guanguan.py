@@ -3,11 +3,13 @@
 from handler.basehandler import BaseHandler
 from service.guanguan import GuanguanService
 from util.monitor import superMonitor, Response
+from util.time_cost import timecost
 
 
 class GuanguanHandler(BaseHandler):
 
     @superMonitor
+    @timecost
     def get(self):
         longitude = self.getRequestParameter('longitude', paraType=float)
         latitude = self.getRequestParameter('latitude', paraType=float)

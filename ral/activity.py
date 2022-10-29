@@ -11,7 +11,7 @@ from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, BIRTH
     MODEL_MARTIAL_STATUS_NO_MARRY, MODEL_MARTIAL_STATUS_BREAK, MODEL_MAIL_TYPE_UNKNOWN, MODEL_MAIL_TYPE_SCHOOL, \
     MODEL_MAIL_TYPE_WORK
 from util.redis_conn import redisConn
-
+from util.time_cost import timecost
 
 COLUMN_MAP_USER_RANGE = {  # 每个维度对应的取值范围
     "verify_type": [MODEL_MAIL_TYPE_UNKNOWN, MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK],
@@ -102,6 +102,7 @@ def cleanByActivity(activityId):
 
 
 # 查询某个用户匹配的活动id集合
+@timecost
 def getMatchedActivityIds(user):
     matchedKeys = []
     for columnName in COLUMN_MAP_USER_RANGE:
