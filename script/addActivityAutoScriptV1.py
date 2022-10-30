@@ -10,9 +10,9 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current_dir))
 import datetime
-
 from sqlalchemy.orm import sessionmaker
 
+from handler.basehandler import Manager
 from model.activity import ActivityModel
 from model.address import AddressModel
 from ral.activity import addByActivity
@@ -47,7 +47,8 @@ class ActivityAutoCreater(object):
         return nextTime
 
     def createActivity(self):
-        with LocalContext(lambda: self.dbSession):
+        manager = Manager(self.dbSession)
+        with LocalContext(lambda: manager):
             addressList = self.getAvaliableAddressList()
             if not addressList:
                 return
