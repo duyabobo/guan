@@ -3,8 +3,13 @@
 # 刷新符合你期望的人数。这个脚本暂时用不着。
 # 1，更新期望后（期望信息完备的前提下），立刻计算一次。对user表建立索引。每天允许更新3次期望。
 # 2，定时全量刷新
-import time
+import sys
+print sys.path
+import os
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current_dir))
 
+import time
 from model.user import UserModel
 
 FIRST_PASSPORT_ID = 0

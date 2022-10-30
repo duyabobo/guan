@@ -5,18 +5,17 @@
 # 2，筛选是否有可用的见面地点，如果存在就继续。
 # 3，判断上一个添加的活动时间是否在周末，是否在早上10点到下午16点之间，如果就时间加上半小时，如果不是就初始化下一个周末的早上十点。
 # 4，添加下一个活动。
-import datetime
 import os
 import sys
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current_dir))
+import datetime
 
 from sqlalchemy.orm import sessionmaker
 
-from ral.activity import addByActivity
-
-current_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.dirname(current_dir))
 from model.activity import ActivityModel
 from model.address import AddressModel
+from ral.activity import addByActivity
 from util.database import engine
 from util.ctx import LocalContext
 

@@ -3,12 +3,11 @@
 # 活动过期，清空匹配缓存，每天跑一遍
 import os
 import sys
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current_dir))
 
 from model.activity import ActivityModel
 from ral.activity import cleanByActivity
-
-current_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.dirname(current_dir))
 
 
 if __name__ == "__main__":
