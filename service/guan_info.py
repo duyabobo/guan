@@ -184,7 +184,7 @@ class GuanInfoService(BaseService):
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
-                "requirementResult": "%d人满足你的期望" % UserModel.getMatchCnt(passportId=self.passportId)
+                "requirementResult": "%d人满足期望" % UserModel.getMatchCnt(passportId=self.passportId)
             },
         }
 
