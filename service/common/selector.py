@@ -99,7 +99,7 @@ class SingleSelector(object):  # 单项选择器
     def __init__(self, desc, value, bindChange, subDesc=""):
         def _selectValueIndex():  # 值对应的取值范围索引
             try:
-                return self.choiceList.index(self.value) or self.defaultIndex
+                return self.choiceList.index(self.value) if self.value in self.choiceList else self.defaultIndex
             except:
                 return self.defaultIndex
 
@@ -123,13 +123,13 @@ class MultiSelector(object):  # 两项选择器
     def __init__(self, desc, fromValue, toValue, bindChange, subDesc=""):
         def _selectMinIndex():
             try:
-                return self.choiceList.index(self.fromValue) or self.defaultIndex
+                return self.choiceList.index(self.fromValue) if self.fromValue in self.choiceList else self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectMaxIndex():
             try:
-                return self.choiceList.index(self.toValue) or self.toValue
+                return self.choiceList.index(self.toValue) if self.toValue in self.choiceList else self.toValue
             except:
                 return self.defaultIndex
 
@@ -154,19 +154,19 @@ class MultiSelectorExtra(object):  # 三项选择器
         """zeroValue用来计算firstValue，firstValue用来计算secondValue, ..."""
         def _selectFirstIndex():
             try:
-                return self.multiChoiceList[0].index(firstValue) or self.defaultIndex
+                return self.multiChoiceList[0].index(firstValue) if firstValue in self.multiChoiceList[0] else self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectSecondIndex():
             try:
-                return self.multiChoiceList[1].index(secondValue) or self.defaultIndex
+                return self.multiChoiceList[1].index(secondValue) if secondValue in self.multiChoiceList[1] else self.defaultIndex
             except:
                 return self.defaultIndex
 
         def _selectThirdIndex():
             try:
-                return self.multiChoiceList[2].index(thirdValue) or self.defaultIndex
+                return self.multiChoiceList[2].index(thirdValue) if thirdValue in self.multiChoiceList[2] else self.defaultIndex
             except:
                 return self.defaultIndex
 
