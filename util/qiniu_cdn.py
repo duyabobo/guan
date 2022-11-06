@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from django.core.files.storage import FileSystemStorage
-
 import util.config
 from qiniu import Auth, put_data
 
@@ -46,20 +44,3 @@ class Qiniu():
         ret, info = put_data(up_token=token, key=key, data=stream_data)
         assert ret and ret['key'] == key
         # assert ret['hash'] == etag_stream(stream_data)
-
-
-class MyStorage(FileSystemStorage):
-    def _save(self, name, content):
-        # 延续原方法的写法
-        filename = "%s/%s" % ('head_img', name.replace('\\', '/'))
-        # 将文件传入封装好的对象里
-        q = Qiniu()
-        q.upload_stream(filename, content.file.getvalue())
-        return filename
-
-    @staticmethod
-    def upload(passportId, imgStreamData):
-        filename = "%s/%s" % ('head_img', passportId)
-        q = Qiniu()
-        q.upload_stream(filename, imgStreamData)
-        return filename

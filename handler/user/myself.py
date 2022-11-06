@@ -4,7 +4,7 @@ from handler.basehandler import BaseHandler
 from service.common.selector import VALUE_TYPE_DICT
 from service.myself import UserInfoService
 from util.monitor import superMonitor, Response
-from util.qiniu_cdn import MyStorage
+from service.qiniu_cdn import MyStorage
 
 
 class MyselfHandler(BaseHandler):
@@ -31,7 +31,7 @@ class HeadImgHandler(BaseHandler):
     @superMonitor
     def post(self, *args, **kwargs):  # 上传+更新头像
         files = self.request.files
-        MyStorage.upload(self.currentPassportId, files['file'][0]['body'])
+        MyStorage(self.currentPassportId).upload(files['file'][0]['body'])
         return Response()
 
     @superMonitor
