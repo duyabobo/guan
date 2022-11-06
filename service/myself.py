@@ -164,3 +164,8 @@ class UserInfoService(BaseService):
                 and value == DEFAULT_MARTIAL_STATUS_INDEX:
             return RESP_MARTIAL_STATUS_CANOT_EDIT
         # todo 其他修改限制，比如一月一次修改工作地址的机会
+
+    @deleteCache(["UserInfoService:{passportId}"])
+    def resetHeadImg(self):
+        # 重置头像
+        UserModel.updateByPassportId(passportId=self.passportId, head_img_obj_name="")

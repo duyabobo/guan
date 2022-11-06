@@ -24,3 +24,13 @@ class MyselfHandler(BaseHandler):
         if ret:
             return Response(msg=ret)
         return Response(data=uis.updateMyselfInfo(opType, value, column=column))
+
+
+class HeadImgHandler(BaseHandler):
+    def post(self, *args, **kwargs):  # 上传+更新头像
+        pass
+
+    def put(self, *args, **kwargs):  # 使用默认头像
+        uis = UserInfoService(self.currentPassport)
+        uis.resetHeadImg()
+        return Response()

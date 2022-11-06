@@ -15,6 +15,7 @@ handlers = [
     (r'/secret$', secret.SecretHandler),
     (r'/login$', login.LoginHandler),
     (r'/mine$', mine.MineHandler),
+    (r'/update_head_img', myself.HeadImgHandler),
     (r'/myself$', myself.MyselfHandler),
     (r'/requirement$', requirement.RequirementHandler),
     (r'/guanguan$', guanguan.GuanguanHandler),
