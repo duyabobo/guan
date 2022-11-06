@@ -28,6 +28,8 @@ ALGORITHM_SIGN = 'HS256'
 # 6，尽可能实时的自动化的维护一个 ip 黑名单，以及一个 uid 黑名单，并在应用中对这些 ip/uid 发出的请求进行处理。
 # 7，如果 6 中黑名单请求量特别大，已经影响到系统正常提供服务，就直接在 ng 进行 503 拒绝响应。
 
+WHITE_APIS = [["POST", "/update_head_img"]]
+
 
 class Checker(object):
     def __init__(self, handler):
@@ -47,7 +49,7 @@ class Checker(object):
         攻击是不能完全防控的，还需要监控日志识别恶意ip和虚假user，并进行管控和清理。"""
         checkFailedCnt(self.remote_ip)  # 有爬取用户信息攻击行为时放开，1次redis查询操作
         checkSuccessCnt(self.accessToken)  # 有消耗服务资源攻击行为时放开，1～3次redis操作
-        if self.method == "POST" and self.path == "/update_head_img":  # 上传图片，暂且不检查签名
+        if [self.method, self.path] in WHITE_APIS:  # 上传图片，暂且不检查签名
             pass
         else:
             self.check_sign(self.secret)  # 1次解密操作

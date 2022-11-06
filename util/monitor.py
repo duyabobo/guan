@@ -21,9 +21,10 @@ class Response(object):
 def httpReturn(handler, response, err=None):
     manager = util.ctx.getManager()
     manager.tc_child_out()
+    body = handler.request.body_arguments or handler.request.body
     logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s,' \
              ' respMsg: %s, respData: %s, tc: %s, error: %s, tc_tree=%s' % \
-             (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(handler.request.body),
+             (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(body),
               handler.accessToken, response.msg, object_2_dict(response.data),
               time.time()-handler.timestamp, err, manager.timecost_tree)
     if err is None:
