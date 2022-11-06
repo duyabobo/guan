@@ -44,7 +44,7 @@ class Qiniu():
         # 要上传文件的本地路径
         # localfile = file_path
         ret, info = put_data(up_token=token, key=key, data=stream_data)
-        assert ret['key'] == key
+        assert ret and ret['key'] == key
         # assert ret['hash'] == etag_stream(stream_data)
 
 
@@ -55,4 +55,11 @@ class MyStorage(FileSystemStorage):
         # 将文件传入封装好的对象里
         q = Qiniu()
         q.upload_stream(filename, content.file.getvalue())
+        return filename
+
+    @staticmethod
+    def upload(passportId, imgStreamData):
+        filename = "%s/%s" % ('head_img', passportId)
+        q = Qiniu()
+        q.upload_stream(filename, imgStreamData)
         return filename
