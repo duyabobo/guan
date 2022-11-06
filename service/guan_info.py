@@ -154,7 +154,7 @@ class GuanInfoService(BaseService):
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": MYINFORMATION_PAGE_WITH_ERRMSG,
-                "requirementResult": "3人满足见面条件"  # todo
+                "requirementResult": "3人满足条件"  # todo
             },
         }
 
