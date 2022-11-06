@@ -4,6 +4,6 @@ import hashlib
 import time
 
 
-def getRandomStr():
+def getRandomStr(seed):
     t = time.time()
-    return hashlib.md5(str(t)).hexdigest()
+    return hashlib.md5(str(t) + str(seed)).hexdigest()

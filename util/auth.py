@@ -47,12 +47,11 @@ class Checker(object):
     def check(self):
         """对请求进行检查，拦截无效/非法/恶意的请求。
         攻击是不能完全防控的，还需要监控日志识别恶意ip和虚假user，并进行管控和清理。"""
+        if [self.method, self.path] in WHITE_APIS:  # 上传图片，暂且不检查签名
+            return
         checkFailedCnt(self.remote_ip)  # 有爬取用户信息攻击行为时放开，1次redis查询操作
         checkSuccessCnt(self.accessToken)  # 有消耗服务资源攻击行为时放开，1～3次redis操作
-        if [self.method, self.path] in WHITE_APIS:  # 上传图片，暂且不检查签名
-            pass
-        else:
-            self.check_sign(self.secret)  # 1次解密操作
+        self.check_sign(self.secret)  # 1次解密操作
         checkUnique(self.accessToken, self.requestSeq)  # 1～2次redis写入操作
 
     def fail(self):

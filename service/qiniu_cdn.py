@@ -3,7 +3,6 @@
 import hashlib
 
 from model.user import UserModel
-from util import str_util
 from util.qiniu_cdn import Qiniu
 
 
@@ -12,14 +11,14 @@ class MyStorage(object):
         self.passportId = passportId
 
     @staticmethod
-    def getQiNiuObjName(passportId, local_obj_name):
-        return hashlib.md5("passportId:%s:local_obj_name:%s" % (passportId, local_obj_name)).hexdigest()
+    def getQiNiuObjName(passportId, localObjName):
+        return hashlib.md5("passportId:%s:localObjName:%s" % (passportId, localObjName)).hexdigest()
 
     @property
     def objName(self):
-        local_obj_name = str_util.getRandomStr()
-        UserModel.updateByPassportId(passportId=self.passportId, head_img_obj_name=local_obj_name)
-        return self.getQiNiuObjName(self.passportId, local_obj_name)
+        localObjName = hashlib.md5("%d" % self.passportId).hexdigest()
+        UserModel.updateByPassportId(passportId=self.passportId, head_img_obj_name=localObjName)
+        return self.getQiNiuObjName(self.passportId, localObjName)
 
     def upload(self, imgStreamData):
         filename = "%s/%s" % ('head_img', self.objName)
