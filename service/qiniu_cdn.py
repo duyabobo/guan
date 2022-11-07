@@ -10,13 +10,21 @@ class MyStorage(object):
     def __init__(self, passportId):
         self.passportId = passportId
 
-    @property
-    def objName(self):
-        localObjName = hashlib.md5("%d" % self.passportId).hexdigest()
-        return hashlib.md5("obj_name_secret:%s:localObjName:%s" % (util.config.get("qiniu", "secret_key"), localObjName)).hexdigest()
+    @staticmethod
+    def getObjNames(passportId):
+        # 获取真实头像照片cdn对象名，以及虚拟头像照片cdn对象名
+        fmt = "obj_name_secret:%s:localObjName:%s"
+        realSeed = fmt % (util.config.get("qiniu", "secret_key"), passportId)
+        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), hashlib.md5("%d" % passportId).hexdigest())
+        return hashlib.md5(realSeed).hexdigest(), hashlib.md5(virtualSeed).hexdigest()
 
     def upload(self, imgStreamData):
-        filename = "%s/%s" % ('head_img', self.objName)
+        realObjName, virtualObjName = self.getObjNames(self.passportId)
+        # 上传真实照片
+        filename = "%s/%s" % ('head_img', realObjName)
         q = Qiniu()
         q.upload_stream(filename, imgStreamData)
-        return filename
+        # 上传虚拟照片
+        filename = "%s/%s" % ('head_img', virtualObjName)
+        q = Qiniu()
+        q.upload_stream(filename, imgStreamData)
