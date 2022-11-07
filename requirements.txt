@@ -17,6 +17,6 @@ PyJWT==1.6.4
 pymysql==0.9.3
 qiniu==7.9.0
 opencv-contrib-python==4.1.2.30
-opencv-python-headless==4.1.2.30
+opencv-python-headless==4.2.0.32
 aliyun-python-sdk-dysmsapi==2.1.2
 pyDes==2.0.1
