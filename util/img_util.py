@@ -37,9 +37,11 @@ def burnV2(image, mask):
     return 255 - cv2.divide(255 - image, 255 - mask, scale=256)
 
 
-def rgb_to_sketch(src_image_name, save_path):
+def rgb_to_sketch(buffer_data, save_path):
     print('转换中......')
-    img_rgb = cv2.imread(src_image_name)
+    # img_rgb = cv2.imread(src_image_name)
+    img_np_arr = np.frombuffer(buffer_data, np.uint8)
+    img_rgb = cv2.imdecode(img_np_arr, cv2.IMREAD_COLOR)
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
     # 读取图片时直接转换操作
     # img_gray = cv2.imread('example.jpg', cv2.IMREAD_GRAYSCALE)
@@ -59,6 +61,7 @@ def rgb_to_sketch(src_image_name, save_path):
 
 
 if __name__ == '__main__':
-    src_image_name = "/Users/duyabo/Desktop/abc.jpeg"  # 文件路径
-    save_path = "/Users/duyabo/Desktop/4.jpeg"  # 存储路径
-    rgb_to_sketch(src_image_name, save_path)
+    pass
+    # src_image_name = "/Users/duyabo/Desktop/abc.jpeg"  # 文件路径
+    # save_path = "/Users/duyabo/Desktop/4.jpeg"  # 存储路径
+    # rgb_to_sketch(src_image_name, save_path)

@@ -3,6 +3,7 @@
 import hashlib
 
 import util.config
+from util.img_util import rgb_to_sketch
 from util.qiniu_cdn import Qiniu
 
 
@@ -25,6 +26,7 @@ class MyStorage(object):
         q = Qiniu()
         q.upload_stream(filename, imgStreamData)
         # 上传虚拟照片
-        filename = "%s/%s" % ('head_img', virtualObjName)
-        q = Qiniu()
-        q.upload_stream(filename, imgStreamData)
+        # filename = "%s/%s" % ('head_img', virtualObjName)
+        # q = Qiniu()
+        # q.upload_stream(filename, imgStreamData)
+        rgb_to_sketch(imgStreamData, "/Users/duyabo/Desktop/14.jpeg")
