@@ -26,7 +26,6 @@ class MyStorage(object):
         q = Qiniu()
         q.upload_stream(filename, imgStreamData)
         # 上传虚拟照片
-        # filename = "%s/%s" % ('head_img', virtualObjName)
-        # q = Qiniu()
-        # q.upload_stream(filename, imgStreamData)
-        rgb_to_sketch(imgStreamData, "/Users/duyabo/Desktop/14.jpeg")
+        filename = "%s/%s" % ('head_img', virtualObjName)
+        q = Qiniu()
+        q.upload_stream(filename, rgb_to_sketch(imgStreamData))

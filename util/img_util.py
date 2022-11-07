@@ -37,7 +37,7 @@ def burnV2(image, mask):
     return 255 - cv2.divide(255 - image, 255 - mask, scale=256)
 
 
-def rgb_to_sketch(buffer_data, save_path):
+def rgb_to_sketch(buffer_data):
     print('转换中......')
     # img_rgb = cv2.imread(src_image_name)
     img_np_arr = np.frombuffer(buffer_data, np.uint8)
@@ -56,11 +56,11 @@ def rgb_to_sketch(buffer_data, save_path):
     # cv2.imshow('gray_inv', img_gray_inv)
     # cv2.imshow('gray_blur', img_blur)
     # cv2.imwrite(save_path, img_blend)
-    newstream = cv2.imencode(".jpg", img_blend)[1].tobytes()
-    with open(save_path, 'wb') as f:
-        f.write(newstream)
-    print('转换完成!!!\n')
-    print('保存路径:' + save_path)
+    return cv2.imencode(".jpg", img_blend)[1].tobytes()
+    # with open(save_path, 'wb') as f:
+    #     f.write(newstream)
+    # print('转换完成!!!\n')
+    # print('保存路径:' + save_path)
 
 
 if __name__ == '__main__':
