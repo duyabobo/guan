@@ -55,7 +55,10 @@ def rgb_to_sketch(buffer_data, save_path):
     # cv2.imshow('gray', img_gray)
     # cv2.imshow('gray_inv', img_gray_inv)
     # cv2.imshow('gray_blur', img_blur)
-    cv2.imwrite(save_path, img_blend)
+    # cv2.imwrite(save_path, img_blend)
+    newstream = cv2.imencode(".jpg", img_blend)[1].tobytes()
+    with open(save_path, 'wb') as f:
+        f.write(newstream)
     print('转换完成!!!\n')
     print('保存路径:' + save_path)
 
