@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, String
+from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
@@ -27,7 +27,6 @@ class UserModel(BaseModel):
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer, default=0)  # passport_id
     sex = Column(Integer, default=MODEL_SEX_UNKNOWN_INDEX)  # 性别：MODEL_SEX_ENUMERATE
-    head_img_obj_name = Column(String, default="")  # oss的对象名，比如七牛
     birth_year = Column(Integer, default=0)  # 出生年份
     height = Column(Integer, default=0)  # 身高(厘米)
     weight = Column(Integer, default=0)  # 体重(公斤)
