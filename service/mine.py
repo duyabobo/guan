@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from model.user import UserModel
 from service import BaseService
+from service.qiniu_cdn import MyStorage
 from util.const.match import MODEL_SEX_UNKNOWN_INDEX, MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_STATUS_NO, \
     MODEL_STATUS_EMPTY
 from util.const.mini_program import *
@@ -34,7 +35,7 @@ class MineService(BaseService):
                 MODEL_SEX_UNKNOWN_INDEX: CDN_QINIU_DEFAULT_HEAD_IMG
             }.get(sexIndex, CDN_QINIU_DEFAULT_HEAD_IMG)
         else:  # 自定义头像（虚拟）
-            return
+            return MyStorage.getVirtualImgUrl(passportId)
 
     def getMainGroupList(self):
         return [
