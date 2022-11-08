@@ -12,7 +12,6 @@ from model import BaseModel
 from util.const import match
 from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO
 from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
-from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.ctx import getDbSession
 from util.time_cost import timecost
 from util.util_time import datetime2hommization
@@ -56,14 +55,6 @@ class ActivityModel(BaseModel):
     @property
     def startTimeStr(self):
         return datetime2hommization(self.start_time)
-
-    @property
-    def boyImg(self):
-        return CDN_QINIU_BOY_HEAD_IMG if self.boy_passport_id else ""
-
-    @property
-    def girlImg(self):
-        return CDN_QINIU_GIRL_HEAD_IMG if self.girl_passport_id else ""
 
     @classmethod
     def updateById(cls, activityId, *whereParams, **updateParams):

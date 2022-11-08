@@ -104,8 +104,6 @@ class GuanguanService(BaseService):
                 {
                     "id": activity.id,
                     "time": activity.startTimeStr,
-                    "boyImg": activity.boyImg,
-                    "girlImg": activity.girlImg,
                     "state": self.getState(activity),
                     "img": address.thumbnails_img,
                     "addressImg": CDN_QINIU_ADDRESS_IMG,

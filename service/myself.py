@@ -9,7 +9,7 @@ from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
 from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS, \
-    DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN
+    DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_STATUS_NO
 from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX
 from util.const.response import RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
     RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_STUDY_FROM_YEAR, \
@@ -168,4 +168,4 @@ class UserInfoService(BaseService):
     @deleteCache(["UserInfoService:{passportId}"])
     def resetHeadImg(self):
         # 重置头像
-        UserModel.updateByPassportId(passportId=self.passportId, head_img_obj_name="")
+        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_NO)

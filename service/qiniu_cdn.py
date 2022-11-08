@@ -3,6 +3,8 @@
 import hashlib
 
 import util.config
+from model.user import UserModel
+from util.const.match import MODEL_STATUS_YES
 from util.img_util import rgb_to_sketch
 from util.qiniu_cdn import Qiniu
 
@@ -29,3 +31,5 @@ class MyStorage(object):
         filename = "%s/%s" % ('head_img', virtualObjName)
         q = Qiniu()
         q.upload_stream(filename, rgb_to_sketch(imgStreamData))
+        # 修改db
+        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES)
