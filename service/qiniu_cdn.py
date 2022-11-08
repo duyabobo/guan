@@ -17,7 +17,7 @@ class MyStorage(object):
     @staticmethod
     def getVirtualImgUrl(passportId, head_img_version):
         realObjName, virtualObjName = MyStorage.getObjNames(passportId)
-        return CDN_QINIU_URL + virtualObjName + '?head_img_version=%d' % head_img_version
+        return CDN_QINIU_URL + virtualObjName + '?head_img_version=%s' % str(head_img_version)
 
     @staticmethod
     def getRealImgUrl(passportId, head_img_version):
