@@ -28,6 +28,7 @@ class UserModel(BaseModel):
     passport_id = Column(Integer, default=0)  # passport_id
     sex = Column(Integer, default=MODEL_SEX_UNKNOWN_INDEX)  # 性别：MODEL_SEX_ENUMERATE
     has_head_img = Column(Integer, default=-1)  # 是否自定义头像：-1未选中 0否，1是
+    head_img_version = Column(Integer, default=0)  # 头像版本
     birth_year = Column(Integer, default=0)  # 出生年份
     height = Column(Integer, default=0)  # 身高(厘米)
     weight = Column(Integer, default=0)  # 体重(公斤)
@@ -80,6 +81,7 @@ class UserModel(BaseModel):
     def updateByPassportId(cls, passportId=0, **updateParams):
         getDbSession().query(cls).filter(cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES).update(updateParams)
         getDbSession().commit()
+        updateParams.pop('head_img_version', '')
         UserChangeRecordModel.addRecords(passportId, **updateParams)  # 流水记录
 
     @classmethod

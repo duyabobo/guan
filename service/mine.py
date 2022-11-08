@@ -25,7 +25,7 @@ class MineService(BaseService):
 
     def getHeadImg(self, passportId):
         user = UserModel.getByPassportId(passportId=passportId)
-        if user.has_head_img == MODEL_STATUS_EMPTY:  # 未定义
+        if not user or user.has_head_img == MODEL_STATUS_EMPTY:  # 未定义
             return CDN_QINIU_DEFAULT_HEAD_IMG
         elif user.has_head_img == MODEL_STATUS_NO:  # 系统头像
             sexIndex = user.sexIndex if user else MODEL_SEX_UNKNOWN_INDEX
@@ -35,7 +35,7 @@ class MineService(BaseService):
                 MODEL_SEX_UNKNOWN_INDEX: CDN_QINIU_DEFAULT_HEAD_IMG
             }.get(sexIndex, CDN_QINIU_DEFAULT_HEAD_IMG)
         else:  # 自定义头像（虚拟）
-            return MyStorage.getVirtualImgUrl(passportId)
+            return MyStorage.getVirtualImgUrl(passportId, user.head_img_version)
 
     def getMainGroupList(self):
         return [

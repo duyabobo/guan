@@ -15,14 +15,14 @@ class MyStorage(object):
         self.passportId = passportId
 
     @staticmethod
-    def getVirtualImgUrl(passportId):
+    def getVirtualImgUrl(passportId, head_img_version):
         realObjName, virtualObjName = MyStorage.getObjNames(passportId)
-        return CDN_QINIU_URL + virtualObjName
+        return CDN_QINIU_URL + virtualObjName + '?head_img_version=%d' % head_img_version
 
     @staticmethod
-    def getRealImgUrl(passportId):
+    def getRealImgUrl(passportId, head_img_version):
         realObjName, virtualObjName = MyStorage.getObjNames(passportId)
-        return CDN_QINIU_URL + realObjName
+        return CDN_QINIU_URL + realObjName + '?head_img_version=%d' % head_img_version
 
     @staticmethod
     def getObjNames(passportId):
@@ -42,4 +42,5 @@ class MyStorage(object):
         q = Qiniu()
         q.upload_stream(virtualObjName, rgb_to_sketch(imgStreamData))
         # 修改db
-        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES)
+        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES,
+                                     head_img_version=UserModel.head_img_version+1)
