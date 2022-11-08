@@ -27,7 +27,7 @@ class UserModel(BaseModel):
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer, default=0)  # passport_id
     sex = Column(Integer, default=MODEL_SEX_UNKNOWN_INDEX)  # 性别：MODEL_SEX_ENUMERATE
-    has_head_img = Column(Integer, default=0)  # 是否自定义头像：0否，1是
+    has_head_img = Column(Integer, default=-1)  # 是否自定义头像：-1未选中 0否，1是
     birth_year = Column(Integer, default=0)  # 出生年份
     height = Column(Integer, default=0)  # 身高(厘米)
     weight = Column(Integer, default=0)  # 体重(公斤)
