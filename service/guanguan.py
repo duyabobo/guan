@@ -8,8 +8,11 @@ from ral.activity import getMatchedActivityIds
 from ral.cache import checkCache
 from service import BaseService
 from service.common.match import MatchHelper
+from service.qiniu_cdn import MyStorage
+from util import url_util
 from util.class_helper import lazy_property
-from util.const.match import MODEL_SEX_MALE_INDEX
+from util.const.base import MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, MODEL_STATUS_YES
 from util.time_cost import timecost
 
 
@@ -80,6 +83,27 @@ class GuanguanService(BaseService):
         return {a.id: a for a in addressList}
 
     @timecost
+    def getMatchUserByIds(self, passportIds):
+        if not passportIds:
+            return {}
+        users = UserModel.getByPassportIds(passportIds)
+        return {u.passport_id: u for u in users}
+
+    def getMatchPassportId(self, activity):
+        return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
+
+    def getMatchMeetResult(self, activity):
+        return activity.girl_meet_result if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_meet_result
+
+    def getActivityImg(self, activity, address, matchUser):
+        if not matchUser or matchUser.has_head_img != MODEL_STATUS_YES:  # 如果没有异性参与，或者用户没有选择头像，返回地址图片
+            return address.thumbnails_img
+        if self.getMatchMeetResult(activity) in [MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]:  # 如果双方都满意此次见面，就返回异性真实头像
+            return MyStorage.getRealThumbnailsImgUrl(matchUser.passportId, matchUser.head_img_version)
+        else:
+            return MyStorage.getVirtualThumbnailsImgUrl(matchUser.passportId, matchUser.head_img_version)
+
+    @timecost
     def getGuanguanList(self, longitude, latitude):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
         matchedActivityList = []
@@ -96,15 +120,17 @@ class GuanguanService(BaseService):
         matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds))  # 按照经纬度，对matchedActivityList进行排序--- 不太必要，同城即可，后期还会加上学校
         # 封装
         addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
+        matchUserMap = self.getMatchUserByIds(list(set(self.getMatchPassportId(a) for a in matchedActivityList)))
         guanguanList = []
         for activity in matchedActivityList:
             address = addressMap[activity.address_id]
+            matchUser = matchUserMap.get(self.getMatchPassportId(activity), None)
             guanguanList.append(
                 {
                     "id": activity.id,
                     "time": activity.startTimeStr,
                     "state": self.getState(activity),
-                    "img": address.thumbnails_img,
+                    "img": self.getActivityImg(activity, address, matchUser),
                     "address": address.nameShort,
                 }
             )

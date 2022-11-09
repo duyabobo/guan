@@ -25,6 +25,16 @@ class MyStorage(object):
         return CDN_QINIU_URL + realObjName + '?head_img_version=%d' % head_img_version
 
     @staticmethod
+    def getVirtualThumbnailsImgUrl(passportId, head_img_version):
+        realObjName, virtualObjName = MyStorage.getObjNames(passportId)
+        return CDN_QINIU_URL + virtualObjName + '?imageMogr2/thumbnail/200x&head_img_version=%s' % str(head_img_version)
+
+    @staticmethod
+    def getRealThumbnailsImgUrl(passportId, head_img_version):
+        realObjName, virtualObjName = MyStorage.getObjNames(passportId)
+        return CDN_QINIU_URL + realObjName + '?imageMogr2/thumbnail/200x&head_img_version=%d' % head_img_version
+
+    @staticmethod
     def getObjNames(passportId):
         # 获取真实头像照片cdn对象名，以及虚拟头像照片cdn对象名
         fmt = "obj_name_secret:%s:localObjName:%s"

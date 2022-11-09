@@ -34,7 +34,7 @@ class AddressModel(BaseModel):
 
     @property
     def thumbnails_img(self):  # 缩略图url
-        return "{qiniuUrl}{objName}?imageMogr2/thumbnail/188x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
+        return "{qiniuUrl}{objName}?imageMogr2/thumbnail/200x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
 
     @classmethod
     def listByLongitudeLatitude(cls, longitude, latitude):  # todo
