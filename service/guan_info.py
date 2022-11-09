@@ -20,8 +20,6 @@ from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL
     MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
 from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG, \
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
-from util.const.qiniu_img import CDN_QINIU_TIME_IMG, CDN_QINIU_ADDRESS_IMG, CDN_QINIU_CAMERA_HEAD_IMG, \
-    CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
     RESP_NEED_FILL_INFO
@@ -55,14 +53,6 @@ class GuanInfoService(BaseService):
             passportId = self.activityRecord.boy_passport_id
 
         return UserModel.getByPassportId(passportId=passportId)
-
-    @property
-    def timeIcon(self):
-        return CDN_QINIU_TIME_IMG
-
-    @property
-    def addressIcon(self):
-        return CDN_QINIU_ADDRESS_IMG
 
     @property
     def img(self):

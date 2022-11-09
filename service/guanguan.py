@@ -10,7 +10,6 @@ from service import BaseService
 from service.common.match import MatchHelper
 from util.class_helper import lazy_property
 from util.const.match import MODEL_SEX_MALE_INDEX
-from util.const.qiniu_img import CDN_QINIU_ADDRESS_IMG, CDN_QINIU_TIME_IMG
 from util.time_cost import timecost
 
 
@@ -106,8 +105,6 @@ class GuanguanService(BaseService):
                     "time": activity.startTimeStr,
                     "state": self.getState(activity),
                     "img": address.thumbnails_img,
-                    "addressImg": CDN_QINIU_ADDRESS_IMG,
-                    "timeImg": CDN_QINIU_TIME_IMG,
                     "address": address.nameShort,
                 }
             )
