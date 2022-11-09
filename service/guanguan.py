@@ -9,10 +9,9 @@ from ral.cache import checkCache
 from service import BaseService
 from service.common.match import MatchHelper
 from service.qiniu_cdn import MyStorage
-from util import url_util
 from util.class_helper import lazy_property
-from util.const.base import MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, MODEL_STATUS_YES
+from util.const.base import MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_UNKNOWN
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_STATUS_YES
 from util.time_cost import timecost
 
 
@@ -90,9 +89,13 @@ class GuanguanService(BaseService):
         return {u.passport_id: u for u in users}
 
     def getMatchPassportId(self, activity):
+        if not self.userInfo:
+            return 0
         return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
 
     def getMatchMeetResult(self, activity):
+        if not self.userInfo:
+            return MODEL_MEET_RESULT_UNKNOWN
         return activity.girl_meet_result if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_meet_result
 
     def getActivityImg(self, activity, address, matchUser):
