@@ -10,7 +10,7 @@ from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util.const import match
-from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO
+from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_FIT_CHOICE
 from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
 from util.ctx import getDbSession
 from util.time_cost import timecost
@@ -68,7 +68,13 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls).filter(
             or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
         ).filter(
-            cls.start_time > datetime.datetime.now().date()
+            or_(
+                cls.start_time > datetime.datetime.now().date(),
+                and_(
+                    cls.girl_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
+                    cls.boy_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
+                )
+            )
         ).first()
 
     @classmethod

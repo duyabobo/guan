@@ -10,6 +10,7 @@ from model.user import UserModel
 from ral.activity import changeByRequirement
 from ral.cache import lock
 from service import BaseService
+from service.common.guan_helper import GuanHelper
 from service.common.match import MatchHelper
 from service.common.myself_helper import UserHelper
 from service.myself import UserInfoService
@@ -55,35 +56,12 @@ class GuanInfoService(BaseService):
         return UserModel.getByPassportId(passportId=passportId)
 
     @property
-    def img(self):
-        return self.addressRecord.img
-
-    @property
     def address(self):
         return self.addressRecord.name
 
     @property
-    def addressDesc(self):
-        return self.addressRecord.description
-
-    @property
     def time(self):
         return self.activityRecord.startTimeStr
-
-    @property
-    def timeDesc(self):
-        startTime = self.activityRecord.start_time
-        today = datetime.datetime.now().date()
-
-        leftDays = (startTime.date() - today).days
-        if leftDays == 0:
-            return "今天"
-        elif leftDays == 1:
-            return "明天"
-        elif leftDays == 2:
-            return "后天"
-        else:
-            return "%s天后" % leftDays
 
     @property
     def opType(self):
@@ -145,7 +123,7 @@ class GuanInfoService(BaseService):
         return {
             "guanId": self.activityId,
             "activity": {
-                "img": self.img,
+                "img": GuanHelper.getActivityImg(self.activityRecord, self.addressRecord, self.oppositeUserRecord, self.userRecord, False),
                 "time": self.time,
                 "address": self.address,
             },
@@ -202,7 +180,6 @@ class GuanInfoService(BaseService):
                 return UNREACHABLE_REQUIREMENT
             return RequirementModel.getByPassportId(invitePid)
         return UNREACHABLE_REQUIREMENT  # 有问题
-
 
     def parseUpdataParams(self, opType, sexIndex):
         updateParams = {}

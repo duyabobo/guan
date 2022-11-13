@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 from model.activity import ActivityModel
 from model.address import AddressModel
-from model.requirement import RequirementModel
 from model.user import UserModel
 from ral.activity import getMatchedActivityIds
 from ral.cache import checkCache
 from service import BaseService
-from service.common.match import MatchHelper
-from service.qiniu_cdn import MyStorage
+from service.common.guan_helper import GuanHelper
 from util.class_helper import lazy_property
-from util.const.base import MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_UNKNOWN
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_STATUS_YES
+from util.const.match import MODEL_SEX_MALE_INDEX
 from util.time_cost import timecost
 
 
@@ -24,28 +21,6 @@ class GuanguanService(BaseService):
     @lazy_property
     def userInfo(self):
         return UserModel.getByPassportId(passportId=self.passportId)
-
-    def getRequirementMap(self, activityList):
-        if not self.userInfo:
-            return {}
-        getPid = lambda x: a.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else a.boy_passport_id
-        passportIds = [getPid(a) for a in activityList]
-        if not passportIds:
-            return {}
-        requirementList = RequirementModel.getByPassportIds(list(set(passportIds)))
-        passportIdMapRequirement = {r.passport_id: r for r in requirementList}
-        activityIdMapPassportId = {a.id: getPid(a) for a in activityList}
-        return {aid: passportIdMapRequirement.get(activityIdMapPassportId[aid], None) for aid in activityIdMapPassportId}
-
-    def filterActivityIdList(self, activityList):
-        """筛选匹配满足的"""
-        activityIdMapRequirement = self.getRequirementMap(activityList)
-        matchedActivityIdList = []
-        for a in activityList:
-            requirement = activityIdMapRequirement.get(a.id, None)
-            if MatchHelper.match(self.userInfo, requirement):
-                matchedActivityIdList.append(a.id)
-        return matchedActivityIdList
 
     @timecost
     @checkCache("GuanguanService:{passportId}", ex=60)
@@ -93,19 +68,6 @@ class GuanguanService(BaseService):
             return 0
         return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
 
-    def getMatchMeetResult(self, activity):
-        if not self.userInfo:
-            return MODEL_MEET_RESULT_UNKNOWN
-        return activity.girl_meet_result if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_meet_result
-
-    def getActivityImg(self, activity, address, matchUser):
-        if not matchUser or matchUser.has_head_img != MODEL_STATUS_YES:  # 如果没有异性参与，或者用户没有选择头像，返回地址图片
-            return address.thumbnails_img
-        if self.getMatchMeetResult(activity) in [MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]:  # 如果双方都满意此次见面，就返回异性真实头像
-            return MyStorage.getRealThumbnailsImgUrl(matchUser.passportId, matchUser.head_img_version)
-        else:
-            return MyStorage.getVirtualThumbnailsImgUrl(matchUser.passportId, matchUser.head_img_version)
-
     @timecost
     def getGuanguanList(self, longitude, latitude):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
@@ -133,7 +95,7 @@ class GuanguanService(BaseService):
                     "id": activity.id,
                     "time": activity.startTimeStr,
                     "state": self.getState(activity),
-                    "img": self.getActivityImg(activity, address, matchUser),
+                    "img": GuanHelper.getActivityImg(activity, address, matchUser, self.userInfo, True),
                     "address": address.nameShort,
                 }
             )
