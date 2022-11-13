@@ -42,32 +42,32 @@ VALUE_TYPE_DICT = {
 def selectorFactory(op_type, data, checkDynamicData):
     # 单项选择器
     if op_type == OP_TYPE_VERIFY:
-        return SingleSelector("认证类型", VERIFY_CHOICE_LIST[data.verify_type], op_type)
+        return SingleSelector("认证类型 *", VERIFY_CHOICE_LIST[data.verify_type], op_type)
     elif op_type == OP_TYPE_SEX:
-        return SingleSelector("性别", SEX_CHOICE_LIST[data.sex], op_type)
+        return SingleSelector("性别 *", SEX_CHOICE_LIST[data.sex], op_type)  # 加星必填
     elif op_type == OP_TYPE_BIRTH_YEAR:
-        return SingleSelector("出生年份", data.birth_year, op_type)
+        return SingleSelector("出生年份 *", data.birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT:
-        return SingleSelector("身高", data.height, op_type, "(cm)")
+        return SingleSelector("身高", data.height, op_type, "(cm) *")
     elif op_type == OP_TYPE_WEIGHT:
-        return SingleSelector("体重", data.weight, op_type, "(kg)")
+        return SingleSelector("体重", data.weight, op_type, "(kg) *")
     elif op_type == OP_TYPE_MONTH_PAY:
-        return SingleSelector("税前月收入", data.month_pay, op_type, "(元)")
+        return SingleSelector("税前月收入 *", data.month_pay, op_type, "(元) *")
     elif op_type == OP_TYPE_MARTIAL_STATUS:
-        return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type)
+        return SingleSelector("婚姻现状 *", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type)
     elif op_type == OP_TYPE_EDUCATION_LEVEL:
-        return SingleSelector("学历", EDUCATION_LEVEL[data.education_level], op_type)
+        return SingleSelector("学历 *", EDUCATION_LEVEL[data.education_level], op_type)
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
     # 双项选择器
     elif op_type == OP_BIRTH_YEAR_PERIOD:
-        return MultiSelector("出生年份区间", data.min_birth_year, data.max_birth_year, op_type)
+        return MultiSelector("出生年份区间 *", data.min_birth_year, data.max_birth_year, op_type)
     elif op_type == OP_TYPE_HEIGHT_PERIOD:
-        return MultiSelector("身高区间", data.min_height, data.max_height, op_type, "(cm)")
+        return MultiSelector("身高区间", data.min_height, data.max_height, op_type, "(cm) *")
     elif op_type == OP_TYPE_WEIGHT_PERIOD:
-        return MultiSelector("体重区间", data.min_weight, data.max_weight, op_type, "(kg)")
+        return MultiSelector("体重区间", data.min_weight, data.max_weight, op_type, "(kg) *")
     elif op_type == OP_TYPE_MONTH_PAY_PERIOD:
-        return MultiSelector("税前月收入", data.min_month_pay, data.max_month_pay, op_type, "(元)")
+        return MultiSelector("税前月收入", data.min_month_pay, data.max_month_pay, op_type, "(元) *")
     elif op_type == OP_TYPE_STUDY_FROM_YEAR_PERIOD:
         return MultiSelector("入学时间区间", data.min_study_from_year, data.max_study_from_year, op_type)
     # 三项选择器
