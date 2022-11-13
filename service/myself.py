@@ -1,31 +1,25 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from common.myself_helper import UserHelper
-from model.passport import PassportModel
 from model.requirement import RequirementModel
 from model.user import UserModel
-from model.verify import VerifyModel
 from ral import user
 from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
 from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS, \
-    DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_STATUS_NO
-from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX
+    DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_STATUS_NO, MODEL_MAIL_TYPE_UNKNOWN
+from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX, OP_TYPE_VERIFY
 from util.const.response import RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
-    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_STUDY_REGION, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_STUDY_FROM_YEAR, \
-    RESP_NEED_FILL_EDUCATION, RESP_NEED_FILL_EDUCATION_LEVEL, RESP_NEED_FILL_WORK, RESP_NEED_FILL_WORK_REGION, \
-    RESP_NEED_FILL_MONEY_PAY
+    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_EDUCATION_LEVEL, RESP_NEED_FILL_MONEY_PAY
 from util.const.response import RESP_SEX_CANOT_EDIT, RESP_MARTIAL_STATUS_CANOT_EDIT
 
 DEFAULT_VERIFY_TYPE = "未认证"
 EDUCATION_VERIFY_TYPE = "教育认证"
 WORK_VERIFY_TYPE = "工作认证"
 VERIFY_TYPE_DICT = {
-    MODEL_MAIL_VERIFY_STATUS_YES: {
-        MODEL_MAIL_TYPE_SCHOOL: EDUCATION_VERIFY_TYPE,
-        MODEL_MAIL_TYPE_WORK: WORK_VERIFY_TYPE
-    },
+    MODEL_MAIL_TYPE_SCHOOL: EDUCATION_VERIFY_TYPE,
+    MODEL_MAIL_TYPE_WORK: WORK_VERIFY_TYPE
 }
 
 
@@ -47,17 +41,12 @@ class UserInfoService(BaseService):
         return UserModel.getFillFinishCnt()
 
     @property
-    def verify(self):
-        return VerifyModel.getByPassportId(self.passportId)
-
-    @property
     def isVerified(self):
-        return self.verify.mail_verify_status == MODEL_MAIL_VERIFY_STATUS_YES
+        return self.userInfo.verify_type != MODEL_MAIL_TYPE_UNKNOWN
     
     @property
     def verifyType(self):
-        return VERIFY_TYPE_DICT.get(self.verify.mail_verify_status, {}).\
-            get(self.verify.mail_type, DEFAULT_VERIFY_TYPE)
+        return VERIFY_TYPE_DICT.get(self.userInfo.verify_type, DEFAULT_VERIFY_TYPE)
 
     @property
     def infoIsFilled(self):
@@ -84,10 +73,10 @@ class UserInfoService(BaseService):
             return RESP_NEED_FILL_HEIGHT
         elif not self.userInfo.weight:
             return RESP_NEED_FILL_WEIGHT
-        elif self.verify.mail_type == MODEL_MAIL_TYPE_SCHOOL:  # 学校认证
+        elif self.userInfo.verify_type == MODEL_MAIL_TYPE_SCHOOL:  # 学校认证
             if not self.userInfo.education_level:
                 return RESP_NEED_FILL_EDUCATION_LEVEL
-        elif self.verify.mail_type == MODEL_MAIL_TYPE_WORK:  # 工作认证
+        elif self.userInfo.verify_type == MODEL_MAIL_TYPE_WORK:  # 工作认证
             if not self.userInfo.month_pay:
                 return RESP_NEED_FILL_MONEY_PAY
         elif self.userInfo.martial_status == MODEL_MARTIAL_STATUS_UNKNOWN:
@@ -99,7 +88,6 @@ class UserInfoService(BaseService):
         return {
             "desc": "认证 *",
             "value": self.verifyType,
-            "is_student": self.verify.mail_type
         }
 
     def getPhone(self):
@@ -114,11 +102,18 @@ class UserInfoService(BaseService):
 
     @checkCache("UserInfoService:{passportId}")
     def getMyselfInfo(self, checkDynamicData=False):
-        informationList = self.userHelper.getInformationList(checkDynamicData)
+        _informationList = self.userHelper.getInformationList(checkDynamicData)
+        # 认证这里要pop掉，使用workVerify单独去页面展示
+        informationList = []
+        for i in _informationList:
+            if i.bindChange == OP_TYPE_VERIFY:
+                continue
+            informationList.append(i)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(informationList)}
         return {
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
+            "workVerify": self.getVerify(),
             "obtainWorkEmailPlaceHolder": "输入您的大学邮箱或工作邮箱",
             "informationResult": "%s人完善个人信息" % self.infoFinishCnt,
         }
