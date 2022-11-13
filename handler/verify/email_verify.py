@@ -12,7 +12,7 @@ class EmailVerifyHandler(BaseHandler):
     def get(self):
         openid = self.getRequestParameter('openid')
         email = self.getRequestParameter('email')
-        evs = EmailVerifyService(self.currentPassportId)
+        evs = EmailVerifyService(self.currentPassport)
         ret = evs.sendVerifyEmail(openid, email)
         return Response(msg=ret)
 
@@ -21,7 +21,7 @@ class EmailVerifyHandler(BaseHandler):
         openid = self.getRequestParameter('openid')
         email = self.getRequestParameter('email')
         code = self.getRequestParameter('code')
-        evs = EmailVerifyService(self.currentPassportId)
+        evs = EmailVerifyService(self.currentPassport)
         ret = evs.checkCodeWithCache(openid, email, code)
         uis = UserInfoService(self.currentPassport)
         return Response(data=uis.getMyselfInfo(), msg=ret)

@@ -4,7 +4,9 @@ import gevent
 
 from model.verify import VerifyModel
 from service import BaseService
+from service.myself import UserInfoService
 from util.class_helper import lazy_property
+from util.const.match import OP_TYPE_VERIFY
 from util.const.response import RESP_HAS_EMAIL_VERIFY_RECENTLY, RESP_OK, \
     RESP_HAS_EMAIL_VERIFY_FAILED, RESP_HAS_EMAIL_IS_NOT_COMPANY, RESP_HAS_SEND_EMAIL
 from util.encryption import getEncryptMail
@@ -18,8 +20,9 @@ EMAIL_VERIFY_CODE = "email_verify_code:{passportId}:{email}"
 
 class EmailVerifyService(BaseService):
 
-    def __init__(self, passportId):
-        self.passportId = passportId
+    def __init__(self, currentPassport):
+        self.currentPassport = currentPassport
+        self.passportId = currentPassport.get('id', 0)
         super(EmailVerifyService, self).__init__()
         self.verifyRecordKey = EMAIL_VERIFY_RECORD.format(passportId=self.passportId)
 
@@ -46,6 +49,7 @@ class EmailVerifyService(BaseService):
             return RESP_HAS_EMAIL_VERIFY_FAILED
         mailType = VerifyModel.getMailType(email)
         VerifyModel.updateVerifyStatus(passportId=self.passportId, encryptedMail=encryptedMail, mailType=mailType)
+        UserInfoService(self.currentPassport).updateMyselfInfo(OP_TYPE_VERIFY, mailType)
         self.recordVerifyOperate()
         return RESP_OK
 

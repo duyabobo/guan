@@ -49,7 +49,7 @@ MODEL_MAIL_KEYWORD = "edu"
 MODEL_MAIL_TYPE_UNKNOWN = MODEL_VERIFY_TYPE_NO_NEED_VERIFY = 0
 MODEL_MAIL_TYPE_SCHOOL = MODEL_VERIFY_TYPE_SCHOOL = 1
 MODEL_MAIL_TYPE_WORK = MODEL_VERIFY_TYPE_WORK = 2
-VERIFY_CHOICE_LIST = [u"不要求认证", u"教育认证", u"工作认证"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
+VERIFY_CHOICE_LIST = [u"无认证", u"教育认证", u"工作认证"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
 DEFAULT_VERIFY_INDEX = 0
 
 # MODEL_SEX_ENUMERATE

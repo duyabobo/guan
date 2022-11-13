@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from common.myself_helper import UserHelper
+from model.passport import PassportModel
 from model.requirement import RequirementModel
 from model.user import UserModel
 from model.verify import VerifyModel
@@ -118,7 +119,6 @@ class UserInfoService(BaseService):
         return {
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
-            "workVerify": self.getVerify(),
             "obtainWorkEmailPlaceHolder": "输入您的大学邮箱或工作邮箱",
             "informationResult": "%s人完善个人信息" % self.infoFinishCnt,
         }

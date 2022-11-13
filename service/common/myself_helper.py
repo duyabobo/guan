@@ -12,6 +12,7 @@ from util.const.match import *
 
 INFORMATION_PAIR_LIST_DICT = {
     MODEL_MAIL_TYPE_UNKNOWN: [  # 活动详情页，邀请人信息展示顺序
+        [OP_TYPE_VERIFY],
         [OP_TYPE_SEX, OP_TYPE_BIRTH_YEAR],
         [OP_TYPE_HEIGHT, OP_TYPE_WEIGHT],
         [OP_TYPE_EDUCATION_LEVEL, OP_TYPE_MARTIAL_STATUS],
@@ -21,6 +22,7 @@ INFORMATION_PAIR_LIST_DICT = {
         [OP_TYPE_EDUCATION_MULTI],
     ],
     MODEL_MAIL_TYPE_SCHOOL: [  # 活动详情页，邀请人信息展示顺序
+        [OP_TYPE_VERIFY],
         [OP_TYPE_SEX, OP_TYPE_BIRTH_YEAR],
         [OP_TYPE_HEIGHT, OP_TYPE_WEIGHT],
         [OP_TYPE_EDUCATION_LEVEL, OP_TYPE_MARTIAL_STATUS],
@@ -29,6 +31,7 @@ INFORMATION_PAIR_LIST_DICT = {
         [OP_TYPE_EDUCATION_MULTI],
     ],
     MODEL_MAIL_TYPE_WORK: [  # 活动详情页，邀请人信息展示顺序
+        [OP_TYPE_VERIFY],
         [OP_TYPE_SEX, OP_TYPE_BIRTH_YEAR],
         [OP_TYPE_HEIGHT, OP_TYPE_WEIGHT],
         [OP_TYPE_EDUCATION_LEVEL, OP_TYPE_MARTIAL_STATUS],
@@ -39,8 +42,10 @@ INFORMATION_PAIR_LIST_DICT = {
     ],
 }
 
+
 OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
     MODEL_MAIL_TYPE_UNKNOWN: [
+        OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
@@ -54,6 +59,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_EDUCATION_MULTI,
     ],
     MODEL_MAIL_TYPE_SCHOOL: [
+        OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
@@ -66,6 +72,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_EDUCATION_MULTI,
     ],
     MODEL_MAIL_TYPE_WORK: [
+        OP_TYPE_VERIFY,
         OP_TYPE_SEX,
         OP_TYPE_BIRTH_YEAR,
         OP_TYPE_HEIGHT,
@@ -104,7 +111,10 @@ class UserHelper(object):
         userUpdateParams = {}
         requirementUpdateParams = {}
         # 单项选择器
-        if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
+        if opType == OP_TYPE_VERIFY and value != MODEL_MAIL_TYPE_UNKNOWN:
+            userUpdateParams['verify_type'] = value
+            requirementUpdateParams['verify_type'] = value
+        elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             userUpdateParams['sex'] = value
             if self.user.sex == MODEL_SEX_UNKNOWN_INDEX:  # 首次更新用户信息- sex。下同
                 if value == MODEL_SEX_MALE_INDEX:
