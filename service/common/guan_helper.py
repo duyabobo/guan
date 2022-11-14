@@ -35,7 +35,10 @@ class GuanHelper(object):
             else:  # 真实头像
                 return cls.getUserImg(imgUser, False, thumbnailsFlag)
         else:  # 地址头像
-            return address.thumbnails_img
+            if thumbnailsFlag:
+                return address.thumbnails_img
+            else:
+                return address.img
 
     @classmethod
     def getUserImg(cls, userRecord, virtualFlag, thumbnailsFlag):
