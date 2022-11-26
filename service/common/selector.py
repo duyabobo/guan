@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from model.requirement import RequirementModel
+from model.user import UserModel
 from service.common.multi_picker_helper import MultiPickerHelper
 from util.const.education import EDUCATION_LEVEL
 from util.const.match import *
@@ -56,7 +58,10 @@ def selectorFactory(op_type, data, checkDynamicData):
     elif op_type == OP_TYPE_MARTIAL_STATUS:
         return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_EDUCATION_LEVEL:
-        return SingleSelector("学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
+        if isinstance(data, UserModel):
+            return SingleSelector("最高学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
+        elif isinstance(data, RequirementModel):
+            return SingleSelector("最低学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
     # 双项选择器
