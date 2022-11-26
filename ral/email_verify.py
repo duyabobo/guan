@@ -63,8 +63,8 @@ class EmailVerifyService(BaseService):
         return False
 
     def emailIsValid(self, email):
-        regex = re.compile(r'([A-Za-z0-9] + [.-_]) * [A-Za-z0-9] + @[A-Za-z0-9 -] + (\.[A-Z|a-z]{2, }) +')
-        if re.fullmatch(regex, email):
+        regex = re.compile(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$')
+        if re.match(regex, email):
             return True
         else:
             return False
@@ -76,7 +76,7 @@ class EmailVerifyService(BaseService):
             return RESP_HAS_EMAIL_VERIFY_RECENTLY
         if self.hasSendEmailRecently(email):
             return RESP_HAS_SEND_EMAIL
-        if self.emailIsValid(email):
+        if not self.emailIsValid(email):
             return RESP_EMAIL_IS_NOT_VALID
 
         code = generate_code()
