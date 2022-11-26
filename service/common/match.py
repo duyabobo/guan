@@ -52,7 +52,7 @@ class MatchHelper(object):
         if userInfo.study_area != requirement.study_area and requirement.study_area != ALL_STR:
             return False
         # 学校
-        if userInfo.education_level != requirement.education_level and requirement.education_level != ALL_STR:
+        if userInfo.education_level < requirement.education_level:
             return False
         if userInfo.major != requirement.major and requirement.major != ALL_STR:
             return False
