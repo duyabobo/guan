@@ -132,11 +132,6 @@ class UserModel(BaseModel):
         return getDbSession().query(cls.id).filter(*filterParms).count()
 
     @property
-    def verify_type(self):
-        verify = VerifyModel.getByPassportId(self.passport_id)
-        return verify.mail_type if verify else MODEL_MAIL_TYPE_UNKNOWN
-
-    @property
     def sexIndex(self):
         return self.sex
 
