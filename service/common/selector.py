@@ -59,9 +59,9 @@ def selectorFactory(op_type, data, checkDynamicData):
         return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_EDUCATION_LEVEL:
         if isinstance(data, UserModel):
-            return SingleSelector("最高学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
+            return SingleSelector("最高第一学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
         elif isinstance(data, RequirementModel):
-            return SingleSelector("最低学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
+            return SingleSelector("最低第一学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
     # 双项选择器
