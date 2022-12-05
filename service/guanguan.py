@@ -23,9 +23,8 @@ class GuanguanService(BaseService):
         return UserModel.getByPassportId(passportId=self.passportId)
 
     @timecost
-    @checkCache("GuanguanService:{passportId}", ex=60)
     def getActivityIdsByLocation(self, longitude, latitude):
-        addressIds = self.getAddressIds(longitude, latitude)
+        addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2))
         if not addressIds:
             addressIds = [0]
         activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds)
@@ -35,9 +34,15 @@ class GuanguanService(BaseService):
     def getLimitMatchedActivityList(self, activityIds, limit=20):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
 
+    @timecost
+    @checkCache("GuanguanService:{longitude}:{latitude}")
     def getAddressIds(self, longitude, latitude):
         addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查
-        return [a.id for a in addressList]
+        addressIdMapDistance = {
+            a.id: (a.longitude - longitude) ** 2 + (a.latitude - latitude) ** 2
+            for a in addressList
+        }
+        return [k for k, v in sorted(addressIdMapDistance.items(), key=lambda x: x[1])][:100]
 
     def getState(self, activity):
         girl_pid = activity.girl_passport_id
@@ -65,7 +70,7 @@ class GuanguanService(BaseService):
 
     def getMatchPassportId(self, activity):
         if not self.userInfo:
-            return 0
+            return activity.girl_passport_id or activity.boy_passport_id
         return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
 
     @timecost

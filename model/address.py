@@ -37,8 +37,14 @@ class AddressModel(BaseModel):
         return "{qiniuUrl}{objName}?imageMogr2/thumbnail/200x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
 
     @classmethod
-    def listByLongitudeLatitude(cls, longitude, latitude):  # todo
-        return getDbSession().query(cls).filter(cls.status == match.MODEL_STATUS_YES).all()
+    def listByLongitudeLatitude(cls, longitude, latitude):
+        return getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            cls.longitude >= longitude - 1,
+            cls.longitude <= longitude + 1,
+            cls.latitude >= latitude - 1,
+            cls.latitude <= latitude + 1
+        ).all()
 
     @classmethod
     def getById(cls, addressId):
