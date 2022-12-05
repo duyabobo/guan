@@ -52,7 +52,9 @@ def datetime2hommization(d):
     """
     today = datetime.now().date()
     days = (d.date() - today).days
-    if days == 0:
+    if days < 0:
+        return datetime2str(d)
+    elif days == 0:
         return "今天 %s" % (d.strftime("%H:%M:%S"))
     elif days == 1:
         return "明天 %s" % (d.strftime("%H:%M:%S"))
