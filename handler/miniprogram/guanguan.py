@@ -13,7 +13,8 @@ class GuanguanHandler(BaseHandler):
     def get(self):
         longitude = self.getRequestParameter('longitude', paraType=float)
         latitude = self.getRequestParameter('latitude', paraType=float)
+        limit = self.getRequestParameter('limit', paraType=int, default=20)
         ggs = GuanguanService(self.currentPassportId)
         return Response(data={
-            "guanguanList": ggs.getGuanguanList(longitude, latitude),
+            "guanguanList": ggs.getGuanguanList(longitude, latitude, limit),
         })

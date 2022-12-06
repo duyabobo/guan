@@ -23,26 +23,26 @@ class GuanguanService(BaseService):
         return UserModel.getByPassportId(passportId=self.passportId)
 
     @timecost
-    def getActivityIdsByLocation(self, longitude, latitude):
-        addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2))
+    def getActivityIdsByLocation(self, longitude, latitude, hasLogin, limit):
+        addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit*5)
         if not addressIds:
             addressIds = [0]
-        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds)
+        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, hasLogin, limit)
         return set([a.id for a in activityIds])
 
     @timecost
-    def getLimitMatchedActivityList(self, activityIds, limit=20):
+    def getLimitMatchedActivityList(self, activityIds, limit):
         return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
 
     @timecost
-    @checkCache("GuanguanService:{longitude}:{latitude}")
-    def getAddressIds(self, longitude, latitude):
+    @checkCache("GuanguanService:{longitude}:{latitude}:{limit}")
+    def getAddressIds(self, longitude, latitude, limit):
         addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查
         addressIdMapDistance = {
             a.id: (a.longitude - longitude) ** 2 + (a.latitude - latitude) ** 2
             for a in addressList
         }
-        return [k for k, v in sorted(addressIdMapDistance.items(), key=lambda x: x[1])][:100]
+        return [k for k, v in sorted(addressIdMapDistance.items(), key=lambda x: x[1])][:limit]
 
     def getState(self, activity):
         girl_pid = activity.girl_passport_id
@@ -74,7 +74,7 @@ class GuanguanService(BaseService):
         return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
 
     @timecost
-    def getGuanguanList(self, longitude, latitude):
+    def getGuanguanList(self, longitude, latitude, limit):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
         matchedActivityList = []
         # 进行中的（且自己参与的）
@@ -84,10 +84,12 @@ class GuanguanService(BaseService):
         # 自己参与，但是没有闭环的
         unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
         matchedActivityList.extend(unfinishedActivities)
-        # 匹配的
-        matchedActivityIds = getMatchedActivityIds(self.userInfo) if self.userInfo else set()
-        matchedActivityIds = matchedActivityIds.union(self.getActivityIdsByLocation(longitude=longitude, latitude=latitude))  # 兜底的
-        matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds))  # 按照经纬度，对matchedActivityList进行排序--- 不太必要，同城即可，后期还会加上学校
+        # 匹配的+兜底的
+        hasLogin = bool(self.userInfo)
+        matchedActivityIds = getMatchedActivityIds(self.userInfo) if hasLogin else set()
+        notMatchedActivityIds = self.getActivityIdsByLocation(longitude, latitude, hasLogin, limit)   # 兜底的
+        matchedActivityIds = matchedActivityIds.union(notMatchedActivityIds)
+        matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds, limit))
         # 封装
         addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
         matchUserMap = self.getMatchUserByIds(list(set(self.getMatchPassportId(a) for a in matchedActivityList)))

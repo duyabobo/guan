@@ -11,7 +11,8 @@ from sqlalchemy.sql import or_
 from model import BaseModel
 from util.const import match
 from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_FIT_CHOICE
-from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
+from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, \
+    MODEL_ACTIVITY_STATE_EMPTY
 from util.ctx import getDbSession
 from util.time_cost import timecost
 from util.util_time import datetime2hommization
@@ -33,25 +34,29 @@ class ActivityModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def listActivityIdsByAddressIds(cls, addressIds):
-        return getDbSession().query(cls.id).filter(
+    def listActivityIdsByAddressIds(cls, addressIds, hasLogin, limit):
+        whereParams = [
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now(),
-            cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST)
-        )
+        ]
+        if hasLogin:
+            whereParams.append(cls.state == MODEL_ACTIVITY_STATE_EMPTY)
+        else:
+            whereParams.append(cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST))
+        return getDbSession().query(cls.id).filter(*whereParams).limit(limit).all()
 
     @classmethod
     def listActivity(cls, activityIds, limit, exceptPassportId):
-        where_params = [
+        whereParams = [
             cls.status == match.MODEL_STATUS_YES,
             cls.id.in_(activityIds),
             cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST),
             cls.start_time > datetime.datetime.now()
         ]
         if exceptPassportId:
-            where_params.extend([cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId])
-        return getDbSession().query(cls).filter(*where_params).\
+            whereParams.extend([cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId])
+        return getDbSession().query(cls).filter(*whereParams).\
             order_by(cls.state.desc(), cls.start_time.asc()).limit(limit).all()
 
     @classmethod
