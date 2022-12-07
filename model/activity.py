@@ -34,20 +34,19 @@ class ActivityModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def listActivityIdsByAddressIds(cls, addressIds, hasSex, limit):
+    @timecost
+    def listActivityIdsByAddressIds(cls, addressIds, limit):
         whereParams = [
             cls.status == match.MODEL_STATUS_YES,
             cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now(),
+            cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST)
         ]
-        if hasSex:
-            whereParams.append(cls.state == MODEL_ACTIVITY_STATE_EMPTY)
-        else:
-            whereParams.append(cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST))
-        return getDbSession().query(cls.id).filter(*whereParams).limit(limit).all()
+        return getDbSession().query(cls.id, cls.state).filter(*whereParams).limit(limit).all()
 
     @classmethod
-    def listActivity(cls, activityIds, limit, exceptPassportId):
+    @timecost
+    def listActivity(cls, activityIds, exceptPassportId):
         whereParams = [
             cls.status == match.MODEL_STATUS_YES,
             cls.id.in_(activityIds),
@@ -57,7 +56,7 @@ class ActivityModel(BaseModel):
         if exceptPassportId:
             whereParams.extend([cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId])
         return getDbSession().query(cls).filter(*whereParams).\
-            order_by(cls.state.desc(), cls.start_time.asc()).limit(limit).all()
+            order_by(cls.state.desc(), cls.start_time.asc()).all()
 
     @classmethod
     def getById(cls, activityId):

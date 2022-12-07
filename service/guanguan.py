@@ -8,7 +8,8 @@ from ral.cache import checkCache
 from service import BaseService
 from service.common.guan_helper import GuanHelper
 from util.class_helper import lazy_property
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX, MODEL_ACTIVITY_STATE_EMPTY, \
+    MODEL_ACTIVITY_STATE_INVITING
 from util.time_cost import timecost
 
 
@@ -23,16 +24,30 @@ class GuanguanService(BaseService):
         return UserModel.getByPassportId(passportId=self.passportId)
 
     @timecost
-    def getActivityIdsByLocation(self, longitude, latitude, hasSex, limit):
-        addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit*5)
+    def getActivityIdsByLocation(self, longitude, latitude, limit):
+        addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit)
         if not addressIds:
             addressIds = [0]
-        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, hasSex, limit)
-        return set([a.id for a in activityIds])
+        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, limit)
+        return set([a.id for a in activityIds if a.state == MODEL_ACTIVITY_STATE_EMPTY]), \
+               set([a.id for a in activityIds if a.state == MODEL_ACTIVITY_STATE_INVITING])
 
     @timecost
-    def getLimitMatchedActivityList(self, activityIds, limit):
-        return ActivityModel.listActivity(activityIds, limit, exceptPassportId=self.passportId)
+    def getLimitMatchedActivityList(self, matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit):
+        matchedLocationActivityIdsSet = matchedActivityIdsSet.intersection(locationMatchingActivityIdsSet)
+        if len(matchedLocationActivityIdsSet) < limit:  # 附近匹配不足
+            # 附近匹配的（高优）
+            sortedActivityIdList = list(matchedLocationActivityIdsSet)
+            # 匹配的（次高优）
+            sortedActivityIdList.extend(list(matchedActivityIdsSet - set(sortedActivityIdList)))
+            # 附近的（补充）
+            if sex == MODEL_SEX_UNKNOWN_INDEX:  # 性别未定，匹配中的和空闲的活动都可以用来补充
+                sortedActivityIdList.extend(list(locationFreeActivityIdsSet.union(locationMatchingActivityIdsSet) - set(sortedActivityIdList)))
+            else:  # 性别已定，只补充空闲的活动
+                sortedActivityIdList.extend(list(locationFreeActivityIdsSet - set(sortedActivityIdList)))
+        else:
+            sortedActivityIdList = list(matchedLocationActivityIdsSet)
+        return ActivityModel.listActivity(sortedActivityIdList[:limit], exceptPassportId=self.passportId)
 
     @timecost
     @checkCache("GuanguanService:{longitude}:{latitude}:{limit}")
@@ -85,11 +100,11 @@ class GuanguanService(BaseService):
         unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
         matchedActivityList.extend(unfinishedActivities)
         # 匹配的+兜底的
-        hasSex = bool(self.userInfo and self.userInfo.sex != MODEL_SEX_UNKNOWN_INDEX)
-        matchedActivityIds = getMatchedActivityIds(self.userInfo) if hasSex else set()
-        notMatchedActivityIds = self.getActivityIdsByLocation(longitude, latitude, hasSex, limit)   # 兜底的
-        matchedActivityIds = matchedActivityIds.union(notMatchedActivityIds)
-        matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds, limit))
+        sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
+        matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
+        locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit*20)   # 兜底的
+        limitMatchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
+        matchedActivityList.extend(limitMatchedActivityList)
         # 封装
         addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
         matchUserMap = self.getMatchUserByIds(list(set(self.getMatchPassportId(a) for a in matchedActivityList)))
