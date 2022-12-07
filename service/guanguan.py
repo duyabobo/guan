@@ -8,7 +8,7 @@ from ral.cache import checkCache
 from service import BaseService
 from service.common.guan_helper import GuanHelper
 from util.class_helper import lazy_property
-from util.const.match import MODEL_SEX_MALE_INDEX
+from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX
 from util.time_cost import timecost
 
 
@@ -23,11 +23,11 @@ class GuanguanService(BaseService):
         return UserModel.getByPassportId(passportId=self.passportId)
 
     @timecost
-    def getActivityIdsByLocation(self, longitude, latitude, hasLogin, limit):
+    def getActivityIdsByLocation(self, longitude, latitude, hasSex, limit):
         addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit*5)
         if not addressIds:
             addressIds = [0]
-        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, hasLogin, limit)
+        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, hasSex, limit)
         return set([a.id for a in activityIds])
 
     @timecost
@@ -85,9 +85,9 @@ class GuanguanService(BaseService):
         unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
         matchedActivityList.extend(unfinishedActivities)
         # 匹配的+兜底的
-        hasLogin = bool(self.userInfo)
-        matchedActivityIds = getMatchedActivityIds(self.userInfo) if hasLogin else set()
-        notMatchedActivityIds = self.getActivityIdsByLocation(longitude, latitude, hasLogin, limit)   # 兜底的
+        hasSex = bool(self.userInfo and self.userInfo.sex != MODEL_SEX_UNKNOWN_INDEX)
+        matchedActivityIds = getMatchedActivityIds(self.userInfo) if hasSex else set()
+        notMatchedActivityIds = self.getActivityIdsByLocation(longitude, latitude, hasSex, limit)   # 兜底的
         matchedActivityIds = matchedActivityIds.union(notMatchedActivityIds)
         matchedActivityList.extend(self.getLimitMatchedActivityList(matchedActivityIds, limit))
         # 封装
