@@ -142,8 +142,16 @@ class ActivityModel(BaseModel):
     def getExpireActivityIdsIn7Days(cls):
         now = datetime.datetime.now()
         sevenDaysAgo = now - datetime.timedelta(days=7)
+        oneDayLater = now + datetime.timedelta(days=1)
         return getDbSession().query(cls.id).filter(
-            or_(cls.status == match.MODEL_STATUS_NO, and_(cls.start_time >= sevenDaysAgo, cls.start_time <= now))
+            or_(
+                cls.status == match.MODEL_STATUS_NO,
+                and_(
+                    cls.start_time >= sevenDaysAgo,
+                    cls.start_time <= oneDayLater,
+                    cls.state == MODEL_ACTIVITY_STATE_EMPTY
+                )
+            )
         ).order_by(cls.id.desc())
 
     @classmethod
