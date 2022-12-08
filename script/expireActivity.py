@@ -11,7 +11,7 @@ from ral.activity import cleanByActivity
 
 
 if __name__ == "__main__":
-    activityIds = ActivityModel.getExpireActivityIdsIn7Days()
+    activityIds = ActivityModel.getExpireActivityIds()
     activityIds = [a.id for a in activityIds]
     for activityId in activityIds:
         cleanByActivity(activityId)

@@ -92,19 +92,20 @@ class GuanguanService(BaseService):
     def getGuanguanList(self, longitude, latitude, limit):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
         matchedActivityList = []
-        # 进行中的（且自己参与的）
+        # 自己参与，已表达意愿为满意发展中
         ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
-        if ongoingActivity:  # 进行中的永远在第一位
+        if ongoingActivity:  # 有发展中的
             matchedActivityList.append(ongoingActivity)
-        # 自己参与，但是没有闭环的
-        unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
-        matchedActivityList.extend(unfinishedActivities)
-        # 匹配的+兜底的
-        sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
-        matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
-        locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit*20)   # 兜底的
-        limitMatchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
-        matchedActivityList.extend(limitMatchedActivityList)
+        else:
+            # 自己参与，未表达意愿为满意发展中（邀请中/邀请成功尚未见面的/见面后尚未表达意愿）
+            unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
+            matchedActivityList.extend(unfinishedActivities)
+            # 匹配的+兜底的
+            sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
+            matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
+            locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit*20)   # 兜底的
+            limitMatchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
+            matchedActivityList.extend(limitMatchedActivityList)
         # 封装
         addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
         matchUserMap = self.getMatchUserByIds(list(set(self.getMatchPassportId(a) for a in matchedActivityList)))

@@ -75,16 +75,12 @@ class ActivityModel(BaseModel):
     @classmethod
     @timecost
     def getOngoingActivity(cls, passportId):
+        """参与活动，且关系发展中"""
         return getDbSession().query(cls).filter(
             or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
         ).filter(
-            or_(
-                cls.start_time > datetime.datetime.now().date(),
-                and_(
-                    cls.girl_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
-                    cls.boy_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
-                )
-            )
+            cls.girl_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
+            cls.boy_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
         ).first()
 
     @classmethod
@@ -139,15 +135,15 @@ class ActivityModel(BaseModel):
         return ret
 
     @classmethod
-    def getExpireActivityIdsIn7Days(cls):
+    def getExpireActivityIds(cls):
         now = datetime.datetime.now()
-        sevenDaysAgo = now - datetime.timedelta(days=7)
+        oneDayAgo = now - datetime.timedelta(days=1)
         oneDayLater = now + datetime.timedelta(days=1)
         return getDbSession().query(cls.id).filter(
             or_(
                 cls.status == match.MODEL_STATUS_NO,
                 and_(
-                    cls.start_time >= sevenDaysAgo,
+                    cls.start_time >= oneDayAgo,
                     cls.start_time <= oneDayLater,
                     cls.state == MODEL_ACTIVITY_STATE_EMPTY
                 )
@@ -157,12 +153,15 @@ class ActivityModel(BaseModel):
     @classmethod
     @timecost
     def getUnfinishedActivities(cls, passportId):
+        """参与，但是还没最终闭环（表达意愿）"""
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
-            cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             or_(
-                and_(cls.girl_passport_id != passportId, cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN),
-                and_(cls.boy_passport_id != passportId, cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN)
+                cls.girl_passport_id == passportId,
+                cls.boy_passport_id == passportId
             ),
-            cls.start_time > datetime.datetime.now()
+            or_(
+                cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+                cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+            )
         ).order_by(cls.state.desc(), cls.start_time.asc()).all()
