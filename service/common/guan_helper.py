@@ -26,8 +26,7 @@ class GuanHelper(object):
         if matchUser:  # 有异性参与，优先展示异性头像
             imgUser = matchUser
 
-        if imgUser:  # 人物头像
-            assert imgUser.sex in [MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX]
+        if imgUser and imgUser.sex in [MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX]:  # 人物头像
             if imgUser.has_head_img != MODEL_STATUS_YES:  # 默认头像
                 return CDN_QINIU_BOY_HEAD_IMG if imgUser.sex == MODEL_SEX_MALE_INDEX else CDN_QINIU_GIRL_HEAD_IMG
             elif cls.getMatchMeetResult(activity, imgUser) not in [MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]:  # 虚拟头像
