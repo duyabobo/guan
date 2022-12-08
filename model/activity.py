@@ -159,6 +159,8 @@ class ActivityModel(BaseModel):
     @timecost
     def getUnfinishedActivities(cls, passportId):
         """参与，但是还没最终闭环（表达意愿）"""
+        if not passportId:
+            return []
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
             or_(
