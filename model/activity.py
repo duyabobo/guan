@@ -78,6 +78,8 @@ class ActivityModel(BaseModel):
     @timecost
     def getOngoingActivity(cls, passportId):
         """参与活动，且关系发展中"""
+        if not passportId:
+            return None
         return getDbSession().query(cls).filter(
             or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
         ).filter(
