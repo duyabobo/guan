@@ -15,6 +15,7 @@ from service.common.match import MatchHelper
 from service.common.myself_helper import UserHelper
 from service.myself import UserInfoService
 from util.class_helper import lazy_property
+from util.const import match
 from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
     MODEL_MEET_RESULT_MAP
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST, \
@@ -144,7 +145,7 @@ class GuanInfoService(BaseService):
         }
 
     def reloadActivityRecord(self):
-        self.activityRecord = ActivityModel.getById(self.activityId)
+        self.activityRecord = ActivityModel.getById(self.activityId, status=match.MODEL_STATUS_YES)
 
     @property
     def hasOngoingActivity(self):

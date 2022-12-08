@@ -11,8 +11,7 @@ from sqlalchemy.sql import or_
 from model import BaseModel
 from util.const import match
 from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_FIT_CHOICE
-from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, \
-    MODEL_ACTIVITY_STATE_EMPTY
+from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_EMPTY
 from util.ctx import getDbSession
 from util.time_cost import timecost
 from util.util_time import datetime2hommization
@@ -59,8 +58,11 @@ class ActivityModel(BaseModel):
             order_by(cls.state.desc(), cls.start_time.asc()).all()
 
     @classmethod
-    def getById(cls, activityId):
-        return getDbSession().query(cls).filter(cls.id == activityId, cls.status == match.MODEL_STATUS_YES).first()
+    def getById(cls, activityId, status=None):
+        whereParams = [cls.id == activityId]
+        if status != None:
+            whereParams.append(cls.status == status)
+        return getDbSession().query(cls).filter(*whereParams).first()
 
     @property
     def startTimeStr(self):
@@ -142,6 +144,7 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls.id).filter(
             or_(
                 cls.status == match.MODEL_STATUS_NO,
+                cls.start_time <= now,
                 and_(
                     cls.start_time >= oneDayAgo,
                     cls.start_time <= oneDayLater,
