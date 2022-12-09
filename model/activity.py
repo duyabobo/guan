@@ -43,7 +43,7 @@ class ActivityModel(BaseModel):
             ),
             cls.start_time >= start_time.date(),
             cls.start_time <= start_time.date() + datetime.timedelta(days=1)
-        )
+        ).all()
 
     @classmethod
     @timecost
