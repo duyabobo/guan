@@ -35,6 +35,18 @@ class ActivityModel(BaseModel):
 
     @classmethod
     @timecost
+    def getConflictActivity(cls, passportId, start_time):
+        return getDbSession().query(cls.id).filter(
+            or_(
+                cls.boy_passport_id == passportId,
+                cls.girl_passport_id == passportId
+            ),
+            cls.start_time >= start_time.date(),
+            cls.start_time <= start_time.date() + datetime.timedelta(days=1)
+        )
+
+    @classmethod
+    @timecost
     def listActivityIdsByAddressIds(cls, addressIds, limit):
         whereParams = [
             cls.status == match.MODEL_STATUS_YES,

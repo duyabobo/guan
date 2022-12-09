@@ -24,7 +24,7 @@ from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
 from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
-    RESP_NEED_FILL_INFO
+    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT
 
 
 class GuanInfoService(BaseService):
@@ -211,6 +211,9 @@ class GuanInfoService(BaseService):
         if ret['code'] == RESP_NEED_FILL_INFO['code']:
             self.myInformationPage = self.myInformationPage + ret['errMsg']
 
+    def timeIsConflict(self):
+        return bool(ActivityModel.getConflictActivity(self.passportId, self.activityRecord.start_time))
+
     @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)  # 加一个分布式锁
     def activityOprete(self, opType):
         """对活动进行操作"""
@@ -229,6 +232,8 @@ class GuanInfoService(BaseService):
         requirement = self.getRequirement()
         if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.userRecord, requirement):
             return RESP_JOIN_ACTIVITY_FAILED
+        if self.timeIsConflict():
+            return RESP_HAS_TIME_CONFLICT
         # todo 这个开关，前期可以不开。因为让用户帮我们拉新，是需要一定的吸引力和号召力的，前期不行。前期还得需要我们主动去推广，去营销，不得偷懒。
         # if opType == GUAN_INFO_OP_TYPE_JOIN and not ShareModel.getAcceptCnt(self.passportId):
         #     return RESP_NEED_INVITE_OR_MEMBER
