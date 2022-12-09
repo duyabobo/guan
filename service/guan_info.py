@@ -227,12 +227,12 @@ class GuanInfoService(BaseService):
         if opType != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
         if self.hasOngoingActivity and \
-                opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有进行中的活动，不能再次参与
+                opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有发展中的对象，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY
         requirement = self.getRequirement()
         if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.userRecord, requirement):
             return RESP_JOIN_ACTIVITY_FAILED
-        if self.timeIsConflict():
+        if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN] and self.timeIsConflict():
             return RESP_HAS_TIME_CONFLICT
         # todo 这个开关，前期可以不开。因为让用户帮我们拉新，是需要一定的吸引力和号召力的，前期不行。前期还得需要我们主动去推广，去营销，不得偷懒。
         # if opType == GUAN_INFO_OP_TYPE_JOIN and not ShareModel.getAcceptCnt(self.passportId):
