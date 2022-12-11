@@ -106,10 +106,20 @@ class ActivityModel(BaseModel):
         if not passportId:
             return None
         return getDbSession().query(cls).filter(
-            or_(cls.boy_passport_id == passportId, cls.girl_passport_id == passportId)
-        ).filter(
-            cls.girl_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
-            cls.boy_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
+            or_(
+                cls.boy_passport_id == passportId,
+                cls.girl_passport_id == passportId
+            ),
+            or_(
+                and_(
+                    cls.girl_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
+                    cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN
+                ),
+                and_(
+                    cls.boy_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
+                    cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN
+                )
+            )
         ).first()
 
     @classmethod
