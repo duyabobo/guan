@@ -27,6 +27,7 @@ RESP_EMAIL_IS_NOT_VALID = {'code': 1104, 'errMsg': '请输入正确的邮箱'}
 RESP_JOIN_ACTIVITY_FAILED = {'code': 1201, 'errMsg': '本次见面已被别人预约，请返回重新选择'}
 RESP_HAS_ONGOING_ACTIVITY = {'code': 1202, 'errMsg': '您已经有满意的发展对象，不能参与别的见面'}
 RESP_HAS_TIME_CONFLICT = {'code': 1203, 'errMsg': '您有其他见面和本次时间冲突，请返回重新选择'}
+RESP_MEET_RESULT_ERR = {'code': 1204, 'errMsg': '修改见面结果失败'}
 RESP_HAS_SEND_EMAIL = {'code': 0, 'errMsg': '您已发送过认证邮件，请稍后检查'}
 RESP_SEX_CANOT_EDIT = {'code': 1301, 'errMsg': '不能修改性别，请联系客服'}
 RESP_USER_SEX_FIRST_EDIT = {'code': 1302, 'errMsg': '请先完善个人信息里的性别'}

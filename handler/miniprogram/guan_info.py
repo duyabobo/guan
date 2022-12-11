@@ -21,3 +21,14 @@ class GuanInfoHandler(BaseHandler):
         ret = gis.activityOprete(opType)
         gis.updateMyInformationPage(ret)
         return Response(data=gis.getGuanInfo(), msg=ret)
+
+
+class MeetResultHandler(BaseHandler):
+
+    @superMonitor
+    def put(self, *args, **kwargs):
+        activityId = self.getRequestParameter('guanId', paraType=int)
+        meetResultValue = self.getRequestParameter('value', paraType=int)
+        gis = GuanInfoService(activityId, self.currentPassport)
+        ret = gis.updateMeetResult(meetResultValue)
+        return Response(msg=ret)

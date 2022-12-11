@@ -24,7 +24,7 @@ from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
 from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
-    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT, RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
+    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT, RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR
 
 
 class GuanInfoService(BaseService):
@@ -105,6 +105,15 @@ class GuanInfoService(BaseService):
             pairs.append(pair)
 
         return pairs
+
+    def updateMeetResult(self, meetResultValue):
+        if self.passportId == self.activityRecord.boy_passport_id:
+            ActivityModel.updateBoyMeetResult(self.activityId, meetResultValue)
+        elif self.passportId == self.activityRecord.girl_passport_id:
+            ActivityModel.updateGirlMeetResult(self.activityId, meetResultValue)
+        else:
+            return RESP_MEET_RESULT_ERR
+        return RESP_OK
 
     def getMeetResult(self):
         if self.passportId == self.activityRecord.boy_passport_id:

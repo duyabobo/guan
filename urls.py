@@ -20,6 +20,7 @@ handlers = [
     (r'/requirement$', requirement.RequirementHandler),
     (r'/guanguan$', guanguan.GuanguanHandler),
     (r'/guan_info$', guan_info.GuanInfoHandler),
+    (r'/meet_result$', guan_info.MeetResultHandler),
     (r'/phone_verify$', phone_verify.PhoneVerifyHandler),
     (r'/email_verify$', email_verify.EmailVerifyHandler),
     (r'/subscribe_cb$', subscribe.SubscribeCBHandler),

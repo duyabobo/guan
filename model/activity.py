@@ -35,6 +35,18 @@ class ActivityModel(BaseModel):
 
     @classmethod
     @timecost
+    def updateBoyMeetResult(cls, activityId, meetResultValue):
+        getDbSession().query(cls).filter(cls.id == activityId).update({cls.boy_meet_result: meetResultValue})
+        getDbSession().commit()
+
+    @classmethod
+    @timecost
+    def updateGirlMeetResult(cls, activityId, meetResultValue):
+        getDbSession().query(cls).filter(cls.id == activityId).update({cls.girl_meet_result: meetResultValue})
+        getDbSession().commit()
+
+    @classmethod
+    @timecost
     def getConflictActivity(cls, passportId, start_time):
         return getDbSession().query(cls.id).filter(
             or_(
