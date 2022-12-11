@@ -24,7 +24,7 @@ from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_
     SUBSCRIBE_ACTIVITY_START_NOTI_TID
 from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
     RESP_HAS_ONGOING_ACTIVITY, \
-    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT
+    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT, RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
 
 
 class GuanInfoService(BaseService):
@@ -226,6 +226,8 @@ class GuanInfoService(BaseService):
             return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
+        if opType == GUAN_INFO_OP_TYPE_QUIT:
+            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
         if self.hasOngoingActivity and \
                 opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有发展中的对象，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY

@@ -34,6 +34,6 @@ RESP_REQUIREMENT_SEX_ERROR = {'code': 1303, 'errMsg': '期望性别不能与自�
 RESP_MARTIAL_STATUS_CANOT_EDIT = {'code': 1304, 'errMsg': '请完善真实的婚姻现状'}
 RESP_NEED_INVITE_OR_MEMBER = {'code': 1401, 'errMsg': '请充会员，或邀请一位新用户注册'}
 RESP_SUCCESS_WITH_NOTI_MIN_CODE = 9000
-RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI = {'code': 9001, 'errMsg': 'tobefilled'}
+RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI = {'code': 9001, 'errMsg': '取消见面活动过多会影响您的信用'}
 RESP_USER_INFO_UPDATE_SUCCESS_WITH_NOTI = {'code': 9002, 'errMsg': 'tobefilled'}
 RESP_REQUIREMENT_UPDATE_SUCCESS_WITH_NOTI = {'code': 9003, 'errMsg': 'tobefilled'}
