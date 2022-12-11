@@ -235,8 +235,6 @@ class GuanInfoService(BaseService):
             return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
-        if opType == GUAN_INFO_OP_TYPE_QUIT:
-            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
         if self.hasOngoingActivity and \
                 opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有发展中的对象，不能再次参与
             return RESP_HAS_ONGOING_ACTIVITY
@@ -258,4 +256,6 @@ class GuanInfoService(BaseService):
         self.reloadActivityRecord()
         # 更新活动id匹配缓存
         changeByRequirement(self.activityRecord.id, requirement, self.getRequirement())
+        if opType == GUAN_INFO_OP_TYPE_QUIT:
+            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
         return RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
