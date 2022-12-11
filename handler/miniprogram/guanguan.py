@@ -11,8 +11,8 @@ class GuanguanHandler(BaseHandler):
     @superMonitor
     @timecost
     def get(self):
-        longitude = self.getRequestParameter('longitude', paraType=float)
-        latitude = self.getRequestParameter('latitude', paraType=float)
+        longitude = self.getRequestParameter('longitude', default=0, paraType=float)
+        latitude = self.getRequestParameter('latitude', default=0, paraType=float)
         limit = self.getRequestParameter('limit', paraType=int, default=20)
         ggs = GuanguanService(self.currentPassportId)
         return Response(data={

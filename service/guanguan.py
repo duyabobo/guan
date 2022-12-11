@@ -25,12 +25,13 @@ class GuanguanService(BaseService):
 
     @timecost
     def getActivityIdsByLocation(self, longitude, latitude, limit):
-        addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit)
-        if not addressIds:
-            addressIds = [0]
-        activityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, limit)
-        return set([a.id for a in activityIds if a.state == MODEL_ACTIVITY_STATE_EMPTY]), \
-               set([a.id for a in activityIds if a.state == MODEL_ACTIVITY_STATE_INVITING])
+        if not longitude and not latitude:  # 没有获取地址信息
+            addressIds = []
+        else:  # 有获取地址信息
+            addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit*10)
+        emptyActivityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, MODEL_ACTIVITY_STATE_EMPTY, limit)
+        invitingActivityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, MODEL_ACTIVITY_STATE_INVITING, limit)
+        return set([a.id for a in emptyActivityIds]), set([a.id for a in invitingActivityIds])
 
     @timecost
     def getLimitMatchedActivityList(self, matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit):
@@ -103,7 +104,7 @@ class GuanguanService(BaseService):
             # 匹配的+兜底的
             sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
             matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
-            locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit*20)   # 兜底的
+            locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit)   # 兜底的
             limitMatchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
             matchedActivityList.extend(limitMatchedActivityList)
         # 封装

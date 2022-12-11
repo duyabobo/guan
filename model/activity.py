@@ -59,13 +59,14 @@ class ActivityModel(BaseModel):
 
     @classmethod
     @timecost
-    def listActivityIdsByAddressIds(cls, addressIds, limit):
+    def listActivityIdsByAddressIds(cls, addressIds, state, limit):
         whereParams = [
             cls.status == match.MODEL_STATUS_YES,
-            cls.address_id.in_(addressIds),
             cls.start_time > datetime.datetime.now(),
-            cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST)
+            cls.state == state
         ]
+        if addressIds:
+            whereParams.append(cls.address_id.in_(addressIds))
         return getDbSession().query(cls.id, cls.state).filter(*whereParams).limit(limit).all()
 
     @classmethod
