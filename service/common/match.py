@@ -23,7 +23,7 @@ class MatchHelper(object):
         if userInfo.sex != requirement.sex:
             return False
         # 婚姻
-        if userInfo.martial_status != requirement.martial_status:
+        if userInfo.martial_status >= requirement.martial_status:
             return False
         # 出生年份
         if userInfo.birth_year < requirement.min_birth_year or userInfo.birth_year > requirement.max_birth_year:

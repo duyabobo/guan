@@ -66,7 +66,8 @@ DEFAULT_YEAR_INDEX = BIRTH_YEAR_CHOICE_LIST.index(DEFAULT_BIRTH_YEAR)
 MODEL_MARTIAL_STATUS_UNKNOWN = 0
 MODEL_MARTIAL_STATUS_NO_MARRY = 1
 MODEL_MARTIAL_STATUS_BREAK = 2
-MARTIAL_STATUS_CHOICE_LIST = [u"未知", u"未婚", u"离异不带孩子", u"离异最多带1个孩子", u"离异最多带2个孩子", u"离异带2+个孩子"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
+REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST = [u"未知", u"未婚", u"离异不带孩子", u"离异最多带1个孩子", u"离异最多带2个孩子", u"离异带2+个孩子"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
+USER_MARTIAL_STATUS_CHOICE_LIST = [u"未知", u"未婚", u"离异不带孩子", u"离异带1个孩子", u"离异带2个孩子", u"离异带2+个孩子"]
 DEFAULT_MARTIAL_STATUS_INDEX = 0
 
 HEIGHT_CHOICE_LIST = range(MIN_HEIGHT, MAX_HEIGHT)
@@ -93,7 +94,7 @@ MATCH_INFO_DICT = {
         "COLUMN_CHANGE_FUNC": ""
     },
     OP_TYPE_MARTIAL_STATUS: {
-        "CHOICE_LIST": MARTIAL_STATUS_CHOICE_LIST,
+        "CHOICE_LIST": REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST,
         "DEFAULT_INDEX": DEFAULT_MARTIAL_STATUS_INDEX,
         "COLUMN_CHANGE_FUNC": ""
     },

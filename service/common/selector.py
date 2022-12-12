@@ -56,7 +56,10 @@ def selectorFactory(op_type, data, checkDynamicData):
     elif op_type == OP_TYPE_MONTH_PAY:
         return SingleSelector("税前月收入", data.month_pay, op_type, "元", choiceRequired=True)
     elif op_type == OP_TYPE_MARTIAL_STATUS:
-        return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
+        if isinstance(data, UserModel):
+            return SingleSelector("婚姻现状", USER_MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
+        elif isinstance(data, RequirementModel):
+            return SingleSelector("婚姻现状", REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_EDUCATION_LEVEL:
         if isinstance(data, UserModel):
             return SingleSelector("最高第一学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)
