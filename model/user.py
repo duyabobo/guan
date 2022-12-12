@@ -108,7 +108,7 @@ class UserModel(BaseModel):
         if requirement.max_weight:
             filterParms.append(cls.weight <= requirement.max_weight)
         if requirement.martial_status:
-            filterParms.append(cls.martial_status == requirement.martial_status)
+            filterParms.append(cls.martial_status <= requirement.martial_status)
         if requirement.verify_type in [MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_UNKNOWN]:
             if requirement.min_study_from_year:
                 filterParms.append(cls.study_from_year >= requirement.min_study_from_year)
