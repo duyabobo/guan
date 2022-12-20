@@ -19,7 +19,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_WEIGHT_PERIOD,
         OP_TYPE_EDUCATION_LEVEL,
         OP_TYPE_MONTH_PAY_PERIOD,
-        OP_TYPE_MARTIAL_STATUS,
+        OP_TYPE_MARTIAL_STATUS_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
         OP_TYPE_STUDY_REGION_PERIOD,
         OP_TYPE_STUDY_FROM_YEAR_PERIOD,
@@ -32,7 +32,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_HEIGHT_PERIOD,
         OP_TYPE_WEIGHT_PERIOD,
         OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_MARTIAL_STATUS,
+        OP_TYPE_MARTIAL_STATUS_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
         OP_TYPE_STUDY_REGION_PERIOD,
         OP_TYPE_STUDY_FROM_YEAR_PERIOD,
@@ -46,7 +46,7 @@ OP_FUNCS_DICT = {
         OP_TYPE_WEIGHT_PERIOD,
         OP_TYPE_EDUCATION_LEVEL,
         OP_TYPE_MONTH_PAY_PERIOD,
-        OP_TYPE_MARTIAL_STATUS,
+        OP_TYPE_MARTIAL_STATUS_PERIOD,
         OP_TYPE_HOME_REGION_PERIOD,
         OP_TYPE_WORK_REGION_PERIOD,
         OP_TYPE_WORK_MULTI,
@@ -84,7 +84,7 @@ class RequirementHelper(object):
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
             updateParams['max_birth_year'] = max(BIRTH_YEAR_CHOICE_LIST[value[0]], BIRTH_YEAR_CHOICE_LIST[value[1]])
-        elif opType == OP_TYPE_MARTIAL_STATUS:
+        elif opType == OP_TYPE_MARTIAL_STATUS_PERIOD:
             updateParams['martial_status'] = value
         elif opType == OP_TYPE_WEIGHT_PERIOD:
             updateParams['min_weight'] = WEIGHT_CHOICE_LIST[value[0]]

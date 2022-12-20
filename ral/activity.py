@@ -9,7 +9,7 @@ from util.const.education import EDUCATION_LEVEL
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, BIRTH_YEAR_CHOICE_LIST, HEIGHT_CHOICE_LIST, \
     WEIGHT_CHOICE_LIST, STUDY_FROM_YEAR_CHOICE_LIST, MONTH_PAY_CHOICE_LIST, MODEL_MAIL_TYPE_UNKNOWN, \
     MODEL_MAIL_TYPE_SCHOOL, \
-    MODEL_MAIL_TYPE_WORK, REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST, MODEL_MARTIAL_STATUS_UNKNOWN
+    MODEL_MAIL_TYPE_WORK, MARTIAL_STATUS_PERIOD_CHOICE_LIST, MODEL_MARTIAL_STATUS_UNKNOWN
 from util.redis_conn import redisConn
 from util.time_cost import timecost
 
@@ -27,7 +27,7 @@ COLUMN_MAP_USER_RANGE = {  # 每个维度对应的取值范围
     "work_region_id": RegionModel.getAllRegionIds(),
     "work_id": WorkModel.getAllWorkIds(),
     "month_pay": MONTH_PAY_CHOICE_LIST,
-    "martial_status": range(len(REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST)),
+    "martial_status": range(len(MARTIAL_STATUS_PERIOD_CHOICE_LIST)),
 }
 
 
@@ -47,7 +47,7 @@ COLUMN_MAP_RERQUIREMENT_RANGE_FUNC = {
     "month_pay": lambda x: range(getattr(x, "min_month_pay"), getattr(x, "max_month_pay")),
     "martial_status": lambda x: range(getattr(x, "martial_status")+1)
     if getattr(x, "martial_status") != MODEL_MARTIAL_STATUS_UNKNOWN
-    else range(len(REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST)),
+    else range(len(MARTIAL_STATUS_PERIOD_CHOICE_LIST)),
 }
 
 

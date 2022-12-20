@@ -3,7 +3,6 @@
 from model.requirement import RequirementModel
 from model.user import UserModel
 from service.common.multi_picker_helper import MultiPickerHelper
-from util.const.education import EDUCATION_LEVEL
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
@@ -18,9 +17,10 @@ VALUE_TYPE_DICT = {
     OP_TYPE_MONTH_PAY: int,
     OP_TYPE_STUDY_FROM_YEAR: int,
     OP_TYPE_EDUCATION_LEVEL: int,
+    OP_TYPE_MARTIAL_STATUS: int,
+    OP_TYPE_MARTIAL_STATUS_PERIOD: int,
     # 双项选择器
     OP_BIRTH_YEAR_PERIOD: list,
-    OP_TYPE_MARTIAL_STATUS: int,
     OP_TYPE_WEIGHT_PERIOD: list,
     OP_TYPE_HEIGHT_PERIOD: list,
     OP_TYPE_MONTH_PAY_PERIOD: list,
@@ -55,11 +55,10 @@ def selectorFactory(op_type, data, checkDynamicData):
         return SingleSelector("体重", data.weight, op_type, "kg", choiceRequired=True)
     elif op_type == OP_TYPE_MONTH_PAY:
         return SingleSelector("税前月收入", data.month_pay, op_type, "元", choiceRequired=True)
+    elif op_type == OP_TYPE_MARTIAL_STATUS_PERIOD:
+        return SingleSelector("婚姻现状", MARTIAL_STATUS_PERIOD_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_MARTIAL_STATUS:
-        if isinstance(data, UserModel):
-            return SingleSelector("婚姻现状", USER_MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
-        elif isinstance(data, RequirementModel):
-            return SingleSelector("婚姻现状", REQUIREMENT_MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
+        return SingleSelector("婚姻现状", MARTIAL_STATUS_CHOICE_LIST[data.martial_status], op_type, choiceRequired=True)
     elif op_type == OP_TYPE_EDUCATION_LEVEL:
         if isinstance(data, UserModel):
             return SingleSelector("最高第一学历", EDUCATION_LEVEL[data.education_level], op_type, choiceRequired=True)

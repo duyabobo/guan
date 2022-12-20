@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from model.education import EducationModel
 from model.region import RegionModel
 from model.verify import VerifyModel
-from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.selector import selectorFactory
@@ -127,6 +125,9 @@ class UserHelper(object):
                 requirementUpdateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[max(value-2, 0)]
                 requirementUpdateParams['max_birth_year'] = BIRTH_YEAR_CHOICE_LIST[min(value+2, len(BIRTH_YEAR_CHOICE_LIST)-1)]
         elif opType == OP_TYPE_MARTIAL_STATUS:
+            userUpdateParams['martial_status'] = value
+            requirementUpdateParams['martial_status'] = value
+        elif opType == OP_TYPE_MARTIAL_STATUS_PERIOD:
             userUpdateParams['martial_status'] = value
             requirementUpdateParams['martial_status'] = value
         elif opType == OP_TYPE_HEIGHT:

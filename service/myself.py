@@ -7,9 +7,9 @@ from ral import user
 from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS, \
+from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS_PERIOD, \
     DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_STATUS_NO, MODEL_MAIL_TYPE_UNKNOWN
-from util.const.match import MODEL_MAIL_VERIFY_STATUS_YES, OP_TYPE_SEX, DEFAULT_SEX_INDEX, OP_TYPE_VERIFY
+from util.const.match import OP_TYPE_SEX, DEFAULT_SEX_INDEX, OP_TYPE_VERIFY
 from util.const.response import RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
     RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_EDUCATION_LEVEL, RESP_NEED_FILL_MONEY_PAY
 from util.const.response import RESP_SEX_CANOT_EDIT, RESP_MARTIAL_STATUS_CANOT_EDIT
@@ -145,7 +145,7 @@ class UserInfoService(BaseService):
         if opType == OP_TYPE_SEX and \
                 self.userInfo.sex != DEFAULT_SEX_INDEX and self.userInfo.sex != value:
             return RESP_SEX_CANOT_EDIT
-        if opType == OP_TYPE_MARTIAL_STATUS and self.userInfo.martial_status != DEFAULT_MARTIAL_STATUS_INDEX \
+        if opType == OP_TYPE_MARTIAL_STATUS_PERIOD and self.userInfo.martial_status != DEFAULT_MARTIAL_STATUS_INDEX \
                 and value == DEFAULT_MARTIAL_STATUS_INDEX:
             return RESP_MARTIAL_STATUS_CANOT_EDIT
         # todo 其他修改限制，比如一月一次修改工作地址的机会
