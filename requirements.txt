@@ -12,7 +12,7 @@ SQLAlchemy==1.2.15
 tornado==5.1.1
 websocket==0.2.1
 websocket-server==0.4
-wheel==0.32.3
+wheel==0.38.1
 PyJWT==1.6.4
 pymysql==0.9.3
 qiniu==7.9.0
