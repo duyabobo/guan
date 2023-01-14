@@ -56,4 +56,4 @@ def asyncRequest(url, data_json, method='GET', timeout=1, need_retry=False):
 
         if r == retry_cnt - 1:
             monitor_logger.error('异步调用http接口 重试结束调用失败 retry_cnt=%s r=%s', retry_cnt, r)
-            raise gen.Return()
+            raise e
