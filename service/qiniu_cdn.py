@@ -52,5 +52,6 @@ class MyStorage(object):
         q = Qiniu()
         q.upload_stream(virtualObjName, rgb_to_sketch(imgStreamData))
         # 修改db
+        userInfo = UserModel.getByPassportId(passportId=self.passportId)
         UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES,
-                                     head_img_version=UserModel.head_img_version+1)
+                                     head_img_version=userInfo.head_img_version+1)
