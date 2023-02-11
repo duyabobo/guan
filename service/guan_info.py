@@ -76,7 +76,7 @@ class GuanInfoService(BaseService):
     @property
     def opDesc(self):
         return {
-            GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
+            GUAN_INFO_OP_TYPE_INVITE: "发送邀请",
             GUAN_INFO_OP_TYPE_QUIT: "取消见面",
             GUAN_INFO_OP_TYPE_JOIN: "接受邀请",
         }.get(self.opType, "参加")
@@ -149,7 +149,7 @@ class GuanInfoService(BaseService):
                 "subscribeTemplateIds": subscribeTemplateIds,
                 "myRequirementPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
-                "requirementResult": "%d人满足期望" % UserModel.getMatchCnt(passportId=self.passportId)
+                "requirementResult": "%d人符合您的期望" % UserModel.getMatchCnt(passportId=self.passportId)
             },
         }
 
