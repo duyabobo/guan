@@ -73,9 +73,10 @@ class UserInfoService(BaseService):
             return RESP_NEED_FILL_HEIGHT
         elif not self.userInfo.weight:
             return RESP_NEED_FILL_WEIGHT
+        elif not self.userInfo.education_level:
+            return RESP_NEED_FILL_EDUCATION_LEVEL
         elif self.userInfo.verify_type == MODEL_MAIL_TYPE_SCHOOL:  # 学校认证
-            if not self.userInfo.education_level:
-                return RESP_NEED_FILL_EDUCATION_LEVEL
+            pass
         elif self.userInfo.verify_type == MODEL_MAIL_TYPE_WORK:  # 工作认证
             if not self.userInfo.month_pay:
                 return RESP_NEED_FILL_MONEY_PAY
@@ -86,7 +87,7 @@ class UserInfoService(BaseService):
 
     def getVerify(self): 
         return {
-            "desc": "认证 *",
+            "desc": "认证",
             "value": self.verifyType,
         }
 
