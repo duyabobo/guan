@@ -66,6 +66,9 @@ def selectorFactory(op_type, data, checkDynamicData):
             return SingleSelector("最低第一学历", EDUCATION_LEVEL[data.education_level], op_type)
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
+    elif op_type == OP_TYPE_STUDY_SCHOOL:
+        school_choice_list = get_school_choice_list(data.study_region)
+        return SingleSelector("学校", school_choice_list[data.school_id], op_type, choice_list=school_choice_list)
     # 双项选择器
     elif op_type == OP_BIRTH_YEAR_PERIOD:
         return MultiSelector("出生年份区间", data.min_birth_year, data.max_birth_year, op_type)
@@ -103,7 +106,7 @@ def selectorFactory(op_type, data, checkDynamicData):
 
 class SingleSelector(object):  # 单项选择器
     """个人信息选择项数据结构：单项选择器"""
-    def __init__(self, desc, value, bindChange, subDesc=""):
+    def __init__(self, desc, value, bindChange, subDesc="", choice_list=None):
         def _selectValueIndex():  # 值对应的取值范围索引
             try:
                 return self.choiceList.index(self.value) if self.value in self.choiceList else self.defaultIndex
@@ -118,7 +121,7 @@ class SingleSelector(object):  # 单项选择器
         self.pickerType = PICKER_TYPE_SELECTOR  # 选择器类型：单项
 
         matchInfo = MATCH_INFO_DICT[self.bindChange]
-        self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围列表
+        self.choiceList = choice_list or matchInfo['CHOICE_LIST']  # 可选范围列表
         self.defaultIndex = matchInfo['DEFAULT_INDEX']
         self.bindColumnChange = matchInfo['COLUMN_CHANGE_FUNC']  # 小程序解析用的
 
