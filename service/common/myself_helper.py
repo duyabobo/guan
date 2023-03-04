@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from model.region import RegionModel
+from model.school import UNKNOWN_SCHOOL_ID
 from model.verify import VerifyModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.multi_picker_helper import MultiPickerHelper
@@ -153,6 +154,14 @@ class UserHelper(object):
         elif opType == OP_TYPE_EDUCATION_LEVEL:
             userUpdateParams['education_level'] = value
             requirementUpdateParams['education_level'] = value
+        elif opType == OP_TYPE_STUDY_SCHOOL:
+            school_list = get_sorted_school_list(self.user.study_region_id)
+            school_id_list = [s.id for s in school_list]
+            if value > len(school_id_list) - 1:
+                school_id = UNKNOWN_SCHOOL_ID
+            else:
+                school_id = school_id_list[value]
+            userUpdateParams['school_id'] = school_id
         # region地址选择器类型
         elif opType == OP_TYPE_HOME_REGION:
             home_region_id = RegionModel.getIdByRegion(*value)
@@ -162,6 +171,8 @@ class UserHelper(object):
         elif opType == OP_TYPE_STUDY_REGION:
             study_region_id = RegionModel.getIdByRegion(*value)
             userUpdateParams['study_region_id'] = study_region_id
+            if self.user.study_region_id != study_region_id:
+                userUpdateParams['school_id'] = UNKNOWN_SCHOOL_ID
             if not self.user.study_region_id:
                 requirementUpdateParams['study_region_id'] = study_region_id
         elif opType == OP_TYPE_WORK_REGION:

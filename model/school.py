@@ -8,6 +8,10 @@ from sqlalchemy import func
 from model import BaseModel
 
 
+UNKNOWN_SCHOOL_ID = 0
+
+
+# 学校数据变更，需要刷新缓存
 class SchoolModel(BaseModel):
     """学校信息"""
     __tablename__ = 'school'
