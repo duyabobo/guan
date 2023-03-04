@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from model.education import EducationModel
 from model.region import RegionModel
+from model.school import UNKNOWN_SCHOOL_ID
 from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
@@ -79,6 +80,14 @@ class RequirementHelper(object):
             updateParams['sex'] = value
         elif opType == OP_TYPE_EDUCATION_LEVEL:
             updateParams['education_level'] = value
+        elif opType == OP_TYPE_STUDY_SCHOOL:
+            school_list = get_sorted_school_list(self.requirement.study_region_id)
+            school_id_list = [s.id for s in school_list]
+            if value > len(school_id_list) - 1:
+                school_id = UNKNOWN_SCHOOL_ID
+            else:
+                school_id = school_id_list[value]
+            updateParams['school_id'] = school_id
         # 双项选择器类型
         elif opType == OP_BIRTH_YEAR_PERIOD:
             updateParams['min_birth_year'] = BIRTH_YEAR_CHOICE_LIST[value[0]]
