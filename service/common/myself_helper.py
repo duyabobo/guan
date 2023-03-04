@@ -62,6 +62,7 @@ OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
         OP_TYPE_WEIGHT,
         OP_TYPE_EDUCATION_LEVEL,
         OP_TYPE_STUDY_REGION,
+        OP_TYPE_STUDY_SCHOOL,
         OP_TYPE_STUDY_FROM_YEAR,
         OP_TYPE_EDUCATION_MULTI,
         OP_TYPE_HOME_REGION,
