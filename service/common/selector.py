@@ -3,6 +3,7 @@
 from model.requirement import RequirementModel
 from model.user import UserModel
 from service.common.multi_picker_helper import MultiPickerHelper
+from service.common.school_helper import getSortedSchoolList
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
@@ -67,7 +68,7 @@ def selectorFactory(op_type, data, checkDynamicData):
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
     elif op_type == OP_TYPE_STUDY_SCHOOL:
-        school_list = get_sorted_school_list(data.study_region_id)  # 第一个item是未知学校（id为UNKNOWN_SCHOOL_ID）
+        school_list = getSortedSchoolList(regionId=data.study_region_id)  # 第一个item是未知学校（id为UNKNOWN_SCHOOL_ID）
         school_id_list = [s.id for s in school_list]
         school_choice_list = [s.name for s in school_list]
         return SingleSelector("学校", school_choice_list[school_id_list.index(data.school_id)], op_type, choice_list=school_choice_list)
@@ -93,17 +94,17 @@ def selectorFactory(op_type, data, checkDynamicData):
         return MultiSelectorExtra("工作信息", work, workDynamic, op_type)
     # 地址选择器
     elif op_type == OP_TYPE_HOME_REGION:
-        return RegionSelector("籍贯", data.home_region, op_type)
+        return RegionSelector("籍贯", data.homeRegion, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
-        return RegionSelector("籍贯范围", data.home_region, op_type)
+        return RegionSelector("籍贯范围", data.homeRegion, op_type)
     elif op_type == OP_TYPE_STUDY_REGION:
-        return RegionSelector("学校地址", data.study_region, op_type)
+        return RegionSelector("学校地址", data.studyRegion, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
-        return RegionSelector("学校地址范围", data.study_region, op_type)
+        return RegionSelector("学校地址范围", data.studyRegion, op_type)
     elif op_type == OP_TYPE_WORK_REGION:
-        return RegionSelector("工作地址", data.work_region, op_type)
+        return RegionSelector("工作地址", data.workRegion, op_type)
     elif op_type == OP_TYPE_WORK_REGION_PERIOD:
-        return RegionSelector("工作地址范围", data.work_region, op_type)
+        return RegionSelector("工作地址范围", data.workRegion, op_type)
 
 
 class SingleSelector(object):  # 单项选择器

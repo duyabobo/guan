@@ -10,6 +10,7 @@ from ral.cache import checkInconsistentCache
 from util.const.base import EMPTY_STR
 from util.const.match import MODEL_STATUS_YES
 from util.ctx import getDbSession
+UNKNOWN_REGION_ID = 0
 
 
 class RegionModel(BaseModel):

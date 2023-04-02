@@ -7,6 +7,7 @@ from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.multi_picker_helper import MultiPickerHelper
+from service.common.school_helper import getSortedSchoolList
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
@@ -81,7 +82,7 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_EDUCATION_LEVEL:
             updateParams['education_level'] = value
         elif opType == OP_TYPE_STUDY_SCHOOL:
-            school_list = get_sorted_school_list(self.requirement.study_region_id)
+            school_list = getSortedSchoolList(regionId=self.requirement.study_region_id)
             school_id_list = [s.id for s in school_list]
             if value > len(school_id_list) - 1:
                 school_id = UNKNOWN_SCHOOL_ID
@@ -112,7 +113,9 @@ class RequirementHelper(object):
         elif opType == OP_TYPE_STUDY_REGION_PERIOD:
             study_region_id = RegionModel.getIdByRegion(*value)
             updateParams['study_region_id'] = study_region_id
-            updateParams['education_id'] = EducationModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
+            if self.requirement.study_region_id != study_region_id:
+                updateParams['education_id'] = EducationModel.getIdByData(ALL_STR, ALL_STR, ALL_STR)
+                updateParams['school_id'] = UNKNOWN_SCHOOL_ID
         elif opType == OP_TYPE_WORK_REGION_PERIOD:
             work_region_id = RegionModel.getIdByRegion(*value)
             updateParams['work_region_id'] = work_region_id

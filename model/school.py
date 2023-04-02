@@ -6,7 +6,8 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
-
+from util.const import match
+from util.ctx import getDbSession
 
 UNKNOWN_SCHOOL_ID = 0
 
@@ -23,3 +24,9 @@ class SchoolModel(BaseModel):
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
+
+    @classmethod
+    def getSortedList(cls, regionIds):
+        return getDbSession().\
+            query(cls).filter(cls.region_id.in_(regionIds), cls.status == match.MODEL_STATUS_YES).\
+            order_by(cls.seq)
