@@ -52,6 +52,8 @@ class MatchHelper(object):
         if userInfo.study_area != requirement.study_area and requirement.study_area != ALL_STR:
             return False
         # 学校
+        if userInfo.school_id and userInfo.school_id != requirement.school_id:
+            return False
         if userInfo.education_level < requirement.education_level:
             return False
         if userInfo.major != requirement.major and requirement.major != ALL_STR:

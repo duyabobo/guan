@@ -3,7 +3,7 @@
 from model.requirement import RequirementModel
 from model.user import UserModel
 from service.common.multi_picker_helper import MultiPickerHelper
-from service.common.school_helper import getSortedSchoolList
+from service.common.school_helper import SchoolHelper
 from util.const.match import *
 from util.const.mini_program import PICKER_TYPE_SELECTOR, PICKER_TYPE_MULTI_SELECTOR, PICKER_TYPE_REGION_SELECTOR, \
     PICKER_TYPE_MULTI_EXTRA_SELECTOR
@@ -20,6 +20,7 @@ VALUE_TYPE_DICT = {
     OP_TYPE_EDUCATION_LEVEL: int,
     OP_TYPE_MARTIAL_STATUS: int,
     OP_TYPE_MARTIAL_STATUS_PERIOD: int,
+    OP_TYPE_STUDY_SCHOOL: int,
     # 双项选择器
     OP_BIRTH_YEAR_PERIOD: list,
     OP_TYPE_WEIGHT_PERIOD: list,
@@ -68,7 +69,7 @@ def selectorFactory(op_type, data, checkDynamicData):
     elif op_type == OP_TYPE_STUDY_FROM_YEAR:
         return SingleSelector("入学时间", data.study_from_year, op_type)
     elif op_type == OP_TYPE_STUDY_SCHOOL:
-        school_list = getSortedSchoolList(regionId=data.study_region_id)  # 第一个item是未知学校（id为UNKNOWN_SCHOOL_ID）
+        school_list = SchoolHelper.getSortedSchoolList(regionId=data.study_region_id)  # 第一个item是未知学校（id为UNKNOWN_SCHOOL_ID）
         school_id_list = [s.id for s in school_list]
         school_choice_list = [s.name for s in school_list]
         return SingleSelector("学校", school_choice_list[school_id_list.index(data.school_id)], op_type, choice_list=school_choice_list)

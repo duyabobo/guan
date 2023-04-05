@@ -29,4 +29,4 @@ class SchoolModel(BaseModel):
     def getSortedList(cls, regionIds):
         return getDbSession().\
             query(cls).filter(cls.region_id.in_(regionIds), cls.status == match.MODEL_STATUS_YES).\
-            order_by(cls.seq)
+            order_by(cls.seq).all()

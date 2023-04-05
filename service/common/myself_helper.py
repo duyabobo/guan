@@ -5,7 +5,7 @@ from model.school import UNKNOWN_SCHOOL_ID
 from model.verify import VerifyModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.multi_picker_helper import MultiPickerHelper
-from service.common.school_helper import getSortedSchoolList
+from service.common.school_helper import SchoolHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
@@ -156,7 +156,7 @@ class UserHelper(object):
             userUpdateParams['education_level'] = value
             requirementUpdateParams['education_level'] = value
         elif opType == OP_TYPE_STUDY_SCHOOL:
-            school_list = getSortedSchoolList(regionId=self.user.study_region_id)
+            school_list = SchoolHelper.getSortedSchoolList(regionId=self.user.study_region_id)
             school_id_list = [s.id for s in school_list]
             if value > len(school_id_list) - 1:
                 school_id = UNKNOWN_SCHOOL_ID

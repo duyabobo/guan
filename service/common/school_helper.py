@@ -8,8 +8,11 @@ from model.school import SchoolModel
 from ral.cache import checkCache
 
 
-@checkCache("school_helper:{regionId}")
-def getSortedSchoolList(regionId):  # 算上`未知学校`，缓存，变更数据需刷数据
-    regionIds = RegionModel.getRegionIdsByRegionId(regionId)
-    regionIds.append(UNKNOWN_REGION_ID)
-    return SchoolModel.getSortedList(regionIds)
+class SchoolHelper(object):
+
+    @classmethod
+    @checkCache("school_helper:{regionId}")
+    def getSortedSchoolList(cls, regionId):  # 算上`未知学校`，缓存，变更数据需刷数据
+        regionIds = RegionModel.getRegionIdsByRegionId(regionId)
+        regionIds.append(UNKNOWN_REGION_ID)
+        return SchoolModel.getSortedList(regionIds)
