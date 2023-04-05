@@ -73,38 +73,38 @@ class RequirementModel(BaseModel):
         getDbSession().commit()
         RequirementChangeRecordModel.addRecords(passportId, **updateParams)  # 流水记录
 
-    # @property
-    # def home_region(self):
-    #     """home_address_id"""
-    #     return RegionModel.getById(self.home_region_id)
-    #
-    # @property
-    # def home_province(self):
-    #     return self.home_region.province if self.home_region else ALL_STR
-    #
-    # @property
-    # def home_city(self):
-    #     return self.home_region.city if self.home_region else ALL_STR
-    #
-    # @property
-    # def home_area(self):
-    #     return self.home_region.area if self.home_region else ALL_STR
+    @property
+    def home_region(self):
+        """home_address_id"""
+        return RegionModel.getById(self.home_region_id)
 
     @property
-    def studyRegion(self):
+    def home_province(self):
+        return self.home_region.province if self.home_region else ALL_STR
+
+    @property
+    def home_city(self):
+        return self.home_region.city if self.home_region else ALL_STR
+
+    @property
+    def home_area(self):
+        return self.home_region.area if self.home_region else ALL_STR
+
+    @property
+    def study_region(self):
         return RegionModel.getById(self.study_region_id)
-    #
-    # @property
-    # def study_province(self):
-    #     return self.study_region.province if self.study_region else ALL_STR
-    #
-    # @property
-    # def study_city(self):
-    #     return self.study_region.city if self.study_region else ALL_STR
-    #
-    # @property
-    # def study_area(self):
-    #     return self.study_region.area if self.study_region else ALL_STR
+
+    @property
+    def study_province(self):
+        return self.study_region.province if self.study_region else ALL_STR
+
+    @property
+    def study_city(self):
+        return self.study_region.city if self.study_region else ALL_STR
+
+    @property
+    def study_area(self):
+        return self.study_region.area if self.study_region else ALL_STR
 
     @property
     def education(self):
@@ -139,21 +139,21 @@ class RequirementModel(BaseModel):
         return self.work.position if self.work else ALL_STR
 
     @property
-    def workRegion(self):
+    def work_region(self):
         """home_address_id"""
         return RegionModel.getById(self.work_region_id)
 
-    # @property
-    # def work_province(self):
-    #     return self.work_region.province if self.work_region else ALL_STR
-    #
-    # @property
-    # def work_city(self):
-    #     return self.work_region.city if self.work_region else ALL_STR
-    #
-    # @property
-    # def work_area(self):
-    #     return self.work_region.area if self.work_region else ALL_STR
+    @property
+    def work_province(self):
+        return self.work_region.province if self.work_region else ALL_STR
+
+    @property
+    def work_city(self):
+        return self.work_region.city if self.work_region else ALL_STR
+
+    @property
+    def work_area(self):
+        return self.work_region.area if self.work_region else ALL_STR
 
 
 UNREACHABLE_REQUIREMENT = RequirementModel()

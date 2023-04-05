@@ -94,17 +94,17 @@ def selectorFactory(op_type, data, checkDynamicData):
         return MultiSelectorExtra("工作信息", work, workDynamic, op_type)
     # 地址选择器
     elif op_type == OP_TYPE_HOME_REGION:
-        return RegionSelector("籍贯", data.homeRegion, op_type)
+        return RegionSelector("籍贯", data.home_region, op_type)
     elif op_type == OP_TYPE_HOME_REGION_PERIOD:
-        return RegionSelector("籍贯范围", data.homeRegion, op_type)
+        return RegionSelector("籍贯范围", data.home_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION:
-        return RegionSelector("学校地址", data.studyRegion, op_type)
+        return RegionSelector("学校地址", data.study_region, op_type)
     elif op_type == OP_TYPE_STUDY_REGION_PERIOD:
-        return RegionSelector("学校地址范围", data.studyRegion, op_type)
+        return RegionSelector("学校地址范围", data.study_region, op_type)
     elif op_type == OP_TYPE_WORK_REGION:
-        return RegionSelector("工作地址", data.workRegion, op_type)
+        return RegionSelector("工作地址", data.work_region, op_type)
     elif op_type == OP_TYPE_WORK_REGION_PERIOD:
-        return RegionSelector("工作地址范围", data.workRegion, op_type)
+        return RegionSelector("工作地址范围", data.work_region, op_type)
 
 
 class SingleSelector(object):  # 单项选择器
