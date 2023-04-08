@@ -3,6 +3,13 @@
 #  Time : 2023/4/8 21:59
 #  File: getSchoolData.py
 #  Software: PyCharm
+import sys
+
+print sys.path
+import os
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(current_dir))
+
 import time
 
 import requests

@@ -3,14 +3,12 @@
 # 获取大学专业数据
 import sys
 
-from util.const.base import ALL_STR
-
 print sys.path
 import os
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current_dir))
-import json
 
+from util.const.base import ALL_STR
 import requests
 from bs4 import BeautifulSoup
 
