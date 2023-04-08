@@ -61,11 +61,11 @@ class RegionModel(BaseModel):
         if not region:
             return []
 
-        if region.area != EMPTY_STR:
+        if region.area != ALL_STR:
             regionList = [region]
-        elif region.city != EMPTY_STR:
+        elif region.city != ALL_STR:
             regionList = getDbSession().query(cls.id).filter(cls.province == region.province, cls.city == region.city, cls.status == MODEL_STATUS_YES).all()
-        elif region.province != EMPTY_STR:
+        elif region.province != ALL_STR:
             regionList = getDbSession().query(cls.id).filter(cls.province == region.province, cls.status == MODEL_STATUS_YES).all()
         else:
             regionList = cls.getAllRegionIds()
