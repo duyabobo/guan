@@ -28,7 +28,6 @@ def getByPage(page):
     for s in schools:
         cityName = s['city_name']
         townName = s['town_name']
-        levelName = s['level_name']
         name = s['name']  # 学校名称
         logo = s['logo']  # 学校logo
         natureName = s['nature_name']  # 民办还是公办性质
@@ -43,7 +42,7 @@ def getByPage(page):
         if not regionId:
             print "city and area not found: school=%s city=%s, area=%s" % (name, cityName, townName)
             continue
-        ret = SchoolModel.addOne(regionId, name, logo, levelName, natureName, schoolTypeName)
+        ret = SchoolModel.addOne(regionId, name, logo, natureName, schoolTypeName)
         print 'success ret.id=%s' % ret.id
 
 

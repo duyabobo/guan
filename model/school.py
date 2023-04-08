@@ -21,7 +21,6 @@ class SchoolModel(BaseModel):
     region_id = Column(Integer, default=0)  # 地址id
     name = Column(String, default=0)  # 学校名(每个校区有一个记录)
     logo = Column(String, default='')  # 学校校徽logo
-    level_name = Column(String, default='')  # 专科还是本科
     nature_name = Column(String, default='')  # 民办还是公办性质
     school_type_name = Column(String, default='')  # 专科还是本科
     seq = Column(Integer, default=0)  # 序号越小越靠前
@@ -42,13 +41,12 @@ class SchoolModel(BaseModel):
             order_by(cls.seq).all()
 
     @classmethod
-    def addOne(cls, regionId, name, logo, levelName, natureName, schoolTypeName):
+    def addOne(cls, regionId, name, logo, natureName, schoolTypeName):
         record = cls(
             region_id=regionId,
             name=name,
             logo=logo,
             nature_name=natureName,
-            level_name=levelName,
             school_type_name=schoolTypeName,
         )
         getDbSession().add(record)
