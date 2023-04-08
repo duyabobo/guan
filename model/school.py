@@ -30,6 +30,12 @@ class SchoolModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
+    def getAll(cls):
+        return getDbSession(). \
+            query(cls).filter(cls.status == match.MODEL_STATUS_YES). \
+            order_by(cls.seq).all()
+
+    @classmethod
     def getSortedList(cls, regionIds):
         return getDbSession().\
             query(cls).filter(cls.region_id.in_(regionIds), cls.status == match.MODEL_STATUS_YES).\

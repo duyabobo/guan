@@ -80,3 +80,8 @@ class RegionModel(BaseModel):
     def getRegionIdByCity(cls, city):
         region = getDbSession().query(cls.id).filter(cls.city == city, cls.area == ALL_STR, cls.status == MODEL_STATUS_YES).first()
         return region.id if region else 0
+
+    @classmethod
+    def getRegionIdByProvince(cls, province):
+        region = getDbSession().query(cls.id).filter(cls.province == province, cls.city == ALL_STR, cls.area == ALL_STR, cls.status == MODEL_STATUS_YES).first()
+        return region.id if region else 0
