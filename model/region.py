@@ -7,7 +7,7 @@ from sqlalchemy import func
 
 from model import BaseModel
 from ral.cache import checkInconsistentCache
-from util.const.base import EMPTY_STR
+from util.const.base import EMPTY_STR, ALL_STR
 from util.const.match import MODEL_STATUS_YES
 from util.ctx import getDbSession
 UNKNOWN_REGION_ID = 0
@@ -70,3 +70,13 @@ class RegionModel(BaseModel):
         else:
             regionList = cls.getAllRegionIds()
         return [r.id for r in regionList]
+
+    @classmethod
+    def getRegionIdByArea(cls, area):
+        region = getDbSession().query(cls.id).filter(cls.area == area, cls.status == MODEL_STATUS_YES).first()
+        return region.id if region else 0
+
+    @classmethod
+    def getRegionIdByCity(cls, city):
+        region = getDbSession().query(cls.id).filter(cls.city == city, cls.area == ALL_STR, cls.status == MODEL_STATUS_YES).first()
+        return region.id if region else 0

@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # 获取大学专业数据
 import sys
+
+from util.const.base import ALL_STR
+
 print sys.path
 import os
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -40,8 +43,11 @@ def getPageData():
         code = int(code)
         if code % 10000 == 0:  # 省份
             code_map_province[code / 10000] = value
+            code_map_city[code / 100] = ALL_STR
+            code_map_area[code] = ALL_STR
         elif code % 100 == 0:  # 市
             code_map_city[code / 100] = value
+            code_map_area[code] = ALL_STR
         else:  # 区
             code_map_area[code] = value
 
