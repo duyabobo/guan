@@ -50,6 +50,7 @@ def datetime2hommization(d):
     4.1 不跨年显示`%m-%d(几天后) %H:%M:%S`
     4.3 其他情况`%Y-%m-%d %H:%M:%S`
     """
+    return datetime2str(d)
     today = datetime.now().date()
     days = (d.date() - today).days
     if days < 0:
