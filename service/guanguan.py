@@ -13,7 +13,7 @@ from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX, MODE
 from util.time_cost import timecost
 
 
-UNKNOWN_LONGITUDE_OR_LATITUDE = -1
+UNKNOWN_NEGATIVE_ONE = -1
 
 
 class GuanguanService(BaseService):
@@ -95,11 +95,11 @@ class GuanguanService(BaseService):
     @timecost
     def getGuanguanList(self, longitude, latitude, limit):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
-        if longitude == UNKNOWN_LONGITUDE_OR_LATITUDE or latitude == UNKNOWN_LONGITUDE_OR_LATITUDE:  # 尚未获取用户地理位置，此时返回功能介绍类数据demo
+        if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:  # 尚未获取用户地理位置，此时返回功能介绍类数据demo
             return (
                 [
                     {
-                        "id": 0,
+                        "id": UNKNOWN_NEGATIVE_ONE,
                         "time": "YYYY-MM-DD HH:mm:SS",
                         "state": "",
                         "img": DEFAULT_ADDRESS_URL,
