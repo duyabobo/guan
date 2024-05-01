@@ -18,6 +18,7 @@ handlers = [
     (r'/update_head_img', myself.HeadImgHandler),
     (r'/myself$', myself.MyselfHandler),
     (r'/requirement$', requirement.RequirementHandler),
+    (r'/location_state$', myself.LocationStateHandler),
     (r'/guanguan$', guanguan.GuanguanHandler),
     (r'/guan_info$', guan_info.GuanInfoHandler),
     (r'/meet_result$', guan_info.MeetResultHandler),

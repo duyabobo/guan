@@ -2,6 +2,7 @@
 # -*- coding=utf-8 -*-
 from util.const.base import *
 from util.const.education import DEFAULT_MULTI_INDEX, EDUCATION_LEVEL, DEFAULT_EDUCATION_INDEX
+from util.const.qiniu_img import CDN_QINIU_ADDRESS_URL
 
 # model
 # MODEL_STATUS_ENUMERATE
@@ -45,7 +46,7 @@ OP_TYPE_EDUCATION_LEVEL = 'updateEducationLevel'
 OP_TYPE_STUDY_FROM_YEAR_PERIOD = 'updateStudyFromYearPeriod'
 # CHOICE_LIST and DEFAULT_INDEX
 
-DEFAULT_ADDRESS_URL = ""
+DEFAULT_ADDRESS_URL = "{qiniuUrl}address/beijingshihaidianquwudaokoudonglaishun.png?imageMogr2/thumbnail/200x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL)  # todo
 
 # VERIFY_MAIL_TYPE
 MODEL_MAIL_KEYWORD = "edu"

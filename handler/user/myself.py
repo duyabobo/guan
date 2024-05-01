@@ -27,6 +27,14 @@ class MyselfHandler(BaseHandler):
         return Response(data=uis.updateMyselfInfo(opType, value, column=column))
 
 
+class LocationStateHandler(BaseHandler):
+
+    @superMonitor
+    def get(self):
+        uis = UserInfoService(self.currentPassport)
+        return Response(data=uis.getLocationState())
+
+
 class HeadImgHandler(BaseHandler):
     @superMonitor
     def post(self, *args, **kwargs):  # 上传+更新头像

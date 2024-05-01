@@ -97,13 +97,15 @@ class GuanguanService(BaseService):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
         if longitude == UNKNOWN_LONGITUDE_OR_LATITUDE or latitude == UNKNOWN_LONGITUDE_OR_LATITUDE:  # 尚未获取用户地理位置，此时返回功能介绍类数据demo
             return (
-                {
-                    "id": 0,
-                    "time": "YYYY-MM-DD HH:mm:SS",
-                    "state": "",
-                    "img": DEFAULT_ADDRESS_URL,
-                    "address": "获取地理位置后，可以根据实际情况进行推荐活动地址信息。",
-                }
+                [
+                    {
+                        "id": 0,
+                        "time": "YYYY-MM-DD HH:mm:SS",
+                        "state": "",
+                        "img": DEFAULT_ADDRESS_URL,
+                        "address": "根据地理位置进行活动推荐。",
+                    }
+                ]
             )
 
 

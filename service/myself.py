@@ -85,6 +85,11 @@ class UserInfoService(BaseService):
         else:
             return None
 
+    def getLocationState(self):
+        return {
+            "locationIsAllow": bool(self.userInfo.allow_location) if self.userInfo else False
+        }
+
     def getVerify(self): 
         return {
             "desc": "认证",
