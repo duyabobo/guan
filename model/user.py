@@ -26,6 +26,8 @@ class UserModel(BaseModel):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)  # 自增
     passport_id = Column(Integer, default=0)  # passport_id
+    allow_location = Column(Integer, default=0) # 是否已允许获取地理位置信息
+
     sex = Column(Integer, default=MODEL_SEX_UNKNOWN_INDEX)  # 性别：MODEL_SEX_ENUMERATE
     verify_type = Column(Integer, default=0)  # 认证类型：MODEL_VERIFY_TYPE
     has_head_img = Column(Integer, default=-1)  # 是否自定义头像：-1未选中 0否，1是
@@ -53,6 +55,13 @@ class UserModel(BaseModel):
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
+
+    @classmethod
+    def changeAllowLocation(cls, passportId):
+        getDbSession().query(cls).filter(
+            cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES, cls.allow_location == match.MODEL_STATUS_NO
+        ).update({'allow_location': match.MODEL_STATUS_YES})
+        getDbSession().commit()
 
     @classmethod
     def getLimitUserList(cls, lastPassportId, limit=500):  # 性能可能会相对慢些，脚本使用。todo 后期用读库。

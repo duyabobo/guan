@@ -1,0 +1,1 @@
+alter table user add column allow_location tinyint unsigned not null default 0 comment '是否已允许获取地理位置信息';

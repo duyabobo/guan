@@ -9,8 +9,11 @@ from service import BaseService
 from service.common.guan_helper import GuanHelper
 from util.class_helper import lazy_property
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX, MODEL_ACTIVITY_STATE_EMPTY, \
-    MODEL_ACTIVITY_STATE_INVITING
+    MODEL_ACTIVITY_STATE_INVITING, DEFAULT_ADDRESS_URL
 from util.time_cost import timecost
+
+
+UNKNOWN_LONGITUDE_OR_LATITUDE = -1
 
 
 class GuanguanService(BaseService):
@@ -92,6 +95,21 @@ class GuanguanService(BaseService):
     @timecost
     def getGuanguanList(self, longitude, latitude, limit):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
+        if longitude == UNKNOWN_LONGITUDE_OR_LATITUDE or latitude == UNKNOWN_LONGITUDE_OR_LATITUDE:  # 尚未获取用户地理位置，此时返回功能介绍类数据demo
+            return (
+                {
+                    "id": 0,
+                    "time": "YYYY-MM-DD HH:mm:SS",
+                    "state": "",
+                    "img": DEFAULT_ADDRESS_URL,
+                    "address": "获取地理位置后，可以根据实际情况进行推荐活动地址信息。",
+                }
+            )
+
+
+        # 记录用户已经允许获取地理位置
+        UserModel.changeAllowLocation(self.passportId)
+
         matchedActivityList = []
         # 自己参与，已表达意愿为满意发展中
         ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
