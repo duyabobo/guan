@@ -139,8 +139,15 @@ class GuanguanService(BaseService):
                     "id": activity.id,
                     "time": activity.startTimeStr,
                     "state": self.getState(activity),
+<<<<<<< Updated upstream
                     "img": GuanHelper.getActivityImg(activity, address, matchUser, self.userInfo, True),
                     "address": address.nameShort,
+=======
+                    "img": CDN_QINIU_ADDRESS_URL + address.img_obj_name,
+                    "addressImg": CDN_QINIU_ADDRESS_IMG,
+                    "timeImg": CDN_QINIU_TIME_IMG,
+                    "address": address.name,
+>>>>>>> Stashed changes
                 }
             )
 
