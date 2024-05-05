@@ -102,7 +102,7 @@ class GuanguanService(BaseService):
                     "img": CDN_QINIU_ADDRESS_URL + address.img_obj_name,
                     "addressImg": CDN_QINIU_ADDRESS_IMG,
                     "timeImg": CDN_QINIU_TIME_IMG,
-                    "address": address.nameShort,
+                    "address": address.name,
                 }
             )
 

@@ -72,7 +72,7 @@ class GuanInfoService(BaseService):
 
     @property
     def address(self):
-        return self.addressRecord.nameLong
+        return self.addressRecord.name
 
     @property
     def addressDesc(self):
