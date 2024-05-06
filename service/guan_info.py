@@ -59,13 +59,6 @@ class GuanInfoService(BaseService):
     @property
     def address(self):
         return self.addressRecord.name
-<<<<<<< Updated upstream
-=======
-
-    @property
-    def addressDesc(self):
-        return self.addressRecord.description
->>>>>>> Stashed changes
 
     @property
     def time(self):
