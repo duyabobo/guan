@@ -7,11 +7,11 @@ import util.config
 from handler.basehandler import BaseHandler
 from service.mine import MineService
 from service.wx_crypt.WXBizMsgCrypt import WXBizMsgCrypt
-from util.monitor import superMonitor, Response
+from util.monitor import superMonitor, Response, httpReturn
 
 
 class ContactHandler(BaseHandler):
-    @superMonitor
+
     def post(self, *args, **kwargs):
         signature = self.getRequestParameter('signature')
         timestamp = self.getRequestParameter('timestamp')
@@ -24,4 +24,6 @@ class ContactHandler(BaseHandler):
         encodingAESKey = util.config.get('weixin', 'encodingAESKey')
         decrypt_test = WXBizMsgCrypt(token, encodingAESKey, appid)
         ret, decrypXml = decrypt_test.DecryptMsg(from_xml, msgSign, timestamp, nonce)
-        return Response(data={'ret': ret, 'decrypXml': decrypXml})
+        response = Response(data={'ret': ret, 'decrypXml': decrypXml})
+        httpReturn(self, response)
+        return
