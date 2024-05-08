@@ -42,9 +42,10 @@ def superMonitor(func):
         try:
             checker.check()
         except Exception as e:  # 校验失败
-            checker.fail()
-            httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
-            return
+            if handler.request.path != '/contact':
+                checker.fail()
+                httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
+                return
         else:  # 校验成功
             checker.success()
         # 开始处理请求
