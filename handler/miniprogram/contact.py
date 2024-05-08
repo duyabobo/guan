@@ -12,12 +12,14 @@ from util.monitor import superMonitor, Response, httpReturn
 
 class ContactHandler(BaseHandler):
 
+    # todo 特殊的monitor
+    @superMonitor
     def post(self, *args, **kwargs):
-        signature = self.getRequestParameter('signature')
-        timestamp = self.getRequestParameter('timestamp')
-        nonce = self.getRequestParameter('nonce')
-        encrypt_type = self.getRequestParameter('encrypt_type')
-        msgSign = self.getRequestParameter('msg_signature')
+        signature = self.request.query_arguments.get('signature', '')
+        timestamp = self.request.query_arguments.get('timestamp', '')
+        nonce = self.request.query_arguments.get('nonce', '')
+        encrypt_type = self.request.query_arguments.get('encrypt_type', '')
+        msgSign = self.request.query_arguments.get('msg_signature', '')
         from_xml = self.request.body_arguments or self.request.body
         appid = util.config.get('weixin', 'appid')
         token = util.config.get('weixin', 'token')
