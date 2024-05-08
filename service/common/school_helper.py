@@ -22,10 +22,10 @@ class SchoolHelper(object):
         schools = _getSortedSchoolList(regionId)
         if len(schools) == 1:  # 本区无大学(len(schools) == 1代表只有一个未知大学)
             region = RegionModel.getById(regionId)
-            if region.area != EMPTY_STR:  # 找本市的大学
+            if region and region.area != EMPTY_STR:  # 找本市的大学
                 regionId = RegionModel.getRegionIdByCity(region.city)
                 schools = _getSortedSchoolList(regionId)
-            if len(schools) == 1:  # 本市无大学
+            if region and len(schools) == 1:  # 本市无大学
                 if region.city != EMPTY_STR:  # 找本省的大学
                     regionId = RegionModel.getRegionIdByProvince(region.province)
                     schools = _getSortedSchoolList(regionId)
