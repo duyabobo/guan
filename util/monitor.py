@@ -39,10 +39,11 @@ def superMonitor(func):
     def wrapper(handler, *args, **kwargs):
         # 处理前校验
         checker = Checker(handler)
+        isContact = handler.request.path == '/contact'
         try:
             checker.check()
         except Exception as e:  # 校验失败
-            if handler.request.path != '/contact':
+            if not isContact:
                 checker.fail()
                 httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
                 return
@@ -55,7 +56,10 @@ def superMonitor(func):
             httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
             return
         else:  # 处理成功
-            httpReturn(handler, response)
+            if isContact:
+                handler.write(response.data.get('decrypXml') or '<xml></xml>')
+            else:
+                httpReturn(handler, response)
             return
     return wrapper
 
