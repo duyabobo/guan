@@ -56,10 +56,7 @@ def superMonitor(func):
             httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
             return
         else:  # 处理成功
-            if isContact:
-                handler.write(response.data.get('decrypXml') or '<xml></xml>')
-            else:
-                httpReturn(handler, response)
+            httpReturn(handler, response)
             return
     return wrapper
 
