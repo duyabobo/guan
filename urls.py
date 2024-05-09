@@ -3,7 +3,7 @@
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
 from handler import example
-from handler.miniprogram import guan_info, guanguan, mine, about, secret, subscribe, contact
+from handler.miniprogram import guan_info, guanguan, mine, about, secret, subscribe, contact, send_msg
 from handler.pc import index
 from handler.user import login, myself, requirement
 from handler.verify import email_verify, phone_verify
@@ -16,6 +16,7 @@ handlers = [
     (r'/login$', login.LoginHandler),
     (r'/mine$', mine.MineHandler),
     (r'/contact$', contact.ContactHandler),
+    (r'/send_sms$', send_msg.SendSmsHandler),
     (r'/update_head_img', myself.HeadImgHandler),
     (r'/myself$', myself.MyselfHandler),
     (r'/requirement$', requirement.RequirementHandler),

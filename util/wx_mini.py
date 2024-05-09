@@ -8,7 +8,7 @@ import util.config
 from ral import wx
 from util.async_request import asyncRequest
 from util.const.mini_program import WX_MINIPROGRAM_CODE_TO_SESSION, WX_MINIPROGRAM_GET_TEKEN, \
-    WX_MINIPROGRAM_SEND_SUBSCRIBE_MSG
+    WX_MINIPROGRAM_SEND_SUBSCRIBE_MSG, WX_MINIPROGRAM_SEND_MSG_TO_USER
 
 
 class WxHelper(object):
@@ -45,7 +45,7 @@ class WxHelper(object):
         accessToken = tokenRes.get("access_token", "")
         if accessToken:
             wx.setToken(accessToken)
-        raise gen.Return(localToken)
+        raise gen.Return(accessToken)
 
     @gen.coroutine
     def sendSubscribeMsg(self, openid, templateId, page, data, miniprogramState):
@@ -60,6 +60,25 @@ class WxHelper(object):
                 "page": page,
                 "data": data,
                 "miniprogram_state": miniprogramState,
+            },
+            method='POST',
+            timeout=3,
+        )
+        raise gen.Return(res)
+
+    @gen.coroutine
+    def sendMsgToUser(self, openid, msgContent):
+        """给用户发送客服消息"""
+        access_token = yield self.getMiniProgramToken()
+        sendSmsUrl = WX_MINIPROGRAM_SEND_MSG_TO_USER.format(access_token=access_token)
+        res = yield asyncRequest(
+            sendSmsUrl,
+            {
+                "touser": openid,
+                "msgtype": "text",
+                "text": {
+                    "content": msgContent
+                }
             },
             method='POST',
             timeout=3,
