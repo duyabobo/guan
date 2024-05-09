@@ -10,6 +10,12 @@ from util.monitor import superMonitor, Response
 
 
 class ContactHandler(BaseHandler):
+    
+    # @superMonitor
+    def get(self):
+        echostr = self.getRequestParameter('echostr', '')
+        # todo 校验是否来自微信
+        return self.write(echostr)
 
     # todo 特殊的monitor
     @superMonitor
