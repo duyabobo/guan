@@ -57,7 +57,8 @@ class UserModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @classmethod
-    def changeAllowLocation(cls, passportId):
+    @deleteCache(["UserModel:{passportId}"])
+    def changeAllowLocation(cls, passportId=0):
         getDbSession().query(cls).filter(
             cls.passport_id == passportId, cls.status == match.MODEL_STATUS_YES, cls.allow_location == match.MODEL_STATUS_NO
         ).update({'allow_location': match.MODEL_STATUS_YES})
