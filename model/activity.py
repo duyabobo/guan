@@ -10,7 +10,7 @@ from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util.const import match
-from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE, \
+from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE, \
     UNFIX_SHOW_DELAY_DAYS
 from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_EMPTY, \
     MODEL_ACTIVITY_STATE_INVITE_SUCCESS
