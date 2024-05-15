@@ -172,11 +172,19 @@ class ActivityModel(BaseModel):
         """邀请尚未见面的||意向不合适的一周内"""
         if not passportId:
             return []
-        unfixShowDelayTime = datetime.datetime.now() + datetime.timedelta(days=UNFIX_SHOW_DELAY_DAYS)
+        now = datetime.datetime.now()
+        unfixShowDelayTime = now + datetime.timedelta(days=UNFIX_SHOW_DELAY_DAYS)
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
             or_(
-                cls.start_time > datetime.datetime.now(),
+                and_(
+                    cls.start_time > now,
+                    cls.boy_passport_id == passportId,
+                ),
+                and_(
+                    cls.start_time > now,
+                    cls.girl_passport_id == passportId,
+                ),
                 and_(
                     cls.start_time < unfixShowDelayTime,
                     cls.boy_passport_id == passportId,
