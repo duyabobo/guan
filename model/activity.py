@@ -169,7 +169,7 @@ class ActivityModel(BaseModel):
     @classmethod
     @timecost
     def getUnfinishedActivities(cls, passportId):
-        """邀请尚未见面的||意向不合适的一周内"""
+        """邀请尚未见面的||尚未表达意向的||意向不合适的一周内"""
         if not passportId:
             return []
         now = datetime.datetime.now()
