@@ -113,12 +113,12 @@ class GuanguanService(BaseService):
         UserModel.changeAllowLocation(self.passportId)
 
         matchedActivityList = []
-        # 自己参与，已表达意愿为满意发展中
+        # 自己参与，已表达意愿为满意发展中，或者本该评论但尚未评论
         ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
         if ongoingActivity:  # 有发展中的
             matchedActivityList.append(ongoingActivity)
         else:
-            # 自己参与，未表达意愿为满意发展中（邀请中/邀请成功尚未见面的/见面后尚未表达意愿）
+            # 自己参与中
             unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
             matchedActivityList.extend(unfinishedActivities)
             # 匹配的+兜底的

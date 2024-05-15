@@ -42,24 +42,21 @@ MIN_STUDY_FROM_YEAR = CURRENT_YEAR - 6  # 博士6年
 MAX_STUDY_FROM_YEAR = CURRENT_YEAR
 
 # 根据自己的选择结果，影响活动结束后在首页的展示。
-#   0会展示1月，1月内不操作会自动转化为2。
-#   1/2 会持续展示在自己首页的。
-#   3/4/5/6是会继续展示1周的。
+#   见面时间开始以后，0/1 会持续展示在自己首页，且不会推荐其他见面。
+#   >= 100 是会继续展示7天(如下)，但是不影响其他见面。
+UNFIX_SHOW_DELAY_DAYS = 7
 # 另外：
-#   见面结论任何变更会通过icon同步给对方。0是头像icon，1是实心爱心，2是空心爱心，3/4/5/6是加油。
-#   如果双方都选择了1/2，则停止推荐新的活动。
+#   见面结论任何变更会通过icon同步给对方。0是虚拟头像icon，1是真实头像icon。
 MODEL_MEET_RESULT_UNKNOWN = 0
 MODEL_MEET_RESULT_FIT_CHOICE = 1
-MODEL_MEET_RESULT_FIT_AUTO = 2
+MODEL_MEET_RESULT_UNFIT_CHOICE = 100
 MODEL_MEET_RESULT_MAP = {
-    0: "尚未表达意向",
-    1: "合适（主动选择意向）",
-    2: "合适（系统猜测意向）",
-    3: "不合适（信息造假）",
-    4: "不合适（迟到爽约）",
-    5: "不合适（衣冠不得体）",
-    6: "不合适（性格不合）",
-    7: "不合适（涉嫌pua）",
-    8: "不合适（骗财骗色）",
-    9: "不合适（其他违法行为）",
+    MODEL_MEET_RESULT_UNKNOWN: "尚未表达意向",
+    MODEL_MEET_RESULT_FIT_CHOICE: "合适",
+    MODEL_MEET_RESULT_UNFIT_CHOICE: "不合适",
+    101: "不合适（信息造假）",  # > 100的选择，会扣除保证金，而且会展示在自己的信息中（直到联系客服解除）
+    102: "不合适（迟到爽约）",
+    103: "不合适（涉嫌pua）",
+    104: "不合适（骗财骗色）",
+    105: "不合适（其他违法行为）",
 }

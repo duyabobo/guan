@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from service.qiniu_cdn import MyStorage
-from util.const.base import MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_UNKNOWN
+from util.const.base import MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNKNOWN
 from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_STATUS_YES
 from util.const.qiniu_img import CDN_QINIU_BOY_HEAD_IMG, CDN_QINIU_GIRL_HEAD_IMG
 
@@ -29,7 +29,7 @@ class GuanHelper(object):
         if imgUser and imgUser.sex in [MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX]:  # 人物头像
             if imgUser.has_head_img != MODEL_STATUS_YES:  # 默认头像
                 return CDN_QINIU_BOY_HEAD_IMG if imgUser.sex == MODEL_SEX_MALE_INDEX else CDN_QINIU_GIRL_HEAD_IMG
-            elif cls.getMatchMeetResult(activity, imgUser) not in [MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]:  # 虚拟头像
+            elif cls.getMatchMeetResult(activity, imgUser) != MODEL_MEET_RESULT_FIT_CHOICE:  # 虚拟头像
                 return cls.getUserImg(imgUser, virtualFlag=True, thumbnailsFlag=thumbnailsFlag)
             else:  # 真实头像
                 return cls.getUserImg(imgUser, virtualFlag=False, thumbnailsFlag=thumbnailsFlag)

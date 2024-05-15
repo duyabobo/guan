@@ -10,7 +10,8 @@ from sqlalchemy.sql import or_
 
 from model import BaseModel
 from util.const import match
-from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_AUTO, MODEL_MEET_RESULT_FIT_CHOICE
+from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE, \
+    UNFIX_SHOW_DELAY_DAYS
 from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_EMPTY, \
     MODEL_ACTIVITY_STATE_INVITE_SUCCESS
 from util.ctx import getDbSession
@@ -107,18 +108,16 @@ class ActivityModel(BaseModel):
         if not passportId:
             return None
         return getDbSession().query(cls).filter(
-            or_(
-                cls.boy_passport_id == passportId,
-                cls.girl_passport_id == passportId
-            ),
+            cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            cls.start_time <= datetime.datetime.now(),
             or_(
                 and_(
-                    cls.girl_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
-                    cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN
+                    cls.boy_passport_id == passportId,
+                    cls.boy_meet_result.in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
                 ),
                 and_(
-                    cls.boy_meet_result.in_([MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_AUTO]),
-                    cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN
+                    cls.girl_passport_id == passportId,
+                    cls.girl_meet_result.in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
                 )
             )
         ).first()
@@ -151,30 +150,6 @@ class ActivityModel(BaseModel):
         return record
 
     @classmethod
-    def closeBoyActivities(cls):
-        fromTime = datetime.datetime.now() - datetime.timedelta(days=30)
-        ret = getDbSession().query(cls).filter(
-            cls.start_time < fromTime,
-            cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN,
-            cls.state == match.MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-            cls.status == match.MODEL_STATUS_YES
-        ).update({cls.boy_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
-        getDbSession().commit()
-        return ret
-
-    @classmethod
-    def closeGirlActivities(cls):
-        fromTime = datetime.datetime.now() - datetime.timedelta(days=30)
-        ret = getDbSession().query(cls).filter(
-            cls.start_time < fromTime,
-            cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN,
-            cls.state == match.MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-            cls.status == match.MODEL_STATUS_YES
-        ).update({cls.girl_meet_result: MODEL_MEET_RESULT_FIT_AUTO})
-        getDbSession().commit()
-        return ret
-
-    @classmethod
     def getExpireActivityIds(cls):
         now = datetime.datetime.now()
         oneDayAgo = now - datetime.timedelta(days=1)
@@ -194,21 +169,23 @@ class ActivityModel(BaseModel):
     @classmethod
     @timecost
     def getUnfinishedActivities(cls, passportId):
-        """参与，但是还没最终闭环（表达意愿）"""
+        """邀请尚未见面的||意向不合适的一周内"""
         if not passportId:
             return []
+        unfixShowDelayTime = datetime.datetime.now() + datetime.timedelta(days=UNFIX_SHOW_DELAY_DAYS)
         return getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
             or_(
-                cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-                cls.start_time > datetime.datetime.now()
-            ),
-            or_(
-                cls.girl_passport_id == passportId,
-                cls.boy_passport_id == passportId
-            ),
-            or_(
-                cls.girl_meet_result == MODEL_MEET_RESULT_UNKNOWN,
-                cls.boy_meet_result == MODEL_MEET_RESULT_UNKNOWN,
+                cls.start_time > datetime.datetime.now(),
+                and_(
+                    cls.start_time < unfixShowDelayTime,
+                    cls.boy_passport_id == passportId,
+                    cls.boy_meet_result.not_in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
+                ),
+                and_(
+                    cls.start_time < unfixShowDelayTime,
+                    cls.girl_passport_id == passportId,
+                    cls.girl_meet_result.not_in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
+                )
             )
         ).order_by(cls.state.desc(), cls.start_time.asc()).all()
