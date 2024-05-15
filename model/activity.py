@@ -180,12 +180,12 @@ class ActivityModel(BaseModel):
                 and_(
                     cls.start_time < unfixShowDelayTime,
                     cls.boy_passport_id == passportId,
-                    cls.boy_meet_result.not_in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
+                    cls.boy_meet_result.notin_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
                 ),
                 and_(
                     cls.start_time < unfixShowDelayTime,
                     cls.girl_passport_id == passportId,
-                    cls.girl_meet_result.not_in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
+                    cls.girl_meet_result.notin_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
                 )
             )
         ).order_by(cls.state.desc(), cls.start_time.asc()).all()
