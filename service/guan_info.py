@@ -98,7 +98,7 @@ class GuanInfoService(BaseService):
                     continue
                 information = opTypeMapInformation[opType]
                 pair.append({
-                    "desc": information.desc + ":",
+                    "desc": information.desc,
                     "subDesc": information.subDesc,
                     "value": information.fullValue,
                 })
