@@ -37,9 +37,10 @@ class MyStorage(object):
     @staticmethod
     def getObjNames(passportId):
         # 获取真实头像照片cdn对象名，以及虚拟头像照片cdn对象名
-        fmt = "obj_name_secret:%s:localObjName:%s"
-        realSeed = fmt % (util.config.get("qiniu", "secret_key"), passportId)
-        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), hashlib.md5("%d" % passportId).hexdigest())
+        userInfo = UserModel.getByPassportId(passportId=passportId)
+        fmt = "obj_name_secret:%s:passport_id:%s:head_img_version:%d"
+        realSeed = fmt % (util.config.get("qiniu", "secret_key"), passportId, userInfo.head_img_version)
+        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), hashlib.md5("%d" % passportId).hexdigest(), userInfo.head_img_version)
         return "%s/%s" % ('head_img', hashlib.md5(realSeed).hexdigest()), \
                "%s/%s" % ('head_img', hashlib.md5(virtualSeed).hexdigest())
 
