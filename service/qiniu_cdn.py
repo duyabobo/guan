@@ -45,6 +45,9 @@ class MyStorage(object):
                "%s/%s" % ('head_img', hashlib.md5(virtualSeed).hexdigest())
 
     def upload(self, imgStreamData):
+        # 先修改head_img_version，因为要获取getObjNames
+        userInfo = UserModel.getByPassportId(passportId=self.passportId)
+        UserModel.updateByPassportId(passportId=self.passportId, head_img_version=userInfo.head_img_version+1)
         realObjName, virtualObjName = self.getObjNames(self.passportId)
         # 上传真实照片
         q = Qiniu()
@@ -53,6 +56,4 @@ class MyStorage(object):
         q = Qiniu()
         q.upload_stream(virtualObjName, rgb_to_sketch(imgStreamData))
         # 修改db
-        userInfo = UserModel.getByPassportId(passportId=self.passportId)
-        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES,
-                                     head_img_version=userInfo.head_img_version+1)
+        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES)
