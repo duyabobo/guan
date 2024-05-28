@@ -8,7 +8,7 @@ from email.mime.text import MIMEText  # 邮件文本
 
 subject = "工作认证"  # 邮件标题
 sender = "13366397755@163.com"  # 发送方
-password = "TSFQXWOROBDTCSCC"  # 邮箱密码
+password = "SVKSYFUAAQEKHCLP"  # 邮箱密码
 
 
 def send_email_verify(receiver, code):
