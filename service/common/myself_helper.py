@@ -4,95 +4,12 @@ from model.region import RegionModel
 from model.school import UNKNOWN_SCHOOL_ID
 from model.verify import VerifyModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
+from service.common.match import OP_FUNC_LIST
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.school_helper import SchoolHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
-
-INFORMATION_PAIR_LIST_DICT = {
-    MODEL_MAIL_TYPE_UNKNOWN: [  # 活动详情页，邀请人信息展示顺序
-        [OP_TYPE_VERIFY],
-        [OP_TYPE_SEX],
-        [OP_TYPE_BIRTH_YEAR],
-        [OP_TYPE_HEIGHT],
-        [OP_TYPE_WEIGHT],
-        [OP_TYPE_EDUCATION_LEVEL],
-        [OP_TYPE_MONTH_PAY],
-        [OP_TYPE_MARTIAL_STATUS],
-        [OP_TYPE_HOME_REGION],
-        [OP_TYPE_STUDY_REGION],
-        [OP_TYPE_EDUCATION_MULTI],
-    ],
-    MODEL_MAIL_TYPE_SCHOOL: [  # 活动详情页，邀请人信息展示顺序
-        [OP_TYPE_VERIFY],
-        [OP_TYPE_SEX],
-        [OP_TYPE_BIRTH_YEAR],
-        [OP_TYPE_HEIGHT],
-        [OP_TYPE_WEIGHT],
-        [OP_TYPE_EDUCATION_LEVEL],
-        [OP_TYPE_MARTIAL_STATUS],
-        [OP_TYPE_HOME_REGION],
-        [OP_TYPE_STUDY_REGION],
-        [OP_TYPE_EDUCATION_MULTI],
-    ],
-    MODEL_MAIL_TYPE_WORK: [  # 活动详情页，邀请人信息展示顺序
-        [OP_TYPE_VERIFY],
-        [OP_TYPE_SEX],
-        [OP_TYPE_BIRTH_YEAR],
-        [OP_TYPE_HEIGHT],
-        [OP_TYPE_WEIGHT],
-        [OP_TYPE_EDUCATION_LEVEL],
-        [OP_TYPE_MONTH_PAY],
-        [OP_TYPE_MARTIAL_STATUS],
-        [OP_TYPE_HOME_REGION],
-        [OP_TYPE_STUDY_REGION],
-        [OP_TYPE_EDUCATION_MULTI],
-    ],
-}
-
-
-OP_FUNCS_DICT = {   # 不同类型的用户，需要维护不通的信息
-    MODEL_MAIL_TYPE_UNKNOWN: [
-        OP_TYPE_VERIFY,
-        OP_TYPE_SEX,
-        OP_TYPE_BIRTH_YEAR,
-        OP_TYPE_HEIGHT,
-        OP_TYPE_WEIGHT,
-        OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_MONTH_PAY,
-        OP_TYPE_HOME_REGION,
-        OP_TYPE_MARTIAL_STATUS,
-    ],
-    MODEL_MAIL_TYPE_SCHOOL: [
-        OP_TYPE_VERIFY,
-        OP_TYPE_SEX,
-        OP_TYPE_BIRTH_YEAR,
-        OP_TYPE_HEIGHT,
-        OP_TYPE_WEIGHT,
-        OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_STUDY_REGION,
-        OP_TYPE_STUDY_SCHOOL,
-        OP_TYPE_STUDY_FROM_YEAR,
-        OP_TYPE_EDUCATION_MULTI,
-        OP_TYPE_HOME_REGION,
-        OP_TYPE_MARTIAL_STATUS,
-    ],
-    MODEL_MAIL_TYPE_WORK: [
-        OP_TYPE_VERIFY,
-        OP_TYPE_SEX,
-        OP_TYPE_BIRTH_YEAR,
-        OP_TYPE_HEIGHT,
-        OP_TYPE_WEIGHT,
-        OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_EDUCATION_MULTI,
-        OP_TYPE_MONTH_PAY,
-        OP_TYPE_WORK_REGION,
-        OP_TYPE_WORK_MULTI,
-        OP_TYPE_HOME_REGION,
-        OP_TYPE_MARTIAL_STATUS,
-    ]
-}
 
 
 class UserHelper(object):
@@ -100,20 +17,16 @@ class UserHelper(object):
     def __init__(self, user):
         self.user = user
 
-    @lazy_property
-    def verify_record(self):
-        return VerifyModel.getByPassportId(self.user.passport_id)
-
     def getInformationList(self, checkDynamicData):
         informationList = []
-        for op_func in OP_FUNCS_DICT.get(self.verify_record.mail_type, []):
+        for op_func in OP_FUNC_LIST:
             info = selectorFactory(op_func, self.user, checkDynamicData)
             if info:
                 informationList.append(info)
         return informationList
 
     def getInformationPariList(self):
-        return INFORMATION_PAIR_LIST_DICT.get(self.verify_record.mail_type, [])
+        return [[f] for f in OP_FUNC_LIST if f != OP_TYPE_NONE]
 
     def getUpdateParams(self, opType, value, column=None):
         userUpdateParams = {}

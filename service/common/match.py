@@ -2,7 +2,26 @@
 # -*- coding: utf-8 -*-
 from model.requirement import UNREACHABLE_REQUIREMENT
 from util.const.base import ALL_STR
-from util.const.match import MODEL_MAIL_TYPE_UNKNOWN
+from util.const.match import *
+
+OP_FUNC_LIST = [
+    OP_TYPE_SEX,
+    OP_TYPE_BIRTH_YEAR,
+    OP_TYPE_HEIGHT,
+    OP_TYPE_WEIGHT,
+    OP_TYPE_MARTIAL_STATUS,
+    OP_TYPE_HOME_REGION,
+    OP_TYPE_NONE,
+    OP_TYPE_EDUCATION_LEVEL,
+    OP_TYPE_STUDY_REGION,
+    OP_TYPE_STUDY_SCHOOL,
+    OP_TYPE_STUDY_FROM_YEAR,
+    OP_TYPE_EDUCATION_MULTI,
+    OP_TYPE_NONE,
+    OP_TYPE_MONTH_PAY,
+    OP_TYPE_WORK_REGION,
+    OP_TYPE_WORK_MULTI,
+]
 
 
 class MatchHelper(object):

@@ -18,6 +18,7 @@ MODEL_ACTIVITY_STATE_INVITE_SUCCESS = 100
 MODEL_MAIL_VERIFY_STATUS_YES = 1
 MODEL_MAIL_VERIFY_STATUS_NO = 0
 # OP_TYPE_ENUMERATE  如果更改，需要同步小程序对应枚举。新增枚举类型，就是在这里增加，然后项目里其他用到枚举的地方都增加支持。最后小程序里对应增加同名的js方法。
+OP_TYPE_NONE = ''  # 这里用来分割不同的选项维度
 OP_TYPE_VERIFY = 'updateVerify'
 OP_TYPE_SEX = 'updateSex'
 OP_TYPE_BIRTH_YEAR = 'updateBirthYear'

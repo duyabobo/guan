@@ -6,53 +6,12 @@ from model.school import UNKNOWN_SCHOOL_ID
 from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
+from service.common.match import OP_FUNC_LIST
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.school_helper import SchoolHelper
 from service.common.selector import selectorFactory
 from util.class_helper import lazy_property
 from util.const.match import *
-
-OP_FUNCS_DICT = {
-    MODEL_VERIFY_TYPE_NO_NEED_VERIFY: [
-        OP_TYPE_VERIFY,
-        OP_TYPE_SEX,
-        OP_BIRTH_YEAR_PERIOD,
-        OP_TYPE_HEIGHT_PERIOD,
-        OP_TYPE_WEIGHT_PERIOD,
-        OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_MONTH_PAY_PERIOD,
-        OP_TYPE_HOME_REGION_PERIOD,
-        OP_TYPE_MARTIAL_STATUS_PERIOD,
-    ],
-    MODEL_VERIFY_TYPE_SCHOOL: [
-        OP_TYPE_VERIFY,
-        OP_TYPE_SEX,
-        OP_BIRTH_YEAR_PERIOD,
-        OP_TYPE_HEIGHT_PERIOD,
-        OP_TYPE_WEIGHT_PERIOD,
-        OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_STUDY_REGION_PERIOD,
-        OP_TYPE_STUDY_SCHOOL,
-        OP_TYPE_STUDY_FROM_YEAR_PERIOD,
-        OP_TYPE_EDUCATION_MULTI,
-        OP_TYPE_HOME_REGION_PERIOD,
-        OP_TYPE_MARTIAL_STATUS_PERIOD,
-    ],
-    MODEL_VERIFY_TYPE_WORK: [
-        OP_TYPE_VERIFY,
-        OP_TYPE_SEX,
-        OP_BIRTH_YEAR_PERIOD,
-        OP_TYPE_HEIGHT_PERIOD,
-        OP_TYPE_WEIGHT_PERIOD,
-        OP_TYPE_EDUCATION_LEVEL,
-        OP_TYPE_EDUCATION_MULTI,
-        OP_TYPE_MONTH_PAY_PERIOD,
-        OP_TYPE_WORK_REGION_PERIOD,
-        OP_TYPE_WORK_MULTI,
-        OP_TYPE_HOME_REGION_PERIOD,
-        OP_TYPE_MARTIAL_STATUS_PERIOD,
-    ]
-}
 
 
 class RequirementHelper(object):
@@ -66,7 +25,7 @@ class RequirementHelper(object):
         
     def getRequirementList(self, checkDynamicData):
         requirementList = []
-        for op_func in OP_FUNCS_DICT.get(self.requirement.verify_type, []):
+        for op_func in OP_FUNC_LIST:
             requirement = selectorFactory(op_func, self.requirement, checkDynamicData)
             if requirement:
                 requirementList.append(requirement)
