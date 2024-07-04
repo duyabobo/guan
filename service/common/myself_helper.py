@@ -3,11 +3,30 @@
 from model.region import RegionModel
 from model.school import UNKNOWN_SCHOOL_ID
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
-from service.common.match import OP_FUNC_LIST
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.school_helper import SchoolHelper
 from service.common.selector import selectorFactory
 from util.const.match import *
+
+
+OP_FUNC_LIST = [
+    OP_TYPE_SEX,
+    OP_TYPE_BIRTH_YEAR,
+    OP_TYPE_HEIGHT,
+    OP_TYPE_WEIGHT,
+    OP_TYPE_MARTIAL_STATUS,
+    OP_TYPE_HOME_REGION,
+    OP_TYPE_NONE,
+    OP_TYPE_EDUCATION_LEVEL,
+    OP_TYPE_STUDY_REGION,
+    OP_TYPE_STUDY_SCHOOL,
+    OP_TYPE_STUDY_FROM_YEAR,
+    OP_TYPE_EDUCATION_MULTI,
+    OP_TYPE_NONE,
+    OP_TYPE_MONTH_PAY,
+    OP_TYPE_WORK_REGION,
+    OP_TYPE_WORK_MULTI,
+]
 
 
 class UserHelper(object):
@@ -30,10 +49,7 @@ class UserHelper(object):
         userUpdateParams = {}
         requirementUpdateParams = {}
         # 单项选择器
-        if opType == OP_TYPE_VERIFY and value != MODEL_MAIL_TYPE_UNKNOWN:
-            userUpdateParams['verify_type'] = value
-            requirementUpdateParams['verify_type'] = value
-        elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
+        if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             userUpdateParams['sex'] = value
             if self.user.sex == MODEL_SEX_UNKNOWN_INDEX:  # 首次更新用户信息- sex。下同
                 if value == MODEL_SEX_MALE_INDEX:

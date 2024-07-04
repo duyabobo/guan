@@ -9,7 +9,7 @@ from service import BaseService
 from util.class_helper import lazy_property
 from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS_PERIOD, \
     DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_STATUS_NO, MODEL_MAIL_TYPE_UNKNOWN
-from util.const.match import OP_TYPE_SEX, DEFAULT_SEX_INDEX, OP_TYPE_VERIFY
+from util.const.match import OP_TYPE_SEX, DEFAULT_SEX_INDEX
 from util.const.response import RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
     RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_EDUCATION_LEVEL, RESP_NEED_FILL_MONEY_PAY
 from util.const.response import RESP_SEX_CANOT_EDIT, RESP_MARTIAL_STATUS_CANOT_EDIT
@@ -112,15 +112,11 @@ class UserInfoService(BaseService):
         # 认证这里要pop掉，使用workVerify单独去页面展示
         informationList = []
         for i in _informationList:
-            if i.bindChange == OP_TYPE_VERIFY:
-                continue
             informationList.append(i)
         columnChangeTypeIndexMap = {v.bindColumnChange: i for i, v in enumerate(informationList)}
         return {
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
-            "workVerify": self.getVerify(),
-            "obtainWorkEmailPlaceHolder": "输入您的大学邮箱或工作邮箱",
             "informationResult": "%s人完善个人信息" % self.infoFinishCnt,
         }
 
