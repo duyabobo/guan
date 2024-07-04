@@ -1,20 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
-class C(object):
-    def __enter__(self):
-        print '__enter__'
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print '__exit__'
-
-    def enter(self):
-        print 'enter'
-
-    def exit(self):
-        print 'exit'
-
+import random
 
 if __name__ == '__main__':
-    with C():
-        print 'with'
+    a = [[str(random.randint(70,90)) for j in range(5)] for i in range(30)]
+    b = ['\t'.join(i) for i in a]
+    c = '\n'.join(b)
+    with open('/Users/edy/Desktop/x.txt', 'wb') as f:
+        f.write(c)
