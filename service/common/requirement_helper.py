@@ -3,14 +3,12 @@
 from model.education import EducationModel
 from model.region import RegionModel
 from model.school import UNKNOWN_SCHOOL_ID
-from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.match import OP_FUNC_LIST
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.school_helper import SchoolHelper
 from service.common.selector import selectorFactory
-from util.class_helper import lazy_property
 from util.const.match import *
 
 
@@ -19,10 +17,6 @@ class RequirementHelper(object):
     def __init__(self, requirement):
         self.requirement = requirement
 
-    @lazy_property
-    def verify_record(self):
-        return VerifyModel.getByPassportId(self.requirement.passport_id)
-        
     def getRequirementList(self, checkDynamicData):
         requirementList = []
         for op_func in OP_FUNC_LIST:

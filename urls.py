@@ -6,7 +6,7 @@ from handler import example
 from handler.miniprogram import guan_info, guanguan, mine, about, secret, subscribe, contact, send_msg
 from handler.pc import index
 from handler.user import login, myself, requirement
-from handler.verify import email_verify, phone_verify
+from handler.verify import phone_verify
 
 handlers = [
     (r'/$', example.ExampleHandler),
@@ -25,7 +25,6 @@ handlers = [
     (r'/guan_info$', guan_info.GuanInfoHandler),
     (r'/meet_result$', guan_info.MeetResultHandler),
     (r'/phone_verify$', phone_verify.PhoneVerifyHandler),
-    (r'/email_verify$', email_verify.EmailVerifyHandler),
     (r'/subscribe_cb$', subscribe.SubscribeCBHandler),
     (r'/send_subscribe_msg$', subscribe.SendMsgHandler)
 ]

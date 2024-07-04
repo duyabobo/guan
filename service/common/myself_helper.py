@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 from model.region import RegionModel
 from model.school import UNKNOWN_SCHOOL_ID
-from model.verify import VerifyModel
 from ral.multi_picker import setDataIdAfterColumnChange, delDataIdAfterConfirm
 from service.common.match import OP_FUNC_LIST
 from service.common.multi_picker_helper import MultiPickerHelper
 from service.common.school_helper import SchoolHelper
 from service.common.selector import selectorFactory
-from util.class_helper import lazy_property
 from util.const.match import *
 
 

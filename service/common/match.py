@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from model.requirement import UNREACHABLE_REQUIREMENT
-from util.const.base import ALL_STR
 from util.const.match import *
 
 OP_FUNC_LIST = [

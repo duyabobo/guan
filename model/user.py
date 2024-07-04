@@ -10,7 +10,6 @@ from model.education import EducationModel
 from model.region import RegionModel
 from model.requirement import RequirementModel
 from model.user_change_record import UserChangeRecordModel
-from model.verify import VerifyModel
 from model.work import WorkModel
 from ral.cache import checkCache, deleteCache
 from ral.user import finishCntKey
