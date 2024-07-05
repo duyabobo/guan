@@ -49,7 +49,10 @@ class UserHelper(object):
         userUpdateParams = {}
         requirementUpdateParams = {}
         # 单项选择器
-        if opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
+        if opType == OP_TYPE_VERIFY and value != MODEL_MAIL_TYPE_UNKNOWN:
+            userUpdateParams['verify_type'] = value
+            requirementUpdateParams['verify_type'] = value
+        elif opType == OP_TYPE_SEX and value != MODEL_SEX_UNKNOWN_INDEX:
             userUpdateParams['sex'] = value
             if self.user.sex == MODEL_SEX_UNKNOWN_INDEX:  # 首次更新用户信息- sex。下同
                 if value == MODEL_SEX_MALE_INDEX:

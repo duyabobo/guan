@@ -4,6 +4,7 @@ from model.passport import PassportModel
 from model.requirement import RequirementModel
 from model.share import ShareModel
 from model.user import UserModel
+from model.verify import VerifyModel
 from ral.passport import putSession
 from service import BaseService
 from util.encode import generate_access_token
@@ -19,6 +20,7 @@ class LoginService(BaseService):
             UserModel.addByPassportId(passport.id)
             RequirementModel.addByPassportId(passport.id)
             UserModel.getMatchCnt(passportId=passport.id, forceRefreshCache=True)
+            VerifyModel.addByPassportId(passport.id)
             # shareOpenid 的生命周期是：
             # 1, 分享者分享首页时带上当前用户的openid（为啥不是passportId呢？其实也行，但是客户端有token，就用不到passportId作为参数了）作为shareOpenid
             # 2, 领取者打开首页会在小程序本地保存这个shareOpenid

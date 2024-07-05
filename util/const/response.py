@@ -24,6 +24,7 @@ RESP_HAS_EMAIL_VERIFY_RECENTLY = {'code': 1101, 'errMsg': '您半年内已经工
 RESP_HAS_EMAIL_VERIFY_FAILED = {'code': 1102, 'errMsg': '验证码错误，请重新输入'}
 RESP_HAS_EMAIL_IS_NOT_COMPANY = {'code': 1103, 'errMsg': '贵公司尚未开放认证，请联系客服'}
 RESP_EMAIL_IS_NOT_VALID = {'code': 1104, 'errMsg': '请输入正确的邮箱'}
+RESP_EMAIL_IS_NOT_SCHOOL = {'code': 1105, 'errMsg': '暂时只支持大学学生邮箱'}
 RESP_JOIN_ACTIVITY_FAILED = {'code': 1201, 'errMsg': '本次见面已被别人预约，请返回重新选择'}
 RESP_HAS_ONGOING_ACTIVITY = {'code': 1202, 'errMsg': '您已经有满意的发展对象，不能参与别的见面'}
 RESP_HAS_TIME_CONFLICT = {'code': 1203, 'errMsg': '您有其他见面和本次时间冲突，请返回重新选择'}

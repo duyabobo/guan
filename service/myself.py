@@ -109,7 +109,6 @@ class UserInfoService(BaseService):
     @checkCache("UserInfoService:{passportId}")
     def getMyselfInfo(self, checkDynamicData=False):
         _informationList = self.userHelper.getInformationList(checkDynamicData)
-        # 认证这里要pop掉，使用workVerify单独去页面展示
         informationList = []
         for i in _informationList:
             informationList.append(i)
@@ -118,6 +117,8 @@ class UserInfoService(BaseService):
             "informationList": informationList,
             "columnChangeTypeIndexMap": columnChangeTypeIndexMap,  # 给informationList的每个元素一个对应序号
             "informationResult": "%s人完善个人信息" % self.infoFinishCnt,
+            "workVerify": self.getVerify(),  # 使用workVerify单独去控制认证相关数据
+            "obtainWorkEmailPlaceHolder": "输入您的大学邮箱",  # 后期再支持工作邮箱
         }
 
     @deleteCache(["UserInfoService:{passportId}"])
