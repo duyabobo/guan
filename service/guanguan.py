@@ -56,6 +56,7 @@ class GuanguanService(BaseService):
     @timecost
     @checkCache("GuanguanService:{longitude}:{latitude}:{limit}")
     def getAddressIds(self, longitude, latitude, limit):
+        # todo 其实可以根据redis的Geospatial类型存储和处理这些位置数据
         addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查
         addressIdMapDistance = {
             a.id: (a.longitude - longitude) ** 2 + (a.latitude - latitude) ** 2
