@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
-import requests
-import chardet
-from bs4 import BeautifulSoup
-import sys
 import codecs
+import sys
+
+import chardet
+import requests
+from bs4 import BeautifulSoup
+
+from model.movie.movie_info import MovieInfoModel
 
 # 设置标准输出编码为 UTF-8
 reload(sys)
@@ -37,7 +40,7 @@ multi_line_mapping = {
     u'◎导　　演': 'director',
     u'◎主　　演': 'cast',
     u'◎简　　介': 'synopsis',
-    u'◎影片截图': 'screenshot',  # 如果有需要，添加一个截图字段
+    # u'◎影片截图': 'screenshot',  # 如果有需要，添加一个截图字段
 }
 
 
@@ -71,12 +74,12 @@ if __name__ == '__main__':
                 pre_len = 0
                 for k in one_line_mapping.keys():
                     if line.startswith(k):
-                        current_key = k[1:]
+                        current_key = one_line_mapping[k]
                         pre_len = len(k)
                         break
                 for k in multi_line_mapping.keys():
                     if line.startswith(k):
-                        current_key = k[1:]
+                        current_key = multi_line_mapping[k]
                         pre_len = len(k)
                         break
 
@@ -90,12 +93,15 @@ if __name__ == '__main__':
                         movie_info[current_key].append(value)
 
             # 打印解析结果
+            _movie_info = {}
             for key, value in movie_info.items():
                 if isinstance(value, list):
                     value = '\n'.join(value)
+                _movie_info[key] = value
                 print(u'{}: {}'.format(key, value))  # 使用 Unicode 输出
 
-
+            # 保存到数据库
+            MovieInfoModel.create_movie(**_movie_info)
         else:
             print(u'没有找到包含信息的 div')
 

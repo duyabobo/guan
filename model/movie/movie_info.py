@@ -3,6 +3,7 @@
 from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, func
 
 from model import BaseModel
+from util.ctx import getDbSession
 
 
 class MovieInfoModel(BaseModel):
@@ -31,38 +32,38 @@ class MovieInfoModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now(), comment='创建时间')  # 创建时间
 
     @classmethod
-    def create_movie(cls, session, **kwargs):
+    def create_movie(cls, **kwargs):
         """插入新电影信息"""
         new_movie = cls(**kwargs)
-        session.add(new_movie)
-        session.commit()
+        getDbSession().add(new_movie)
+        getDbSession().flush()
         return new_movie
 
     @classmethod
-    def get_movie_by_id(cls, session, movie_id):
+    def get_movie_by_id(cls, movie_id):
         """根据电影ID查询电影信息"""
-        return session.query(cls).filter_by(id=movie_id).first()
+        return getDbSession().query(cls).filter_by(id=movie_id).first()
 
     @classmethod
-    def get_all_movies(cls, session):
+    def get_all_movies(cls):
         """查询所有电影信息"""
-        return session.query(cls).all()
+        return getDbSession().query(cls).all()
 
     @classmethod
-    def update_movie(cls, session, movie_id, **kwargs):
+    def update_movie(cls, movie_id, **kwargs):
         """根据电影ID更新电影信息"""
-        movie = cls.get_movie_by_id(session, movie_id)
+        movie = cls.get_movie_by_id(movie_id)
         if movie:
             for key, value in kwargs.items():
                 setattr(movie, key, value)
-            session.commit()
+            getDbSession().commit()
         return movie
 
     @classmethod
-    def delete_movie(cls, session, movie_id):
+    def delete_movie(cls, movie_id):
         """根据电影ID删除电影信息"""
-        movie = cls.get_movie_by_id(session, movie_id)
+        movie = cls.get_movie_by_id(movie_id)
         if movie:
-            session.delete(movie)
-            session.commit()
+            getDbSession().delete(movie)
+            getDbSession().commit()
         return movie
