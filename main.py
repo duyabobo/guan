@@ -7,31 +7,40 @@ import sys
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
+from gevent import monkey
 
 import util.config
 from urls import handlers
 from util.database import engine
+
+# tornado 支持 https，如果要使用 gevent，需要 patch_all 的时候，把 ssl 设置为 False
+monkey.patch_all(ssl=False, thread=False, socket=False)
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
 def main():
-    port = util.config.get("global", "port")
+    port = util.config.get('global', 'port')
     server = util.config.get('global', 'server')
-    login_url = util.config.get('global', 'login_url')
+    debug = util.config.get('global', 'debug')
     cookie_secret = util.config.get('global', 'cookie_secret')
 
     application = tornado.web.Application(handlers, **{
-        'debug': True if server == 'test' else False,
-        'login_url': login_url,
-        'cookie_secret': cookie_secret
+        'debug': True if debug == 'true' else False,
+        'cookie_secret': cookie_secret,
+        'template_path': 'handler/template',
+        'static_path': 'handler/static',
     })
 
     application.engine = engine
     http_server = tornado.httpserver.HTTPServer(
         application,
-    )
+        ssl_options={
+            "certfile": '/home/guan/service.pem',
+            "keyfile": '/home/guan/service.key',
+        }
+    ) if server == 'online' else tornado.httpserver.HTTPServer(application)
     http_server.listen(port)
     print ('>>>>> Starting development server at http://localhost:{}/ <<<<<'.format(port))
     tornado.ioloop.IOLoop.instance().start()

@@ -4,3 +4,5 @@ README.MD
 du.conf
 *.pyc
 .DS_Store
+*.rdb
+.qiniu_pythonsdk_hostscache.json

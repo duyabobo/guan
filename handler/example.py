@@ -4,7 +4,35 @@
 # __created_at__ = '2020/1/1'
 import time
 
-from api.basehandler import *
+from handler.basehandler import BaseHandler
+from util.monitor import superMonitor, Response
+
+
+def sleepA(n):
+    print 'in A'
+    time.sleep(n)
+    print 'end A'
+    return 'A'
+
+
+def sleepB(n):
+    print 'in B'
+    time.sleep(n)
+    print 'end B'
+    return 'B'
+
+
+def sleepC(n):
+    print 'in c'
+    time.sleep(n)
+    print 'end C'
+
+
+def sleepD(n):
+    print 'in D'
+    time.sleep(n)
+    print 'end D'
+    return 'D'
 
 
 class ExampleHandler(BaseHandler):
@@ -14,20 +42,14 @@ class ExampleHandler(BaseHandler):
     # 可以在请求这个接口的时候，后面加上不同的请求参数，就可以看到异步非阻塞效果了！！
     __model__ = ''
 
-    @run_on_executor
-    @super_monitor
+    @superMonitor
     def get(self):
         """注释, 说明这个接口是干嘛的, 以及一些注意事项, 请求和返回结果不必说明, 会单独写到 DOC 文档中的。
         """
         # 第一步, 把传参接受过来, 赋值给本地变量
-        # 第二步, 请求数据访问层(dal), 数据库操作结束后, 需要立刻调用 finish_db_operation 释放数据库连接
+        # 第二步, 请求数据访问层(dal), 数据库操作结束后, 需要立刻调用 finishDbOperation 释放数据库连接
         # 第三步, 调用 response 或者 redirect
         # 第四步, return response
         # 说明: 接口中不需要有日志抓取操作, 数据库操作要求: 一个接口只有一个 commit, 数据库操作层只需要执行 flush
-        print time.time()
-        para_name = self.get_request_parameter('para_name')  # 接受参数，如果必传就不给出默认值
-        print para_name
-        time.sleep(10)
-        response = {'msg': 'abc'}
-        self.response(response)
-        return response
+        response = {'msg': 'abc', 'icp': '京ICP备20005743号-1'}
+        return self.response(response)

@@ -1,0 +1,1 @@
+alter table address add index idx_longitude_latitude (`longitude`, `latitude`);

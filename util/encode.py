@@ -46,12 +46,18 @@ def jwt_decode(jwt_str, key):
 
 def generate_access_token(login_user_id):
     """
-    md5 生成 access_token
+    md5 生成 accessToken
     :param login_user_id:
     :return:
     """
     timestamp = str(time.time())
     return hashlib.md5(timestamp+str(login_user_id)).hexdigest()
+
+
+def generate_secret(accessToken):
+    """"""
+    timestamp = str(time.time())
+    return hashlib.md5(timestamp + str(accessToken)).hexdigest()
 
 
 def generate_encrypted_password(password):

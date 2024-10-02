@@ -1,0 +1,1 @@
+alter table user add column `verify_type` tinyint unsigned NOT NULL DEFAULT '0' COMMENT '认证类型：MODEL_VERIFY_TYPE' after sex;
