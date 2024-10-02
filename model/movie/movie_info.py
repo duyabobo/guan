@@ -13,6 +13,7 @@ class MovieInfoModel(BaseModel):
     id = Column(Integer, primary_key=True)  # 自增
     title_translation = Column(String(255), default='', nullable=False, comment='译名')
     title_original = Column(String(255), default='', nullable=False, comment='片名')
+    head_img = Column(String(512), default='', nullable=False, comment='海报')
     year = Column(String(50), default='', nullable=False, comment='年代')
     country = Column(String(255), default='', nullable=False, comment='产地')
     genre = Column(String(50), default='', nullable=False, comment='类别')
@@ -34,9 +35,13 @@ class MovieInfoModel(BaseModel):
     @classmethod
     def create_movie(cls, **kwargs):
         """插入新电影信息"""
+        session = getDbSession()
         new_movie = cls(**kwargs)
-        getDbSession().add(new_movie)
-        getDbSession().flush()
+        session.add(new_movie)
+        try:
+            session.commit()
+        except:
+            session.rollback()
         return new_movie
 
     @classmethod
@@ -63,7 +68,8 @@ class MovieInfoModel(BaseModel):
     def delete_movie(cls, movie_id):
         """根据电影ID删除电影信息"""
         movie = cls.get_movie_by_id(movie_id)
+        session = getDbSession()
         if movie:
-            getDbSession().delete(movie)
-            getDbSession().commit()
+            session.delete(movie)
+            session.commit()
         return movie

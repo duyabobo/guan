@@ -13,9 +13,6 @@ from model.movie.movie_info import MovieInfoModel
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
-# 目标URL
-url = 'http://www.dytt89.com/i/112423.html'
-
 # 定义键
 # 一行数据的键与 movie_info 列的对应关系
 one_line_mapping = {
@@ -44,12 +41,12 @@ multi_line_mapping = {
 }
 
 
-if __name__ == '__main__':
-    # 发送HTTP GET请求
+def get_one_movie(movie_id):
+    url = 'http://www.dytt89.com/i/%d.html' % movie_id
     response = requests.get(url)
 
     # 使用chardet检测网页编码
-    detected_encoding = chardet.detect(response.content)['encoding']
+    detected_encoding = "GB2312" # chardet.detect(response.content)['encoding']
     # print(u'检测到的编码:', detected_encoding)
 
     # 根据检测结果设置编码
@@ -83,27 +80,41 @@ if __name__ == '__main__':
                         pre_len = len(k)
                         break
 
+                value = line[pre_len:].strip()
+                if value.startswith(u'【下载地址】'):
+                    break
                 if current_key:
-                    value = line[pre_len:].strip()
                     if current_key in one_line_mapping:
                         movie_info[current_key] = value
-                    else:
+                    elif not value.startswith(u'◎'):
                         if current_key not in movie_info:
                             movie_info[current_key] = []
                         movie_info[current_key].append(value)
 
             # 打印解析结果
-            _movie_info = {}
+            _movie_info = {'id': movie_id, 'head_img': info_div.find('img')['src'], 'create_time': soup.find('span', class_='updatetime').text[5:]}
             for key, value in movie_info.items():
                 if isinstance(value, list):
-                    value = '\n'.join(value)
+                    value = '\n'.join(value).strip("\n")
                 _movie_info[key] = value
                 print(u'{}: {}'.format(key, value))  # 使用 Unicode 输出
 
             # 保存到数据库
-            MovieInfoModel.create_movie(**_movie_info)
+            if MovieInfoModel.get_movie_by_id(movie_id):
+                MovieInfoModel.update_movie(movie_id, **_movie_info)
+            else:
+                MovieInfoModel.create_movie(**_movie_info)
         else:
             print(u'没有找到包含信息的 div')
 
     else:
         print(u'请求失败，状态码:', response.status_code)
+
+
+if __name__ == '__main__':
+    # 发送HTTP GET请求
+    for i in range(100000, 120000):
+        try:
+            get_one_movie(i)
+        except Exception as e:
+            print('err: %s' % e)
