@@ -14,27 +14,32 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 url = 'http://www.dytt89.com/i/112423.html'
 
 # 定义键
-one_line_key = {
-    u'◎译　　名': 1,
-    u'◎片　　名': 1,
-    u'◎年　　代': 1,
-    u'◎产　　地': 1,
-    u'◎类　　别': 1,
-    u'◎语　　言': 1,
-    u'◎上映日期': 1,
-    u'◎豆瓣评分': 1,
-    u'◎IMDb评分': 1,
-    u'◎文件格式': 1,
-    u'◎文件大小': 1,
-    u'◎片　　长': 1,
+# 一行数据的键与 movie_info 列的对应关系
+one_line_mapping = {
+    u'◎译　　名': 'title_translation',
+    u'◎片　　名': 'title_original',
+    u'◎年　　代': 'year',
+    u'◎产　　地': 'country',
+    u'◎类　　别': 'genre',
+    u'◎语　　言': 'language',
+    u'◎上映日期': 'release_date',
+    u'◎豆瓣评分': 'douban_rating',
+    u'◎IMDb评分': 'imdb_rating',
+    u'◎文件格式': 'file_format',
+    u'◎文件大小': 'file_size',
+    u'◎片　　长': 'duration',
+    u'◎字　　幕': 'subtitle_type',
+    u'◎视频尺寸': 'video_size',
 }
 
-multi_line_key = {
-    u'◎导　　演': 1,
-    u'◎主　　演': 1,
-    u'◎简　　介': 1,
-    u'◎影片截图': 1,
+# 多行数据的键与 movie_info 列的对应关系
+multi_line_mapping = {
+    u'◎导　　演': 'director',
+    u'◎主　　演': 'cast',
+    u'◎简　　介': 'synopsis',
+    u'◎影片截图': 'screenshot',  # 如果有需要，添加一个截图字段
 }
+
 
 if __name__ == '__main__':
     # 发送HTTP GET请求
@@ -64,12 +69,12 @@ if __name__ == '__main__':
             # 提取每一个信息项
             for line in info_div.stripped_strings:
                 pre_len = 0
-                for k in one_line_key.keys():
+                for k in one_line_mapping.keys():
                     if line.startswith(k):
                         current_key = k[1:]
                         pre_len = len(k)
                         break
-                for k in multi_line_key.keys():
+                for k in multi_line_mapping.keys():
                     if line.startswith(k):
                         current_key = k[1:]
                         pre_len = len(k)
@@ -77,7 +82,7 @@ if __name__ == '__main__':
 
                 if current_key:
                     value = line[pre_len:].strip()
-                    if current_key in one_line_key:
+                    if current_key in one_line_mapping:
                         movie_info[current_key] = value
                     else:
                         if current_key not in movie_info:
