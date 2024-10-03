@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 import os
-from ConfigParser import RawConfigParser
-
+try:
+    from ConfigParser import RawConfigParser
+except ImportError:
+    from configparser import RawConfigParser
 
 def singleton(cls):
     instances = {}
@@ -18,13 +20,13 @@ def singleton(cls):
 class Configuration:
     def __init__(self, config_file=None):
         conf_name = os.getenv('CONFNAME') or 'du'
-        default_conf = "%s.conf" % conf_name
+        default_conf = "../../%s.conf" % conf_name
         self._config_file = default_conf if not config_file else config_file
         self._load()
 
     def _load(self):
         self._config = RawConfigParser()
-        print "load config from", self._config_file
+        # print "load config from", self._config_file
         self._config.read(self._config_file)
 
     def get(self, sect, opt):
