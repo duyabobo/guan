@@ -39,29 +39,61 @@ def timestamp2date(t):
 def datetime2str(d, fmt="%Y-%m-%d %H:%M:%S"):
     return d.strftime(fmt)
 
-
 def datetime2hommization(d):
     """
     把日期转成人性化友好的字符格式：
     1. 今天就显示`今天 %H:%M:%S`
     2. 明天就显示`明天 %H:%M:%S`
     3. 后天就显示`后天 %H:%M:%S`
-    4. 其他情况
-    4.1 不跨年显示`%m-%d(几天后) %H:%M:%S`
-    4.3 其他情况`%Y-%m-%d %H:%M:%S`
+    4. 其他情况：
+        4.1 下周六，就展示 `下周六 %H:%M:%S`
+        4.2 下周日，就展示 `下周日 %H:%M:%S`
+        4.3 其他，就直接显示 `%Y-%m-%d %H:%M:%S`
     """
-    return datetime2str(d)
-    today = datetime.now().date()
-    days = (d.date() - today).days
-    if days < 0:
-        return datetime2str(d)
-    elif days == 0:
-        return "今天 %s" % (d.strftime("%H:%M:%S"))
-    elif days == 1:
-        return "明天 %s" % (d.strftime("%H:%M:%S"))
-    elif days == 2:
-        return "后天 %s" % (d.strftime("%H:%M:%S"))
-    elif d.year == today.year:  # 不跨年
-        return "%s(%d天后) %s" % (d.strftime("%m-%d"), days, d.strftime("%H:%M:%S"))
+    now = datetime.now()
+    today = now.date()
+    tomorrow = today + timedelta(days=1)
+    day_after_tomorrow = today + timedelta(days=2)
+
+    # 将日期转换为日期对象，仅保留年月日
+    input_date = d.date()
+
+    # 如果是今天
+    if input_date == today:
+        return "今天 {}".format(d.strftime('%H:%M:%S'))
+    # 如果是明天
+    elif input_date == tomorrow:
+        return "明天 {}".format(d.strftime('%H:%M:%S'))
+    # 如果是后天
+    elif input_date == day_after_tomorrow:
+        return "后天 {}".format(d.strftime('%H:%M:%S'))
     else:
-        return datetime2str(d)
+        # 获取输入日期的星期编号（周一为0，周日为6）
+        input_weekday = input_date.weekday()
+        # 获取当前日期所在周的下周六和下周日
+        next_saturday = today + timedelta(days=(5 - today.weekday() + 7) % 7 + 7)
+        next_sunday = today + timedelta(days=(6 - today.weekday() + 7) % 7 + 7)
+
+        if input_date == next_saturday:
+            return "下周六 {}".format(d.strftime('%H:%M:%S'))
+        elif input_date == next_sunday:
+            return "下周日 {}".format(d.strftime('%H:%M:%S'))
+        else:
+            # 默认情况显示完整日期时间
+            return d.strftime('%Y-%m-%d %H:%M:%S')
+
+# 测试代码
+if __name__ == "__main__":
+    now = datetime.now()
+    test_dates = [
+        now,  # 今天
+        now + timedelta(days=1),  # 明天
+        now + timedelta(days=2),  # 后天
+        now + timedelta(days=(5 - now.weekday()) % 7 + 7),  # 下周六
+        now + timedelta(days=(6 - now.weekday()) % 7 + 7),  # 下周日
+        now + timedelta(days=10),  # 随意未来日期
+    ]
+
+    for test_date in test_dates:
+        print("{}: {}".format(test_date, datetime2hommization(test_date)))
+

@@ -11,6 +11,7 @@ SECRET_PAGE = '/page/secret/secret?title=隐私条款'  # 隐私条款
 SHARE_PAGE = '/page/share/share'  # 分享
 SUGGESTION_PAGE = '/page/suggestion/suggestion'  # 客服（建议）
 GUANINFO_PAGE = '/page/guan_info/guan_info?guan_id={guan_id}'  # 活动详情页
+MYCERTIFICATION_PAGE = '/page/my_certification/my_certification?title=我的认证'  # 我的认证
 MYINFORMATION_PAGE = '/page/my_information/my_information?title=我的资料'  # 我的资料
 MYINFORMATION_PAGE_WITH_ERRMSG = '/page/my_information/my_information?title=我的资料&errMsg='  # 我的资料
 MYREQUIREMENT_PAGE = '/page/my_requirement/my_requirement?title=我的期望'  # 我的期望
