@@ -20,7 +20,7 @@ def singleton(cls):
 class Configuration:
     def __init__(self, config_file=None):
         conf_name = os.getenv('CONFNAME') or 'du'
-        default_conf = "../../%s.conf" % conf_name
+        default_conf = "./%s.conf" % conf_name
         self._config_file = default_conf if not config_file else config_file
         self._load()
 

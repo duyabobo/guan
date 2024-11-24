@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
 
 import taskingai
 
@@ -42,6 +43,9 @@ if __name__ == "__main__":
     u'◎导　　演': 'director',
     u'◎主　　演': 'cast',
     u'◎简　　介': 'synopsis',"""
+        if movie.id <= 100295:
+            continue
+        time.sleep(1)
         content = f"译名：{movie.title_translation}\n" \
                   f"片名：{movie.title_original}\n"  \
                   f"导演：{movie.director}\n" \
