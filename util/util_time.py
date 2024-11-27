@@ -77,13 +77,13 @@ def datetime2hommization(d):
         next_sunday = today + timedelta(days=(6 - today.weekday() + 7) % 7 + 7)
 
         if input_date == this_saturday:
-            return "本周六 {}".format(d.strftime('%H:%M:%S'))
+            return "{}(本周六) {}".format(d.strftime('%Y-%m-%d'), d.strftime('%H:%M:%S'))
         elif input_date == this_sunday:
-            return "本周日 {}".format(d.strftime('%H:%M:%S'))
+            return "{}(本周日) {}".format(d.strftime('%Y-%m-%d'), d.strftime('%H:%M:%S'))
         elif input_date == next_saturday:
-            return "下周六 {}".format(d.strftime('%H:%M:%S'))
+            return "{}(下周六) {}".format(d.strftime('%Y-%m-%d'), d.strftime('%H:%M:%S'))
         elif input_date == next_sunday:
-            return "下周日 {}".format(d.strftime('%H:%M:%S'))
+            return "{}(下周日) {}".format(d.strftime('%Y-%m-%d'), d.strftime('%H:%M:%S'))
         else:
             # 默认情况显示完整日期时间
             return d.strftime('%Y-%m-%d %H:%M:%S')
