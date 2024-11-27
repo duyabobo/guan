@@ -46,8 +46,10 @@ def datetime2hommization(d):
     2. 明天就显示`明天 %H:%M:%S`
     3. 后天就显示`后天 %H:%M:%S`
     4. 其他情况：
-        4.1 下周六，就展示 `下周六 %H:%M:%S`
-        4.2 下周日，就展示 `下周日 %H:%M:%S`
+        4.1 本周六，就展示 `本周六 %H:%M:%S`
+        4.2 本周日，就展示 `本周日 %H:%M:%S`
+        4.3 下周六，就展示 `下周六 %H:%M:%S`
+        4.4 下周日，就展示 `下周日 %H:%M:%S`
         4.3 其他，就直接显示 `%Y-%m-%d %H:%M:%S`
     """
     now = datetime.now()
@@ -69,12 +71,16 @@ def datetime2hommization(d):
         return "后天 {}".format(d.strftime('%H:%M:%S'))
     else:
         # 获取输入日期的星期编号（周一为0，周日为6）
-        input_weekday = input_date.weekday()
-        # 获取当前日期所在周的下周六和下周日
+        this_saturday = today + timedelta(days=(5 - today.weekday() + 7) % 7)
+        this_sunday = today + timedelta(days=(6 - today.weekday() + 7) % 7)
         next_saturday = today + timedelta(days=(5 - today.weekday() + 7) % 7 + 7)
         next_sunday = today + timedelta(days=(6 - today.weekday() + 7) % 7 + 7)
 
-        if input_date == next_saturday:
+        if input_date == this_saturday:
+            return "本周六 {}".format(d.strftime('%H:%M:%S'))
+        elif input_date == this_sunday:
+            return "本周日 {}".format(d.strftime('%H:%M:%S'))
+        elif input_date == next_saturday:
             return "下周六 {}".format(d.strftime('%H:%M:%S'))
         elif input_date == next_sunday:
             return "下周日 {}".format(d.strftime('%H:%M:%S'))
@@ -88,7 +94,7 @@ if __name__ == "__main__":
     test_dates = [
         now,  # 今天
         now + timedelta(days=1),  # 明天
-        now + timedelta(days=2),  # 后天
+        now + timedelta(days=3),  # 后天
         now + timedelta(days=(5 - now.weekday()) % 7 + 7),  # 下周六
         now + timedelta(days=(6 - now.weekday()) % 7 + 7),  # 下周日
         now + timedelta(days=10),  # 随意未来日期
