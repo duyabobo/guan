@@ -122,10 +122,10 @@ class GuanguanService(BaseService):
                 [
                     {
                         "id": UNKNOWN_NEGATIVE_ONE,
-                        "time": "YYYY-MM-DD HH:mm:SS",
+                        "time": "YYYY-MM-DD HH:mm",
                         "state": "",
                         "img": DEFAULT_ADDRESS_URL,
-                        "address": "根据地理位置进行活动推荐。",
+                        "address": "线下活动地址",
                     }
                 ]
             )
