@@ -93,6 +93,27 @@ class GuanguanService(BaseService):
             return activity.girl_passport_id or activity.boy_passport_id
         return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
 
+    def getActivityList(self, longitude, latitude, limit):
+        matchedActivityList = []
+        # 自己参与，已表达意愿为满意发展中，或者本该评论但尚未评论
+        ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
+        if ongoingActivity:  # 有发展中的
+            matchedActivityList.append(ongoingActivity)
+            return matchedActivityList
+        unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
+        if unfinishedActivities:  # 自己参与中
+            matchedActivityList.extend(unfinishedActivities)
+            return matchedActivityList
+        # 匹配的+兜底的
+        sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
+        matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
+        locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(
+            longitude, latitude, limit)  # 兜底的
+        limitMatchedActivityList = self.getLimitMatchedActivityList(
+            matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
+        matchedActivityList.extend(limitMatchedActivityList)
+        return matchedActivityList
+
     @timecost
     def getGuanguanList(self, longitude, latitude, limit):
         """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
@@ -109,25 +130,10 @@ class GuanguanService(BaseService):
                 ]
             )
 
-
         # 记录用户已经允许获取地理位置
         UserModel.changeAllowLocation(self.passportId)
+        matchedActivityList = self.getActivityList(longitude, latitude, limit)
 
-        matchedActivityList = []
-        # 自己参与，已表达意愿为满意发展中，或者本该评论但尚未评论
-        ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
-        if ongoingActivity:  # 有发展中的
-            matchedActivityList.append(ongoingActivity)
-        else:
-            # 自己参与中
-            unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
-            matchedActivityList.extend(unfinishedActivities)
-            # 匹配的+兜底的
-            sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
-            matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
-            locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit)   # 兜底的
-            limitMatchedActivityList = self.getLimitMatchedActivityList(matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
-            matchedActivityList.extend(limitMatchedActivityList)
         # 封装
         addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
         matchUserMap = self.getMatchUserByIds(list(set(self.getMatchPassportId(a) for a in matchedActivityList)))
