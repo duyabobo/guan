@@ -45,11 +45,11 @@ def datetime2hommization(d):
     1. 今天就显示`今天 %H:%M:%S`
     2. 明天就显示`明天 %H:%M:%S`
     3. 其他情况：
-        3.1 本周六，就展示 `本周六 %H:%M:%S`
-        3.2 本周日，就展示 `本周日 %H:%M:%S`
-        3.3 下周六，就展示 `下周六 %H:%M:%S`
-        3.4 下周日，就展示 `下周日 %H:%M:%S`
-        3.3 其他，就直接显示 `%Y-%m-%d %H:%M:%S`
+        3.1 本周六，就展示 `本周六 %H:%M`
+        3.2 本周日，就展示 `本周日 %H:%M`
+        3.3 下周六，就展示 `下周六 %H:%M`
+        3.4 下周日，就展示 `下周日 %H:%M`
+        3.3 其他，就直接显示 `%Y-%m-%d %H:%M`
     """
     now = datetime.now()
     today = now.date()
@@ -60,7 +60,7 @@ def datetime2hommization(d):
 
     # 如果是今天
     _d = d.strftime('%Y-%m-%d')
-    _t = d.strftime('%H:%M:%S')
+    _t = d.strftime('%H:%M')
     if input_date == today:
         return "{}(今天) {}".format(_d, _t)
     # 如果是明天
@@ -83,7 +83,7 @@ def datetime2hommization(d):
             return "{}(下周日) {}".format(_d, _t)
         else:
             # 默认情况显示完整日期时间
-            return d.strftime('%Y-%m-%d %H:%M:%S')
+            return d.strftime('%Y-%m-%d %H:%M')
 
 # 测试代码
 if __name__ == "__main__":
