@@ -47,7 +47,7 @@ class MineService(BaseService):
             ],
             [
                 MainFuncObj(4, 0, SUGGESTION_PAGE, "客服", "handleContact", needLogin=False, openType="contact"),
-                MainFuncObj(5, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share", desc="近水楼台先得月"),
+                MainFuncObj(5, 1, SHARE_PAGE, "分享", "onShareAppMessage", needLogin=False, openType="share"),
             ],
             [
                 MainFuncObj(6, 0, SECRET_PAGE, "隐私条款", "clickMine", needLogin=False),
