@@ -9,7 +9,7 @@ setuptools==40.6.3
 singledispatch==3.4.0.3
 six==1.12.0
 SQLAlchemy==1.2.15
-tornado==5.1.1
+tornado==6.5
 websocket==0.2.1
 websocket-server==0.4
 wheel==0.32.3
