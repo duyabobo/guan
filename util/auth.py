@@ -9,7 +9,7 @@ import base64
 import json
 
 import hashlib
-import urlparse
+from urllib import parse as urlparse
 
 from ral.passport import checkUnique, setFailCnt, setSuccessCnt, checkFailedCnt, checkSuccessCnt
 

@@ -1,14 +1,15 @@
 # -*- coding:utf-8 -*-
-import cv2
-import numpy as np
 
 
 def dodgeV2(image, mask):
+    import cv2
     return cv2.divide(image, 255 - mask, scale=256)
 
 
 def rgb_to_sketch(buffer_data):
-    # 手绘风处理，输入一个图片二进制流，输出手绘风图片二进制流
+    # 手绘风处理：cv2 / numpy 体积大，延迟导入，避免服务启动强依赖
+    import cv2
+    import numpy as np
     img_np_arr = np.frombuffer(buffer_data, np.uint8)
     img_rgb = cv2.imdecode(img_np_arr, cv2.IMREAD_COLOR)
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)

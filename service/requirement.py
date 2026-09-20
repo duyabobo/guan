@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.requirement_helper import RequirementHelper
+from service.common.requirement_helper import RequirementHelper
 from model.activity import ActivityModel
 from model.requirement import RequirementModel
 from model.user import UserModel

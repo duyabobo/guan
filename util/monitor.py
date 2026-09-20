@@ -6,7 +6,7 @@ import time
 from tornado import gen
 
 import util.ctx
-from log import monitor_logger
+from util.log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
 from util.obj_util import object_2_dict

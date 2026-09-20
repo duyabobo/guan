@@ -5,7 +5,6 @@
 #  Software: PyCharm
 import util.config
 from handler.basehandler import BaseHandler
-from service.wx_crypt.WXBizMsgCrypt import WXBizMsgCrypt
 from util.monitor import superMonitor, Response
 
 
@@ -20,6 +19,8 @@ class ContactHandler(BaseHandler):
     # todo 特殊的monitor
     @superMonitor
     def post(self, *args, **kwargs):
+        # WXBizMsgCrypt 依赖 pycryptodome，延迟导入，避免服务启动被卡住
+        # from service.wx_crypt.WXBizMsgCrypt import WXBizMsgCrypt
         signature = self.getRequestParameter('signature', '')
         timestamp = self.getRequestParameter('timestamp', '')
         nonce = self.getRequestParameter('nonce', '')

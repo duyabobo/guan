@@ -8,7 +8,7 @@ from tornado import gen
 from tornado.httpclient import AsyncHTTPClient
 from tornado.httpclient import HTTPRequest
 
-from log import monitor_logger
+from util.log import monitor_logger
 
 
 @gen.coroutine

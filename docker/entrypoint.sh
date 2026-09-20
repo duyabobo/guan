@@ -34,6 +34,11 @@ token=${WX_TOKEN:-}
 EncodingAESKey=${WX_ENCODING_AES_KEY:-}
 subscribe_offline_noti_tid=${WX_SUBSCRIBE_NOTI_TID:-}
 
+[llm]
+openai_api_key=${OPENAI_API_KEY:-}
+openai_api_base=${OPENAI_API_BASE:-https://api.openai.com/v1}
+openai_model=${OPENAI_MODEL:-gpt-4o-mini}
+
 [qiniu]
 access_key=${QINIU_ACCESS_KEY:-}
 secret_key=${QINIU_SECRET_KEY:-}

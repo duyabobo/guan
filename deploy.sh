@@ -102,6 +102,29 @@ cmd_logs() {
     docker-compose logs -f --tail=100 "${service}"
 }
 
+# ── 初始化数据库（DDL + Mock 数据）──────────────────────────────────────────
+cmd_init_db() {
+    log_title "初始化数据库"
+    log_info "等待 MySQL 就绪..."
+
+    # 等待 MySQL 健康（最多 60s）
+    local elapsed=0
+    until docker-compose exec mysql mysqladmin ping -h localhost -u root \
+        "-p$(grep MYSQL_ROOT_PASSWORD .env | cut -d= -f2)" --silent 2>/dev/null; do
+        sleep 2
+        elapsed=$((elapsed + 2))
+        if [[ ${elapsed} -ge 60 ]]; then
+            log_error "MySQL 启动超时，请检查: docker-compose logs mysql"
+            exit 1
+        fi
+        log_info "  等待 MySQL... (${elapsed}s)"
+    done
+
+    # 直接本地执行（MySQL 端口已暴露到宿主机，无需 app 容器就绪）
+    log_info "执行初始化脚本..."
+    python "${SCRIPT_DIR}/scripts/init_db.py"
+}
+
 # ── 查看状态 ──────────────────────────────────────────────────────────────────
 cmd_status() {
     log_title "容器状态"
@@ -148,13 +171,17 @@ main() {
         status)
             cmd_status
             ;;
+        init-db)
+            cmd_init_db
+            ;;
         *)
-            echo "用法: bash deploy.sh [start|stop|restart|logs|status]"
+            echo "用法: bash deploy.sh [start|stop|restart|logs|status|init-db]"
             echo "  start   - 构建并启动所有服务（默认）"
             echo "  stop    - 停止并移除所有容器"
             echo "  restart - 重启所有服务"
             echo "  logs    - 查看日志（默认 app，可指定服务名）"
             echo "  status  - 查看容器状态"
+            echo "  init-db - 幂等执行 DDL + 写入 Mock 测试数据"
             exit 1
             ;;
     esac

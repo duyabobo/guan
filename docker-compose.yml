@@ -36,6 +36,10 @@ services:
       - QINIU_ACCESS_KEY=${QINIU_ACCESS_KEY:-}
       - QINIU_SECRET_KEY=${QINIU_SECRET_KEY:-}
       - QINIU_BUCKET=${QINIU_BUCKET:-}
+      # OpenAI / LLM
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
     restart: unless-stopped
 
   # ── MySQL ─────────────────────────────────────────────────────────────────

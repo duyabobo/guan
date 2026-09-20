@@ -77,11 +77,15 @@ class GuanInfoService(BaseService):
 
     @property
     def address(self):
-        return self.addressRecord.name
+        if not self.addressRecord:
+            return ""
+        return self.addressRecord.name or ""
 
     @property
     def time(self):
-        return self.activityRecord.startTimeStr
+        if not self.activityRecord:
+            return ""
+        return self.activityRecord.startTimeStr or ""
 
     @property
     def progressStatus(self):

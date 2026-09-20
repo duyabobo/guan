@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.myself_helper import UserHelper
+from service.common.myself_helper import UserHelper
 from model.requirement import RequirementModel
 from model.user import UserModel
 from ral import user

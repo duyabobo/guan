@@ -6,7 +6,6 @@ import util.config
 from model.user import UserModel
 from util.const.match import MODEL_STATUS_YES
 from util.const.qiniu_img import CDN_QINIU_URL
-from util.img_util import rgb_to_sketch
 from util.qiniu_cdn import Qiniu
 
 
@@ -46,6 +45,7 @@ class MyStorage(object):
 
     def upload(self, imgStreamData):
         # 先修改head_img_version，因为要获取getObjNames
+        from util.img_util import rgb_to_sketch
         userInfo = UserModel.getByPassportId(passportId=self.passportId)
         UserModel.updateByPassportId(passportId=self.passportId, head_img_version=userInfo.head_img_version+1)
         realObjName, virtualObjName = self.getObjNames(self.passportId)
