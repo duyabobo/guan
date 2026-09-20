@@ -30,6 +30,9 @@ host=${RABBITMQ_HOST:-rabbitmq}
 [weixin]
 appid=${WX_APPID:-}
 secret=${WX_SECRET:-}
+token=${WX_TOKEN:-}
+EncodingAESKey=${WX_ENCODING_AES_KEY:-}
+subscribe_offline_noti_tid=${WX_SUBSCRIBE_NOTI_TID:-}
 
 [qiniu]
 access_key=${QINIU_ACCESS_KEY:-}
