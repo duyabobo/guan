@@ -29,8 +29,6 @@ services:
       # Redis
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      # RabbitMQ
-      - RABBITMQ_HOST=rabbitmq
       # 第三方平台（在 .env 里配置真实值）
       - WX_APPID=${WX_APPID:-}
       - WX_SECRET=${WX_SECRET:-}
