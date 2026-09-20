@@ -13,8 +13,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     volumes:
       - ./log:/app/log
     environment:
@@ -81,26 +79,8 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ── RabbitMQ ──────────────────────────────────────────────────────────────
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guan}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guan123}
-    ports:
-      - "${RABBITMQ_EXPOSE_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
-    restart: unless-stopped
 
 volumes:
   mysql_data:
   redis_data:
-  rabbitmq_data:
+  # rabbitmq_data:
