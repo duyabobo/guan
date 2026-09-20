@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
+
 from model.activity import ActivityModel
 from model.address import AddressModel
 from model.user import UserModel
@@ -8,10 +10,19 @@ from ral.cache import checkCache
 from service import BaseService
 from service.common.guan_helper import GuanHelper
 from util.class_helper import lazy_property
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX, MODEL_ACTIVITY_STATE_EMPTY, \
-    MODEL_ACTIVITY_STATE_INVITING, DEFAULT_ADDRESS_URL
+from util.const.match import (
+    MODEL_SEX_MALE_INDEX, MODEL_SEX_UNKNOWN_INDEX,
+    MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING,
+    DEFAULT_ADDRESS_URL
+)
+from util.const.progress import (
+    PROGRESS_NOT_SELECTED,
+    PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
+    calc_activity_progress
+)
 from util.time_cost import timecost
 
+logger = logging.getLogger(__name__)
 
 UNKNOWN_NEGATIVE_ONE = -1
 
@@ -26,12 +37,16 @@ class GuanguanService(BaseService):
     def userInfo(self):
         return UserModel.getByPassportId(passportId=self.passportId)
 
+    def _calcActivityProgress(self, activity):
+        """计算进展状态（委托纯函数）"""
+        return calc_activity_progress(self.passportId, activity)
+
     @timecost
     def getActivityIdsByLocation(self, longitude, latitude, limit):
-        if not longitude and not latitude:  # 没有获取地址信息
+        if not longitude and not latitude:
             addressIds = []
-        else:  # 有获取地址信息
-            addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit*10)
+        else:
+            addressIds = self.getAddressIds(longitude=round(longitude, 2), latitude=round(latitude, 2), limit=limit * 10)
         emptyActivityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, MODEL_ACTIVITY_STATE_EMPTY, limit)
         invitingActivityIds = ActivityModel.listActivityIdsByAddressIds(addressIds, MODEL_ACTIVITY_STATE_INVITING, limit)
         return set([a.id for a in emptyActivityIds]), set([a.id for a in invitingActivityIds])
@@ -39,15 +54,12 @@ class GuanguanService(BaseService):
     @timecost
     def getLimitMatchedActivityList(self, matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit):
         matchedLocationActivityIdsSet = matchedActivityIdsSet.intersection(locationMatchingActivityIdsSet)
-        if len(matchedLocationActivityIdsSet) < limit:  # 附近匹配不足
-            # 附近匹配的（高优）
+        if len(matchedLocationActivityIdsSet) < limit:
             sortedActivityIdList = list(matchedLocationActivityIdsSet)
-            # 匹配的（次高优）
             sortedActivityIdList.extend(list(matchedActivityIdsSet - set(sortedActivityIdList)))
-            # 附近的（补充）
-            if sex == MODEL_SEX_UNKNOWN_INDEX:  # 性别未定，匹配中的和空闲的活动都可以用来补充
+            if sex == MODEL_SEX_UNKNOWN_INDEX:
                 sortedActivityIdList.extend(list(locationFreeActivityIdsSet.union(locationMatchingActivityIdsSet) - set(sortedActivityIdList)))
-            else:  # 性别已定，只补充空闲的活动
+            else:
                 sortedActivityIdList.extend(list(locationFreeActivityIdsSet - set(sortedActivityIdList)))
         else:
             sortedActivityIdList = list(matchedLocationActivityIdsSet)
@@ -56,23 +68,12 @@ class GuanguanService(BaseService):
     @timecost
     @checkCache("GuanguanService:{longitude}:{latitude}:{limit}")
     def getAddressIds(self, longitude, latitude, limit):
-        # todo 其实可以根据redis的Geospatial类型存储和处理这些位置数据
-        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)  # 根据地理位置查
+        addressList = AddressModel.listByLongitudeLatitude(longitude, latitude)
         addressIdMapDistance = {
             a.id: (a.longitude - longitude) ** 2 + (a.latitude - latitude) ** 2
             for a in addressList
         }
         return [k for k, v in sorted(addressIdMapDistance.items(), key=lambda x: x[1])][:limit]
-
-    def getState(self, activity):
-        girl_pid = activity.girl_passport_id
-        boy_pid = activity.boy_passport_id
-        if not girl_pid and not boy_pid:
-            return "虚位以待"
-        elif self.passportId in [girl_pid, boy_pid]:
-            return "我的见面"
-        else:
-            return "见面邀请"
 
     @timecost
     def getAddressMapByIds(self, addressIds):
@@ -93,62 +94,71 @@ class GuanguanService(BaseService):
             return activity.girl_passport_id or activity.boy_passport_id
         return activity.girl_passport_id if self.userInfo.sex == MODEL_SEX_MALE_INDEX else activity.boy_passport_id
 
-    def getActivityList(self, longitude, latitude, limit):
-        matchedActivityList = []
-        # 自己参与，已表达意愿为满意发展中，或者本该评论但尚未评论
-        ongoingActivity = ActivityModel.getOngoingActivity(self.passportId)
-        if ongoingActivity:  # 有发展中的
-            matchedActivityList.append(ongoingActivity)
-            return matchedActivityList
-        unfinishedActivities = ActivityModel.getUnfinishedActivities(self.passportId)
-        if unfinishedActivities:  # 自己参与中
-            matchedActivityList.extend(unfinishedActivities)
-            return matchedActivityList
-        # 匹配的+兜底的
+    @timecost
+    def getCandidateActivities(self, longitude, latitude, limit):
+        """获取候选活动（用户未参与的推荐活动）"""
         sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
         matchedActivityIdsSet = getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
-        locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(
-            longitude, latitude, limit)  # 兜底的
-        limitMatchedActivityList = self.getLimitMatchedActivityList(
-            matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit)
-        matchedActivityList.extend(limitMatchedActivityList)
-        return matchedActivityList
+        locationFreeActivityIdsSet, locationMatchingActivityIdsSet = self.getActivityIdsByLocation(longitude, latitude, limit)
+        return self.getLimitMatchedActivityList(
+            matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit
+        )
 
     @timecost
     def getGuanguanList(self, longitude, latitude, limit):
-        """优先展示自己参与的，其次有邀请人的，最后没有邀请人的，不分页直接返回最多20个"""
-        if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:  # 尚未获取用户地理位置，此时返回功能介绍类数据demo
-            return (
-                [
-                    {
-                        "id": UNKNOWN_NEGATIVE_ONE,
-                        "time": "YYYY-MM-DD HH:mm",
-                        "state": "",
-                        "img": DEFAULT_ADDRESS_URL,
-                        "address": "线下活动地址",
-                    }
-                ]
-            )
+        """
+        列表排序规则（优先级从高到低）：
+        AGREE/DISAGREE（常驻）→ MET → WAIT_MEET → SELECTED → NOT_SELECTED（按地理时间综合排序）
+        """
+        if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
+            return [{
+                "id": UNKNOWN_NEGATIVE_ONE,
+                "time": "YYYY-MM-DD HH:mm",
+                "state": "",
+                "progressStatus": PROGRESS_NOT_SELECTED,
+                "progressDesc": "",
+                "img": DEFAULT_ADDRESS_URL,
+                "address": "线下活动地址",
+            }]
 
-        # 记录用户已经允许获取地理位置
         UserModel.changeAllowLocation(self.passportId)
-        matchedActivityList = self.getActivityList(longitude, latitude, limit)
 
-        # 封装
-        addressMap = self.getAddressMapByIds(list(set(a.address_id for a in matchedActivityList)))
-        matchUserMap = self.getMatchUserByIds(list(set(self.getMatchPassportId(a) for a in matchedActivityList)))
+        # 1. 用户已参与的所有活动（含各状态）
+        user_activities = ActivityModel.getUserAllActivities(self.passportId)
+        user_activities_with_progress = [(a, self._calcActivityProgress(a)) for a in user_activities]
+
+        # 2. 候选活动（用户未参与）
+        participated_ids = {a.id for a, _ in user_activities_with_progress}
+        candidate_activities = self.getCandidateActivities(longitude, latitude, limit)
+        candidate_with_progress = [
+            (a, PROGRESS_NOT_SELECTED)
+            for a in candidate_activities
+            if a.id not in participated_ids
+        ]
+
+        # 3. 合并并按进展状态权重排序
+        all_activities = user_activities_with_progress + candidate_with_progress
+        all_activities.sort(key=lambda x: PROGRESS_SORT_WEIGHT.get(x[1], 0), reverse=True)
+        all_activities = all_activities[:limit]
+
+        # 4. 批量获取地址和关联用户（避免 N+1 查询）
+        addressIds = list({a.address_id for a, _ in all_activities})
+        addressMap = self.getAddressMapByIds(addressIds)
+        matchPassportIds = list({self.getMatchPassportId(a) for a, _ in all_activities})
+        matchUserMap = self.getMatchUserByIds(matchPassportIds)
+
+        # 5. 封装返回列表
         guanguanList = []
-        for activity in matchedActivityList:
-            address = addressMap[activity.address_id]
-            matchUser = matchUserMap.get(self.getMatchPassportId(activity), None)
-            guanguanList.append(
-                {
-                    "id": activity.id,
-                    "time": activity.startTimeStr,
-                    "state": self.getState(activity),
-                    "img": GuanHelper.getActivityImg(activity, address, matchUser, self.userInfo, True),
-                    "address": address.name,
-                }
-            )
+        for activity, progress in all_activities:
+            address = addressMap.get(activity.address_id)
+            matchUser = matchUserMap.get(self.getMatchPassportId(activity))
+            guanguanList.append({
+                "id": activity.id,
+                "time": activity.startTimeStr,
+                "progressStatus": progress,
+                "progressDesc": PROGRESS_DESC.get(progress, ""),
+                "img": GuanHelper.getActivityImg(activity, address, matchUser, self.userInfo, True),
+                "address": address.name if address else "",
+            })
 
         return guanguanList

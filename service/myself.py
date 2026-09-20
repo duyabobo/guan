@@ -7,11 +7,12 @@ from ral import user
 from ral.cache import checkCache, deleteCache
 from service import BaseService
 from util.class_helper import lazy_property
-from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, OP_TYPE_MARTIAL_STATUS_PERIOD, \
-    DEFAULT_MARTIAL_STATUS_INDEX, MODEL_MARTIAL_STATUS_UNKNOWN, MODEL_STATUS_NO, MODEL_MAIL_TYPE_UNKNOWN
+from util.const.match import MODEL_MAIL_TYPE_SCHOOL, MODEL_MAIL_TYPE_WORK, MODEL_MAIL_TYPE_UNKNOWN, MODEL_STATUS_NO
 from util.const.match import OP_TYPE_SEX, DEFAULT_SEX_INDEX
-from util.const.response import RESP_NEED_VERIFY, RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT, \
-    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_MARTIAL_STATUS, RESP_NEED_FILL_EDUCATION_LEVEL, RESP_NEED_FILL_MONEY_PAY
+from util.const.response import (
+    RESP_NEED_FILL_SEX, RESP_NEED_FILL_BIRTH_YEAR, RESP_NEED_FILL_HEIGHT,
+    RESP_NEED_FILL_WEIGHT, RESP_NEED_FILL_EDUCATION_LEVEL
+)
 from util.const.response import RESP_SEX_CANOT_EDIT, RESP_MARTIAL_STATUS_CANOT_EDIT
 
 DEFAULT_VERIFY_TYPE = "未认证"
@@ -62,10 +63,11 @@ class UserInfoService(BaseService):
             return False
 
     def userInfoNeedFilled(self):
-        # 返回细化提示信息
-        if not self.isVerified:
-            return RESP_NEED_VERIFY
-        elif not self.userInfo.sex:
+        """检查用户信息是否已完善，返回 None 表示已完善，否则返回错误 response。
+        注：认证入口已移除，不再强制校验 isVerified。"""
+        if not self.userInfo:
+            return RESP_NEED_FILL_SEX
+        if not self.userInfo.sex:
             return RESP_NEED_FILL_SEX
         elif not self.userInfo.birth_year:
             return RESP_NEED_FILL_BIRTH_YEAR
@@ -75,13 +77,6 @@ class UserInfoService(BaseService):
             return RESP_NEED_FILL_WEIGHT
         elif not self.userInfo.education_level:
             return RESP_NEED_FILL_EDUCATION_LEVEL
-        elif self.userInfo.verify_type == MODEL_MAIL_TYPE_SCHOOL:  # 学校认证
-            pass
-        elif self.userInfo.verify_type == MODEL_MAIL_TYPE_WORK:  # 工作认证
-            if not self.userInfo.month_pay:
-                return RESP_NEED_FILL_MONEY_PAY
-        elif self.userInfo.martial_status == MODEL_MARTIAL_STATUS_UNKNOWN:
-            return RESP_NEED_FILL_MARTIAL_STATUS
         else:
             return None
 

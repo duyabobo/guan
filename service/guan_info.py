@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import datetime
+import logging
 
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
@@ -13,21 +13,34 @@ from service import BaseService
 from service.common.guan_helper import GuanHelper
 from service.common.match import MatchHelper
 from service.common.myself_helper import UserHelper
+from service.common.requirement_helper import RequirementHelper
 from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const import match
-from util.const.base import GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE, \
-    MODEL_MEET_RESULT_MAP
-from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, MODEL_MEET_RESULT_CHOICE_LIST, \
-    MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
-from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG, \
-    SUBSCRIBE_ACTIVITY_START_NOTI_TID
-from util.const.response import RESP_OK, RESP_JOIN_ACTIVITY_FAILED, \
-    RESP_HAS_ONGOING_ACTIVITY, \
-    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT, RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR
+from util.const.base import (
+    GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE,
+    MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE
+)
+from util.const.match import (
+    MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX,
+    MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY,
+    MODEL_ACTIVITY_STATE_INVITE_SUCCESS
+)
+from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG
+from util.const.progress import (
+    PROGRESS_DESC, calc_activity_progress, get_bottom_buttons
+)
+from util.const.response import (
+    RESP_OK, RESP_JOIN_ACTIVITY_FAILED, RESP_HAS_ONGOING_ACTIVITY,
+    RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT,
+    RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR
+)
+
+logger = logging.getLogger(__name__)
 
 
 class GuanInfoService(BaseService):
+
     def __init__(self, activityId, passport):
         self.activityId = activityId
         self.passport = passport
@@ -49,12 +62,18 @@ class GuanInfoService(BaseService):
     def oppositeUserRecord(self):
         if not self.userRecord:
             return None
-        elif self.userRecord.sexIndex == MODEL_SEX_MALE_INDEX:
-            passportId = self.activityRecord.girl_passport_id
-        else:
-            passportId = self.activityRecord.boy_passport_id
-
+        passportId = (
+            self.activityRecord.girl_passport_id
+            if self.userRecord.sexIndex == MODEL_SEX_MALE_INDEX
+            else self.activityRecord.boy_passport_id
+        )
         return UserModel.getByPassportId(passportId=passportId)
+
+    @lazy_property
+    def oppositeRequirementRecord(self):
+        if not self.oppositeUserRecord:
+            return None
+        return RequirementModel.getByPassportId(self.oppositeUserRecord.passport_id)
 
     @property
     def address(self):
@@ -65,30 +84,31 @@ class GuanInfoService(BaseService):
         return self.activityRecord.startTimeStr
 
     @property
+    def progressStatus(self):
+        """计算用户在当前活动中的进展状态（委托纯函数）"""
+        return calc_activity_progress(self.passportId, self.activityRecord)
+
+    @property
     def opType(self):
+        """当前活动操作类型（邀请/加入/退出）"""
         if not self.activityRecord.boy_passport_id and not self.activityRecord.girl_passport_id:
             return GUAN_INFO_OP_TYPE_INVITE
-        elif self.passportId in [self.activityRecord.girl_passport_id, self.activityRecord.boy_passport_id]:
+        if self.passportId in [self.activityRecord.girl_passport_id, self.activityRecord.boy_passport_id]:
             return GUAN_INFO_OP_TYPE_QUIT
-        else:
-            return GUAN_INFO_OP_TYPE_JOIN
+        return GUAN_INFO_OP_TYPE_JOIN
 
     @property
-    def opDesc(self):
-        return {
-            GUAN_INFO_OP_TYPE_INVITE: "发起邀请",
-            GUAN_INFO_OP_TYPE_QUIT: "取消见面",
-            GUAN_INFO_OP_TYPE_JOIN: "接受邀请",
-        }.get(self.opType, "参加")
+    def bottomButtons(self):
+        """根据进展状态返回底部按钮配置（委托纯函数）"""
+        return get_bottom_buttons(self.progressStatus, self.opType)
 
     @property
-    def oppositeDataPairs(self):
+    def oppositeInfoDataPairs(self):
+        """对方的条件（用户信息），按对列展示"""
         if not self.oppositeUserRecord:
             return []
-
-        checkDynamicData = False
         uh = UserHelper(self.oppositeUserRecord)
-        informationList = uh.getInformationList(checkDynamicData)
+        informationList = uh.getInformationList(checkDynamicData=False)
         opTypeMapInformation = {i.bindChange: i for i in informationList}
         pairs = []
         for opTypes in uh.getInformationPariList():
@@ -96,60 +116,55 @@ class GuanInfoService(BaseService):
             for opType in opTypes:
                 if opType not in opTypeMapInformation:
                     continue
-                information = opTypeMapInformation[opType]
-                pair.append({
-                    "desc": information.desc,
-                    "subDesc": information.subDesc,
-                    "value": information.fullValue,
-                })
+                info = opTypeMapInformation[opType]
+                pair.append({"desc": info.desc, "subDesc": info.subDesc, "value": info.fullValue})
             pairs.append(pair)
-
         return pairs
 
+    @property
+    def oppositeRequirementDataPairs(self):
+        """对方的期望（择偶条件），按对列展示"""
+        if not self.oppositeRequirementRecord:
+            return []
+        rh = RequirementHelper(self.oppositeRequirementRecord)
+        requirementList = rh.getRequirementList(checkDynamicData=False)
+        return [[{"desc": r.desc, "subDesc": r.subDesc, "value": r.fullValue}] for r in requirementList]
+
     def updateMeetResult(self, meetResultValue):
+        """更新见面结果（含合适/不合适/结束/恢复）"""
         if self.passportId == self.activityRecord.boy_passport_id:
             ActivityModel.updateBoyMeetResult(self.activityId, meetResultValue)
         elif self.passportId == self.activityRecord.girl_passport_id:
             ActivityModel.updateGirlMeetResult(self.activityId, meetResultValue)
         else:
             return RESP_MEET_RESULT_ERR
+        logger.info("meet_result updated: activityId=%s passportId=%s value=%s",
+                    self.activityId, self.passportId, meetResultValue)
         return RESP_OK
 
-    def getMeetResult(self):
-        if self.passportId == self.activityRecord.boy_passport_id:
-            meet_result = self.activityRecord.boy_meet_result
-        elif self.passportId == self.activityRecord.girl_passport_id:
-            meet_result = self.activityRecord.girl_meet_result
-        else:
-            meet_result = 0
-        return {
-            "value": MODEL_MEET_RESULT_MAP[meet_result],
-            "selectValueIndex": meet_result,
-            "choiceList": MODEL_MEET_RESULT_CHOICE_LIST,
-        }
-    
     def getGuanInfo(self):
-        subscribeTemplateIds = [SUBSCRIBE_ACTIVITY_START_NOTI_TID]  # 尽最大可能搜集订阅消息
+        progress = self.progressStatus
         return {
             "guanId": self.activityId,
+            "progressStatus": progress,
+            "progressDesc": PROGRESS_DESC.get(progress, ""),
             "activity": {
-                "img": GuanHelper.getActivityImg(self.activityRecord, self.addressRecord, self.oppositeUserRecord, self.userRecord, False),
+                "img": GuanHelper.getActivityImg(
+                    self.activityRecord, self.addressRecord,
+                    self.oppositeUserRecord, self.userRecord, False
+                ),
                 "time": self.time,
                 "address": self.address,
             },
-            "opposite": {  # 发邀请的对象信息
-                "oppositeDataPairs": self.oppositeDataPairs,
+            "opposite": {
+                "infoDataPairs": self.oppositeInfoDataPairs,
+                "requirementDataPairs": self.oppositeRequirementDataPairs,
             },
-            "operate": {  # 操作信息
-                "opDesc": self.opDesc,
-                "opType": self.opType,
-                "isAfterMeet": int(self.activityRecord.start_time < datetime.datetime.now()),
-                "meetResultDesc": "点评内容只会被自己看到",
-                "meetResult": self.getMeetResult(),
-                "subscribeTemplateIds": subscribeTemplateIds,
-                "myRequirementPage": MYREQUIREMENT_PAGE,
+            "operate": {
+                "bottomButtons": self.bottomButtons,
+                "matchConfigPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
-                "requirementResult": "%d人将收到邀请" % UserModel.getMatchCnt(passportId=self.passportId)
+                "requirementResult": "%d人将收到邀请" % UserModel.getMatchCnt(passportId=self.passportId),
             },
         }
 
@@ -164,32 +179,30 @@ class GuanInfoService(BaseService):
         if self.opType == GUAN_INFO_OP_TYPE_INVITE:
             return None
         elif self.opType == GUAN_INFO_OP_TYPE_JOIN:
-            if self.userRecord.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:  # 加入了
+            if self.userRecord.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:
                 return UNREACHABLE_REQUIREMENT
-            if self.userRecord.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:  # 加不了
+            if self.userRecord.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:
                 return UNREACHABLE_REQUIREMENT
-            invitePid = self.activityRecord.girl_passport_id if self.userRecord.sex == MODEL_SEX_MALE_INDEX else self.activityRecord.boy_passport_id
-            if not invitePid:  # 有问题的活动
+            invitePid = (
+                self.activityRecord.girl_passport_id
+                if self.userRecord.sex == MODEL_SEX_MALE_INDEX
+                else self.activityRecord.boy_passport_id
+            )
+            if not invitePid:
                 return UNREACHABLE_REQUIREMENT
             return RequirementModel.getByPassportId(invitePid)
         elif self.opType == GUAN_INFO_OP_TYPE_QUIT:
-            if self.activityRecord.boy_passport_id != 0 and self.activityRecord.girl_passport_id != 0:  # 退前，男女都已就位
+            if self.activityRecord.boy_passport_id != 0 and self.activityRecord.girl_passport_id != 0:
                 return UNREACHABLE_REQUIREMENT
             invitePid = 0
             if self.userRecord.sex == MODEL_SEX_MALE_INDEX:
-                if self.activityRecord.boy_passport_id != 0:  # 退前
-                    invitePid = self.activityRecord.boy_passport_id
-                elif self.activityRecord.girl_passport_id != 0:  # 退后的活动，人不空
-                    invitePid = self.activityRecord.girl_passport_id
+                invitePid = self.activityRecord.boy_passport_id or self.activityRecord.girl_passport_id
             elif self.userRecord.sex == MODEL_SEX_FEMALE_INDEX:
-                if self.activityRecord.girl_passport_id != 0:  # 退前
-                    invitePid = self.activityRecord.girl_passport_id
-                elif self.activityRecord.boy_passport_id != 0:  # 退后的活动，人不空
-                    invitePid = self.activityRecord.boy_passport_id
-            if not invitePid:  # 有问题的活动
+                invitePid = self.activityRecord.girl_passport_id or self.activityRecord.boy_passport_id
+            if not invitePid:
                 return UNREACHABLE_REQUIREMENT
             return RequirementModel.getByPassportId(invitePid)
-        return UNREACHABLE_REQUIREMENT  # 有问题
+        return UNREACHABLE_REQUIREMENT
 
     def parseUpdataParams(self, opType, sexIndex):
         updateParams = {}
@@ -223,39 +236,31 @@ class GuanInfoService(BaseService):
     def timeIsConflict(self):
         return bool(ActivityModel.getConflictActivity(self.passportId, self.activityRecord.start_time))
 
-    @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)  # 加一个分布式锁
+    @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)
     def activityOprete(self, opType):
-        """对活动进行操作"""
-        # 参加前检查
+        """对活动进行操作（邀请/加入/退出）"""
         uis = UserInfoService(self.passport)
-        needFilled = uis.userInfoNeedFilled()  # 个人信息完善程度检查不通过
+        needFilled = uis.userInfoNeedFilled()
         if needFilled:
             return needFilled
         if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
             return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
-        if self.hasOngoingActivity and \
-                opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:  # 有发展中的对象，不能再次参与
+        if self.hasOngoingActivity and opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:
             return RESP_HAS_ONGOING_ACTIVITY
         requirement = self.getRequirement()
         if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.userRecord, requirement):
             return RESP_JOIN_ACTIVITY_FAILED
         if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN] and self.timeIsConflict():
             return RESP_HAS_TIME_CONFLICT
-        # todo 这个开关，前期可以不开。因为让用户帮我们拉新，是需要一定的吸引力和号召力的，前期不行。前期还得需要我们主动去推广，去营销，不得偷懒。
-        # if opType == GUAN_INFO_OP_TYPE_JOIN and not ShareModel.getAcceptCnt(self.passportId):
-        #     return RESP_NEED_INVITE_OR_MEMBER
-        # 操作执行结果入库
         updateParams, whereParams = self.parseUpdataParams(opType, uis.userInfo.sexIndex)
         ret = ActivityModel.updateById(self.activityId, *whereParams, **updateParams)
         if not ret:
             return RESP_JOIN_ACTIVITY_FAILED
         ActivityChangeRecordModel.addOne(self.activityId, self.passportId, opType)
-        # 重载一下活动信息
         self.reloadActivityRecord()
-        # 更新活动id匹配缓存
         changeByRequirement(self.activityRecord.id, requirement, self.getRequirement())
         if opType == GUAN_INFO_OP_TYPE_QUIT:
             return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
-        return RESP_OK  # todo 可以根据不同的场景，可以返回 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
+        return RESP_OK

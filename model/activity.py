@@ -150,6 +150,20 @@ class ActivityModel(BaseModel):
         return record
 
     @classmethod
+    @timecost
+    def getUserAllActivities(cls, passportId):
+        """获取用户参与的所有活动（不限状态），用于列表页全量展示"""
+        if not passportId:
+            return []
+        return getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            or_(
+                cls.boy_passport_id == passportId,
+                cls.girl_passport_id == passportId,
+            )
+        ).order_by(cls.state.desc(), cls.start_time.asc()).all()
+
+    @classmethod
     def getExpireActivityIds(cls):
         now = datetime.datetime.now()
         oneDayAgo = now - datetime.timedelta(days=1)

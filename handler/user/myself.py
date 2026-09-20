@@ -4,7 +4,6 @@ from handler.basehandler import BaseHandler
 from service.common.selector import VALUE_TYPE_DICT
 from service.myself import UserInfoService
 from util.monitor import superMonitor, Response
-from service.qiniu_cdn import MyStorage
 
 
 class MyselfHandler(BaseHandler):
@@ -33,17 +32,3 @@ class LocationStateHandler(BaseHandler):
     def get(self):
         uis = UserInfoService(self.currentPassport)
         return Response(data=uis.getLocationState())
-
-
-class HeadImgHandler(BaseHandler):
-    @superMonitor
-    def post(self, *args, **kwargs):  # 上传+更新头像
-        files = self.request.files
-        MyStorage(self.currentPassportId).upload(files['file'][0]['body'])
-        return Response()
-
-    @superMonitor
-    def put(self, *args, **kwargs):  # 使用默认头像
-        uis = UserInfoService(self.currentPassport)
-        uis.resetHeadImg()
-        return Response()
