@@ -1,40 +1,43 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-# 利用tornado的 StackContext，构造一个线程全局变量栈。
-# 主要解决每次请求都可以随时使用到同一个 dbSession 和 redisConn。
+# 利用 Python 3.7+ contextvars 构造请求级别的上下文变量
+# tornado.stack_context 在 Tornado 6.0 中已被移除，此处用 contextvars 替代，接口保持兼容。
 
-from tornado.stack_context import StackContext, _state
+from contextvars import ContextVar
 
 from util.database import mysql_offline_session
 
+# 每个请求的协程/线程拥有独立的 manager 上下文
+_manager_ctx: ContextVar = ContextVar('manager', default=None)
 
-class LocalContext(StackContext):
-    """继承自StackContext，StackContext基于线程号维护了状态对象即_state，_state里有一个内容栈。
-    根据StackContext的 __enter__ 和 __exit__ 可以维护 _state里的内容栈。
-    ：此处做出如下改动，以获取隐式随时获取 _state 里的内容栈信息。
-    ：1，使用方式改变：with 语句放到每次handler的 get/post/put/delete方法最前面。见 BaseHandler 里处理过程。
-        # with LocalContext(lamdba: dbSession):
-        #   ret = fn(*args, **kwargs)
-    ：2，功能改变：LocalContext增加一个类方法，可以直接返回（只查询非pop） _state 的内容栈。
+
+class LocalContext:
+    """模拟原 StackContext 的 with 语句接口，基于 contextvars 实现协程安全的请求上下文。
+
+    用法（与原 StackContext 完全兼容）：
+        with LocalContext(lambda: manager):
+            ret = fn(*args, **kwargs)
     """
 
-    @classmethod
-    def current_data(cls):
-        """
-        :returns: current context
-        """
-        for ctx in reversed(_state.contexts[0]):
-            if isinstance(ctx, cls) and ctx.active:
-                return ctx.contexts[0]
+    def __init__(self, context_factory):
+        self._context_factory = context_factory
+        self._token = None
+
+    def __enter__(self):
+        self._token = _manager_ctx.set(self._context_factory())
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._token is not None:
+            _manager_ctx.reset(self._token)
 
 
 def getManager():
-    return LocalContext.current_data()
+    return _manager_ctx.get()
 
 
 def getDbSession():
     manager = getManager()
     if not manager:
         return mysql_offline_session
-    else:
-        return manager.dbSession
+    return manager.dbSession

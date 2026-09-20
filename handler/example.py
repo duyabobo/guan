@@ -9,29 +9,29 @@ from util.monitor import superMonitor, Response
 
 
 def sleepA(n):
-    print 'in A'
+    print('in A')
     time.sleep(n)
-    print 'end A'
+    print('end A')
     return 'A'
 
 
 def sleepB(n):
-    print 'in B'
+    print('in B')
     time.sleep(n)
-    print 'end B'
+    print('end B')
     return 'B'
 
 
 def sleepC(n):
-    print 'in c'
+    print('in c')
     time.sleep(n)
-    print 'end C'
+    print('end C')
 
 
 def sleepD(n):
-    print 'in D'
+    print('in D')
     time.sleep(n)
-    print 'end D'
+    print('end D')
     return 'D'
 
 
