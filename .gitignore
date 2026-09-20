@@ -1,8 +1,19 @@
 venv
 README.MD
 .idea/*
+
+# 配置文件（含密钥，不入库）
 du.conf
+app.conf
+*.conf
+.env
+
+# 运行产物
 *.pyc
+__pycache__/
 .DS_Store
 *.rdb
+log/
+
+# 三方平台缓存
 .qiniu_pythonsdk_hostscache.json

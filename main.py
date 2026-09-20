@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-# __author__ = ‘duyabo‘
-# __created_at__ = '2020/1/1'
-import sys
+import logging
 
 import tornado.httpserver
 import tornado.ioloop
@@ -16,8 +14,18 @@ from util.database import engine
 # tornado 支持 https，如果要使用 gevent，需要 patch_all 的时候，把 ssl 设置为 False
 monkey.patch_all(ssl=False, thread=False, socket=False)
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+)
+logger = logging.getLogger(__name__)
+
+
+def _build_ssl_options():
+    return {
+        "certfile": '/home/guan/service.pem',
+        "keyfile": '/home/guan/service.key',
+    }
 
 
 def main():
@@ -27,22 +35,22 @@ def main():
     cookie_secret = util.config.get('global', 'cookie_secret')
 
     application = tornado.web.Application(handlers, **{
-        'debug': True if debug == 'true' else False,
+        'debug': debug == 'true',
         'cookie_secret': cookie_secret,
         'template_path': 'handler/template',
         'static_path': 'handler/static',
     })
 
     application.engine = engine
-    http_server = tornado.httpserver.HTTPServer(
-        application,
-        ssl_options={
-            "certfile": '/home/guan/service.pem',
-            "keyfile": '/home/guan/service.key',
-        }
-    ) if server == 'online' else tornado.httpserver.HTTPServer(application)
+
+    is_online = server == 'online'
+    http_server = (
+        tornado.httpserver.HTTPServer(application, ssl_options=_build_ssl_options())
+        if is_online
+        else tornado.httpserver.HTTPServer(application)
+    )
     http_server.listen(port)
-    print ('>>>>> Starting development server at http://localhost:{}/ <<<<<'.format(port))
+    logger.info("Starting server at http://localhost:%s/ (mode=%s, debug=%s)", port, server, debug)
     tornado.ioloop.IOLoop.instance().start()
 
 

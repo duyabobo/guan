@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
+import logging
 import os
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
+
+logger = logging.getLogger(__name__)
 
 
 def singleton(cls):
@@ -18,13 +21,13 @@ def singleton(cls):
 class Configuration:
     def __init__(self, config_file=None):
         conf_name = os.getenv('CONFNAME') or 'du'
-        default_conf = "%s.conf" % conf_name
+        default_conf = f"{conf_name}.conf"
         self._config_file = default_conf if not config_file else config_file
         self._load()
 
     def _load(self):
         self._config = RawConfigParser()
-        print "load config from", self._config_file
+        logger.info("load config from %s", self._config_file)
         self._config.read(self._config_file)
 
     def get(self, sect, opt):

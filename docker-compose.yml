@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+
+  # ── 应用服务 ──────────────────────────────────────────────────────────────
+  app:
+    build: .
+    image: guan-app:latest
+    ports:
+      - "${APP_PORT:-8888}:8888"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./log:/app/log
+    environment:
+      - PORT=8888
+      - SERVER_ENV=${SERVER_ENV:-offline}
+      - DEBUG=${DEBUG:-false}
+      - COOKIE_SECRET=${COOKIE_SECRET:-change_me_in_production}
+      # MySQL
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=${MYSQL_USER:-guan}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-guan123}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-guan}
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # RabbitMQ
+      - RABBITMQ_HOST=rabbitmq
+      # 第三方平台（在 .env 里配置真实值）
+      - WX_APPID=${WX_APPID:-}
+      - WX_SECRET=${WX_SECRET:-}
+      - QINIU_ACCESS_KEY=${QINIU_ACCESS_KEY:-}
+      - QINIU_SECRET_KEY=${QINIU_SECRET_KEY:-}
+      - QINIU_BUCKET=${QINIU_BUCKET:-}
+    restart: unless-stopped
+
+  # ── MySQL ─────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-guan}
+      MYSQL_USER: ${MYSQL_USER:-guan}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-guan123}
+    ports:
+      - "${MYSQL_EXPOSE_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 将 sql/init/ 下所有 .sql 文件作为初始化脚本（仅首次建库执行）
+      - ./sql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_EXPOSE_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── RabbitMQ ──────────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guan}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guan123}
+    ports:
+      - "${RABBITMQ_EXPOSE_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
