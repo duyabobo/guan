@@ -62,22 +62,32 @@ class Checker(object):
         """校验成功处理"""
         setSuccessCnt(self.accessToken)
 
+    @staticmethod
+    def _b64_encode_text(text):
+        """与小程序 request.js 中 base64 编码一致（UTF-8）。"""
+        if isinstance(text, bytes):
+            text = text.decode('utf-8')
+        return base64.b64encode(text.encode('utf-8')).decode('ascii')
+
     def getContentFromQuery(self, data, sep):
-        if type(data) == str:
-            return base64.b64encode(data)
-        if type(data) == unicode:
-            return base64.b64encode(data.encode('utf8'))
-        if type(data) == int:
-            return base64.b64encode(str(data))
-        if type(data) == float:
-            return base64.b64encode(str(data))
-        if type(data) == dict:
-            sortedItems = sorted(data.items(), key=lambda x: x[0])
-            contentList = [self.getContentFromQuery(k, sep) + sep + self.getContentFromQuery(v, sep) for k, v in sortedItems]
-            return sep.join(contentList)
-        if type(data) == list:
-            contentList = [self.getContentFromQuery(i, sep) + sep + self.getContentFromQuery(data[i], sep) for i in range(len(data))]
-            return sep.join(contentList)
+        """递归拼接签名字符串，算法需与 miniprogram/util/request.js 保持一致。"""
+        if isinstance(data, str):
+            return self._b64_encode_text(data)
+        if isinstance(data, (int, float)):
+            return self._b64_encode_text(str(data))
+        if isinstance(data, dict):
+            sorted_items = sorted(data.items(), key=lambda item: item[0])
+            content_list = [
+                self.getContentFromQuery(k, sep) + sep + self.getContentFromQuery(v, sep)
+                for k, v in sorted_items
+            ]
+            return sep.join(content_list)
+        if isinstance(data, list):
+            content_list = [
+                self.getContentFromQuery(i, sep) + sep + self.getContentFromQuery(data[i], sep)
+                for i in range(len(data))
+            ]
+            return sep.join(content_list)
         return ""
 
     def check_sign(self, secret):
@@ -101,4 +111,5 @@ class Checker(object):
         for k in popKeys:
             requestParams.pop(k)
         content = self.getContentFromQuery(requestParams, "|")
-        assert self.sign == hashlib.md5(content).hexdigest(), '签名验证失败'
+        sign_digest = hashlib.md5(content.encode('utf-8')).hexdigest()
+        assert self.sign == sign_digest, '签名验证失败'

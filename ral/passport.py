@@ -48,13 +48,26 @@ def delSession(accessToken):
     redisConn.delete(getLoginKey(accessToken))
 
 
+def _decode_redis_hash(raw):
+    if not raw:
+        return {}
+    decoded = {}
+    for key, value in raw.items():
+        if isinstance(key, bytes):
+            key = key.decode('utf-8')
+        if isinstance(value, bytes):
+            value = value.decode('utf-8')
+        decoded[key] = value
+    return decoded
+
+
 def getSession(accessToken):
     """
     从 redis 获取当前登录用户的信息
     :param accessToken:
     :return:
     """
-    return redisConn.hgetall(getLoginKey(accessToken))
+    return _decode_redis_hash(redisConn.hgetall(getLoginKey(accessToken)))
 
 
 def checkUnique(accessToken, requestSeq):

@@ -103,9 +103,10 @@ def run_ddl(conn: pymysql.connections.Connection):
 
 # 幂等迁移可忽略的 MySQL 错误码
 _IDEMPOTENT_ERRORS = {
+    1054,  # Unknown column（MODIFY 不存在的列 → 说明 ADD 成功了，MODIFY 是多余的）
     1060,  # Duplicate column name（ADD COLUMN 时列已存在）
     1061,  # Duplicate key name（ADD INDEX 时索引已存在）
-    1091,  # Can't DROP; check that column/key exists（DROP 不存在的列/索引）
+    1091,  # Can't DROP; column/key doesn't exist（DROP 不存在的列/索引）
 }
 
 
