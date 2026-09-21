@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from util.redis_conn import redisConn
+from util.redis_conn import decode_redis_value, redisConn
 
 
 def getTokenKey():
@@ -9,7 +9,7 @@ def getTokenKey():
 
 def getToken():
     key = getTokenKey()
-    return redisConn.get(key)
+    return decode_redis_value(redisConn.get(key))
 
 
 def setToken(token):

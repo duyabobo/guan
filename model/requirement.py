@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column
 from sqlalchemy import Integer
+from sqlalchemy import Text
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
@@ -39,12 +40,12 @@ class RequirementModel(BaseModel):
     education_id = Column(Integer, default=0)  # 学习信息id
     # 工作信息
     work_region_id = Column(Integer, default=0)  # 工作地点id
-    company_id = Column(Integer, default=0)  # 公司id
     work_id = Column(Integer, default=0)  # 工作信息id
     max_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     min_month_pay = Column(Integer, default=0)  # 月收入(元-元)
     # 婚姻
     martial_status = Column(Integer, default=MODEL_MARTIAL_STATUS_UNKNOWN)  # 婚姻现状：MODEL_MARTIAL_STATUS_ENUMERATE
+    requirement_desc = Column(Text, nullable=True)  # 自然语言期望描述原文
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间

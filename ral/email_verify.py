@@ -13,7 +13,7 @@ from util.const.response import RESP_HAS_EMAIL_VERIFY_RECENTLY, RESP_OK, \
     RESP_EMAIL_IS_NOT_SCHOOL
 from util.encryption import getEncryptMail
 from util.mail import send_email_verify
-from util.redis_conn import redisConn
+from util.redis_conn import decode_redis_value, redisConn
 from util.verify import generate_code
 import re
 
@@ -48,7 +48,8 @@ class EmailVerifyService(BaseService):
 
     def checkCodeWithCache(self, openid, email, code):
         encryptedMail = getEncryptMail(openid, email)
-        if redisConn.get(self.getVerifyCodeKey(encryptedMail)) != code:
+        cached_code = decode_redis_value(redisConn.get(self.getVerifyCodeKey(encryptedMail)))
+        if cached_code != code:
             return RESP_HAS_EMAIL_VERIFY_FAILED
         mailType = VerifyModel.getMailType(email)
         if mailType != match.MODEL_MAIL_TYPE_SCHOOL:
@@ -63,7 +64,7 @@ class EmailVerifyService(BaseService):
         return True  # todo 可以不断累积白名单，暂时全部放开
 
     def hasSendEmailRecently(self, email):
-        if redisConn.get(self.getVerifyCodeKey(email)):
+        if decode_redis_value(redisConn.get(self.getVerifyCodeKey(email))):
             return True
         return False
 

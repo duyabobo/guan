@@ -4,7 +4,7 @@ from model.education import EducationModel
 from model.work import WorkModel
 from util.const.match import OP_TYPE_EDUCATION_MULTI, OP_TYPE_EDUCATION_MULTI_COLUMN_CHANGE, \
     OP_TYPE_WORK_MULTI_COLUMN_CHANGE, OP_TYPE_WORK_MULTI
-from util.redis_conn import redisConn
+from util.redis_conn import decode_redis_value, redisConn
 
 
 education_config = {
@@ -53,7 +53,7 @@ def getDataIdAfterColumnChange(opType, passportId):
     返回临时修改的多重选择结果
     """
     key = getKey(opType, passportId)
-    return redisConn.get(key)
+    return decode_redis_value(redisConn.get(key))
 
 
 def delDataIdAfterConfirm(opType, passportId):

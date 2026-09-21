@@ -1,11 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import hashlib
-
 import util.config
 from model.user import UserModel
 from util.const.match import MODEL_STATUS_YES
 from util.const.qiniu_img import CDN_QINIU_URL
+from util.encode import md5_hex
 from util.qiniu_cdn import Qiniu
 
 
@@ -39,9 +38,9 @@ class MyStorage(object):
         userInfo = UserModel.getByPassportId(passportId=passportId)
         fmt = "obj_name_secret:%s:passport_id:%s:head_img_version:%d"
         realSeed = fmt % (util.config.get("qiniu", "secret_key"), passportId, userInfo.head_img_version)
-        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), hashlib.md5("%d" % passportId).hexdigest(), userInfo.head_img_version)
-        return "%s/%s" % ('head_img', hashlib.md5(realSeed).hexdigest()), \
-               "%s/%s" % ('head_img', hashlib.md5(virtualSeed).hexdigest())
+        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), md5_hex("%d" % passportId), userInfo.head_img_version)
+        return "%s/%s" % ('head_img', md5_hex(realSeed)), \
+               "%s/%s" % ('head_img', md5_hex(virtualSeed))
 
     def upload(self, imgStreamData):
         # 先修改head_img_version，因为要获取getObjNames

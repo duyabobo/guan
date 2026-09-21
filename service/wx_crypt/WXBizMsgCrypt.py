@@ -17,9 +17,8 @@ import sys
 from Crypto.Cipher import AES
 import xml.etree.cElementTree as ET
 import socket
-reload(sys)
-import ierror
-sys.setdefaultencoding('utf-8')
+
+from . import ierror
 
 """
 关于Crypto.Cipher模块，ImportError: No module named 'Crypto'解决方案
@@ -48,8 +47,8 @@ class SHA1:
             sortlist = [token, timestamp, nonce, encrypt]
             sortlist.sort()
             sha = hashlib.sha1()
-            sha.update("".join(sortlist))
-            return  ierror.WXBizMsgCrypt_OK, sha.hexdigest()
+            sha.update("".join(sortlist).encode('utf-8'))
+            return ierror.WXBizMsgCrypt_OK, sha.hexdigest()
         except Exception as e:
             #print e
             return  ierror.WXBizMsgCrypt_ComputeSignature_Error, None

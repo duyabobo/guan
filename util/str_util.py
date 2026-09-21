@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import hashlib
 import time
+
+from util.encode import md5_hex
 
 
 def getRandomStr(seed):
     t = time.time()
-    return hashlib.md5(str(t) + str(seed)).hexdigest()
+    return md5_hex(str(t) + str(seed))

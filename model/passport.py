@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import hashlib
-
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -11,6 +9,7 @@ from sqlalchemy import func
 from model import BaseModel
 from util.const import match
 from util.ctx import getDbSession
+from util.encode import md5_hex
 
 
 class PassportModel(BaseModel):
@@ -25,12 +24,12 @@ class PassportModel(BaseModel):
 
     @classmethod
     def getByOpenid(cls, openid):
-        openidMd5 = hashlib.md5(openid).hexdigest()
+        openidMd5 = md5_hex(openid)
         return getDbSession().query(cls).filter(cls.openid == openidMd5, cls.status == match.MODEL_STATUS_YES).first()
 
     @classmethod
     def addByOpenid(cls, openid):
-        openidMd5 = hashlib.md5(openid).hexdigest()
+        openidMd5 = md5_hex(openid)
         passport = cls(
             openid=openidMd5,
             phone="",

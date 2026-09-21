@@ -8,10 +8,10 @@
 import base64
 import json
 
-import hashlib
 from urllib import parse as urlparse
 
 from ral.passport import checkUnique, setFailCnt, setSuccessCnt, checkFailedCnt, checkSuccessCnt
+from util.encode import md5_hex
 
 ALGORITHM_SIGN = 'HS256'
 
@@ -111,5 +111,4 @@ class Checker(object):
         for k in popKeys:
             requestParams.pop(k)
         content = self.getContentFromQuery(requestParams, "|")
-        sign_digest = hashlib.md5(content.encode('utf-8')).hexdigest()
-        assert self.sign == sign_digest, '签名验证失败'
+        assert self.sign == md5_hex(content), '签名验证失败'

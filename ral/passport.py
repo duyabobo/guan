@@ -5,7 +5,7 @@
 import time
 
 from util.encode import generate_secret
-from util.redis_conn import redisConn
+from util.redis_conn import decode_redis_value, redisConn
 
 UNIQUE_EXP_KEY = 'unique:{accessToken}:{exp}'
 FAILED_CNT_ONE_MINUTE = 'failed_cnt:one_minute:{remote_ip}'
@@ -95,14 +95,14 @@ def setSuccessCnt(accessToken):
 def checkFailedCnt(remote_ip):
     """失败频次检查"""
     failed_key = FAILED_CNT_ONE_MINUTE.format(remote_ip=remote_ip)
-    failed_cnt = redisConn.get(failed_key) or 0
+    failed_cnt = decode_redis_value(redisConn.get(failed_key)) or 0
     assert int(failed_cnt) < FAILED_CNT_LIMIT_ONE_MINUTE, 'failed too frequent'
 
 
 def checkSuccessCnt(accessToken):
     """成功频次检查"""
     success_cnt_key = SUCCESS_CNT_ONE_MINUTE.format(accessToken=accessToken)
-    success_cnt = redisConn.get(success_cnt_key) or 0
+    success_cnt = decode_redis_value(redisConn.get(success_cnt_key)) or 0
     if int(success_cnt) > SUCCESS_CNT_LIMIT_ONE_MINUTE:
         redisConn.delete(success_cnt_key)
         raise Exception('success too frequent')

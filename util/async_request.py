@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
-import urllib
+from urllib import parse as urlparse
 
 import tornado
 from tornado import gen
@@ -26,9 +26,9 @@ def asyncRequest(url, data_json, method='GET', timeout=1, need_retry=False):
     # warning: 如果是请求超时，不会重试。这个是实现方控制。
     if method == 'GET' and data_json:
         if '?' not in url:
-            url = '{}?{}'.format(url, urllib.urlencode(data_json))
+            url = '{}?{}'.format(url, urlparse.urlencode(data_json))
         else:
-            url = '{}&{}'.format(url, urllib.urlencode(data_json))
+            url = '{}&{}'.format(url, urlparse.urlencode(data_json))
         body = None
     else:
         body = json.dumps(data_json)
