@@ -6,6 +6,7 @@
 （无 DB 依赖，可直接单元测试）
 """
 import datetime
+import math
 
 from util.const.base import (
     GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_QUIT,
@@ -115,3 +116,117 @@ def get_bottom_buttons(progress_status, op_type):
         return [{"label": "恢复关系", "action": "meetResult", "value": MODEL_MEET_RESULT_FIT_CHOICE, "needConfirm": True}]
 
     return []  # PROGRESS_NO_CONFIG 或其他异常状态
+
+
+# ── 首页列表心形标识 ──────────────────────────────────────────────────────────
+
+HEART_KIND_EMPTY = "empty"
+HEART_KIND_SINGLE = "single"
+HEART_KIND_DOUBLE = "double"
+HEART_KIND_SOLID = "solid"
+HEART_KIND_BROKEN = "broken"
+
+PERMANENT_HEART_KINDS = frozenset({
+    HEART_KIND_BROKEN,
+    HEART_KIND_SOLID,
+    HEART_KIND_DOUBLE,
+})
+
+# 列表排序：实心 > 心碎 > 双心 > 单心 > 空白
+HEART_SORT_ORDER = {
+    HEART_KIND_SOLID: 0,
+    HEART_KIND_BROKEN: 1,
+    HEART_KIND_DOUBLE: 2,
+    HEART_KIND_SINGLE: 3,
+    HEART_KIND_EMPTY: 4,
+}
+
+DISTANCE_BUCKET_KM = 10
+MAX_LIST_LEAD_DAYS = 14
+EARTH_RADIUS_KM = 6371.0
+
+
+def calc_distance_km(latitude_a, longitude_a, latitude_b, longitude_b):
+    if not latitude_a or not longitude_a or not latitude_b or not longitude_b:
+        return None
+    lat1 = math.radians(latitude_a)
+    lat2 = math.radians(latitude_b)
+    d_lat = math.radians(latitude_b - latitude_a)
+    d_lng = math.radians(longitude_b - longitude_a)
+    a = math.sin(d_lat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(d_lng / 2) ** 2
+    return EARTH_RADIUS_KM * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def distance_bucket_km(distance_km):
+    if distance_km is None:
+        return 999
+    if distance_km <= 0:
+        return 1
+    return int(distance_km // DISTANCE_BUCKET_KM) + 1
+
+
+def max_lead_minutes_for_empty(distance_km):
+    """空白项：每 10km 多展示 1 小时内的场次"""
+    return distance_bucket_km(distance_km) * 60
+
+
+def calc_list_heart_kind(progress_status, has_match=False):
+    """
+    首页心形：
+    - broken：不合适 / 缺席等（progress=DISAGREE）
+    - solid：已见面且未标不合适（MET/AGREE）
+    - double：双方已约同一见面（WAIT_MEET）
+    - single：有匹配异性 / 等待对方确认（SELECTED 或候选匹配）
+    - empty：空闲时段
+    """
+    if progress_status == PROGRESS_DISAGREE:
+        return HEART_KIND_BROKEN
+    if progress_status in (PROGRESS_AGREE, PROGRESS_MET):
+        return HEART_KIND_SOLID
+    if progress_status == PROGRESS_WAIT_MEET:
+        return HEART_KIND_DOUBLE
+    if progress_status == PROGRESS_SELECTED:
+        return HEART_KIND_SINGLE
+    if progress_status == PROGRESS_NOT_SELECTED:
+        return HEART_KIND_SINGLE if has_match else HEART_KIND_EMPTY
+    return HEART_KIND_EMPTY
+
+
+def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start):
+    if heart_kind in PERMANENT_HEART_KINDS:
+        return True
+    if minutes_until_start is None or minutes_until_start < 0:
+        return False
+    if minutes_until_start > MAX_LIST_LEAD_DAYS * 24 * 60:
+        return False
+    if heart_kind == HEART_KIND_EMPTY:
+        return minutes_until_start <= max_lead_minutes_for_empty(distance_km)
+    if heart_kind == HEART_KIND_SINGLE:
+        return True
+    return False
+
+
+def limit_solid_heart_items(items, heart_kind_getter):
+    """首页实心标识最多展示一条（已排序列表上过滤）"""
+    solid_seen = False
+    limited = []
+    for item in items:
+        if heart_kind_getter(item) == HEART_KIND_SOLID:
+            if solid_seen:
+                continue
+            solid_seen = True
+        limited.append(item)
+    return limited
+
+
+def guanguan_list_sort_key(heart_kind, distance_km, start_time, now):
+    bucket = distance_bucket_km(distance_km)
+    if start_time:
+        minutes_until = (start_time - now).total_seconds() / 60.0
+    else:
+        minutes_until = 999999.0
+    return (
+        HEART_SORT_ORDER.get(heart_kind, 9),
+        bucket,
+        minutes_until,
+    )

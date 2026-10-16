@@ -21,7 +21,10 @@ from util.const.progress import (
     PROGRESS_NO_CONFIG, PROGRESS_NOT_SELECTED, PROGRESS_SELECTED,
     PROGRESS_WAIT_MEET, PROGRESS_MET, PROGRESS_AGREE, PROGRESS_DISAGREE,
     PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
-    calc_activity_progress, get_bottom_buttons
+    HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_SINGLE, HEART_KIND_SOLID,
+    MAX_LIST_LEAD_DAYS,
+    calc_activity_progress, calc_list_heart_kind, get_bottom_buttons,
+    guanguan_list_sort_key, limit_solid_heart_items, should_show_guanguan_item,
 )
 from util.const.base import (
     GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_QUIT,
@@ -308,3 +311,44 @@ class TestGuanguanListSorting:
 
     def test_selected_before_not_selected(self):
         assert PROGRESS_SORT_WEIGHT[PROGRESS_SELECTED] > PROGRESS_SORT_WEIGHT[PROGRESS_NOT_SELECTED]
+
+
+class TestGuanguanHeartKind:
+
+    def test_heart_kind_mapping(self):
+        assert calc_list_heart_kind(PROGRESS_DISAGREE) == HEART_KIND_BROKEN
+        assert calc_list_heart_kind(PROGRESS_AGREE) == HEART_KIND_SOLID
+        assert calc_list_heart_kind(PROGRESS_MET) == HEART_KIND_SOLID
+        assert calc_list_heart_kind(PROGRESS_WAIT_MEET) == HEART_KIND_DOUBLE
+        assert calc_list_heart_kind(PROGRESS_SELECTED) == HEART_KIND_SINGLE
+        assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=True) == HEART_KIND_SINGLE
+        assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=False) == HEART_KIND_EMPTY
+
+    def test_hide_items_beyond_two_weeks(self):
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, MAX_LIST_LEAD_DAYS * 24 * 60) is False
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, MAX_LIST_LEAD_DAYS * 24 * 60 + 1) is False
+        assert should_show_guanguan_item(HEART_KIND_SOLID, 5, MAX_LIST_LEAD_DAYS * 24 * 60 + 999) is True
+
+    def test_empty_item_time_window_by_distance(self):
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 50) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 90) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 15, 110) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 15, 130) is False
+
+    def test_only_one_solid_heart_in_list(self):
+        items = [
+            ("solid", 1),
+            ("solid", 2),
+            ("broken", 3),
+        ]
+        limited = limit_solid_heart_items(items, lambda item: item[0])
+        assert [item[0] for item in limited] == ["solid", "broken"]
+
+    def test_permanent_hearts_always_show(self):
+        now = datetime.datetime.now()
+        future = now + datetime.timedelta(days=30)
+        for kind in (HEART_KIND_BROKEN, HEART_KIND_SOLID, HEART_KIND_DOUBLE):
+            assert should_show_guanguan_item(kind, 50, 99999) is True
+            assert guanguan_list_sort_key(kind, 50, future, now)[0] < guanguan_list_sort_key(
+                HEART_KIND_EMPTY, 1, future, now
+            )[0]

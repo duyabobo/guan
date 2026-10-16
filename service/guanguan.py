@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import datetime
 import logging
 
 from model.activity import ActivityModel
@@ -17,14 +18,20 @@ from util.const.match import (
 )
 from util.const.progress import (
     PROGRESS_NOT_SELECTED,
-    PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
-    calc_activity_progress
+    PROGRESS_DESC,
+    calc_activity_progress,
+    calc_distance_km,
+    calc_list_heart_kind,
+    guanguan_list_sort_key,
+    limit_solid_heart_items,
+    should_show_guanguan_item,
 )
 from util.time_cost import timecost
 
 logger = logging.getLogger(__name__)
 
 UNKNOWN_NEGATIVE_ONE = -1
+LIST_FETCH_POOL_FACTOR = 5
 
 
 class GuanguanService(BaseService):
@@ -107,8 +114,11 @@ class GuanguanService(BaseService):
     @timecost
     def getGuanguanList(self, longitude, latitude, limit):
         """
-        列表排序规则（优先级从高到低）：
-        AGREE/DISAGREE（常驻）→ MET → WAIT_MEET → SELECTED → NOT_SELECTED（按地理时间综合排序）
+        列表规则：
+        1. 心形优先级：实心 > 心碎 > 双心 > 单心 > 空白
+        2. 同优先级按距离区间（每 10km 一档）由近到远
+        3. 同区间内按见面时间由近到远
+        4. 心碎/实心/双心永久展示；空白按距离只展示 N 小时内场次
         """
         if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
             return [{
@@ -117,48 +127,76 @@ class GuanguanService(BaseService):
                 "state": "",
                 "progressStatus": PROGRESS_NOT_SELECTED,
                 "progressDesc": "",
+                "heartKind": "empty",
                 "img": DEFAULT_ADDRESS_URL,
                 "address": "线下活动地址",
             }]
 
         UserModel.changeAllowLocation(self.passportId)
+        now = datetime.datetime.now()
+        pool_limit = max(limit * LIST_FETCH_POOL_FACTOR, limit)
 
-        # 1. 用户已参与的所有活动（含各状态）
         user_activities = ActivityModel.getUserAllActivities(self.passportId)
         user_activities_with_progress = [(a, self._calcActivityProgress(a)) for a in user_activities]
-
-        # 2. 候选活动（用户未参与）
         participated_ids = {a.id for a, _ in user_activities_with_progress}
-        candidate_activities = self.getCandidateActivities(longitude, latitude, limit)
+
+        sex = self.userInfo.sex if self.userInfo else MODEL_SEX_UNKNOWN_INDEX
+        matched_activity_ids = (
+            getMatchedActivityIds(self.userInfo) if sex != MODEL_SEX_UNKNOWN_INDEX else set()
+        )
+        candidate_activities = self.getCandidateActivities(longitude, latitude, pool_limit)
         candidate_with_progress = [
             (a, PROGRESS_NOT_SELECTED)
             for a in candidate_activities
             if a.id not in participated_ids
         ]
 
-        # 3. 合并并按进展状态权重排序
         all_activities = user_activities_with_progress + candidate_with_progress
-        all_activities.sort(key=lambda x: PROGRESS_SORT_WEIGHT.get(x[1], 0), reverse=True)
-        all_activities = all_activities[:limit]
+        address_ids = list({a.address_id for a, _ in all_activities})
+        address_map = self.getAddressMapByIds(address_ids)
+        match_passport_ids = list({self.getMatchPassportId(a) for a, _ in all_activities})
+        match_user_map = self.getMatchUserByIds(match_passport_ids)
 
-        # 4. 批量获取地址和关联用户（避免 N+1 查询）
-        addressIds = list({a.address_id for a, _ in all_activities})
-        addressMap = self.getAddressMapByIds(addressIds)
-        matchPassportIds = list({self.getMatchPassportId(a) for a, _ in all_activities})
-        matchUserMap = self.getMatchUserByIds(matchPassportIds)
-
-        # 5. 封装返回列表
-        guanguanList = []
+        ranked_items = []
         for activity, progress in all_activities:
-            address = addressMap.get(activity.address_id)
-            matchUser = matchUserMap.get(self.getMatchPassportId(activity))
-            guanguanList.append({
+            address = address_map.get(activity.address_id)
+            has_match = activity.id in matched_activity_ids
+            heart_kind = calc_list_heart_kind(progress, has_match=has_match)
+            distance_km = calc_distance_km(
+                latitude, longitude,
+                address.latitude if address else 0,
+                address.longitude if address else 0,
+            )
+            minutes_until = None
+            if activity.start_time:
+                minutes_until = (activity.start_time - now).total_seconds() / 60.0
+            if not should_show_guanguan_item(heart_kind, distance_km, minutes_until):
+                continue
+            ranked_items.append((
+                guanguan_list_sort_key(heart_kind, distance_km, activity.start_time, now),
+                activity,
+                progress,
+                heart_kind,
+                address,
+                match_user_map.get(self.getMatchPassportId(activity)),
+            ))
+
+        ranked_items.sort(key=lambda item: item[0])
+        ranked_items = limit_solid_heart_items(ranked_items, lambda item: item[3])
+        ranked_items = ranked_items[:limit]
+
+        guanguan_list = []
+        for _, activity, progress, heart_kind, address, match_user in ranked_items:
+            guanguan_list.append({
                 "id": activity.id,
                 "time": activity.startTimeStr,
+                "startTime": activity.start_time.strftime("%Y-%m-%d %H:%M") if activity.start_time else "",
                 "progressStatus": progress,
                 "progressDesc": PROGRESS_DESC.get(progress, ""),
-                "img": GuanHelper.getActivityImg(activity, address, matchUser, self.userInfo, True),
+                "heartKind": heart_kind,
+                "img": GuanHelper.getActivityImg(activity, address, match_user, self.userInfo, True),
                 "address": address.name if address else "",
+                "longitude": address.longitude if address else 0,
+                "latitude": address.latitude if address else 0,
             })
-
-        return guanguanList
+        return guanguan_list
