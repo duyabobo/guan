@@ -1,15 +1,17 @@
-FROM python:3.11-slim
+FROM docker.1panel.live/library/python:3.11-slim
 
 WORKDIR /app
 
 # 安装系统依赖（pymysql/gcc/gevent 编译需要）
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# deb.debian.org 从构建网络不可达，改走中科大镜像
+RUN sed -i 's|deb.debian.org|mirrors.ustc.edu.cn|g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # 先复制依赖文件，利用 Docker 层缓存
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
 # 复制项目代码
 COPY . .

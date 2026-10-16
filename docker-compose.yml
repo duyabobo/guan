@@ -44,7 +44,7 @@ services:
 
   # ── MySQL ─────────────────────────────────────────────────────────────────
   mysql:
-    image: mysql:8.0
+    image: docker.1panel.live/library/mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-guan}
@@ -67,7 +67,7 @@ services:
 
   # ── Redis ─────────────────────────────────────────────────────────────────
   redis:
-    image: redis:7-alpine
+    image: docker.1panel.live/library/redis:7-alpine
     ports:
       - "${REDIS_EXPOSE_PORT:-6379}:6379"
     volumes:
