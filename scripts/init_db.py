@@ -676,6 +676,191 @@ def seed_shares(conn, passport_ids: list[int]) -> list[int]:
     return _insert_if_empty(conn, 'share', rows)
 
 
+# ── 当前登录用户的可测数据 ─────────────────────────────────────────────────────
+
+MOCK_OPENID_PREFIX = 'mock_openid_md5_'
+OPPOSITE_PHONE = '13800000002'
+LOGIN_BIRTH_YEAR = 1996
+LOGIN_HEIGHT = 178
+LOGIN_WEIGHT = 70
+LOGIN_MONTH_PAY = 20000
+LOGIN_EDUCATION_LEVEL = 4  # 本科
+OPPOSITE_MONTH_PAY_MAX = 80000
+PEKING_UNIVERSITY_ID = 1
+TIANJIN_REGION_ID = 4
+BEIJING_REGION_ID = 1
+EDUCATION_SOFTWARE_ID = 1
+STUDY_FROM_YEAR = 2014
+STATE_INVITING = 1
+STATE_SUCCESS = 100
+MEET_RESULT_FIT = 1
+MEET_RESULT_UNFIT = 100
+MINUTES_PER_DAY = 24 * 60
+
+# 地址名, 相对现在的分钟, 我是否占男方席位, 对方是否占女方席位, state, 男方结果, 女方结果
+LOGIN_DEMO_SCENES = (
+    ('天津古文化街小馆', 3 * MINUTES_PER_DAY, True, True, STATE_SUCCESS, 0, 0),
+    ('天津南开大学东门', -2 * MINUTES_PER_DAY, True, True, STATE_SUCCESS, 0, MEET_RESULT_FIT),
+    ('天津之眼河畔', -6 * MINUTES_PER_DAY, True, True, STATE_SUCCESS, MEET_RESULT_UNFIT, 0),
+    ('北京三里屯咖啡', 55, False, True, STATE_INVITING, 0, 0),
+    ('天津意式风情区茶馆', 70, False, True, STATE_INVITING, 0, 0),
+)
+
+
+def _passport_id_by_sql(conn, sql, params):
+    with conn.cursor() as cur:
+        cur.execute(sql, params)
+        row = cur.fetchone()
+    return row[0] if row else None
+
+
+def _fill_login_user_profile(conn, passport_id):
+    """只在还没填性别时写入，避免覆盖语音页后来改过的资料。"""
+    with conn.cursor() as cur:
+        cur.execute("SELECT `sex` FROM `user` WHERE `passport_id` = %s AND `status` = 1", (passport_id,))
+        row = cur.fetchone()
+        if not row:
+            logger.warning("  [跳过] 登录用户没有 user 记录 passport_id=%s", passport_id)
+            return
+        if row[0]:
+            logger.info("  [跳过] 登录用户资料已有性别，不覆盖 passport_id=%s", passport_id)
+            return
+        cur.execute(
+            """
+            UPDATE `user` SET
+                sex=%s, birth_year=%s, height=%s, weight=%s, month_pay=%s,
+                martial_status=0, education_level=%s, info_has_filled=1, allow_location=1,
+                home_region_id=%s, study_region_id=%s, school_id=%s,
+                study_from_year=%s, education_id=%s,
+                profile_desc=%s
+            WHERE passport_id=%s AND status=1
+            """,
+            (
+                1, LOGIN_BIRTH_YEAR, LOGIN_HEIGHT, LOGIN_WEIGHT, LOGIN_MONTH_PAY,
+                LOGIN_EDUCATION_LEVEL, TIANJIN_REGION_ID, BEIJING_REGION_ID, PEKING_UNIVERSITY_ID,
+                STUDY_FROM_YEAR, EDUCATION_SOFTWARE_ID,
+                '1996年的男生，在北京读书，想在天津见面。',
+                passport_id,
+            ),
+        )
+        cur.execute(
+            """
+            UPDATE `requirement` SET
+                sex=2, martial_status=0,
+                min_birth_year=1994, max_birth_year=2001,
+                min_height=155, max_height=175,
+                min_weight=45, max_weight=65,
+                min_month_pay=0, max_month_pay=%s,
+                education_level=%s,
+                home_region_id=%s, study_region_id=%s, school_id=%s,
+                min_study_from_year=2012, max_study_from_year=2018,
+                education_id=%s,
+                requirement_desc=%s
+            WHERE passport_id=%s AND status=1
+            """,
+            (
+                OPPOSITE_MONTH_PAY_MAX, LOGIN_EDUCATION_LEVEL,
+                TIANJIN_REGION_ID, BEIJING_REGION_ID, PEKING_UNIVERSITY_ID,
+                EDUCATION_SOFTWARE_ID,
+                '希望对方是1994到2001年的女生，身高155到175。',
+                passport_id,
+            ),
+        )
+    logger.info("  [写入] 登录用户个人信息和期望 passport_id=%s", passport_id)
+
+
+def _open_opposite_requirement(conn, opposite_id):
+    """女方原期望月收入上限是 0，任何人都匹配不上。放开到可加入的范围。"""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE `requirement` SET
+                max_month_pay=%s,
+                school_id=%s
+            WHERE passport_id=%s AND status=1 AND max_month_pay=0
+            """,
+            (OPPOSITE_MONTH_PAY_MAX, PEKING_UNIVERSITY_ID, opposite_id),
+        )
+        if cur.rowcount:
+            logger.info("  [写入] 对方期望改为可匹配 passport_id=%s", opposite_id)
+
+
+def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, girl_result, start):
+    start_str = _fmt_time(start)
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT `id` FROM `activity`
+            WHERE `address_id`=%s AND `boy_passport_id`=%s AND `girl_passport_id`=%s AND `status`=1
+            ORDER BY `id` DESC LIMIT 1
+            """,
+            (address_id, boy_id, girl_id),
+        )
+        row = cur.fetchone()
+        if row:
+            cur.execute(
+                """
+                UPDATE `activity` SET
+                    start_time=%s, state=%s, boy_meet_result=%s, girl_meet_result=%s
+                WHERE id=%s
+                """,
+                (start_str, state, boy_result, girl_result, row[0]),
+            )
+            return row[0]
+        cur.execute(
+            """
+            INSERT INTO `activity` (
+                address_id, start_time, boy_passport_id, girl_passport_id,
+                state, boy_meet_result, girl_meet_result, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
+            """,
+            (address_id, start_str, boy_id, girl_id, state, boy_result, girl_result),
+        )
+        return cur.lastrowid
+
+
+def ensure_login_user_demo(conn) -> list[int]:
+    """给最近一个真实登录用户补资料，并挂上各状态见面，便于走通页面。"""
+    passport_id = _passport_id_by_sql(
+        conn,
+        "SELECT `id` FROM `passport` WHERE `status`=1 AND `openid` NOT LIKE %s ORDER BY `id` DESC LIMIT 1",
+        (MOCK_OPENID_PREFIX + '%',),
+    )
+    if not passport_id:
+        logger.info("  [跳过] 还没有真实登录用户")
+        return []
+    opposite_id = _passport_id_by_sql(
+        conn,
+        "SELECT `id` FROM `passport` WHERE `phone`=%s AND `status`=1 LIMIT 1",
+        (OPPOSITE_PHONE,),
+    )
+    _fill_login_user_profile(conn, passport_id)
+    if opposite_id:
+        _open_opposite_requirement(conn, opposite_id)
+
+    now = datetime.datetime.now()
+    activity_ids = []
+    for address_name, minutes, boy_is_me, girl_is_opp, state, boy_result, girl_result in LOGIN_DEMO_SCENES:
+        address_id = _address_id_by_name(conn, address_name)
+        if not address_id or not opposite_id:
+            logger.warning("  [跳过] 登录用户场次 %s", address_name)
+            continue
+        boy_id = passport_id if boy_is_me else 0
+        girl_id = opposite_id if girl_is_opp else 0
+        activity_id = _upsert_login_scene(
+            conn, address_id, boy_id, girl_id, state, boy_result, girl_result,
+            now + datetime.timedelta(minutes=minutes),
+        )
+        if activity_id:
+            activity_ids.append(activity_id)
+    conn.commit()
+    logger.info(
+        "  [写入] 登录用户场次 passport_id=%s opposite=%s activity=%s",
+        passport_id, opposite_id, activity_ids,
+    )
+    return activity_ids
+
+
 # ── 主流程 ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -702,9 +887,12 @@ def main():
         seed_activities(conn, passport_ids, address_ids)
         empty_activity_ids = ensure_empty_slot_activities(conn, address_ids)
         seed_shares(conn, passport_ids)
+        login_activity_ids = ensure_login_user_demo(conn)
         sync_activities_to_redis(conn)
         if empty_activity_ids:
             sync_activities_to_redis(conn, empty_activity_ids)
+        if login_activity_ids:
+            sync_activities_to_redis(conn, login_activity_ids)
 
         logger.info("=== 初始化完成 ===")
         _print_summary(conn)

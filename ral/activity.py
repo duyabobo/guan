@@ -10,7 +10,7 @@ from util.const.match import MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX, BIRTH
     WEIGHT_CHOICE_LIST, STUDY_FROM_YEAR_CHOICE_LIST, MONTH_PAY_CHOICE_LIST, MODEL_MAIL_TYPE_UNKNOWN, \
     MODEL_MAIL_TYPE_SCHOOL, \
     MODEL_MAIL_TYPE_WORK, MARTIAL_STATUS_PERIOD_CHOICE_LIST, MODEL_MARTIAL_STATUS_UNKNOWN
-from util.redis_conn import redisConn
+from util.redis_conn import decode_redis_value, redisConn
 from util.time_cost import timecost
 
 COLUMN_MAP_USER_RANGE = {  # 每个维度对应的取值范围
@@ -106,7 +106,13 @@ def cleanByActivity(activityId):
 # 查询某个用户匹配的活动id集合
 @timecost
 def getMatchedActivityIds(user):
-    matchedKeys = []
+    matched_keys = []
     for columnName in COLUMN_MAP_USER_RANGE:
-        matchedKeys.append(getKey(columnName, getattr(user, columnName)))
-    return redisConn.sunion(matchedKeys)
+        matched_keys.append(getKey(columnName, getattr(user, columnName)))
+    activity_ids = set()
+    for raw_id in redisConn.sunion(matched_keys):
+        text = decode_redis_value(raw_id)
+        if not text:
+            continue
+        activity_ids.add(int(text))
+    return activity_ids

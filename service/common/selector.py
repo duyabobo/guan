@@ -130,6 +130,15 @@ class SingleSelector(object):  # 单项选择器
         self.hasFilled = self.value and self.selectValueIndex != self.defaultIndex  # 当前值是否已完善
 
 
+def _format_range(from_value, to_value):
+    """区间展示文案。两端都空时不展示，避免 0 被当成不限却渲染成 0-0。"""
+    if not from_value and not to_value:
+        return ""
+    if from_value and to_value:
+        return "%s-%s" % (from_value, to_value)
+    return str(from_value or to_value)
+
+
 class MultiSelector(object):  # 两项选择器
     def __init__(self, desc, fromValue, toValue, bindChange, subDesc=""):
         def _selectMinIndex():
@@ -150,6 +159,8 @@ class MultiSelector(object):  # 两项选择器
         self.bindChange = bindChange
         self.fromValue = fromValue
         self.toValue = toValue
+        self.value = _format_range(fromValue, toValue)
+        self.fullValue = self.value
 
         matchInfo = MATCH_INFO_DICT[self.bindChange]
         self.choiceList = matchInfo['CHOICE_LIST']  # 可选范围列表

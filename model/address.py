@@ -29,12 +29,23 @@ class AddressModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
 
     @property
-    def img(self):  # 图片url
-        return "{qiniuUrl}{objName}".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
+    def img(self):
+        return self._resolve_img(thumbnail=False)
 
     @property
-    def thumbnails_img(self):  # 缩略图url
-        return "{qiniuUrl}{objName}?imageMogr2/thumbnail/200x".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=self.img_obj_name)
+    def thumbnails_img(self):
+        return self._resolve_img(thumbnail=True)
+
+    def _resolve_img(self, thumbnail):
+        name = (self.img_obj_name or "").strip()
+        if not name:
+            return ""
+        if name.startswith("http://") or name.startswith("https://"):
+            return name
+        url = "{qiniuUrl}{objName}".format(qiniuUrl=CDN_QINIU_ADDRESS_URL, objName=name)
+        if thumbnail:
+            return url + "?imageMogr2/thumbnail/200x"
+        return url
 
     @classmethod
     def listByLongitudeLatitude(cls, longitude, latitude):

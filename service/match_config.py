@@ -19,6 +19,15 @@ from util.class_helper import lazy_property
 
 logger = logging.getLogger(__name__)
 
+
+def _pair_from_selector(item):
+    """展示行。subDesc 是单位（cm/kg），和见面详情用同一套字段。"""
+    return {
+        "desc": item.desc,
+        "value": item.fullValue,
+        "subDesc": getattr(item, "subDesc", "") or "",
+    }
+
 # LLM 可提取并直接写库的用户字段白名单（绕过 opType 流程，直接数值落库）
 _USER_ALLOWED_FIELDS = frozenset({
     'sex', 'birth_year', 'height', 'weight',
@@ -84,12 +93,12 @@ class MatchConfigService(BaseService):
     def _buildMyInfoPairs(self):
         uh = UserHelper(self.userInfo)
         info_list = uh.getInformationList(checkDynamicData=False)
-        return [{"desc": i.desc, "value": i.fullValue} for i in info_list if i.fullValue]
+        return [_pair_from_selector(i) for i in info_list if i.fullValue]
 
     def _buildMyRequirementPairs(self):
         rh = RequirementHelper(self.requirementInfo)
         req_list = rh.getRequirementList(checkDynamicData=False)
-        return [{"desc": r.desc, "value": r.fullValue} for r in req_list if r.fullValue]
+        return [_pair_from_selector(r) for r in req_list if r.fullValue]
 
     # ── 内部：LLM 提取 ────────────────────────────────────────────────────────
 
@@ -137,6 +146,6 @@ class MatchConfigService(BaseService):
         uh = UserHelper(fresh_user)
         rh = RequirementHelper(fresh_req)
         return {
-            "myInfoPairs":        [{"desc": i.desc, "value": i.fullValue} for i in uh.getInformationList(False) if i.fullValue],
-            "myRequirementPairs": [{"desc": r.desc, "value": r.fullValue} for r in rh.getRequirementList(False) if r.fullValue],
+            "myInfoPairs":        [_pair_from_selector(i) for i in uh.getInformationList(False) if i.fullValue],
+            "myRequirementPairs": [_pair_from_selector(r) for r in rh.getRequirementList(False) if r.fullValue],
         }

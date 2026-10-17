@@ -4,9 +4,16 @@
 #  File: school_helper.py
 #  Software: PyCharm
 from model.region import RegionModel, UNKNOWN_REGION_ID
-from model.school import SchoolModel
+from model.school import SchoolModel, UNKNOWN_SCHOOL_ID
 from ral.cache import checkCache
 from util.const.base import EMPTY_STR
+
+
+def _only_unknown_school(schools):
+    """没有真实学校，或列表里只剩「未知学校」占位。"""
+    if not schools:
+        return True
+    return len(schools) == 1 and schools[0].id == UNKNOWN_SCHOOL_ID
 
 
 class SchoolHelper(object):
@@ -14,21 +21,20 @@ class SchoolHelper(object):
     @classmethod
     @checkCache("school_helper:{regionId}")
     def getSortedSchoolList(cls, regionId):  # 算上`未知学校`，缓存，变更数据需刷数据
-        def _getSortedSchoolList(regionId):
-            regionIds = RegionModel.getRegionIdsByRegionId(regionId)
-            regionIds.append(UNKNOWN_REGION_ID)
-            return SchoolModel.getSortedList(regionIds)
+        def _getSortedSchoolList(region_id):
+            region_ids = RegionModel.getRegionIdsByRegionId(region_id)
+            region_ids.append(UNKNOWN_REGION_ID)
+            return SchoolModel.getSortedList(region_ids)
 
         schools = _getSortedSchoolList(regionId)
-        if len(schools) == 1:  # 本区无大学(len(schools) == 1代表只有一个未知大学)
-            region = RegionModel.getById(regionId)
-            if region and region.area != EMPTY_STR:  # 找本市的大学
-                regionId = RegionModel.getRegionIdByCity(region.city)
-                schools = _getSortedSchoolList(regionId)
-            if region and len(schools) == 1:  # 本市无大学
-                if region.city != EMPTY_STR:  # 找本省的大学
-                    regionId = RegionModel.getRegionIdByProvince(region.province)
-                    schools = _getSortedSchoolList(regionId)
-            if len(schools) == 1:  # 本省无大学
-                schools = SchoolModel.getAll()  # 找全国的大学
+        if not _only_unknown_school(schools):
+            return schools
+
+        region = RegionModel.getById(regionId)
+        if region and region.area != EMPTY_STR:
+            schools = _getSortedSchoolList(RegionModel.getRegionIdByCity(region.city))
+        if region and _only_unknown_school(schools) and region.city != EMPTY_STR:
+            schools = _getSortedSchoolList(RegionModel.getRegionIdByProvince(region.province))
+        if _only_unknown_school(schools):
+            schools = SchoolModel.getAll()
         return schools

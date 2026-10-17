@@ -15,6 +15,7 @@ services:
       - ./log:/app/log
     environment:
       - PORT=8888
+      - TZ=Asia/Shanghai
       - SERVER_ENV=${SERVER_ENV:-offline}
       - DEBUG=${DEBUG:-false}
       - COOKIE_SECRET=${COOKIE_SECRET:-change_me_in_production}
