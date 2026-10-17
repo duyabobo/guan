@@ -8,6 +8,7 @@ from model.address import AddressModel
 from ral.cache import checkCache
 from service import BaseService
 from service.common.guan_helper import GuanHelper
+from service.common.profile_match import ProfileMatchService
 from util.const.match import (
     MODEL_SEX_UNKNOWN_INDEX,
     MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING,
@@ -22,6 +23,7 @@ from util.const.progress import (
     calc_list_heart_kind,
     guanguan_list_sort_key,
     limit_solid_heart_items,
+    should_include_activity_for_match,
     should_show_guanguan_item,
 )
 from util.time_cost import timecost
@@ -85,7 +87,7 @@ class GuanguanService(BaseService):
 
     @timecost
     def getCandidateActivities(self, longitude, latitude, limit):
-        """候选活动按地点取，不再用宽表上的匹配索引过滤。"""
+        """先按地点取出候选，匹配与否在列表组装时用 profile_attr 判断。"""
         location_free, location_matching = self.getActivityIdsByLocation(longitude, latitude, limit)
         return self.getLimitMatchedActivityList(
             set(), location_free, location_matching, MODEL_SEX_UNKNOWN_INDEX, limit
@@ -121,6 +123,7 @@ class GuanguanService(BaseService):
         participated_ids = {a.id for a, _ in user_activities_with_progress}
 
         candidate_activities = self.getCandidateActivities(longitude, latitude, pool_limit)
+        matched_activity_ids = ProfileMatchService.matched_activity_ids(self.passportId, candidate_activities)
         candidate_with_progress = [
             (a, PROGRESS_NOT_SELECTED)
             for a in candidate_activities
@@ -133,8 +136,12 @@ class GuanguanService(BaseService):
 
         ranked_items = []
         for activity, progress in all_activities:
+            if not should_include_activity_for_match(
+                progress, activity.id, activity.state, matched_activity_ids, MODEL_ACTIVITY_STATE_EMPTY,
+            ):
+                continue
             address = address_map.get(activity.address_id)
-            has_match = calc_list_has_match(progress, activity.state, False)
+            has_match = calc_list_has_match(progress, activity.state, activity.id in matched_activity_ids)
             heart_kind = calc_list_heart_kind(progress, has_match=has_match)
             distance_km = calc_distance_km(
                 latitude, longitude,
@@ -167,7 +174,7 @@ class GuanguanService(BaseService):
                 "progressStatus": progress,
                 "progressDesc": PROGRESS_DESC.get(progress, ""),
                 "heartKind": heart_kind,
-                "hasMatch": calc_list_has_match(progress, activity.state, False),
+                "hasMatch": calc_list_has_match(progress, activity.state, activity.id in matched_activity_ids),
                 "img": GuanHelper.getActivityImg(activity, address, None, None, True),
                 "address": address.name if address else "",
                 "longitude": address.longitude if address else 0,

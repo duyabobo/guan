@@ -10,6 +10,7 @@ from service import BaseService
 from service.common.guan_helper import GuanHelper
 from service.common.page_copy import guan_info_copy
 from service.common.profile_board import ProfileBoardService
+from service.common.profile_match import ProfileMatchService
 from util.class_helper import lazy_property
 from util.const import match
 from util.const.base import (
@@ -141,6 +142,11 @@ class GuanInfoService(BaseService):
             return bool(self.activityRecord.girl_passport_id)
         return True
 
+    def _can_join(self):
+        if self._my_slot_taken() or not self.oppositePassportId:
+            return False
+        return ProfileMatchService.user_accepts_requirement(self.passportId, self.oppositePassportId)
+
     def parseUpdataParams(self, opType, sexIndex):
         updateParams = {}
         whereParams = []
@@ -184,7 +190,7 @@ class GuanInfoService(BaseService):
             return RESP_JOIN_ACTIVITY_FAILED
         if self.hasOngoingActivity and opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:
             return RESP_HAS_ONGOING_ACTIVITY
-        if self.opType == GUAN_INFO_OP_TYPE_JOIN and (self._my_slot_taken() or not self.oppositePassportId):
+        if self.opType == GUAN_INFO_OP_TYPE_JOIN and not self._can_join():
             return RESP_JOIN_ACTIVITY_FAILED
         if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN] and self.timeIsConflict():
             return RESP_HAS_TIME_CONFLICT

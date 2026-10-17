@@ -245,7 +245,7 @@ def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start):
 
 
 def should_include_activity_for_match(progress_status, activity_id, activity_state, matched_activity_ids, activity_state_empty):
-    """匹配过滤：已参与活动直接展示；候选场次需在 Redis 匹配集合内"""
+    """匹配过滤：已参与活动直接展示；候选场次需在资料匹配集合内"""
     if progress_status != PROGRESS_NOT_SELECTED:
         return True
     return activity_id in matched_activity_ids

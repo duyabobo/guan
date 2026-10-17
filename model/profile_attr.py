@@ -33,8 +33,15 @@ class ProfileAttrModel(BaseModel):
     def listByPassportId(cls, passport_id):
         if not passport_id:
             return []
+        return cls.listByPassportIds([passport_id])
+
+    @classmethod
+    def listByPassportIds(cls, passport_ids):
+        ids = [passport_id for passport_id in passport_ids if passport_id]
+        if not ids:
+            return []
         return getDbSession().query(cls).filter(
-            cls.passport_id == passport_id,
+            cls.passport_id.in_(ids),
             cls.status == match.MODEL_STATUS_YES,
         ).all()
 

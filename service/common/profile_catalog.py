@@ -34,7 +34,20 @@ KIND_RANGE = "range"
 KIND_CHOICE = "choice"
 KIND_TEXT = "text"
 
+MATCH_RULE_EXACT = "exact"
+MATCH_RULE_RANGE = "range"
+MATCH_RULE_MINIMUM = "minimum"
+MATCH_RULE_TEXT = "text"
+
 _EMPTY_PACK = {"value_min": 0, "value_max": 0, "value_text": ""}
+
+
+def _default_match_rule(requirement_kind):
+    if requirement_kind == KIND_RANGE:
+        return MATCH_RULE_RANGE
+    if requirement_kind == KIND_TEXT:
+        return MATCH_RULE_TEXT
+    return MATCH_RULE_EXACT
 
 
 class ProfileDim(object):
@@ -42,12 +55,13 @@ class ProfileDim(object):
 
     def __init__(self, key, label, unit="", info_kind=KIND_NUMBER, requirement_kind=KIND_RANGE,
                  info_op="", requirement_op="", info_field="", requirement_field="",
-                 requirement_min_field="", requirement_max_field="", choices=None):
+                 requirement_min_field="", requirement_max_field="", choices=None, match_rule=""):
         self.key = key
         self.label = label
         self.unit = unit
         self.info_kind = info_kind
         self.requirement_kind = requirement_kind
+        self.match_rule = match_rule or _default_match_rule(requirement_kind)
         self.info_op = info_op
         self.requirement_op = requirement_op
         self.info_field = info_field
@@ -114,6 +128,7 @@ ACTIVE_DIMS = [
     ProfileDim(
         "education_level", "学历",
         info_kind=KIND_CHOICE, requirement_kind=KIND_CHOICE, choices=EDUCATION_LEVEL,
+        match_rule=MATCH_RULE_MINIMUM,
         info_op=OP_TYPE_EDUCATION_LEVEL, requirement_op=OP_TYPE_EDUCATION_LEVEL,
         info_field="education_level", requirement_field="education_level",
     ),
