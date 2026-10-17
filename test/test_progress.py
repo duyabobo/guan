@@ -22,10 +22,11 @@ from util.const.progress import (
     PROGRESS_WAIT_MEET, PROGRESS_MET, PROGRESS_AGREE, PROGRESS_DISAGREE,
     PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
     HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_SINGLE, HEART_KIND_SOLID,
-    MAX_LIST_LEAD_DAYS,
-    calc_activity_progress, calc_list_heart_kind, get_bottom_buttons,
-    guanguan_list_sort_key, limit_solid_heart_items, should_show_guanguan_item,
+    calc_activity_progress, calc_list_has_match, calc_list_heart_kind, get_bottom_buttons,
+    guanguan_list_sort_key, limit_solid_heart_items, should_include_activity_for_match,
+    should_show_guanguan_item, MAX_LIST_DISTANCE_KM,
 )
+from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING
 from util.const.base import (
     GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_QUIT,
     MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE
@@ -324,16 +325,74 @@ class TestGuanguanHeartKind:
         assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=True) == HEART_KIND_SINGLE
         assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=False) == HEART_KIND_EMPTY
 
-    def test_hide_items_beyond_two_weeks(self):
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, MAX_LIST_LEAD_DAYS * 24 * 60) is False
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, MAX_LIST_LEAD_DAYS * 24 * 60 + 1) is False
-        assert should_show_guanguan_item(HEART_KIND_SOLID, 5, MAX_LIST_LEAD_DAYS * 24 * 60 + 999) is True
+    def test_list_has_match_by_activity_state(self):
+        assert calc_list_has_match(PROGRESS_NOT_SELECTED, MODEL_ACTIVITY_STATE_EMPTY, {1}) is False
+        assert calc_list_has_match(PROGRESS_NOT_SELECTED, MODEL_ACTIVITY_STATE_INVITING, set()) is True
+        assert calc_list_has_match(PROGRESS_WAIT_MEET, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, set()) is False
 
-    def test_empty_item_time_window_by_distance(self):
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 50) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 90) is False
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 15, 110) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 15, 130) is False
+    def test_transient_item_time_window_by_distance(self):
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 90) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 130) is False
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 200) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 250) is False
+
+    def test_hide_items_beyond_max_distance(self):
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, 30) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM + 1, 30) is False
+        assert should_show_guanguan_item(HEART_KIND_BROKEN, MAX_LIST_DISTANCE_KM + 1, 30) is True
+
+    def test_match_filter_for_candidates(self):
+        assert should_include_activity_for_match(
+            PROGRESS_NOT_SELECTED, 1, MODEL_ACTIVITY_STATE_EMPTY, set(), MODEL_ACTIVITY_STATE_EMPTY
+        ) is False
+        assert should_include_activity_for_match(
+            PROGRESS_NOT_SELECTED, 1, MODEL_ACTIVITY_STATE_EMPTY, {1}, MODEL_ACTIVITY_STATE_EMPTY
+        ) is True
+        assert should_include_activity_for_match(
+            PROGRESS_NOT_SELECTED, 2, MODEL_ACTIVITY_STATE_INVITING, {2}, MODEL_ACTIVITY_STATE_EMPTY
+        ) is True
+        assert should_include_activity_for_match(
+            PROGRESS_NOT_SELECTED, 3, MODEL_ACTIVITY_STATE_INVITING, set(), MODEL_ACTIVITY_STATE_EMPTY
+        ) is False
+        assert should_include_activity_for_match(
+            PROGRESS_WAIT_MEET, 4, MODEL_ACTIVITY_STATE_INVITING, set(), MODEL_ACTIVITY_STATE_EMPTY
+        ) is True
+
+    def test_hide_items_beyond_two_weeks(self):
+        from util.const.progress import LIST_WINDOW_MINUTES
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, 90) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES + 1) is False
+
+    def test_guanguan_list_sort_priority(self):
+        now = datetime.datetime(2026, 1, 10, 12, 0, 0)
+        near_time = now + datetime.timedelta(hours=1)
+        far_time = now + datetime.timedelta(hours=5)
+
+        ranked = sorted([
+            (guanguan_list_sort_key(HEART_KIND_EMPTY, 5, far_time, now), 'empty'),
+            (guanguan_list_sort_key(HEART_KIND_SINGLE, 5, near_time, now), 'single'),
+            (guanguan_list_sort_key(HEART_KIND_DOUBLE, 15, far_time, now), 'double'),
+            (guanguan_list_sort_key(HEART_KIND_BROKEN, 5, far_time, now), 'broken'),
+            (guanguan_list_sort_key(HEART_KIND_SOLID, 25, far_time, now), 'solid'),
+            (guanguan_list_sort_key(HEART_KIND_SINGLE, 25, near_time, now), 'single_far'),
+        ], key=lambda item: item[0])
+        labels = [label for _, label in ranked]
+        assert labels.index('solid') < labels.index('broken')
+        assert labels.index('broken') < labels.index('double')
+        assert labels.index('double') < labels.index('single')
+        assert labels.index('single') < labels.index('empty')
+        assert labels.index('single') < labels.index('single_far')
+        assert labels.index('single_far') < labels.index('empty')
+
+    def test_sort_by_distance_bucket_then_time(self):
+        now = datetime.datetime(2026, 1, 10, 12, 0, 0)
+        sooner = now + datetime.timedelta(hours=1)
+        later = now + datetime.timedelta(hours=3)
+        near_key = guanguan_list_sort_key(HEART_KIND_SINGLE, 5, sooner, now)
+        far_bucket_key = guanguan_list_sort_key(HEART_KIND_SINGLE, 15, sooner, now)
+        later_time_key = guanguan_list_sort_key(HEART_KIND_SINGLE, 5, later, now)
+        assert near_key < far_bucket_key
+        assert near_key < later_time_key
 
     def test_only_one_solid_heart_in_list(self):
         items = [

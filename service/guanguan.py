@@ -21,9 +21,11 @@ from util.const.progress import (
     PROGRESS_DESC,
     calc_activity_progress,
     calc_distance_km,
+    calc_list_has_match,
     calc_list_heart_kind,
     guanguan_list_sort_key,
     limit_solid_heart_items,
+    should_include_activity_for_match,
     should_show_guanguan_item,
 )
 from util.time_cost import timecost
@@ -115,10 +117,11 @@ class GuanguanService(BaseService):
     def getGuanguanList(self, longitude, latitude, limit):
         """
         列表规则：
-        1. 心形优先级：实心 > 心碎 > 双心 > 单心 > 空白
-        2. 同优先级按距离区间（每 10km 一档）由近到远
-        3. 同区间内按见面时间由近到远
-        4. 心碎/实心/双心永久展示；空白按距离只展示 N 小时内场次
+        1. 心形：实心 > 心碎 > 双心 > 单心 > 无心
+        2. 同级按距离档（每 10km 一级）由近到远
+        3. 同档按见面时间由近到远
+        4. 心碎/实心/双心永久展示
+        5. 其他：两周内、100km 内、匹配通过，且每 10km 剩余 2 小时内
         """
         if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
             return [{
@@ -159,8 +162,17 @@ class GuanguanService(BaseService):
 
         ranked_items = []
         for activity, progress in all_activities:
+            if not should_include_activity_for_match(
+                progress,
+                activity.id,
+                activity.state,
+                matched_activity_ids,
+                MODEL_ACTIVITY_STATE_EMPTY,
+            ):
+                continue
             address = address_map.get(activity.address_id)
-            has_match = activity.id in matched_activity_ids
+            in_matched = activity.id in matched_activity_ids
+            has_match = calc_list_has_match(progress, activity.state, in_matched)
             heart_kind = calc_list_heart_kind(progress, has_match=has_match)
             distance_km = calc_distance_km(
                 latitude, longitude,
@@ -194,6 +206,7 @@ class GuanguanService(BaseService):
                 "progressStatus": progress,
                 "progressDesc": PROGRESS_DESC.get(progress, ""),
                 "heartKind": heart_kind,
+                "hasMatch": has_match,
                 "img": GuanHelper.getActivityImg(activity, address, match_user, self.userInfo, True),
                 "address": address.name if address else "",
                 "longitude": address.longitude if address else 0,

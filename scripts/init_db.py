@@ -142,14 +142,25 @@ def run_migrations(conn: pymysql.connections.Connection):
 
 # ── Mock 数据构造器 ───────────────────────────────────────────────────────────
 
+def _list_table_ids(conn, table: str) -> list[int]:
+    with conn.cursor() as cur:
+        cur.execute(f"SELECT `id` FROM `{table}` ORDER BY `id`")
+        return [row[0] for row in cur.fetchall()]
+
+
+def _pick_id(ids: list[int], index: int, default: int = 0) -> int:
+    if not ids:
+        return default
+    return ids[index % len(ids)]
+
+
 def _insert_if_empty(conn, table: str, rows: list[dict], check_col: str = 'id'):
-    """仅当表为空时批量插入；已有数据则查库返回已有的前 N 条 id（幂等）"""
+    """仅当表为空时批量插入；已有数据则返回表中全部 id（幂等）"""
     with conn.cursor() as cur:
         cur.execute(f"SELECT COUNT(*) FROM `{table}`")
         cnt = cur.fetchone()[0]
         if cnt > 0:
-            cur.execute(f"SELECT `id` FROM `{table}` ORDER BY `id` LIMIT %s", (len(rows),))
-            existing_ids = [row[0] for row in cur.fetchall()]
+            existing_ids = _list_table_ids(conn, table)
             logger.info("  [跳过] %s 已有 %d 条，复用 ids: %s", table, cnt, existing_ids)
             return existing_ids
 
@@ -181,6 +192,41 @@ def seed_regions(conn) -> list[int]:
     return _insert_if_empty(conn, 'region', rows)
 
 
+def ensure_regions(conn) -> list[int]:
+    """幂等补齐省市区（含天津），供异地演示地址使用"""
+    rows = [
+        {'province': '北京市', 'city': '北京市', 'area': '海淀区', 'status': 1},
+        {'province': '上海市', 'city': '上海市', 'area': '浦东新区', 'status': 1},
+        {'province': '广东省', 'city': '深圳市', 'area': '南山区', 'status': 1},
+        {'province': '天津市', 'city': '天津市', 'area': '和平区', 'status': 1},
+    ]
+    inserted = 0
+    with conn.cursor() as cur:
+        for row in rows:
+            cur.execute(
+                """
+                SELECT `id` FROM `region`
+                WHERE `province` = %s AND `city` = %s AND `area` = %s AND `status` = 1
+                LIMIT 1
+                """,
+                (row['province'], row['city'], row['area']),
+            )
+            if cur.fetchone():
+                continue
+            cur.execute(
+                """
+                INSERT INTO `region` (`province`, `city`, `area`, `status`)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (row['province'], row['city'], row['area'], row['status']),
+            )
+            inserted += 1
+    if inserted:
+        conn.commit()
+        logger.info("  [写入] region 补齐 %d 条", inserted)
+    return _list_table_ids(conn, 'region')
+
+
 def seed_educations(conn) -> list[int]:
     rows = [
         {'category': '工学',   'disciplines': '计算机类', 'major': '软件工程', 'seq': 1, 'status': 1},
@@ -208,20 +254,122 @@ def seed_schools(conn, region_ids: list[int]) -> list[int]:
     return _insert_if_empty(conn, 'school', rows)
 
 
-def seed_addresses(conn, region_ids: list[int]) -> list[int]:
-    rows = [
+def _address_seed_rows(region_ids: list[int]) -> list[dict]:
+    region_beijing = _pick_id(region_ids, 0)
+    region_shanghai = _pick_id(region_ids, 1)
+    return [
         {
             'name': '北京五道口东来顺', 'description': '人均150 / 老北京涮肉',
-            'region_id': region_ids[0], 'longitude': 116.339, 'latitude': 40.003,
+            'region_id': region_beijing, 'longitude': 116.339, 'latitude': 40.003,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '北京三里屯咖啡', 'description': '人均60 / 咖啡约会',
+            'region_id': region_beijing, 'longitude': 116.455, 'latitude': 39.937,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '北京国子监茶馆', 'description': '人均80 / 茶馆',
+            'region_id': region_beijing, 'longitude': 116.417, 'latitude': 39.947,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '北京什刹海小馆', 'description': '人均120 / 小馆',
+            'region_id': region_beijing, 'longitude': 116.386, 'latitude': 39.941,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '北京朝阳公园南门', 'description': '公园散步',
+            'region_id': region_beijing, 'longitude': 116.482, 'latitude': 39.933,
             'img_obj_name': '', 'status': 1,
         },
         {
             'name': '上海陆家嘴星巴克', 'description': '人均60 / 咖啡约会',
-            'region_id': region_ids[1], 'longitude': 121.499, 'latitude': 31.237,
+            'region_id': region_shanghai, 'longitude': 121.499, 'latitude': 31.237,
             'img_obj_name': '', 'status': 1,
         },
     ]
-    return _insert_if_empty(conn, 'address', rows)
+
+
+def _tianjin_address_seed_rows(conn, region_ids: list[int]) -> list[dict]:
+    region_tianjin = _region_id_by_city(conn, '天津市') or _pick_id(region_ids, 0)
+    return [
+        {
+            'name': '天津滨江道咖啡', 'description': '人均50 / 咖啡约会',
+            'region_id': region_tianjin, 'longitude': 117.176, 'latitude': 39.129,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '天津意式风情区茶馆', 'description': '人均70 / 茶馆',
+            'region_id': region_tianjin, 'longitude': 117.196, 'latitude': 39.134,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '天津古文化街小馆', 'description': '人均90 / 小吃',
+            'region_id': region_tianjin, 'longitude': 117.188, 'latitude': 39.142,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '天津南开大学东门', 'description': '校园散步',
+            'region_id': region_tianjin, 'longitude': 117.172, 'latitude': 39.103,
+            'img_obj_name': '', 'status': 1,
+        },
+        {
+            'name': '天津之眼河畔', 'description': '河边散步',
+            'region_id': region_tianjin, 'longitude': 117.182, 'latitude': 39.154,
+            'img_obj_name': '', 'status': 1,
+        },
+    ]
+
+
+def _region_id_by_city(conn, city: str) -> int | None:
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT `id` FROM `region` WHERE `city` = %s AND `status` = 1 ORDER BY `id` LIMIT 1",
+            (city,),
+        )
+        row = cur.fetchone()
+    return row[0] if row else None
+
+
+def _all_address_seed_rows(conn, region_ids: list[int]) -> list[dict]:
+    return _address_seed_rows(region_ids) + _tianjin_address_seed_rows(conn, region_ids)
+
+
+def seed_addresses(conn, region_ids: list[int]) -> list[int]:
+    return _insert_if_empty(conn, 'address', _address_seed_rows(region_ids))
+
+
+def ensure_addresses(conn, region_ids: list[int]) -> list[int]:
+    """按 mock 地点名称幂等补齐地址，返回 seed 顺序的 id 列表（供 activity 引用）"""
+    rows = _all_address_seed_rows(conn, region_ids)
+    ordered_ids = []
+    inserted = 0
+    with conn.cursor() as cur:
+        for row in rows:
+            cur.execute(
+                "SELECT `id` FROM `address` WHERE `name` = %s AND `status` = 1 LIMIT 1",
+                (row['name'],),
+            )
+            found = cur.fetchone()
+            if found:
+                ordered_ids.append(found[0])
+                continue
+            cols = list(row.keys())
+            placeholders = ', '.join(['%s'] * len(cols))
+            col_clause = ', '.join(f'`{c}`' for c in cols)
+            cur.execute(
+                f"INSERT INTO `address` ({col_clause}) VALUES ({placeholders})",
+                tuple(row[c] for c in cols),
+            )
+            ordered_ids.append(cur.lastrowid)
+            inserted += 1
+    if inserted:
+        conn.commit()
+        logger.info("  [写入] address 补齐 mock 地点 %d 条，ids: %s", inserted, ordered_ids)
+    else:
+        logger.info("  [跳过] address mock 地点已齐全，ids: %s", ordered_ids)
+    return ordered_ids
 
 
 def seed_passports(conn) -> list[int]:
@@ -323,35 +471,202 @@ def seed_verifies(conn, passport_ids: list[int]) -> list[int]:
     return _insert_if_empty(conn, 'verify', rows)
 
 
+def _fmt_time(dt: datetime.datetime) -> str:
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
+
+
 def seed_activities(conn, passport_ids: list[int], address_ids: list[int]) -> list[int]:
-    """
-    3 个活动场景:
-      1. 空闲活动（无人参与）
-      2. 邀请成功，见面时间在未来（等待见面）
-      3. 邀请成功，见面已过去，双方都选了合适（已成功）
-    """
+    """首页演示：两周内场次 + 双心/实心/心碎常驻场景"""
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM `activity`")
+        if cur.fetchone()[0] > 0:
+            existing_ids = _list_table_ids(conn, 'activity')
+            logger.info("  [跳过] activity 已有数据，复用 ids: %s", existing_ids)
+            return existing_ids
+
+    if not address_ids:
+        logger.warning("  [跳过] activity seed：无可用 address_id")
+        return []
+
     now = datetime.datetime.now()
+    p0, p1, p2 = _pick_id(passport_ids, 0), _pick_id(passport_ids, 1), _pick_id(passport_ids, 2)
+    aid = lambda i: _pick_id(address_ids, i)
     rows = [
-        {  # 空闲活动
-            'address_id': address_ids[0],
-            'start_time': (now + datetime.timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S'),
+        {
+            'address_id': aid(0),
+            'start_time': _fmt_time(now + datetime.timedelta(hours=1)),
             'boy_passport_id': 0, 'girl_passport_id': 0,
             'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
         },
-        {  # 用户1(男)邀请用户2(女)，见面时间在3天后
-            'address_id': address_ids[0],
-            'start_time': (now + datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S'),
-            'boy_passport_id': passport_ids[0], 'girl_passport_id': passport_ids[1],
+        {
+            'address_id': aid(1),
+            'start_time': _fmt_time(now + datetime.timedelta(hours=2)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(2),
+            'start_time': _fmt_time(now + datetime.timedelta(days=2, hours=3)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(0),
+            'start_time': _fmt_time(now + datetime.timedelta(days=3)),
+            'boy_passport_id': p0, 'girl_passport_id': p1,
             'state': 100, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
         },
-        {  # 已见面，双方都选了合适
-            'address_id': address_ids[1],
-            'start_time': (now - datetime.timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S'),
-            'boy_passport_id': passport_ids[2], 'girl_passport_id': passport_ids[1],
+        {
+            'address_id': aid(3),
+            'start_time': _fmt_time(now + datetime.timedelta(days=5)),
+            'boy_passport_id': p0, 'girl_passport_id': 0,
+            'state': 1, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(1),
+            'start_time': _fmt_time(now - datetime.timedelta(days=2)),
+            'boy_passport_id': p2, 'girl_passport_id': p1,
             'state': 100, 'boy_meet_result': 1, 'girl_meet_result': 1, 'status': 1,
+        },
+        {
+            'address_id': aid(4),
+            'start_time': _fmt_time(now - datetime.timedelta(days=1)),
+            'boy_passport_id': p0, 'girl_passport_id': p1,
+            'state': 100, 'boy_meet_result': 100, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(2),
+            'start_time': _fmt_time(now + datetime.timedelta(days=10)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(3),
+            'start_time': _fmt_time(now + datetime.timedelta(minutes=35)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(4),
+            'start_time': _fmt_time(now + datetime.timedelta(minutes=50)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(1),
+            'start_time': _fmt_time(now + datetime.timedelta(minutes=75)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
+        },
+        {
+            'address_id': aid(0),
+            'start_time': _fmt_time(now + datetime.timedelta(minutes=100)),
+            'boy_passport_id': 0, 'girl_passport_id': 0,
+            'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
         },
     ]
     return _insert_if_empty(conn, 'activity', rows)
+
+
+def _address_id_by_name(conn, name: str) -> int | None:
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT `id` FROM `address` WHERE `name` = %s AND `status` = 1 LIMIT 1",
+            (name,),
+        )
+        row = cur.fetchone()
+    return row[0] if row else None
+
+
+def _upsert_demo_empty_activity(conn, address_id: int, start: datetime.datetime) -> int | None:
+    """刷新该地点最近一条空闲场次的开始时间（便于每次 init 后都能在首页看到无心）"""
+    start_str = _fmt_time(start)
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT `id` FROM `activity`
+            WHERE `address_id` = %s AND `state` = 0
+              AND `boy_passport_id` = 0 AND `girl_passport_id` = 0 AND `status` = 1
+            ORDER BY `start_time` DESC
+            LIMIT 1
+            """,
+            (address_id,),
+        )
+        row = cur.fetchone()
+        if row:
+            activity_id = row[0]
+            cur.execute(
+                "UPDATE `activity` SET `start_time` = %s WHERE `id` = %s",
+                (start_str, activity_id),
+            )
+            return activity_id
+        cur.execute(
+            """
+            INSERT INTO `activity` (
+                address_id, start_time, boy_passport_id, girl_passport_id,
+                state, boy_meet_result, girl_meet_result, status
+            ) VALUES (%s, %s, 0, 0, 0, 0, 0, 1)
+            """,
+            (address_id, start_str),
+        )
+        return cur.lastrowid
+
+
+def ensure_empty_slot_activities(conn, address_ids: list[int]) -> list[int]:
+    """补充/刷新空闲（无心）场次：天津演示点 + 北京点，开始时间滚动到未来 1~2 小时内"""
+    now = datetime.datetime.now()
+    touched_ids = []
+
+    tianjin_slots = [
+        ('天津滨江道咖啡', datetime.timedelta(minutes=48)),
+        ('天津意式风情区茶馆', datetime.timedelta(minutes=62)),
+        ('天津古文化街小馆', datetime.timedelta(minutes=78)),
+        ('天津南开大学东门', datetime.timedelta(minutes=95)),
+        ('天津之眼河畔', datetime.timedelta(minutes=110)),
+    ]
+    for name, delta in tianjin_slots:
+        address_id = _address_id_by_name(conn, name)
+        if not address_id:
+            logger.warning("  [跳过] 无心场次：未找到地址 %s", name)
+            continue
+        activity_id = _upsert_demo_empty_activity(conn, address_id, now + delta)
+        if activity_id:
+            touched_ids.append(activity_id)
+
+    if address_ids:
+        legacy_slots = [
+            (_pick_id(address_ids, 2), datetime.timedelta(minutes=40)),
+            (_pick_id(address_ids, 3), datetime.timedelta(minutes=65)),
+        ]
+        for address_id, delta in legacy_slots:
+            activity_id = _upsert_demo_empty_activity(conn, address_id, now + delta)
+            if activity_id:
+                touched_ids.append(activity_id)
+
+    if touched_ids:
+        conn.commit()
+        logger.info("  [写入] activity 刷新无心场次 %d 条，id: %s", len(touched_ids), touched_ids)
+    else:
+        logger.info("  [跳过] activity 无心场次未更新")
+    return touched_ids
+
+
+def sync_activities_to_redis(conn, activity_ids: list[int] | None = None):
+    """将活动写入 Redis 匹配索引，供首页匹配过滤使用"""
+    try:
+        from ral.activity import addByActivity
+    except Exception as exc:
+        logger.warning("跳过 Redis 活动索引同步: %s", exc)
+        return
+
+    if activity_ids is None:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id FROM activity WHERE status = 1")
+            activity_ids = [row[0] for row in cur.fetchall()]
+
+    for activity_id in activity_ids:
+        addByActivity(activity_id)
+    logger.info("Redis 活动索引同步完成，共 %d 条", len(activity_ids))
 
 
 def seed_shares(conn, passport_ids: list[int]) -> list[int]:
@@ -373,17 +688,23 @@ def main():
         run_migrations(conn)
 
         logger.info("=== Step 2: 写入 Mock 数据（幂等）===")
-        region_ids    = seed_regions(conn)
+        seed_regions(conn)
+        region_ids    = ensure_regions(conn)
         education_ids = seed_educations(conn)
         work_ids      = seed_works(conn)
         school_ids    = seed_schools(conn, region_ids)
-        address_ids   = seed_addresses(conn, region_ids)
+        seed_addresses(conn, region_ids)
+        address_ids   = ensure_addresses(conn, region_ids)
         passport_ids  = seed_passports(conn)
         seed_users(conn, passport_ids, region_ids, education_ids, work_ids, school_ids)
         seed_requirements(conn, passport_ids)
         seed_verifies(conn, passport_ids)
         seed_activities(conn, passport_ids, address_ids)
+        empty_activity_ids = ensure_empty_slot_activities(conn, address_ids)
         seed_shares(conn, passport_ids)
+        sync_activities_to_redis(conn)
+        if empty_activity_ids:
+            sync_activities_to_redis(conn, empty_activity_ids)
 
         logger.info("=== 初始化完成 ===")
         _print_summary(conn)

@@ -13,7 +13,7 @@ from util.const.base import (
     MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE
 )
 from util.const.match import (
-    MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_INVITE_SUCCESS
+    MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
 )
 
 # PROGRESS_STATUS - 进展状态常量
@@ -132,7 +132,7 @@ PERMANENT_HEART_KINDS = frozenset({
     HEART_KIND_DOUBLE,
 })
 
-# 列表排序：实心 > 心碎 > 双心 > 单心 > 空白
+# 列表排序：实心 > 心碎 > 双心 > 单心 > 无心（再按 10km 距离档、见面时间）
 HEART_SORT_ORDER = {
     HEART_KIND_SOLID: 0,
     HEART_KIND_BROKEN: 1,
@@ -142,7 +142,10 @@ HEART_SORT_ORDER = {
 }
 
 DISTANCE_BUCKET_KM = 10
-MAX_LIST_LEAD_DAYS = 14
+LIST_WINDOW_DAYS = 14
+LIST_WINDOW_MINUTES = LIST_WINDOW_DAYS * 24 * 60
+MAX_LIST_DISTANCE_KM = 100
+LEAD_MINUTES_PER_DISTANCE_BUCKET = 120
 EARTH_RADIUS_KM = 6371.0
 
 
@@ -165,9 +168,9 @@ def distance_bucket_km(distance_km):
     return int(distance_km // DISTANCE_BUCKET_KM) + 1
 
 
-def max_lead_minutes_for_empty(distance_km):
-    """空白项：每 10km 多展示 1 小时内的场次"""
-    return distance_bucket_km(distance_km) * 60
+def max_lead_minutes_for_transient(distance_km):
+    """单心/空白：每 10km 对应剩余 2 小时内的场次"""
+    return distance_bucket_km(distance_km) * LEAD_MINUTES_PER_DISTANCE_BUCKET
 
 
 def calc_list_heart_kind(progress_status, has_match=False):
@@ -192,18 +195,36 @@ def calc_list_heart_kind(progress_status, has_match=False):
     return HEART_KIND_EMPTY
 
 
+def calc_list_has_match(progress_status, activity_state, in_matched_activity_ids):
+    """候选场次：空闲=无心；邀请中=单心。已参与场次沿用 Redis 匹配标记。"""
+    if progress_status != PROGRESS_NOT_SELECTED:
+        return bool(in_matched_activity_ids)
+    if activity_state == MODEL_ACTIVITY_STATE_EMPTY:
+        return False
+    if activity_state == MODEL_ACTIVITY_STATE_INVITING:
+        return True
+    return bool(in_matched_activity_ids)
+
+
 def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start):
     if heart_kind in PERMANENT_HEART_KINDS:
         return True
+    if distance_km is None or distance_km > MAX_LIST_DISTANCE_KM:
+        return False
     if minutes_until_start is None or minutes_until_start < 0:
         return False
-    if minutes_until_start > MAX_LIST_LEAD_DAYS * 24 * 60:
+    if minutes_until_start > LIST_WINDOW_MINUTES:
         return False
-    if heart_kind == HEART_KIND_EMPTY:
-        return minutes_until_start <= max_lead_minutes_for_empty(distance_km)
-    if heart_kind == HEART_KIND_SINGLE:
-        return True
+    if heart_kind in (HEART_KIND_EMPTY, HEART_KIND_SINGLE):
+        return minutes_until_start <= max_lead_minutes_for_transient(distance_km)
     return False
+
+
+def should_include_activity_for_match(progress_status, activity_id, activity_state, matched_activity_ids, activity_state_empty):
+    """匹配过滤：已参与活动直接展示；候选场次需在 Redis 匹配集合内"""
+    if progress_status != PROGRESS_NOT_SELECTED:
+        return True
+    return activity_id in matched_activity_ids
 
 
 def limit_solid_heart_items(items, heart_kind_getter):
