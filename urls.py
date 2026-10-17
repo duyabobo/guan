@@ -3,7 +3,7 @@
 from handler import example
 from handler.miniprogram import guan_info, guanguan, subscribe, contact, send_msg
 from handler.pc import index
-from handler.user import login, myself, requirement, match_config
+from handler.user import login, match_config
 from handler.verify import phone_verify
 
 handlers = [
@@ -12,9 +12,6 @@ handlers = [
     (r'/login$', login.LoginHandler),
     (r'/contact$', contact.ContactHandler),
     (r'/send_sms$', send_msg.SendSmsHandler),
-    (r'/myself$', myself.MyselfHandler),
-    (r'/requirement$', requirement.RequirementHandler),
-    (r'/location_state$', myself.LocationStateHandler),
     (r'/guanguan$', guanguan.GuanguanHandler),
     (r'/guan_info$', guan_info.GuanInfoHandler),
     (r'/meet_result$', guan_info.MeetResultHandler),

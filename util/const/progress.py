@@ -87,6 +87,29 @@ def calc_activity_progress(passport_id, activity):
     return PROGRESS_NOT_SELECTED
 
 
+STYLE_MEET = "meet"
+STYLE_START_MEET = "start-meet"
+STYLE_CANCEL = "cancel"
+STYLE_SUITABLE = "suitable"
+STYLE_UNSUITABLE = "unsuitable"
+STYLE_END = "end"
+STYLE_RESTORE = "restore"
+
+
+def _button(label, action, style_key, need_confirm, op_type=None, value=None):
+    button = {
+        "label": label,
+        "action": action,
+        "styleKey": style_key,
+        "needConfirm": need_confirm,
+    }
+    if op_type is not None:
+        button["opType"] = op_type
+    if value is not None:
+        button["value"] = value
+    return button
+
+
 def get_bottom_buttons(progress_status, op_type):
     """
     纯函数：根据进展状态和操作类型，返回底部按钮配置列表。
@@ -94,26 +117,27 @@ def get_bottom_buttons(progress_status, op_type):
 
     :param progress_status: PROGRESS_* 常量
     :param op_type:         GUAN_INFO_OP_TYPE_* 常量（仅 NOT_SELECTED 时使用）
-    :return: list of dict {label, action, needConfirm, ...}
+    :return: list of dict {label, action, styleKey, needConfirm, ...}
     """
     if progress_status == PROGRESS_NOT_SELECTED:
-        label = "发起见面" if op_type == GUAN_INFO_OP_TYPE_INVITE else "见面"
-        return [{"label": label, "action": "operate", "opType": op_type, "needConfirm": False}]
+        if op_type == GUAN_INFO_OP_TYPE_INVITE:
+            return [_button("发起见面", "operate", STYLE_START_MEET, False, op_type=op_type)]
+        return [_button("见面", "operate", STYLE_MEET, False, op_type=op_type)]
 
     if progress_status in (PROGRESS_SELECTED, PROGRESS_WAIT_MEET):
-        return [{"label": "取消", "action": "operate", "opType": GUAN_INFO_OP_TYPE_QUIT, "needConfirm": True}]
+        return [_button("取消", "operate", STYLE_CANCEL, True, op_type=GUAN_INFO_OP_TYPE_QUIT)]
 
     if progress_status == PROGRESS_MET:
         return [
-            {"label": "合适", "action": "meetResult", "value": MODEL_MEET_RESULT_FIT_CHOICE, "needConfirm": True},
-            {"label": "不合适", "action": "meetResult", "value": MODEL_MEET_RESULT_UNFIT_CHOICE, "needConfirm": True},
+            _button("合适", "meetResult", STYLE_SUITABLE, True, value=MODEL_MEET_RESULT_FIT_CHOICE),
+            _button("不合适", "meetResult", STYLE_UNSUITABLE, True, value=MODEL_MEET_RESULT_UNFIT_CHOICE),
         ]
 
     if progress_status == PROGRESS_AGREE:
-        return [{"label": "结束关系", "action": "meetResult", "value": MODEL_MEET_RESULT_UNFIT_CHOICE, "needConfirm": True}]
+        return [_button("结束关系", "meetResult", STYLE_END, True, value=MODEL_MEET_RESULT_UNFIT_CHOICE)]
 
     if progress_status == PROGRESS_DISAGREE:
-        return [{"label": "恢复关系", "action": "meetResult", "value": MODEL_MEET_RESULT_FIT_CHOICE, "needConfirm": True}]
+        return [_button("恢复关系", "meetResult", STYLE_RESTORE, True, value=MODEL_MEET_RESULT_FIT_CHOICE)]
 
     return []  # PROGRESS_NO_CONFIG 或其他异常状态
 

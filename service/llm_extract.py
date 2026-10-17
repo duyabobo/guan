@@ -7,6 +7,7 @@ LLM 信息提取服务：从自然语言文本中提取匹配配置的结构化�
 import json
 import logging
 
+from service.common.profile_catalog import extraction_hint
 from util.config import get_conf
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,8 @@ _EXTRACT_PROMPT = """
 2. "my_requirement"（我的期望）：对方性别(sex)、年龄范围(min_birth_year/max_birth_year)、身高范围(min_height/max_height)
 
 只提取文本中明确提到的字段，未提及的不要猜测。
+可提取维度（键名必须一致，未在目录中的键不要返回）：
+{fields}
 返回格式示例：
 {{
   "my_info": {{"sex": 1, "birth_year": 1995, "height": 170}},
@@ -57,7 +60,7 @@ class LlmExtractService:
             return None
 
         client = openai.OpenAI(api_key=api_key, base_url=api_base)
-        prompt = _EXTRACT_PROMPT.format(text=text)
+        prompt = _EXTRACT_PROMPT.format(text=text, fields=extraction_hint())
 
         response = client.chat.completions.create(
             model=model,

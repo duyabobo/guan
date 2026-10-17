@@ -15,7 +15,6 @@ from sqlalchemy.orm import sessionmaker
 from handler.basehandler import Manager
 from model.activity import ActivityModel
 from model.address import AddressModel
-from ral.activity import addByActivity
 from util.database import engine
 from util.ctx import LocalContext
 
@@ -57,8 +56,7 @@ class ActivityAutoCreater(object):
                 if self.hasFreeActivity(addressId):
                     continue
                 nextTime = self.getNextTime(addressId)
-                activity = ActivityModel.addOne(addressId, nextTime)
-                addByActivity(activity.id)
+                ActivityModel.addOne(addressId, nextTime)
         return
 
 

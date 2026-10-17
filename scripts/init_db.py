@@ -107,6 +107,7 @@ _IDEMPOTENT_ERRORS = {
     1060,  # Duplicate column name（ADD COLUMN 时列已存在）
     1061,  # Duplicate key name（ADD INDEX 时索引已存在）
     1091,  # Can't DROP; column/key doesn't exist（DROP 不存在的列/索引）
+    1146,  # Table doesn't exist（历史迁移改已删除的宽表）
 }
 
 
@@ -381,84 +382,51 @@ def seed_passports(conn) -> list[int]:
     return _insert_if_empty(conn, 'passport', rows)
 
 
-def seed_users(conn, passport_ids: list[int], region_ids: list[int],
-               education_ids: list[int], work_ids: list[int],
-               school_ids: list[int]) -> list[int]:
-    """
-    mock 3 个用户: 男/女/男
-    sex: 1=男, 2=女  |  martial_status: 1=未婚
-    verify_type: 1=学校认证, 2=工作认证, 0=无认证
-    """
-    rows = [
-        {  # 用户1：男，学校认证，信息已完善
-            'passport_id': passport_ids[0], 'allow_location': 1,
-            'sex': 1, 'verify_type': 1, 'has_head_img': 1, 'head_img_version': 1,
-            'birth_year': 1996, 'height': 178, 'weight': 70,
-            'home_region_id': region_ids[0],
-            'study_from_year': 2015, 'study_region_id': region_ids[0],
-            'school_id': school_ids[0], 'education_level': 2, 'education_id': education_ids[0],
-            'work_region_id': region_ids[0], 'work_id': work_ids[0], 'month_pay': 25000,
-            'martial_status': 1, 'info_has_filled': 1, 'status': 1,
-        },
-        {  # 用户2：女，工作认证，信息已完善
-            'passport_id': passport_ids[1], 'allow_location': 1,
-            'sex': 2, 'verify_type': 2, 'has_head_img': 1, 'head_img_version': 1,
-            'birth_year': 1998, 'height': 163, 'weight': 52,
-            'home_region_id': region_ids[1],
-            'study_from_year': 2017, 'study_region_id': region_ids[1],
-            'school_id': school_ids[1], 'education_level': 2, 'education_id': education_ids[1],
-            'work_region_id': region_ids[1], 'work_id': work_ids[1], 'month_pay': 18000,
-            'martial_status': 1, 'info_has_filled': 1, 'status': 1,
-        },
-        {  # 用户3：男，无认证，信息未完善
-            'passport_id': passport_ids[2], 'allow_location': 0,
-            'sex': 1, 'verify_type': 0, 'has_head_img': -1, 'head_img_version': 0,
-            'birth_year': 1995, 'height': 175, 'weight': 75,
-            'home_region_id': region_ids[2],
-            'study_from_year': 2014, 'study_region_id': region_ids[2],
-            'school_id': school_ids[2], 'education_level': 2, 'education_id': education_ids[2],
-            'work_region_id': region_ids[2], 'work_id': work_ids[2], 'month_pay': 12000,
-            'martial_status': 1, 'info_has_filled': 0, 'status': 1,
-        },
+def seed_profile_attrs(conn, passport_ids: list[int]):
+    """mock 资料：一个维度一行。已有记录的账号不覆盖。"""
+    specs = [
+        (passport_ids[0], (
+            ("info", "sex", 1, 0),
+            ("info", "birth_year", 1996, 0),
+            ("info", "height", 178, 0),
+            ("info", "weight", 70, 0),
+            ("info", "education_level", 4, 0),
+            ("info", "study_from_year", 2015, 0),
+            ("requirement", "sex", 2, 0),
+            ("requirement", "birth_year", 1993, 2003),
+            ("requirement", "height", 158, 175),
+            ("requirement", "weight", 45, 65),
+        )),
+        (passport_ids[1], (
+            ("info", "sex", 2, 0),
+            ("info", "birth_year", 1998, 0),
+            ("info", "height", 163, 0),
+            ("info", "weight", 52, 0),
+            ("info", "education_level", 4, 0),
+            ("info", "study_from_year", 2017, 0),
+            ("requirement", "sex", 1, 0),
+            ("requirement", "birth_year", 1990, 2000),
+            ("requirement", "height", 170, 190),
+            ("requirement", "weight", 60, 90),
+        )),
+        (passport_ids[2], (
+            ("info", "sex", 1, 0),
+            ("info", "birth_year", 1995, 0),
+            ("info", "height", 175, 0),
+            ("info", "weight", 75, 0),
+            ("requirement", "sex", 2, 0),
+            ("requirement", "birth_year", 1995, 2005),
+            ("requirement", "height", 155, 170),
+        )),
     ]
-    return _insert_if_empty(conn, 'user', rows)
-
-
-def seed_requirements(conn, passport_ids: list[int]) -> list[int]:
-    """期望条件：用户1找女性，用户2找男性，用户3找女性（仅填核心条件，其余 0=不限）"""
-    _ZERO_REGION = {'home_region_id': 0, 'study_region_id': 0, 'work_region_id': 0}
-    _ZERO_EDU    = {'school_id': 0, 'work_id': 0, 'education_id': 0,
-                    'education_level': 0, 'min_study_from_year': 0, 'max_study_from_year': 0}
-    rows = [
-        {
-            'passport_id': passport_ids[0], 'verify_type': 0,
-            'sex': 2, 'martial_status': 2,
-            'min_birth_year': 1993, 'max_birth_year': 2003,
-            'min_height': 158, 'max_height': 175,
-            'min_weight': 45, 'max_weight': 65,
-            'min_month_pay': 0, 'max_month_pay': 0,
-            **_ZERO_REGION, **_ZERO_EDU, 'status': 1,
-        },
-        {
-            'passport_id': passport_ids[1], 'verify_type': 0,
-            'sex': 1, 'martial_status': 1,
-            'min_birth_year': 1990, 'max_birth_year': 2000,
-            'min_height': 170, 'max_height': 190,
-            'min_weight': 60, 'max_weight': 90,
-            'min_month_pay': 15000, 'max_month_pay': 0,
-            **_ZERO_REGION, **_ZERO_EDU, 'status': 1,
-        },
-        {
-            'passport_id': passport_ids[2], 'verify_type': 0,
-            'sex': 2, 'martial_status': 0,
-            'min_birth_year': 1995, 'max_birth_year': 2005,
-            'min_height': 155, 'max_height': 170,
-            'min_weight': 0, 'max_weight': 0,
-            'min_month_pay': 0, 'max_month_pay': 0,
-            **_ZERO_REGION, **_ZERO_EDU, 'status': 1,
-        },
-    ]
-    return _insert_if_empty(conn, 'requirement', rows)
+    for passport_id, dims in specs:
+        if _profile_attr_count(conn, passport_id):
+            logger.info("  [跳过] profile_attr 已有数据 passport_id=%s", passport_id)
+            continue
+        for scope, dim_key, value_min, value_max in dims:
+            _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min, value_max)
+        logger.info("  [写入] profile_attr passport_id=%s dims=%s", passport_id, len(dims))
+    conn.commit()
 
 
 def seed_verifies(conn, passport_ids: list[int]) -> list[int]:
@@ -652,21 +620,8 @@ def ensure_empty_slot_activities(conn, address_ids: list[int]) -> list[int]:
 
 
 def sync_activities_to_redis(conn, activity_ids: list[int] | None = None):
-    """将活动写入 Redis 匹配索引，供首页匹配过滤使用"""
-    try:
-        from ral.activity import addByActivity
-    except Exception as exc:
-        logger.warning("跳过 Redis 活动索引同步: %s", exc)
-        return
-
-    if activity_ids is None:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id FROM activity WHERE status = 1")
-            activity_ids = [row[0] for row in cur.fetchall()]
-
-    for activity_id in activity_ids:
-        addByActivity(activity_id)
-    logger.info("Redis 活动索引同步完成，共 %d 条", len(activity_ids))
+    """宽表匹配索引已删除，不再把活动写进 Redis。"""
+    return
 
 
 def seed_shares(conn, passport_ids: list[int]) -> list[int]:
@@ -683,13 +638,7 @@ OPPOSITE_PHONE = '13800000002'
 LOGIN_BIRTH_YEAR = 1996
 LOGIN_HEIGHT = 178
 LOGIN_WEIGHT = 70
-LOGIN_MONTH_PAY = 20000
 LOGIN_EDUCATION_LEVEL = 4  # 本科
-OPPOSITE_MONTH_PAY_MAX = 80000
-PEKING_UNIVERSITY_ID = 1
-TIANJIN_REGION_ID = 4
-BEIJING_REGION_ID = 1
-EDUCATION_SOFTWARE_ID = 1
 STUDY_FROM_YEAR = 2014
 STATE_INVITING = 1
 STATE_SUCCESS = 100
@@ -714,75 +663,64 @@ def _passport_id_by_sql(conn, sql, params):
     return row[0] if row else None
 
 
+def _profile_attr_count(conn, passport_id):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT COUNT(*) FROM `profile_attr` WHERE `passport_id`=%s AND `status`=1",
+            (passport_id,),
+        )
+        return cur.fetchone()[0]
+
+
+def _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min=0, value_max=0, value_text=""):
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO `profile_attr`
+                (passport_id, scope, dim_key, value_min, value_max, value_text, status)
+            VALUES (%s, %s, %s, %s, %s, %s, 1)
+            ON DUPLICATE KEY UPDATE
+                value_min=VALUES(value_min), value_max=VALUES(value_max),
+                value_text=VALUES(value_text), status=1
+            """,
+            (passport_id, scope, dim_key, value_min, value_max, value_text),
+        )
+
+
+def _sex_value(conn, passport_id):
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT `value_min` FROM `profile_attr`
+            WHERE `passport_id`=%s AND `scope`='info' AND `dim_key`='sex' AND `status`=1
+            """,
+            (passport_id,),
+        )
+        row = cur.fetchone()
+    return row[0] if row else 0
+
+
 def _fill_login_user_profile(conn, passport_id):
     """只在还没填性别时写入，避免覆盖语音页后来改过的资料。"""
-    with conn.cursor() as cur:
-        cur.execute("SELECT `sex` FROM `user` WHERE `passport_id` = %s AND `status` = 1", (passport_id,))
-        row = cur.fetchone()
-        if not row:
-            logger.warning("  [跳过] 登录用户没有 user 记录 passport_id=%s", passport_id)
-            return
-        if row[0]:
-            logger.info("  [跳过] 登录用户资料已有性别，不覆盖 passport_id=%s", passport_id)
-            return
-        cur.execute(
-            """
-            UPDATE `user` SET
-                sex=%s, birth_year=%s, height=%s, weight=%s, month_pay=%s,
-                martial_status=0, education_level=%s, info_has_filled=1, allow_location=1,
-                home_region_id=%s, study_region_id=%s, school_id=%s,
-                study_from_year=%s, education_id=%s,
-                profile_desc=%s
-            WHERE passport_id=%s AND status=1
-            """,
-            (
-                1, LOGIN_BIRTH_YEAR, LOGIN_HEIGHT, LOGIN_WEIGHT, LOGIN_MONTH_PAY,
-                LOGIN_EDUCATION_LEVEL, TIANJIN_REGION_ID, BEIJING_REGION_ID, PEKING_UNIVERSITY_ID,
-                STUDY_FROM_YEAR, EDUCATION_SOFTWARE_ID,
-                '1996年的男生，在北京读书，想在天津见面。',
-                passport_id,
-            ),
-        )
-        cur.execute(
-            """
-            UPDATE `requirement` SET
-                sex=2, martial_status=0,
-                min_birth_year=1994, max_birth_year=2001,
-                min_height=155, max_height=175,
-                min_weight=45, max_weight=65,
-                min_month_pay=0, max_month_pay=%s,
-                education_level=%s,
-                home_region_id=%s, study_region_id=%s, school_id=%s,
-                min_study_from_year=2012, max_study_from_year=2018,
-                education_id=%s,
-                requirement_desc=%s
-            WHERE passport_id=%s AND status=1
-            """,
-            (
-                OPPOSITE_MONTH_PAY_MAX, LOGIN_EDUCATION_LEVEL,
-                TIANJIN_REGION_ID, BEIJING_REGION_ID, PEKING_UNIVERSITY_ID,
-                EDUCATION_SOFTWARE_ID,
-                '希望对方是1994到2001年的女生，身高155到175。',
-                passport_id,
-            ),
-        )
+    if _sex_value(conn, passport_id):
+        logger.info("  [跳过] 登录用户资料已有性别，不覆盖 passport_id=%s", passport_id)
+        return
+    dims = (
+        ("info", "sex", 1, 0),
+        ("info", "birth_year", LOGIN_BIRTH_YEAR, 0),
+        ("info", "height", LOGIN_HEIGHT, 0),
+        ("info", "weight", LOGIN_WEIGHT, 0),
+        ("info", "education_level", LOGIN_EDUCATION_LEVEL, 0),
+        ("info", "study_from_year", STUDY_FROM_YEAR, 0),
+        ("requirement", "sex", 2, 0),
+        ("requirement", "birth_year", 1994, 2001),
+        ("requirement", "height", 155, 175),
+        ("requirement", "weight", 45, 65),
+        ("requirement", "education_level", LOGIN_EDUCATION_LEVEL, 0),
+    )
+    for scope, dim_key, value_min, value_max in dims:
+        _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min, value_max)
     logger.info("  [写入] 登录用户个人信息和期望 passport_id=%s", passport_id)
-
-
-def _open_opposite_requirement(conn, opposite_id):
-    """女方原期望月收入上限是 0，任何人都匹配不上。放开到可加入的范围。"""
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            UPDATE `requirement` SET
-                max_month_pay=%s,
-                school_id=%s
-            WHERE passport_id=%s AND status=1 AND max_month_pay=0
-            """,
-            (OPPOSITE_MONTH_PAY_MAX, PEKING_UNIVERSITY_ID, opposite_id),
-        )
-        if cur.rowcount:
-            logger.info("  [写入] 对方期望改为可匹配 passport_id=%s", opposite_id)
 
 
 def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, girl_result, start):
@@ -835,8 +773,6 @@ def ensure_login_user_demo(conn) -> list[int]:
         (OPPOSITE_PHONE,),
     )
     _fill_login_user_profile(conn, passport_id)
-    if opposite_id:
-        _open_opposite_requirement(conn, opposite_id)
 
     now = datetime.datetime.now()
     activity_ids = []
@@ -874,15 +810,14 @@ def main():
 
         logger.info("=== Step 2: 写入 Mock 数据（幂等）===")
         seed_regions(conn)
-        region_ids    = ensure_regions(conn)
-        education_ids = seed_educations(conn)
-        work_ids      = seed_works(conn)
-        school_ids    = seed_schools(conn, region_ids)
+        region_ids = ensure_regions(conn)
+        seed_educations(conn)
+        seed_works(conn)
+        seed_schools(conn, region_ids)
         seed_addresses(conn, region_ids)
         address_ids   = ensure_addresses(conn, region_ids)
         passport_ids  = seed_passports(conn)
-        seed_users(conn, passport_ids, region_ids, education_ids, work_ids, school_ids)
-        seed_requirements(conn, passport_ids)
+        seed_profile_attrs(conn, passport_ids)
         seed_verifies(conn, passport_ids)
         seed_activities(conn, passport_ids, address_ids)
         empty_activity_ids = ensure_empty_slot_activities(conn, address_ids)
@@ -903,7 +838,7 @@ def main():
 def _print_summary(conn):
     tables = [
         'region', 'education', 'work', 'school', 'address',
-        'passport', 'user', 'requirement', 'verify', 'activity', 'share',
+        'passport', 'profile_attr', 'verify', 'activity', 'share',
     ]
     logger.info("─── 数据总览 ───────────────────────────────")
     with conn.cursor() as cur:

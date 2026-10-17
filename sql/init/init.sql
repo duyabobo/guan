@@ -87,69 +87,6 @@ CREATE TABLE IF NOT EXISTS `passport` (
     INDEX `idx_openid` (`openid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号';
 
--- ── user：用户信息 ──────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `user` (
-    `id`              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`     BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'passport_id',
-    `allow_location`  TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否允许获取位置',
-    `sex`             TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '性别: 0未知 1男 2女',
-    `verify_type`     TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '认证类型: 0无 1学校 2工作',
-    `has_head_img`    TINYINT          NOT NULL DEFAULT -1 COMMENT '自定义头像: -1未选 0否 1是',
-    `head_img_version` INT             NOT NULL DEFAULT 0,
-    `birth_year`      SMALLINT        NOT NULL DEFAULT 0,
-    `height`          SMALLINT        NOT NULL DEFAULT 0 COMMENT '身高cm',
-    `weight`          SMALLINT        NOT NULL DEFAULT 0 COMMENT '体重kg',
-    `home_region_id`  BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '籍贯',
-    `study_from_year` SMALLINT        NOT NULL DEFAULT 0 COMMENT '入学年份',
-    `study_region_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `school_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `education_level` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    `education_id`    BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `work_region_id`  BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `work_id`         BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `month_pay`       INT             NOT NULL DEFAULT 0 COMMENT '月收入(元)',
-    `martial_status`  TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '婚姻: 0未知 1未婚 2离异',
-    `info_has_filled` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否完善信息',
-    `profile_desc`    TEXT             NULL               COMMENT '自然语言个人描述原文',
-    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_passport_id` (`passport_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息';
-
--- ── requirement：期望条件 ───────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `requirement` (
-    `id`                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`         BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `verify_type`         TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    `sex`                 TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '期望对方性别',
-    `min_birth_year`      SMALLINT        NOT NULL DEFAULT 0,
-    `max_birth_year`      SMALLINT        NOT NULL DEFAULT 0,
-    `min_weight`          SMALLINT        NOT NULL DEFAULT 0,
-    `max_weight`          SMALLINT        NOT NULL DEFAULT 0,
-    `min_height`          SMALLINT        NOT NULL DEFAULT 0,
-    `max_height`          SMALLINT        NOT NULL DEFAULT 0,
-    `home_region_id`      BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `min_study_from_year` SMALLINT        NOT NULL DEFAULT 0,
-    `max_study_from_year` SMALLINT        NOT NULL DEFAULT 0,
-    `study_region_id`     BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `school_id`           BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `education_level`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    `education_id`        BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `work_region_id`      BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `work_id`             BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `max_month_pay`       INT             NOT NULL DEFAULT 0,
-    `min_month_pay`       INT             NOT NULL DEFAULT 0,
-    `martial_status`      TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    `requirement_desc`    TEXT             NULL      COMMENT '自然语言期望描述原文',
-    `status`              TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_passport_id` (`passport_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='期望条件';
-
 -- ── verify：认证信息 ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `verify` (
     `id`                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -192,30 +129,6 @@ CREATE TABLE IF NOT EXISTS `activity_change_record` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动流水记录';
 
--- ── user_change_record：用户信息变更流水 ────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `user_change_record` (
-    `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`   BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `change_column` VARCHAR(64)     NOT NULL DEFAULT '',
-    `new_value`     VARCHAR(512)    NOT NULL DEFAULT '',
-    `status`        TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息变更流水';
-
--- ── requirement_change_record：期望变更流水 ─────────────────────────────────
-CREATE TABLE IF NOT EXISTS `requirement_change_record` (
-    `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`   BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `change_column` VARCHAR(64)     NOT NULL DEFAULT '',
-    `new_value`     VARCHAR(512)    NOT NULL DEFAULT '',
-    `status`        TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='期望条件变更流水';
-
 -- ── share：分享记录 ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `share` (
     `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -226,3 +139,19 @@ CREATE TABLE IF NOT EXISTS `share` (
     `update_time`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享记录';
+
+-- ── profile_attr：个人资料与期望，一个维度一行 ─────────────────────────────
+CREATE TABLE IF NOT EXISTS `profile_attr` (
+    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `passport_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `scope`       VARCHAR(16)     NOT NULL DEFAULT '' COMMENT 'info 个人信息 / requirement 个人期望',
+    `dim_key`     VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '维度键，对应代码里的 ACTIVE_DIMS',
+    `value_text`  VARCHAR(512)    NOT NULL DEFAULT '' COMMENT '文本维度的值',
+    `value_min`   INT             NOT NULL DEFAULT 0 COMMENT '单值，或区间下限',
+    `value_max`   INT             NOT NULL DEFAULT 0 COMMENT '区间上限；单值维度为 0',
+    `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_passport_scope_dim` (`passport_id`, `scope`, `dim_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='个人资料与期望，一个维度一行';

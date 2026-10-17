@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
 from ral.email_verify import EmailVerifyService
-from service.myself import UserInfoService
 from util.monitor import superMonitor, Response
 
 
@@ -23,5 +22,4 @@ class EmailVerifyHandler(BaseHandler):
         code = self.getRequestParameter('code')
         evs = EmailVerifyService(self.currentPassport)
         ret = evs.checkCodeWithCache(openid, email, code)
-        uis = UserInfoService(self.currentPassport)
-        return Response(data=uis.getMyselfInfo(), msg=ret)
+        return Response(msg=ret)

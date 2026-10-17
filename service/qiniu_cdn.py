@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import util.config
-from model.user import UserModel
-from util.const.match import MODEL_STATUS_YES
 from util.const.qiniu_img import CDN_QINIU_URL
 from util.encode import md5_hex
 from util.qiniu_cdn import Qiniu
+
+
+HEAD_IMG_VERSION = 0
 
 
 class MyStorage(object):
@@ -34,19 +35,14 @@ class MyStorage(object):
 
     @staticmethod
     def getObjNames(passportId):
-        # 获取真实头像照片cdn对象名，以及虚拟头像照片cdn对象名
-        userInfo = UserModel.getByPassportId(passportId=passportId)
         fmt = "obj_name_secret:%s:passport_id:%s:head_img_version:%d"
-        realSeed = fmt % (util.config.get("qiniu", "secret_key"), passportId, userInfo.head_img_version)
-        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), md5_hex("%d" % passportId), userInfo.head_img_version)
+        realSeed = fmt % (util.config.get("qiniu", "secret_key"), passportId, HEAD_IMG_VERSION)
+        virtualSeed = fmt % (util.config.get("qiniu", "secret_key"), md5_hex("%d" % passportId), HEAD_IMG_VERSION)
         return "%s/%s" % ('head_img', md5_hex(realSeed)), \
                "%s/%s" % ('head_img', md5_hex(virtualSeed))
 
     def upload(self, imgStreamData):
-        # 先修改head_img_version，因为要获取getObjNames
         from util.img_util import rgb_to_sketch
-        userInfo = UserModel.getByPassportId(passportId=self.passportId)
-        UserModel.updateByPassportId(passportId=self.passportId, head_img_version=userInfo.head_img_version+1)
         realObjName, virtualObjName = self.getObjNames(self.passportId)
         # 上传真实照片
         q = Qiniu()
@@ -54,5 +50,3 @@ class MyStorage(object):
         # 上传虚拟照片
         q = Qiniu()
         q.upload_stream(virtualObjName, rgb_to_sketch(imgStreamData))
-        # 修改db
-        UserModel.updateByPassportId(passportId=self.passportId, has_head_img=MODEL_STATUS_YES)

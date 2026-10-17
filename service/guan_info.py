@@ -5,21 +5,15 @@ import logging
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
-from model.requirement import RequirementModel, UNREACHABLE_REQUIREMENT
-from model.user import UserModel
-from ral.activity import changeByRequirement
 from ral.cache import lock
 from service import BaseService
 from service.common.guan_helper import GuanHelper
-from service.common.match import MatchHelper
-from service.common.myself_helper import UserHelper
-from service.common.requirement_helper import RequirementHelper
-from service.myself import UserInfoService
+from service.common.page_copy import guan_info_copy
+from service.common.profile_board import ProfileBoardService
 from util.class_helper import lazy_property
 from util.const import match
 from util.const.base import (
     GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE,
-    MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE
 )
 from util.const.match import (
     MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX,
@@ -55,25 +49,16 @@ class GuanInfoService(BaseService):
         return AddressModel.getById(self.activityRecord.address_id)
 
     @lazy_property
-    def userRecord(self):
-        return UserModel.getByPassportId(passportId=self.passportId)
+    def sexIndex(self):
+        return ProfileBoardService.sex_of(self.passportId)
 
     @lazy_property
-    def oppositeUserRecord(self):
-        if not self.userRecord:
-            return None
-        passportId = (
-            self.activityRecord.girl_passport_id
-            if self.userRecord.sexIndex == MODEL_SEX_MALE_INDEX
-            else self.activityRecord.boy_passport_id
-        )
-        return UserModel.getByPassportId(passportId=passportId)
-
-    @lazy_property
-    def oppositeRequirementRecord(self):
-        if not self.oppositeUserRecord:
-            return None
-        return RequirementModel.getByPassportId(self.oppositeUserRecord.passport_id)
+    def oppositePassportId(self):
+        if self.sexIndex == MODEL_SEX_MALE_INDEX:
+            return self.activityRecord.girl_passport_id
+        if self.sexIndex == MODEL_SEX_FEMALE_INDEX:
+            return self.activityRecord.boy_passport_id
+        return self.activityRecord.girl_passport_id or self.activityRecord.boy_passport_id
 
     @property
     def address(self):
@@ -106,34 +91,6 @@ class GuanInfoService(BaseService):
         """根据进展状态返回底部按钮配置（委托纯函数）"""
         return get_bottom_buttons(self.progressStatus, self.opType)
 
-    @property
-    def oppositeInfoDataPairs(self):
-        """对方的条件（用户信息），按对列展示"""
-        if not self.oppositeUserRecord:
-            return []
-        uh = UserHelper(self.oppositeUserRecord)
-        informationList = uh.getInformationList(checkDynamicData=False)
-        opTypeMapInformation = {i.bindChange: i for i in informationList}
-        pairs = []
-        for opTypes in uh.getInformationPariList():
-            pair = []
-            for opType in opTypes:
-                if opType not in opTypeMapInformation:
-                    continue
-                info = opTypeMapInformation[opType]
-                pair.append({"desc": info.desc, "subDesc": info.subDesc, "value": info.fullValue})
-            pairs.append(pair)
-        return pairs
-
-    @property
-    def oppositeRequirementDataPairs(self):
-        """对方的期望（择偶条件），按对列展示"""
-        if not self.oppositeRequirementRecord:
-            return []
-        rh = RequirementHelper(self.oppositeRequirementRecord)
-        requirementList = rh.getRequirementList(checkDynamicData=False)
-        return [[{"desc": r.desc, "subDesc": r.subDesc, "value": r.fullValue}] for r in requirementList]
-
     def updateMeetResult(self, meetResultValue):
         """更新见面结果（含合适/不合适/结束/恢复）"""
         if self.passportId == self.activityRecord.boy_passport_id:
@@ -152,23 +109,21 @@ class GuanInfoService(BaseService):
             "guanId": self.activityId,
             "progressStatus": progress,
             "progressDesc": PROGRESS_DESC.get(progress, ""),
+            "copy": guan_info_copy(),
             "activity": {
                 "img": GuanHelper.getActivityImg(
-                    self.activityRecord, self.addressRecord,
-                    self.oppositeUserRecord, self.userRecord, False
+                    self.activityRecord, self.addressRecord, None, None, False
                 ),
                 "time": self.time,
                 "address": self.address,
             },
             "opposite": {
-                "infoDataPairs": self.oppositeInfoDataPairs,
-                "requirementDataPairs": self.oppositeRequirementDataPairs,
+                "rows": ProfileBoardService.rows_for(self.oppositePassportId),
             },
             "operate": {
                 "bottomButtons": self.bottomButtons,
                 "matchConfigPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
-                "requirementResult": "%d人将收到邀请" % UserModel.getMatchCnt(passportId=self.passportId),
             },
         }
 
@@ -179,34 +134,12 @@ class GuanInfoService(BaseService):
     def hasOngoingActivity(self):
         return bool(ActivityModel.getOngoingActivity(self.passportId))
 
-    def getRequirement(self):
-        if self.opType == GUAN_INFO_OP_TYPE_INVITE:
-            return None
-        elif self.opType == GUAN_INFO_OP_TYPE_JOIN:
-            if self.userRecord.sex == MODEL_SEX_MALE_INDEX and self.activityRecord.boy_passport_id != 0:
-                return UNREACHABLE_REQUIREMENT
-            if self.userRecord.sex == MODEL_SEX_FEMALE_INDEX and self.activityRecord.girl_passport_id != 0:
-                return UNREACHABLE_REQUIREMENT
-            invitePid = (
-                self.activityRecord.girl_passport_id
-                if self.userRecord.sex == MODEL_SEX_MALE_INDEX
-                else self.activityRecord.boy_passport_id
-            )
-            if not invitePid:
-                return UNREACHABLE_REQUIREMENT
-            return RequirementModel.getByPassportId(invitePid)
-        elif self.opType == GUAN_INFO_OP_TYPE_QUIT:
-            if self.activityRecord.boy_passport_id != 0 and self.activityRecord.girl_passport_id != 0:
-                return UNREACHABLE_REQUIREMENT
-            invitePid = 0
-            if self.userRecord.sex == MODEL_SEX_MALE_INDEX:
-                invitePid = self.activityRecord.boy_passport_id or self.activityRecord.girl_passport_id
-            elif self.userRecord.sex == MODEL_SEX_FEMALE_INDEX:
-                invitePid = self.activityRecord.girl_passport_id or self.activityRecord.boy_passport_id
-            if not invitePid:
-                return UNREACHABLE_REQUIREMENT
-            return RequirementModel.getByPassportId(invitePid)
-        return UNREACHABLE_REQUIREMENT
+    def _my_slot_taken(self):
+        if self.sexIndex == MODEL_SEX_MALE_INDEX:
+            return bool(self.activityRecord.boy_passport_id)
+        if self.sexIndex == MODEL_SEX_FEMALE_INDEX:
+            return bool(self.activityRecord.girl_passport_id)
+        return True
 
     def parseUpdataParams(self, opType, sexIndex):
         updateParams = {}
@@ -243,28 +176,24 @@ class GuanInfoService(BaseService):
     @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)
     def activityOprete(self, opType):
         """对活动进行操作（邀请/加入/退出）"""
-        uis = UserInfoService(self.passport)
-        needFilled = uis.userInfoNeedFilled()
-        if needFilled:
-            return needFilled
+        if not ProfileBoardService.info_is_filled(self.passportId):
+            return RESP_NEED_FILL_INFO
         if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
             return RESP_JOIN_ACTIVITY_FAILED
         if opType != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
         if self.hasOngoingActivity and opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:
             return RESP_HAS_ONGOING_ACTIVITY
-        requirement = self.getRequirement()
-        if self.opType == GUAN_INFO_OP_TYPE_JOIN and not MatchHelper.match(self.userRecord, requirement):
+        if self.opType == GUAN_INFO_OP_TYPE_JOIN and (self._my_slot_taken() or not self.oppositePassportId):
             return RESP_JOIN_ACTIVITY_FAILED
         if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN] and self.timeIsConflict():
             return RESP_HAS_TIME_CONFLICT
-        updateParams, whereParams = self.parseUpdataParams(opType, uis.userInfo.sexIndex)
+        updateParams, whereParams = self.parseUpdataParams(opType, self.sexIndex)
         ret = ActivityModel.updateById(self.activityId, *whereParams, **updateParams)
         if not ret:
             return RESP_JOIN_ACTIVITY_FAILED
         ActivityChangeRecordModel.addOne(self.activityId, self.passportId, opType)
         self.reloadActivityRecord()
-        changeByRequirement(self.activityRecord.id, requirement, self.getRequirement())
         if opType == GUAN_INFO_OP_TYPE_QUIT:
             return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
         return RESP_OK

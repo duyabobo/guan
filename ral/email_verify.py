@@ -4,10 +4,8 @@ import gevent
 
 from model.verify import VerifyModel
 from service import BaseService
-from service.myself import UserInfoService
 from util.class_helper import lazy_property
 from util.const import match
-from util.const.match import OP_TYPE_VERIFY
 from util.const.response import RESP_HAS_EMAIL_VERIFY_RECENTLY, RESP_OK, \
     RESP_HAS_EMAIL_VERIFY_FAILED, RESP_HAS_EMAIL_IS_NOT_COMPANY, RESP_HAS_SEND_EMAIL, RESP_EMAIL_IS_NOT_VALID, \
     RESP_EMAIL_IS_NOT_SCHOOL
@@ -56,7 +54,6 @@ class EmailVerifyService(BaseService):
             return RESP_EMAIL_IS_NOT_SCHOOL
 
         VerifyModel.updateVerifyStatus(passportId=self.passportId, encryptedMail=encryptedMail, mailType=mailType)
-        UserInfoService(self.currentPassport).updateMyselfInfo(OP_TYPE_VERIFY, mailType)
         self.recordVerifyOperate()
         return RESP_OK
 
