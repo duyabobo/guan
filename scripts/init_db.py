@@ -228,33 +228,6 @@ def ensure_regions(conn) -> list[int]:
     return _list_table_ids(conn, 'region')
 
 
-def seed_educations(conn) -> list[int]:
-    rows = [
-        {'category': '工学',   'disciplines': '计算机类', 'major': '软件工程', 'seq': 1, 'status': 1},
-        {'category': '管理学', 'disciplines': '工商管理类', 'major': '市场营销', 'seq': 2, 'status': 1},
-        {'category': '理学',   'disciplines': '数学类', 'major': '应用数学', 'seq': 3, 'status': 1},
-    ]
-    return _insert_if_empty(conn, 'education', rows)
-
-
-def seed_works(conn) -> list[int]:
-    rows = [
-        {'profession': '互联网', 'industry': '后端开发', 'position': '工程师', 'seq': 1, 'status': 1},
-        {'profession': '金融',   'industry': '投资',     'position': '分析师', 'seq': 2, 'status': 1},
-        {'profession': '教育',   'industry': '在线教育', 'position': '产品经理', 'seq': 3, 'status': 1},
-    ]
-    return _insert_if_empty(conn, 'work', rows)
-
-
-def seed_schools(conn, region_ids: list[int]) -> list[int]:
-    rows = [
-        {'region_id': region_ids[0], 'name': '北京大学',   'logo': '', 'nature_name': '公办', 'school_type_name': '本科', 'seq': 1, 'status': 1},
-        {'region_id': region_ids[1], 'name': '复旦大学',   'logo': '', 'nature_name': '公办', 'school_type_name': '本科', 'seq': 2, 'status': 1},
-        {'region_id': region_ids[2], 'name': '深圳大学',   'logo': '', 'nature_name': '公办', 'school_type_name': '本科', 'seq': 3, 'status': 1},
-    ]
-    return _insert_if_empty(conn, 'school', rows)
-
-
 def _address_seed_rows(region_ids: list[int]) -> list[dict]:
     region_beijing = _pick_id(region_ids, 0)
     region_shanghai = _pick_id(region_ids, 1)
@@ -390,8 +363,6 @@ def seed_profile_attrs(conn, passport_ids: list[int]):
             ("info", "birth_year", 1996, 0),
             ("info", "height", 178, 0),
             ("info", "weight", 70, 0),
-            ("info", "education_level", 4, 0),
-            ("info", "study_from_year", 2015, 0),
             ("requirement", "sex", 2, 0),
             ("requirement", "birth_year", 1993, 2003),
             ("requirement", "height", 158, 175),
@@ -402,8 +373,6 @@ def seed_profile_attrs(conn, passport_ids: list[int]):
             ("info", "birth_year", 1998, 0),
             ("info", "height", 163, 0),
             ("info", "weight", 52, 0),
-            ("info", "education_level", 4, 0),
-            ("info", "study_from_year", 2017, 0),
             ("requirement", "sex", 1, 0),
             ("requirement", "birth_year", 1990, 2000),
             ("requirement", "height", 170, 190),
@@ -427,16 +396,6 @@ def seed_profile_attrs(conn, passport_ids: list[int]):
             _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min, value_max)
         logger.info("  [写入] profile_attr passport_id=%s dims=%s", passport_id, len(dims))
     conn.commit()
-
-
-def seed_verifies(conn, passport_ids: list[int]) -> list[int]:
-    """认证信息：用户1/2已认证，用户3未认证"""
-    rows = [
-        {'passport_id': passport_ids[0], 'mail': 'encrypted_pku_mail', 'mail_type': 1, 'mail_verify_status': 1, 'status': 1},
-        {'passport_id': passport_ids[1], 'mail': 'encrypted_work_mail', 'mail_type': 2, 'mail_verify_status': 1, 'status': 1},
-        {'passport_id': passport_ids[2], 'mail': '', 'mail_type': 0, 'mail_verify_status': 0, 'status': 1},
-    ]
-    return _insert_if_empty(conn, 'verify', rows)
 
 
 def _fmt_time(dt: datetime.datetime) -> str:
@@ -619,11 +578,6 @@ def ensure_empty_slot_activities(conn, address_ids: list[int]) -> list[int]:
     return touched_ids
 
 
-def sync_activities_to_redis(conn, activity_ids: list[int] | None = None):
-    """宽表匹配索引已删除，不再把活动写进 Redis。"""
-    return
-
-
 def seed_shares(conn, passport_ids: list[int]) -> list[int]:
     rows = [
         {'share_passport_id': passport_ids[0], 'accept_passport_id': passport_ids[2], 'status': 1},
@@ -638,8 +592,6 @@ OPPOSITE_PHONE = '13800000002'
 LOGIN_BIRTH_YEAR = 1996
 LOGIN_HEIGHT = 178
 LOGIN_WEIGHT = 70
-LOGIN_EDUCATION_LEVEL = 4  # 本科
-STUDY_FROM_YEAR = 2014
 STATE_INVITING = 1
 STATE_SUCCESS = 100
 MEET_RESULT_FIT = 1
@@ -710,13 +662,10 @@ def _fill_login_user_profile(conn, passport_id):
         ("info", "birth_year", LOGIN_BIRTH_YEAR, 0),
         ("info", "height", LOGIN_HEIGHT, 0),
         ("info", "weight", LOGIN_WEIGHT, 0),
-        ("info", "education_level", LOGIN_EDUCATION_LEVEL, 0),
-        ("info", "study_from_year", STUDY_FROM_YEAR, 0),
         ("requirement", "sex", 2, 0),
         ("requirement", "birth_year", 1994, 2001),
         ("requirement", "height", 155, 175),
         ("requirement", "weight", 45, 65),
-        ("requirement", "education_level", LOGIN_EDUCATION_LEVEL, 0),
     )
     for scope, dim_key, value_min, value_max in dims:
         _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min, value_max)
@@ -811,23 +760,14 @@ def main():
         logger.info("=== Step 2: 写入 Mock 数据（幂等）===")
         seed_regions(conn)
         region_ids = ensure_regions(conn)
-        seed_educations(conn)
-        seed_works(conn)
-        seed_schools(conn, region_ids)
         seed_addresses(conn, region_ids)
         address_ids   = ensure_addresses(conn, region_ids)
         passport_ids  = seed_passports(conn)
         seed_profile_attrs(conn, passport_ids)
-        seed_verifies(conn, passport_ids)
         seed_activities(conn, passport_ids, address_ids)
-        empty_activity_ids = ensure_empty_slot_activities(conn, address_ids)
+        ensure_empty_slot_activities(conn, address_ids)
         seed_shares(conn, passport_ids)
-        login_activity_ids = ensure_login_user_demo(conn)
-        sync_activities_to_redis(conn)
-        if empty_activity_ids:
-            sync_activities_to_redis(conn, empty_activity_ids)
-        if login_activity_ids:
-            sync_activities_to_redis(conn, login_activity_ids)
+        ensure_login_user_demo(conn)
 
         logger.info("=== 初始化完成 ===")
         _print_summary(conn)
@@ -837,8 +777,8 @@ def main():
 
 def _print_summary(conn):
     tables = [
-        'region', 'education', 'work', 'school', 'address',
-        'passport', 'profile_attr', 'verify', 'activity', 'share',
+        'region', 'address',
+        'passport', 'profile_attr', 'activity', 'share',
     ]
     logger.info("─── 数据总览 ───────────────────────────────")
     with conn.cursor() as cur:

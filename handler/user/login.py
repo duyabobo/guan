@@ -6,10 +6,11 @@ from tornado import gen
 
 from handler.basehandler import BaseHandler
 from ral.passport import delSession
+from service.identity.registry import get_provider
 from service.login import LoginService
-from util.const.response import RESP_NEED_LOGIN
+from util.const.identity import PROVIDER_WECHAT
+from util.const.response import RESP_IDENTITY_INCOMPLETE, RESP_NEED_LOGIN
 from util.monitor import superMonitor, Response, superGenMonitor
-from util.wx_mini import WxHelper
 
 
 class LoginHandler(BaseHandler):
@@ -18,24 +19,30 @@ class LoginHandler(BaseHandler):
     @superGenMonitor
     @gen.coroutine
     def get(self, *args, **kwargs):
-        """微信登录注册接口
-        """
-        jsCode = self.getRequestParameter('code')
-        shareOpenid = self.getRequestParameter('shareOpenid')
-        openid = yield WxHelper().getOpenidByCode(jsCode)
-        if not openid:
+        """登录。默认微信，后续国家网络身份认证走同一个入口。"""
+        provider_code = self.getRequestParameter('provider', PROVIDER_WECHAT)
+        provider = get_provider(provider_code)
+        if not provider:
             raise gen.Return(Response(msg=RESP_NEED_LOGIN))
 
-        accessToken, secret = LoginService().login(openid, shareOpenid)
-        raise gen.Return(Response(data={
-            'accessToken': accessToken,
-            'secret': secret,
-            'openid': openid,
-        }))
+        assertion = yield provider.authenticate(self.getRequestParameter('code'))
+        if not assertion:
+            raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
+
+        logged = LoginService().login(assertion, self.getRequestParameter('shareOpenid'))
+        if not logged:
+            raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
+        access_token, sign_secret, openid = logged
+        data = {
+            'accessToken': access_token,
+            'secret': sign_secret,
+        }
+        if openid:
+            data['openid'] = openid
+        raise gen.Return(Response(data=data))
 
     @superMonitor
     def put(self, *args, **kwargs):
-        """用户退出登录
-        """
+        """用户退出登录"""
         delSession(self.accessToken)
         return Response()

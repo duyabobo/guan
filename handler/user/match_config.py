@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import logging
-import os
-import tempfile
 
 from handler.basehandler import BaseHandler
 from service.match_config import MatchConfigService
+from service.voice_pipeline import VoicePipeline
+from util.const.identity import MAX_VOICE_BYTES
+from util.const.response import RESP_IDENTITY_INCOMPLETE, RESP_NEED_LOGIN, RESP_VOICE_MISSING, RESP_VOICE_TOO_LARGE
 from util.monitor import superMonitor, Response
 
 logger = logging.getLogger(__name__)
@@ -30,50 +31,26 @@ class MatchConfigHandler(BaseHandler):
 
 
 class VoiceTextHandler(BaseHandler):
-    """语音识别接口：接收音频文件，返回识别文字"""
+    """上传原始语音：加密保存，再识别并抽取个人信息和期望。"""
 
     @superMonitor
     def post(self):
+        if not self.currentPassportId:
+            return Response(msg=RESP_NEED_LOGIN)
+        audio_bytes = self._audio_bytes()
+        if not audio_bytes:
+            return Response(msg=RESP_VOICE_MISSING)
+        if len(audio_bytes) > MAX_VOICE_BYTES:
+            logger.warning("语音超过大小限制 passport=%s bytes=%s", self.currentPassportId, len(audio_bytes))
+            return Response(msg=RESP_VOICE_TOO_LARGE)
+        result = VoicePipeline(self.currentPassport).run(audio_bytes)
+        if result is None:
+            logger.warning("语音加密失败，需要重新登录 passport=%s", self.currentPassportId)
+            return Response(msg=RESP_IDENTITY_INCOMPLETE)
+        return Response(data=result)
+
+    def _audio_bytes(self):
         audio_data = self.request.files.get('audio')
         if not audio_data:
-            return Response(code=400, msg="缺少音频文件")
-
-        audio_bytes = audio_data[0]['body']
-        recognized_text = self._transcribe(audio_bytes)
-        return Response(data={"text": recognized_text})
-
-    def _transcribe(self, audio_bytes):
-        """调用 Whisper 识别音频，返回文本"""
-        try:
-            import openai
-            from util.config import get_conf
-        except ImportError:
-            logger.error("openai package not installed")
-            return ""
-
-        api_key = get_conf("openai_api_key", "")
-        api_base = get_conf("openai_api_base", "https://api.openai.com/v1")
-
-        if not api_key:
-            logger.warning("openai_api_key not configured")
-            return ""
-
-        client = openai.OpenAI(api_key=api_key, base_url=api_base)
-
-        # 写到临时文件（Whisper API 需要文件对象）
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp:
-            tmp.write(audio_bytes)
-            tmp_path = tmp.name
-
-        try:
-            with open(tmp_path, 'rb') as f:
-                result = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=f,
-                    language="zh",
-                )
-            text = result.text
-            logger.info("voice transcription done, text length=%d", len(text))
-            return text
-        finally:
-            os.unlink(tmp_path)
+            return b''
+        return audio_data[0].get('body') or b''

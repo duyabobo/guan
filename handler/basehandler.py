@@ -6,16 +6,10 @@ import functools
 import json
 import time
 
-import pika
-# 这个并发库, python3 自带, python2 需要: pip install futures
-# from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy.orm import sessionmaker
-# from tornado.concurrent import run_on_executor
 from tornado.web import RequestHandler
 
-import util.config
 from ral import passport
-from util.const.base import EXCHANGE_NAME
 from util.const.response import RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.ctx import LocalContext
 from util.monitor import superMonitor
@@ -83,8 +77,6 @@ class BaseHandler(RequestHandler):
         self._requestSeq = ''
         self._dbSession = None
         self._currentPassport = None
-        self._mqConnection = None
-        self._mqChannel = None
         super(BaseHandler, self).__init__(self.application, request, **kwargs)
 
     def __getattribute__(self, name):
@@ -103,29 +95,6 @@ class BaseHandler(RequestHandler):
             return self._dbSession
         self._dbSession = sessionmaker(bind=self.application.engine)()
         return self._dbSession
-
-    @property
-    def mqConnection(self):
-        """
-        rabbitmq 链接，在需要的时候初始化
-        :return:
-        """
-        if hasattr(self, '_mqConnection') and self._mqConnection:
-            return self._mqConnection
-        mq_host = util.config.get('rabbitmq', 'host')
-        self._mqConnection = pika.BlockingConnection(pika.ConnectionParameters(mq_host))
-        return self._mqConnection
-
-    @property
-    def mqChannel(self):
-        """
-        rabbitmq 频道，在需要的时候初始化
-        :return:
-        """
-        if hasattr(self, '_mqChannel') and self._mqChannel:
-            return self._mqChannel
-        self._mqChannel = self.mqConnection.channel()
-        return self._mqChannel
 
     @property
     def accessToken(self):
@@ -183,22 +152,6 @@ class BaseHandler(RequestHandler):
         """
         return self.currentPassport.get('id', 0)
 
-    def putOfflineJobToRabbitmq(self, routingKey, bodyJson):
-        """
-        抛出异步离线任务
-        :param routingKey:
-        :param bodyJson:
-        :return:
-        """
-        return self.mqChannel.basic_publish(
-            exchange=EXCHANGE_NAME,
-            routingKey=routingKey,
-            body=json.dumps(bodyJson),
-            properties=pika.BasicProperties(
-                delivery_mode=2,  # make message persistent
-            )
-        )
-
     def getRequestParameter(self, paraName, default='', paraType=str):
         """
         获取请求体中的参数，获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
@@ -229,8 +182,6 @@ class BaseHandler(RequestHandler):
         resp.update(response.msg)
         self.write(json.dumps(resp))
         self.finishDbOperation(response.msg)
-        if self._mqConnection:
-            self._mqConnection.close()
         return resp
 
     def finishDbOperation(self, respNormal):

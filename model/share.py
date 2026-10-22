@@ -6,8 +6,6 @@ from sqlalchemy import TIMESTAMP
 from sqlalchemy import func
 
 from model import BaseModel
-from ral.cache import checkInconsistentCache
-from util.const.match import MODEL_STATUS_YES
 from util.ctx import getDbSession
 
 
@@ -31,8 +29,3 @@ class ShareModel(BaseModel):
         getDbSession().add(passport)
         getDbSession().flush()
         return passport
-
-    @classmethod
-    @checkInconsistentCache("ShareModel")
-    def getAcceptCnt(cls, share_passport_id):
-        return getDbSession().query(cls.share_passport_id == share_passport_id, cls.status == MODEL_STATUS_YES).count()

@@ -6,6 +6,7 @@ import time
 
 from util.encode import generate_secret
 from util.redis_conn import decode_redis_value, redisConn
+from util.session_payload import session_payload
 
 UNIQUE_EXP_KEY = 'unique:{accessToken}:{exp}'
 FAILED_CNT_ONE_MINUTE = 'failed_cnt:one_minute:{remote_ip}'
@@ -29,10 +30,7 @@ def putSession(accessToken, passport_id):
     :return:
     """
     secret = generate_secret(accessToken)  # 签名校验的密钥
-    currentUserInfoJson = {
-        "secret": secret,
-        "id": passport_id,
-    }
+    currentUserInfoJson = session_payload(passport_id, secret)
     loginKey = getLoginKey(accessToken)
     redisConn.hmset(loginKey, currentUserInfoJson)
     redisConn.expire(loginKey, 3*30*24*3600)

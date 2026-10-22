@@ -142,6 +142,17 @@ def get_bottom_buttons(progress_status, op_type):
     return []  # PROGRESS_NO_CONFIG 或其他异常状态
 
 
+# 分享出去的见面页：1 表示观众打开，只能看
+MEET_VIEWER_MODE = 1
+
+
+def build_meet_share_guide(progress_status, label, viewer):
+    """双心（待见面）才出现安全见面分享。观众打开时没有分享，也没有操作。"""
+    if viewer or progress_status != PROGRESS_WAIT_MEET:
+        return {"enabled": False, "label": ""}
+    return {"enabled": True, "label": label}
+
+
 # ── 首页列表心形标识 ──────────────────────────────────────────────────────────
 
 HEART_KIND_EMPTY = "empty"

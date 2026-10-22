@@ -9,6 +9,7 @@ import util.ctx
 from util.log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
+from util.const.identity import VOICE_TEXT_PATH
 from util.obj_util import object_2_dict
 
 
@@ -18,14 +19,29 @@ class Response(object):
         self.msg = msg
 
 
+def _body_for_log(handler):
+    content_type = handler.request.headers.get('Content-Type', '') or ''
+    if 'multipart/form-data' in content_type:
+        return 'multipart'
+    return handler.request.body_arguments or handler.request.body
+
+
+def _resp_for_log(path, data):
+    logged = object_2_dict(data)
+    if path == VOICE_TEXT_PATH and isinstance(logged, dict) and 'text' in logged:
+        logged = dict(logged)
+        text = logged.get('text') or ''
+        logged['text'] = len(text)
+    return logged
+
+
 def httpReturn(handler, response, err=None):
     manager = util.ctx.getManager()
     manager.tc_child_out()
-    body = handler.request.body_arguments or handler.request.body
     logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s,' \
              ' respMsg: %s, respData: %s, tc: %s, error: %s, tc_tree=%s' % \
-             (handler.currentPassportId, handler.request.method, str(handler.request.uri), str(body),
-              handler.accessToken, response.msg, object_2_dict(response.data),
+             (handler.currentPassportId, handler.request.method, str(handler.request.uri), _body_for_log(handler),
+              handler.accessToken, response.msg, _resp_for_log(handler.request.path, response.data),
               time.time()-handler.timestamp, err, manager.timecost_tree)
     if err is None:
         monitor_logger.info(logMsg)
@@ -39,14 +55,12 @@ def superMonitor(func):
     def wrapper(handler, *args, **kwargs):
         # 处理前校验
         checker = Checker(handler)
-        isContact = handler.request.path == '/contact'
         try:
             checker.check()
         except Exception as e:  # 校验失败
-            if not isContact:
-                checker.fail()
-                httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
-                return
+            checker.fail()
+            httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
+            return
         else:  # 校验成功
             checker.success()
         # 开始处理请求

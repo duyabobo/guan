@@ -62,3 +62,14 @@ def test_values_from_payload_packs_single_and_range():
     assert requirement["height"]["value_min"] == 160
     assert requirement["height"]["value_max"] == 175
     assert "sex" not in requirement
+
+
+def test_duplicate_city_prefix_is_collapsed():
+    rows = build_rows([
+        _Attr(SCOPE_INFO, "home_region", value_text="北京市北京市海淀区"),
+        _Attr(SCOPE_REQUIREMENT, "home_region", value_text="全部"),
+    ])
+    assert len(rows) == 1
+    assert rows[0]["infoValue"] == "北京市海淀区"
+    assert rows[0]["requirementValue"] == MISSING_MARK
+    assert rows[0]["requirementMissing"] is True

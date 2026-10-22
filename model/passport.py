@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
+
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -10,6 +12,8 @@ from model import BaseModel
 from util.const import match
 from util.ctx import getDbSession
 from util.encode import md5_hex
+
+logger = logging.getLogger(__name__)
 
 
 class PassportModel(BaseModel):
@@ -37,4 +41,26 @@ class PassportModel(BaseModel):
         )
         getDbSession().add(passport)
         getDbSession().flush()
+        return passport
+
+    @classmethod
+    def getById(cls, passport_id):
+        if not passport_id:
+            return None
+        return getDbSession().query(cls).filter(
+            cls.id == passport_id,
+            cls.status == match.MODEL_STATUS_YES,
+        ).first()
+
+    @classmethod
+    def addBare(cls):
+        """还没有微信 openid 的通行证，留给后续其他身份提供方。"""
+        passport = cls(
+            openid='',
+            phone='',
+            status=match.MODEL_STATUS_YES,
+        )
+        getDbSession().add(passport)
+        getDbSession().flush()
+        logger.info("已创建未绑定微信的通行证 passport=%s", passport.id)
         return passport

@@ -22,7 +22,7 @@ from util.const.progress import (
     PROGRESS_WAIT_MEET, PROGRESS_MET, PROGRESS_AGREE, PROGRESS_DISAGREE,
     PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
     HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_SINGLE, HEART_KIND_SOLID,
-    calc_activity_progress, calc_list_has_match, calc_list_heart_kind, get_bottom_buttons,
+    build_meet_share_guide, calc_activity_progress, calc_list_has_match, calc_list_heart_kind, get_bottom_buttons,
     guanguan_list_sort_key, limit_solid_heart_items, should_include_activity_for_match,
     should_show_guanguan_item, MAX_LIST_DISTANCE_KM,
 )
@@ -272,6 +272,25 @@ class TestGetBottomButtons:
     def test_no_config_returns_empty(self):
         buttons = get_bottom_buttons(PROGRESS_NO_CONFIG, GUAN_INFO_OP_TYPE_INVITE)
         assert buttons == []
+
+
+class TestMeetShareGuide:
+
+    def test_wait_meet_can_share(self):
+        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享好友", viewer=False)
+        assert guide == {"enabled": True, "label": "安全见面，分享好友"}
+
+    def test_other_progress_cannot_share(self):
+        for status in (
+            PROGRESS_NOT_SELECTED, PROGRESS_SELECTED, PROGRESS_MET,
+            PROGRESS_AGREE, PROGRESS_DISAGREE, PROGRESS_NO_CONFIG,
+        ):
+            guide = build_meet_share_guide(status, "安全见面，分享好友", viewer=False)
+            assert guide == {"enabled": False, "label": ""}
+
+    def test_viewer_cannot_share(self):
+        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享好友", viewer=True)
+        assert guide == {"enabled": False, "label": ""}
 
 
 # ────────────────────────────────────────────

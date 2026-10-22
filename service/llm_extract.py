@@ -20,8 +20,8 @@ _EXTRACT_PROMPT = """
 {text}
 
 请从文本中提取以下两类信息，以 JSON 格式返回：
-1. "my_info"（我的条件）：性别(sex)、出生年份(birth_year)、身高cm(height)、体重kg(weight)、学历级别(education_level)、入学年份(study_from_year)
-2. "my_requirement"（我的期望）：对方性别(sex)、年龄范围(min_birth_year/max_birth_year)、身高范围(min_height/max_height)
+1. "my_info"（我的条件）：性别(sex)、出生年份(birth_year)、身高cm(height)、体重kg(weight)、籍贯(home_region)
+2. "my_requirement"（我的期望）：对方性别(sex)、年龄范围(min_birth_year/max_birth_year)、身高范围(min_height/max_height)、体重范围(min_weight/max_weight)、籍贯(home_region)
 
 只提取文本中明确提到的字段，未提及的不要猜测。
 可提取维度（键名必须一致，未在目录中的键不要返回）：
@@ -32,7 +32,7 @@ _EXTRACT_PROMPT = """
   "my_requirement": {{"min_height": 165, "max_height": 185}}
 }}
 
-注意：sex 字段值：1=男，2=女。学历级别（education_level）：1=高中及以下, 2=大专, 3=本科, 4=硕士, 5=博士。
+注意：sex 字段值：1=男，2=女。
 只返回 JSON，不要有其他说明。
 """
 

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from handler.basehandler import BaseHandler
 from service.guan_info import GuanInfoService
+from util.const.progress import MEET_VIEWER_MODE
 from util.monitor import superMonitor, Response
 
 
@@ -10,7 +11,11 @@ class GuanInfoHandler(BaseHandler):
     @superMonitor
     def get(self):
         activityId = self.getRequestParameter('guanId', paraType=int)
+        viewer = self.getRequestParameter('viewer', default=0, paraType=int)
         gis = GuanInfoService(activityId, self.currentPassport)
+        if viewer == MEET_VIEWER_MODE:
+            share_openid = self.getRequestParameter('shareOpenid', '')
+            return Response(data=gis.getViewerGuanInfo(share_openid))
         return Response(data=gis.getGuanInfo())
 
     @superMonitor

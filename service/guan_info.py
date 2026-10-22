@@ -5,6 +5,7 @@ import logging
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
+from model.passport import PassportModel
 from ral.cache import lock
 from service import BaseService
 from service.common.guan_helper import GuanHelper
@@ -23,7 +24,8 @@ from util.const.match import (
 )
 from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG
 from util.const.progress import (
-    PROGRESS_DESC, calc_activity_progress, get_bottom_buttons
+    PROGRESS_DESC, PROGRESS_NOT_SELECTED, build_meet_share_guide,
+    calc_activity_progress, get_bottom_buttons,
 )
 from util.const.response import (
     RESP_OK, RESP_JOIN_ACTIVITY_FAILED, RESP_HAS_ONGOING_ACTIVITY,
@@ -106,26 +108,68 @@ class GuanInfoService(BaseService):
 
     def getGuanInfo(self):
         progress = self.progressStatus
+        return self._build_page(progress, self.oppositePassportId, self.bottomButtons, viewer=False)
+
+    def getViewerGuanInfo(self, share_openid):
+        """好友从分享卡片打开：看到分享人眼中的这一场，但不能操作。"""
+        sharer_id = self._sharer_passport_id(share_openid)
+        if not self._is_activity_participant(sharer_id):
+            logger.info("viewer rejected activityId=%s sharerId=%s", self.activityId, sharer_id)
+            return self._build_page(PROGRESS_NOT_SELECTED, 0, [], viewer=True)
+        progress = calc_activity_progress(sharer_id, self.activityRecord)
+        opposite_id = self._opposite_passport_id(sharer_id)
+        logger.info("viewer open activityId=%s sharerId=%s progress=%s",
+                    self.activityId, sharer_id, progress)
+        return self._build_page(progress, opposite_id, [], viewer=True)
+
+    def _sharer_passport_id(self, share_openid):
+        if not share_openid:
+            return 0
+        sharer = PassportModel.getByOpenid(share_openid)
+        if not sharer:
+            return 0
+        return sharer.id
+
+    def _is_activity_participant(self, passport_id):
+        if not passport_id or not self.activityRecord:
+            return False
+        return passport_id in (self.activityRecord.boy_passport_id, self.activityRecord.girl_passport_id)
+
+    def _opposite_passport_id(self, passport_id):
+        sex_index = ProfileBoardService.sex_of(passport_id)
+        if sex_index == MODEL_SEX_MALE_INDEX:
+            return self.activityRecord.girl_passport_id
+        if sex_index == MODEL_SEX_FEMALE_INDEX:
+            return self.activityRecord.boy_passport_id
+        if passport_id == self.activityRecord.boy_passport_id:
+            return self.activityRecord.girl_passport_id
+        if passport_id == self.activityRecord.girl_passport_id:
+            return self.activityRecord.boy_passport_id
+        return 0
+
+    def _build_page(self, progress, opposite_passport_id, bottom_buttons, viewer):
+        copy = guan_info_copy()
+        rows = ProfileBoardService.rows_for(opposite_passport_id) if opposite_passport_id else []
         return {
             "guanId": self.activityId,
             "progressStatus": progress,
             "progressDesc": PROGRESS_DESC.get(progress, ""),
-            "copy": guan_info_copy(),
+            "viewer": viewer,
+            "copy": copy,
             "activity": {
-                "img": GuanHelper.getActivityImg(
-                    self.activityRecord, self.addressRecord, None, None, False
-                ),
+                "img": GuanHelper.getActivityImg(self.addressRecord, False),
                 "time": self.time,
                 "address": self.address,
             },
             "opposite": {
-                "rows": ProfileBoardService.rows_for(self.oppositePassportId),
+                "rows": rows,
             },
             "operate": {
-                "bottomButtons": self.bottomButtons,
+                "bottomButtons": bottom_buttons,
                 "matchConfigPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
             },
+            "share": build_meet_share_guide(progress, copy["shareLabel"], viewer),
         }
 
     def reloadActivityRecord(self):

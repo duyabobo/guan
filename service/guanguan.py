@@ -175,7 +175,7 @@ class GuanguanService(BaseService):
                 "progressDesc": PROGRESS_DESC.get(progress, ""),
                 "heartKind": heart_kind,
                 "hasMatch": calc_list_has_match(progress, activity.state, activity.id in matched_activity_ids),
-                "img": GuanHelper.getActivityImg(activity, address, None, None, True),
+                "img": GuanHelper.getActivityImg(address, True),
                 "address": address.name if address else "",
                 "longitude": address.longitude if address else 0,
                 "latitude": address.latitude if address else 0,

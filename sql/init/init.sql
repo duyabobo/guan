@@ -17,49 +17,6 @@ CREATE TABLE IF NOT EXISTS `region` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='省市区';
 
--- ── education：专业信息 ─────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `education` (
-    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
-    `category`    VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '专业门类',
-    `disciplines` VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '专业类(学科)',
-    `major`       VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '专业',
-    `seq`         INT             NOT NULL DEFAULT 0  COMMENT '排序',
-    `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='专业信息';
-
--- ── work：工作信息 ──────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `work` (
-    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
-    `profession`  VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '行业',
-    `industry`    VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '方向',
-    `position`    VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '职位',
-    `seq`         INT             NOT NULL DEFAULT 0,
-    `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作信息';
-
--- company 表已移除（work 相关功能暂未启用，company_id 字段无业务写入）
-
--- ── school：学校 ────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `school` (
-    `id`               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
-    `region_id`        BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '所在省市区id',
-    `name`             VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '学校名',
-    `logo`             VARCHAR(512)    NOT NULL DEFAULT '' COMMENT '学校logo',
-    `nature_name`      VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '公办/民办',
-    `school_type_name` VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '专科/本科',
-    `seq`              INT             NOT NULL DEFAULT 0,
-    `status`           TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学校信息';
-
 -- ── address：见面地点 ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `address` (
     `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -86,20 +43,6 @@ CREATE TABLE IF NOT EXISTS `passport` (
     PRIMARY KEY (`id`),
     INDEX `idx_openid` (`openid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号';
-
--- ── verify：认证信息 ────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `verify` (
-    `id`                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`         BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `mail`                VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '验证邮箱(加密)',
-    `mail_type`           TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '邮箱类型: 0无 1学校 2工作',
-    `mail_verify_status`  TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '认证状态: 0未认证 1已认证',
-    `status`              TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_passport_id` (`passport_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='认证信息';
 
 -- ── activity：见面活动 ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `activity` (
@@ -155,3 +98,35 @@ CREATE TABLE IF NOT EXISTS `profile_attr` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_passport_scope_dim` (`passport_id`, `scope`, `dim_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='个人资料与期望，一个维度一行';
+
+-- ── identity_secret：身份密钥，业务查询不要读 ──────────────────────────────
+CREATE TABLE IF NOT EXISTS `identity_secret` (
+    `id`              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `passport_id`     BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `provider`        VARCHAR(32)     NOT NULL DEFAULT '' COMMENT 'wechat / national_network',
+    `account_key`     VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '登录主体的摘要，不存明文 openid',
+    `secret_material` VARCHAR(512)    NOT NULL DEFAULT '' COMMENT '加密密钥材料。微信为 unionid。不进入会话',
+    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `create_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_provider_account` (`provider`, `account_key`),
+    UNIQUE KEY `uk_passport_provider` (`passport_id`, `provider`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='身份密钥。仅加密写入和最终核查读取';
+
+-- ── sensitive_record：敏感信息密文 ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `sensitive_record` (
+    `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `passport_id`   BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `kind`          VARCHAR(16)     NOT NULL DEFAULT '' COMMENT 'voice/phone/mail/photo',
+    `key_provider`  VARCHAR(32)     NOT NULL DEFAULT '' COMMENT '加密时使用的身份提供方',
+    `nonce`         VARCHAR(32)     NOT NULL DEFAULT '' COMMENT 'AES-GCM nonce, base64',
+    `cipher_text`   MEDIUMBLOB      NOT NULL COMMENT '密文，不含密钥',
+    `content_type`  VARCHAR(64)     NOT NULL DEFAULT '',
+    `plain_length`  INT UNSIGNED    NOT NULL DEFAULT 0 COMMENT '明文长度，不含内容',
+    `status`        TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `create_time`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_passport_kind` (`passport_id`, `kind`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='敏感信息密文';

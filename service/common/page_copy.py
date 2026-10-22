@@ -18,7 +18,7 @@ def match_config_copy():
         "emptyText": "说一段话后，这里会整理出个人信息和期望",
         "privacyEntry": "隐私说明",
         "privacyTitle": "隐私说明",
-        "privacyBody": "点按麦克风后才会开始录音。录音只用来把你说的话整理成个人信息和期望，用于匹配，不会用于别的用途。你可以随时再说一段，覆盖之前整理的内容。",
+        "privacyBody": "点按麦克风后才会开始录音。录音会加密保存，并整理成个人信息和期望，用于匹配。页面上不展示原始录音。你可以随时再说一段，覆盖之前整理出的内容。",
         "privacyConfirm": "知道了",
         "voiceStatus": {
             "idle": "说说你自己和期望",
@@ -37,4 +37,5 @@ def guan_info_copy():
         "infoTitle": "ta的信息",
         "requirementTitle": "ta的期望",
         "emptyText": "还没有可展示的对象资料",
+        "shareLabel": "安全见面，分享好友",
     }

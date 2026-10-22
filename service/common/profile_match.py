@@ -10,7 +10,6 @@ import logging
 from service.common.profile_catalog import (
     ACTIVE_DIMS,
     MATCH_RULE_EXACT,
-    MATCH_RULE_MINIMUM,
     MATCH_RULE_RANGE,
     MATCH_RULE_TEXT,
     SCOPE_INFO,
@@ -108,8 +107,6 @@ def _requirement_maps(rows, viewer_passport_id):
 def _dim_accepts(dim, info_row, requirement_row):
     if dim.match_rule == MATCH_RULE_RANGE:
         return _range_accepts(info_row, requirement_row)
-    if dim.match_rule == MATCH_RULE_MINIMUM:
-        return _minimum_accepts(info_row, requirement_row)
     if dim.match_rule == MATCH_RULE_TEXT:
         return _text_accepts(info_row, requirement_row)
     if dim.match_rule == MATCH_RULE_EXACT:
@@ -141,14 +138,6 @@ def _exact_accepts(info_row, requirement_row):
     if info_row is None:
         return False
     return info_row.value_min == requirement_row.value_min
-
-
-def _minimum_accepts(info_row, requirement_row):
-    if requirement_row is None or not requirement_row.value_min:
-        return True
-    if info_row is None or not info_row.value_min:
-        return False
-    return info_row.value_min >= requirement_row.value_min
 
 
 def _text_accepts(info_row, requirement_row):
