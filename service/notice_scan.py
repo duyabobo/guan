@@ -7,6 +7,7 @@ import logging
 import tornado.ioloop
 from sqlalchemy.orm import sessionmaker
 
+from service.deposit import settle_due
 from service.meet_fee import MeetFeeService
 from service.meet_notice import MeetNoticeService
 from util.const.notice import NOTICE_SCAN_LOCK_KEY, SCAN_INTERVAL_MS, SCAN_LOCK_SEC
@@ -38,7 +39,9 @@ def _scan_in_session():
     holder = _DbHolder(session)
     try:
         with LocalContext(lambda: holder):
-            MeetNoticeService.scan(datetime.datetime.now())
+            now = datetime.datetime.now()
+            MeetNoticeService.scan(now)
+            settle_due(now)
             MeetFeeService.retry_refunds()
         session.commit()
     finally:

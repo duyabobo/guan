@@ -7,9 +7,12 @@ from model.passport import PassportModel
 from model.share import ShareModel
 from ral.passport import putSession
 from service import BaseService
+from service.identity.runtime_key import put_unionid
 from service.phone_bind import PhoneBindService
+from service.sensitive.legacy_seal import seal_passport_plaintext
 from util.const.identity import PROVIDER_WECHAT
 from util.encode import generate_access_token
+from util.sensitive_cipher import union_lookup
 
 logger = logging.getLogger(__name__)
 
@@ -17,18 +20,17 @@ logger = logging.getLogger(__name__)
 class LoginService(BaseService):
 
     def login(self, assertion, share_openid):
-        """登录只把通行证放进会话。身份密钥另表保存，不进入会话。"""
+        """登录只把通行证放进会话。真实 unionid 只进 Redis，库里只留自加密封存。"""
         passport = self._passport_for(assertion, share_openid)
-        saved = IdentitySecretModel.save_material(
-            passport.id,
-            assertion.provider,
-            assertion.account_key,
-            assertion.secret_material,
-        )
-        if not saved:
+        if not IdentitySecretModel.accepts(passport.id, assertion.provider, assertion.secret_material):
+            return None
+        seal_passport_plaintext(passport.id, assertion.secret_material)
+        if not IdentitySecretModel.save_sealed(passport.id, assertion.provider, assertion.secret_material):
+            return None
+        if not put_unionid(passport.id, assertion.secret_material):
             return None
         logger.info(
-            "登录完成，身份密钥已单独保存，未写入会话 passport=%s provider=%s",
+            "登录完成，身份密钥已封存，明文只在运行时 passport=%s provider=%s",
             passport.id,
             assertion.provider,
         )
@@ -52,7 +54,10 @@ class LoginService(BaseService):
         return passport
 
     def _bound_passport(self, assertion):
-        account_key = IdentitySecretModel.account_key_of(assertion.account_key)
+        if not assertion.secret_material:
+            logger.info("身份提供方没有密钥材料 provider=%s", assertion.provider)
+            return self._create_passport('')
+        account_key = union_lookup(assertion.secret_material)
         passport_id = IdentitySecretModel.passport_id_of(assertion.provider, account_key)
         if passport_id:
             passport = PassportModel.getById(passport_id)

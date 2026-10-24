@@ -11,7 +11,7 @@ from sqlalchemy import func
 from model import BaseModel
 from util.const import match
 from util.ctx import getDbSession
-from util.encode import md5_hex
+from util.sensitive_cipher import seal_unionid, stored_unionid_accepts, union_lookup
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +24,10 @@ class IdentitySecretModel(BaseModel):
     passport_id = Column(Integer, default=0)
     provider = Column(String(32), default='')
     account_key = Column(String(64), default='')
-    secret_material = Column(String(512), default='')
+    secret_material = Column(String(512), default='')  # unionid 用自己加密后的封存值，不是明文
     status = Column(Integer, default=1)
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())
     create_time = Column(TIMESTAMP, default=func.now())
-
-    @staticmethod
-    def account_key_of(account_key_raw):
-        return md5_hex(account_key_raw)
 
     @classmethod
     def passport_id_of(cls, provider, account_key_hash):
@@ -48,12 +44,33 @@ class IdentitySecretModel(BaseModel):
         return int(row[0])
 
     @classmethod
-    def save_material(cls, passport_id, provider, account_key_raw, secret_material):
-        if not passport_id or not provider or not account_key_raw or not secret_material:
+    def accepts(cls, passport_id, provider, unionid):
+        """已封存的密钥必须和这次微信返回的 unionid 是同一把。"""
+        if not passport_id or not provider or not unionid:
+            return False
+        row = getDbSession().query(cls.secret_material).filter(
+            cls.passport_id == passport_id,
+            cls.provider == provider,
+            cls.status == match.MODEL_STATUS_YES,
+        ).first()
+        if not row or not row[0]:
+            return True
+        if stored_unionid_accepts(row[0], unionid):
+            return True
+        logger.error("登录身份密钥和已封存的不一致 passport=%s provider=%s", passport_id, provider)
+        return False
+
+    @classmethod
+    def save_sealed(cls, passport_id, provider, unionid):
+        """只写查找值和自加密封存。明文 unionid 不入库。"""
+        if not passport_id or not provider or not unionid:
             logger.error("拒绝保存空的身份密钥 passport=%s provider=%s", passport_id, provider)
-            return None
+            return False
+        if not cls.accepts(passport_id, provider, unionid):
+            return False
         session = getDbSession()
-        account_key = cls.account_key_of(account_key_raw)
+        account_key = union_lookup(unionid)
+        sealed = seal_unionid(unionid)
         existing = session.query(cls.id).filter(
             cls.passport_id == passport_id,
             cls.provider == provider,
@@ -62,56 +79,17 @@ class IdentitySecretModel(BaseModel):
         if existing:
             session.query(cls).filter(cls.id == existing[0]).update({
                 cls.account_key: account_key,
-                cls.secret_material: secret_material,
+                cls.secret_material: sealed,
             }, synchronize_session=False)
-            logger.info("已更新身份密钥 passport=%s provider=%s", passport_id, provider)
+            logger.info("已更新身份密钥封存 passport=%s provider=%s", passport_id, provider)
             return True
         session.add(cls(
             passport_id=passport_id,
             provider=provider,
             account_key=account_key,
-            secret_material=secret_material,
+            secret_material=sealed,
             status=match.MODEL_STATUS_YES,
         ))
         session.flush()
-        logger.info("已写入身份密钥 passport=%s provider=%s", passport_id, provider)
+        logger.info("已写入身份密钥封存 passport=%s provider=%s", passport_id, provider)
         return True
-
-    @classmethod
-    def load_for_sensitive_use(cls, passport_id, provider, purpose):
-        """加密写入或最终核查时才读密钥。调用方必须带上用途。"""
-        if not purpose:
-            logger.error("拒绝无用途读取身份密钥 passport=%s provider=%s", passport_id, provider)
-            return ''
-        logger.info("读取身份密钥 passport=%s provider=%s purpose=%s", passport_id, provider, purpose)
-        row = getDbSession().query(cls).filter(
-            cls.passport_id == passport_id,
-            cls.provider == provider,
-            cls.status == match.MODEL_STATUS_YES,
-        ).first()
-        if not row or not row.secret_material:
-            return ''
-        material = row.secret_material
-        getDbSession().expunge(row)
-        return material
-
-    @classmethod
-    def load_materials(cls, passport_ids, provider, purpose):
-        """批量读取。调用方必须带用途。一次查询，不在循环里逐个读。"""
-        ids = [passport_id for passport_id in passport_ids if passport_id]
-        if not purpose or not ids:
-            logger.error("拒绝无用途或空列表读取身份密钥 provider=%s", provider)
-            return {}
-        logger.info("读取身份密钥 purpose=%s count=%s", purpose, len(ids))
-        rows = getDbSession().query(cls).filter(
-            cls.passport_id.in_(ids),
-            cls.provider == provider,
-            cls.status == match.MODEL_STATUS_YES,
-        ).all()
-        found = {}
-        session = getDbSession()
-        for row in rows:
-            if row.secret_material:
-                found[row.passport_id] = row.secret_material
-            session.expunge(row)
-        return found

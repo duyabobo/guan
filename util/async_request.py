@@ -57,7 +57,7 @@ def asyncRequest(url, data_json, method='GET', timeout=1, need_retry=False, quie
                                 len(http_client.active), len(http_client.waiting), len(http_client.queue),
                                 _joined_urls(http_client.active),
                                 _joined_urls(http_client.waiting))
-            req = HTTPRequest(url, method=method, body=body, validate_cert=False,
+            req = HTTPRequest(url, method=method, body=body, validate_cert=True,
                               request_timeout=timeout, headers=headers, allow_nonstandard_methods=True)
             res = yield http_client.fetch(req)
             resp = json.loads(res.body)

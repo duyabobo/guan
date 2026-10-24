@@ -66,6 +66,6 @@ def test_sms_meet_soon_uses_boss_greeting():
 
 def test_sms_uses_passed_note():
     start = datetime.datetime(2026, 10, 24, 10, 0)
-    text = notice_sms_text(SCENE_NO_SHOW, start, '之后每次见面 20 元')
-    assert '之后每次见面 20 元' in text
-    assert '已记录爽约' in text
+    text = notice_sms_text(SCENE_NO_SHOW, start, '双方定金归对方')
+    assert '双方定金归对方' in text
+    assert '定金不退回' in text

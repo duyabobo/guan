@@ -8,6 +8,8 @@ EMPTY_STR = u""
 GUAN_INFO_OP_TYPE_INVITE = 1  # 邀请
 GUAN_INFO_OP_TYPE_JOIN = 2  # 加入
 GUAN_INFO_OP_TYPE_QUIT = 3  # 退出
+GUAN_INFO_OP_TYPE_CHECKIN = 4  # 签到
+GUAN_INFO_OP_TYPE_REDEPOSIT = 5  # 留下的人重新付定金
 
 # 根据自己的选择结果，影响活动结束后在首页的展示。
 #   见面时间开始以后，0/1 会持续展示在自己首页，且不会推荐其他见面。

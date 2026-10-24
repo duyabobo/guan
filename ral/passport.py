@@ -4,6 +4,7 @@
 # __created_at__ = '2020/1/1'
 import time
 
+from util.const.identity import RUNTIME_UNION_TTL_SEC, SESSION_KEY_PREFIX
 from util.encode import generate_secret
 from util.redis_conn import decode_redis_value, redisConn
 from util.session_payload import session_payload
@@ -20,7 +21,7 @@ def getLoginKey(accessToken):
     返回登录查询 redis 的 key
     :return:
     """
-    return 'accessToken:' + accessToken
+    return SESSION_KEY_PREFIX + accessToken
 
 
 def putSession(accessToken, passport_id):
@@ -33,7 +34,7 @@ def putSession(accessToken, passport_id):
     currentUserInfoJson = session_payload(passport_id, secret)
     loginKey = getLoginKey(accessToken)
     redisConn.hmset(loginKey, currentUserInfoJson)
-    redisConn.expire(loginKey, 3*30*24*3600)
+    redisConn.expire(loginKey, RUNTIME_UNION_TTL_SEC)
     return secret
 
 

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from model.identity_secret import IdentitySecretModel
 from model.sensitive_record import SensitiveRecordModel
+from service.identity.runtime_key import material_for
 from util.const.identity import ACTIVE_KEY_PROVIDER, PURPOSE_ENCRYPT_STORE, SENSITIVE_KINDS
 from util.ctx import getDbSession
 from util.sensitive_cipher import encrypt
@@ -39,9 +39,7 @@ class SensitiveVault(object):
         if not passport_id or not plain:
             logger.warning("敏感信息缺少用户或内容 passport=%s kind=%s", passport_id, kind)
             return None
-        material = IdentitySecretModel.load_for_sensitive_use(
-            passport_id, ACTIVE_KEY_PROVIDER, PURPOSE_ENCRYPT_STORE,
-        )
+        material = material_for(passport_id, PURPOSE_ENCRYPT_STORE)
         if not material:
             logger.error("加密时没有身份密钥 passport=%s kind=%s", passport_id, kind)
             return None

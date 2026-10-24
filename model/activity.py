@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
+import logging
 
 from sqlalchemy import Column, and_
 from sqlalchemy import Integer
@@ -21,6 +22,8 @@ from util.const.match import (
 from util.ctx import getDbSession
 from util.time_cost import timecost
 from util.util_time import datetime2hommization
+
+logger = logging.getLogger(__name__)
 
 
 class ActivityModel(BaseModel):
@@ -79,7 +82,7 @@ class ActivityModel(BaseModel):
     @classmethod
     def list_notice_candidates(cls, now, decide_start, soon_end, expire_end, limit):
         """可能需要到点提醒的场次。窗口由调用方算好，这里只查一次。"""
-        return getDbSession().query(cls).filter(
+        rows = getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
             or_(
                 and_(
@@ -96,28 +99,42 @@ class ActivityModel(BaseModel):
                 ),
             ),
         ).order_by(cls.start_time.asc()).limit(limit).all()
+        return _fill(rows)
+
+    @classmethod
+    def list_deposit_due(cls, earliest, deadline, limit):
+        """已经约上、过了签到时限、还在回溯窗口里的场次。"""
+        rows = getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            cls.start_time >= earliest,
+            cls.start_time <= deadline,
+        ).order_by(cls.start_time.asc()).limit(limit).all()
+        return _fill(rows)
 
     @classmethod
     def listUnsetSuccess(cls, passport_id):
         """双方都还没表态、且已经约上的见面。时间是否到期由调用方判断。"""
-        if not passport_id:
+        activity_ids = _seat_ids(passport_id)
+        if not activity_ids:
             return []
-        return getDbSession().query(cls).filter(
+        rows = getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
+            cls.id.in_(activity_ids),
             cls.state == match.MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-            or_(cls.boy_passport_id == passport_id, cls.girl_passport_id == passport_id),
             cls.boy_meet_result == 0,
             cls.girl_meet_result == 0,
         ).all()
+        return _fill(rows)
 
     @classmethod
     @timecost
     def getConflictActivity(cls, passportId, start_time):
+        activity_ids = _seat_ids(passportId)
+        if not activity_ids:
+            return []
         return getDbSession().query(cls.id).filter(
-            or_(
-                cls.boy_passport_id == passportId,
-                cls.girl_passport_id == passportId
-            ),
+            cls.id.in_(activity_ids),
             cls.start_time >= start_time.date(),
             cls.start_time <= start_time.date() + datetime.timedelta(days=1)
         ).all()
@@ -137,23 +154,26 @@ class ActivityModel(BaseModel):
     @classmethod
     @timecost
     def listActivity(cls, activityIds, exceptPassportId):
-        whereParams = [
+        activity_ids = _without_passport(activityIds, exceptPassportId)
+        if not activity_ids:
+            return []
+        rows = getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
-            cls.id.in_(activityIds),
+            cls.id.in_(activity_ids),
             cls.state.in_(MODEL_ACTIVITY_AVALIABLE_STATE_LIST),
             cls.start_time > datetime.datetime.now()
-        ]
-        if exceptPassportId:
-            whereParams.extend([cls.girl_passport_id != exceptPassportId, cls.boy_passport_id != exceptPassportId])
-        return getDbSession().query(cls).filter(*whereParams).\
-            order_by(cls.state.desc(), cls.start_time.asc()).all()
+        ).order_by(cls.state.desc(), cls.start_time.asc()).all()
+        return _fill(rows)
 
     @classmethod
     def getById(cls, activityId, status=None):
         whereParams = [cls.id == activityId]
         if status != None:
             whereParams.append(cls.status == status)
-        return getDbSession().query(cls).filter(*whereParams).first()
+        row = getDbSession().query(cls).filter(*whereParams).first()
+        if row:
+            _fill([row])
+        return row
 
     @property
     def startTimeStr(self):
@@ -161,8 +181,15 @@ class ActivityModel(BaseModel):
 
     @classmethod
     def updateById(cls, activityId, *whereParams, **updateParams):
-        ret = getDbSession().query(cls).filter(cls.id == activityId, *whereParams).update(updateParams)
-        getDbSession().commit()
+        from service.meet_seat import apply_seat_changes, take_seat_updates
+        seat_changes = take_seat_updates(updateParams)
+        session = getDbSession()
+        ret = session.query(cls).filter(cls.id == activityId, *whereParams).update(updateParams)
+        if ret and seat_changes and not apply_seat_changes(activityId, seat_changes):
+            session.rollback()
+            logger.error("见面座位没有写上，活动更新已回滚 activity=%s", activityId)
+            return 0
+        session.commit()
         return ret
 
     @classmethod
@@ -170,8 +197,7 @@ class ActivityModel(BaseModel):
         return getDbSession().query(cls).filter(
             cls.start_time > datetime.datetime.now() + datetime.timedelta(days=14),
             cls.address_id == addressId,
-            cls.girl_passport_id == 0,
-            cls.boy_passport_id == 0,
+            cls.state == MODEL_ACTIVITY_STATE_EMPTY,
             cls.status == match.MODEL_STATUS_YES
         ).order_by(cls.id.desc()).first()
 
@@ -196,15 +222,14 @@ class ActivityModel(BaseModel):
     @timecost
     def getUserAllActivities(cls, passportId):
         """获取用户参与的所有活动（不限状态），用于列表页全量展示"""
-        if not passportId:
+        activity_ids = _seat_ids(passportId)
+        if not activity_ids:
             return []
-        return getDbSession().query(cls).filter(
+        rows = getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
-            or_(
-                cls.boy_passport_id == passportId,
-                cls.girl_passport_id == passportId,
-            )
+            cls.id.in_(activity_ids),
         ).order_by(cls.state.desc(), cls.start_time.asc()).all()
+        return _fill(rows)
 
     @classmethod
     def getExpireActivityIds(cls):
@@ -227,30 +252,55 @@ class ActivityModel(BaseModel):
     @timecost
     def getUnfinishedActivities(cls, passportId):
         """邀请尚未见面的||尚未表达意向的||意向不合适的一周内"""
-        if not passportId:
+        activity_ids = _seat_ids(passportId)
+        if not activity_ids:
             return []
         now = datetime.datetime.now()
-        unfixShowDelayTime = now + datetime.timedelta(days=UNFIX_SHOW_DELAY_DAYS)
-        return getDbSession().query(cls).filter(
+        delay_end = now + datetime.timedelta(days=UNFIX_SHOW_DELAY_DAYS)
+        rows = getDbSession().query(cls).filter(
             cls.status == match.MODEL_STATUS_YES,
-            or_(
-                and_(
-                    cls.start_time > now,
-                    cls.boy_passport_id == passportId,
-                ),
-                and_(
-                    cls.start_time > now,
-                    cls.girl_passport_id == passportId,
-                ),
-                and_(
-                    cls.start_time < unfixShowDelayTime,
-                    cls.boy_passport_id == passportId,
-                    cls.boy_meet_result.notin_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
-                ),
-                and_(
-                    cls.start_time < unfixShowDelayTime,
-                    cls.girl_passport_id == passportId,
-                    cls.girl_meet_result.notin_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
-                )
-            )
+            cls.id.in_(activity_ids),
         ).order_by(cls.state.desc(), cls.start_time.asc()).all()
+        kept = [row for row in _fill(rows) if _still_unfinished(row, passportId, now, delay_end)]
+        return kept
+
+
+def _seat_ids(passport_id):
+    from service.meet_seat import activity_ids_of
+    if not passport_id:
+        return []
+    return activity_ids_of(passport_id)
+
+
+def _without_passport(activity_ids, passport_id):
+    ids = [activity_id for activity_id in activity_ids or [] if activity_id]
+    if not passport_id:
+        return ids
+    mine = set(_seat_ids(passport_id))
+    return [activity_id for activity_id in ids if activity_id not in mine]
+
+
+def _fill(rows):
+    from service.meet_seat import fill_occupants
+    rows = list(rows or [])
+    fill_occupants(rows)
+    return rows
+
+
+def _still_unfinished(activity, passport_id, now, delay_end):
+    if activity.start_time and activity.start_time > now:
+        return True
+    if not activity.start_time or activity.start_time >= delay_end:
+        return False
+    past_result = _own_result(activity, passport_id)
+    if past_result is None:
+        return False
+    return past_result not in (MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE)
+
+
+def _own_result(activity, passport_id):
+    if passport_id == activity.boy_passport_id:
+        return activity.boy_meet_result
+    if passport_id == activity.girl_passport_id:
+        return activity.girl_meet_result
+    return None

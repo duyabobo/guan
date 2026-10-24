@@ -3,8 +3,8 @@
 """订阅消息发不出去时，用已绑定手机号发短信。没配短信地址就只记日志。"""
 import logging
 
-from model.identity_secret import IdentitySecretModel
 from model.sensitive_record import SensitiveRecordModel
+from service.identity.runtime_key import materials_for
 from util.const.identity import KIND_PHONE, PROVIDER_WECHAT, PURPOSE_PHONE_NOTIFY
 from util.const.notice import notice_sms_text
 from util.sensitive_cipher import decrypt
@@ -34,9 +34,7 @@ def _bound_numbers(passport_ids):
     records = SensitiveRecordModel.latest_map(passport_ids, KIND_PHONE)
     if not records:
         return {}
-    materials = IdentitySecretModel.load_materials(
-        list(records.keys()), PROVIDER_WECHAT, PURPOSE_PHONE_NOTIFY,
-    )
+    materials = materials_for(list(records.keys()), PURPOSE_PHONE_NOTIFY)
     found = {}
     for passport_id, record in records.items():
         number = _open_number(passport_id, record, materials.get(passport_id, ''))

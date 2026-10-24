@@ -245,11 +245,13 @@ class TestGetBottomButtons:
         assert buttons[0]['label'] == '发起见面'
         assert buttons[0]['action'] == 'operate'
         assert buttons[0]['needConfirm'] is False
+        assert buttons[0]['askSubscribe'] is True
 
     def test_not_selected_join_shows_meet(self):
         buttons = get_bottom_buttons(PROGRESS_NOT_SELECTED, GUAN_INFO_OP_TYPE_JOIN)
         assert buttons[0]['label'] == '见面'
         assert buttons[0]['needConfirm'] is False
+        assert buttons[0]['askSubscribe'] is True
 
     def test_selected_shows_cancel_with_confirm(self):
         buttons = get_bottom_buttons(PROGRESS_SELECTED, GUAN_INFO_OP_TYPE_QUIT)
@@ -257,6 +259,7 @@ class TestGetBottomButtons:
         assert buttons[0]['label'] == '取消'
         assert buttons[0]['opType'] == GUAN_INFO_OP_TYPE_QUIT
         assert buttons[0]['needConfirm'] is True
+        assert 'askSubscribe' not in buttons[0]
 
     def test_wait_meet_shows_cancel_with_confirm(self):
         buttons = get_bottom_buttons(PROGRESS_WAIT_MEET, GUAN_INFO_OP_TYPE_QUIT)
@@ -286,7 +289,9 @@ class TestGetBottomButtons:
         assert early[0]['label'] == '取消'
         assert [btn['label'] for btn in late] == ['合适', '不合适']
         assert late[0]['hint'] == HALF_FIT_HINT
+        assert late[0]['askSubscribe'] is True
         assert late[1]['hint'] == UNFIT_SYNC_HINT
+        assert 'askSubscribe' not in late[1]
 
     def test_fit_and_unfit_actions_are_allowed_only_in_window(self):
         assert result_change_allowed(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_FIT_CHOICE, False) is False
@@ -338,6 +343,7 @@ class TestGetBottomButtons:
         assert buttons[0]['value'] == MODEL_MEET_RESULT_UNFIT_CHOICE
         assert buttons[0]['hint'] == UNFIT_SYNC_HINT
         assert buttons[0]['needConfirm'] is True
+        assert 'askSubscribe' not in buttons[0]
 
     def test_disagree_shows_restore_relationship(self):
         buttons = get_bottom_buttons(PROGRESS_DISAGREE, GUAN_INFO_OP_TYPE_QUIT)
@@ -346,6 +352,7 @@ class TestGetBottomButtons:
         assert buttons[0]['value'] == MODEL_MEET_RESULT_FIT_CHOICE
         assert buttons[0]['hint'] == HALF_FIT_HINT
         assert buttons[0]['needConfirm'] is True
+        assert buttons[0]['askSubscribe'] is True
 
 
 class TestRelationshipHold:
@@ -368,19 +375,23 @@ class TestRelationshipHold:
         )
         assert relationship_hold(MY_PID, activity) == HOLD_FIT
 
-    def test_met_or_disagree_holds_nothing(self):
+    def test_half_holds_fit_for_both_sides(self):
         past = datetime.datetime.now() - datetime.timedelta(days=1)
         met = make_activity(
             state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=past,
             boy_result=MODEL_MEET_RESULT_FIT_CHOICE,
         )
+        assert relationship_hold(MY_PID, met) == HOLD_FIT
+        assert relationship_hold(OTHER_PID, met) == HOLD_FIT
+
+    def test_disagree_holds_nothing(self):
+        past = datetime.datetime.now() - datetime.timedelta(days=1)
         disagree = make_activity(
             state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=past,
             boy_result=MODEL_MEET_RESULT_UNFIT_CHOICE,
         )
-        assert relationship_hold(MY_PID, met) == ""
         assert relationship_hold(MY_PID, disagree) == ""
 
     def test_appointment_blocks_new_meeting_only(self):

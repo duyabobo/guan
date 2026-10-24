@@ -22,9 +22,13 @@ class ProfileBoardService(object):
     @staticmethod
     def save_packed(passport_id, scope, values):
         if not passport_id or not values:
-            return
-        ProfileAttrModel.saveScope(passport_id, scope, values)
+            return True
+        saved = ProfileAttrModel.saveScope(passport_id, scope, values)
+        if not saved:
+            logger.error("资料没有封存 passport=%s scope=%s", passport_id, scope)
+            return False
         logger.info("profile_attr scope=%s passport=%s dims=%s", scope, passport_id, list(values.keys()))
+        return True
 
     @staticmethod
     def sex_of(passport_id):

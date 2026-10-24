@@ -3,7 +3,7 @@
 
 
 class IdentityAssertion(object):
-    """一次登录核验的结果。secret_material 只用于落库和加密，不进入会话。"""
+    """一次登录核验的结果。secret_material 只留在这次请求和 Redis，不进会话，也不以明文入库。"""
 
     def __init__(self, provider, account_key, secret_material):
         self.provider = provider

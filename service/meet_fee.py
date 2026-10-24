@@ -23,10 +23,7 @@ from util.const.meet_fee import (
     WX_PAY_TIMEOUT_SEC,
     WX_SUCCESS,
     WX_TRADE_JSAPI,
-    fee_banner_text,
     format_out_refund_no,
-    meet_fee_required,
-    meet_fee_yuan,
 )
 from util.const.response import (
     RESP_MEET_FEE_OPENID,
@@ -52,13 +49,6 @@ class FeeOutcome(object):
         self.order_id = order_id
         self.pay = pay
         self.msg = msg
-
-
-def page_fee(passport_id, viewer, no_show_count):
-    yuan = meet_fee_yuan(no_show_count)
-    if viewer or not passport_id or yuan <= 0:
-        return {'required': False, 'yuan': 0, 'text': ''}
-    return {'required': True, 'yuan': yuan, 'text': fee_banner_text(no_show_count)}
 
 
 def pay_settings():
@@ -217,6 +207,8 @@ def _create_prepay(passport_id, activity_id, openid, client_ip, amount_fen):
         logger.info("见面支付 openid 与账号不一致 passport=%s", passport_id)
         return FeeOutcome(msg=RESP_MEET_FEE_OPENID)
     order = MeetFeeOrderModel.add_created(passport_id, activity_id, amount_fen)
+    if not order:
+        return FeeOutcome(msg=RESP_MEET_FEE_UNAVAILABLE)
     prepay_id = _unified(order, settings, openid, client_ip)
     if not prepay_id:
         MeetFeeOrderModel.close(order.id)

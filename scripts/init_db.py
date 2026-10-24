@@ -428,23 +428,23 @@ MOCK_PROFILE_BY_PHONE = {
 
 def seed_passports(conn) -> list[int]:
     rows = [
-        {'phone': phone, 'openid': openid, 'status': 1}
-        for phone, openid in MOCK_PASSPORT_ROWS
+        {'phone': '', 'openid': openid, 'status': 1}
+        for _, openid in MOCK_PASSPORT_ROWS
     ]
     return _insert_if_empty(conn, 'passport', rows)
 
 
 def ensure_mock_passports(conn):
-    """表里已有账号时按手机号补齐，不改已有行。"""
+    """按演示 openid 补齐。手机号不入库。"""
     phones = [phone for phone, _ in MOCK_PASSPORT_ROWS]
     existing = _passport_id_by_phones(conn, phones)
-    missing = [(phone, openid) for phone, openid in MOCK_PASSPORT_ROWS if phone not in existing]
+    missing = [(openid,) for phone, openid in MOCK_PASSPORT_ROWS if phone not in existing]
     if not missing:
         logger.info("  [跳过] mock passport 已齐全")
         return
     with conn.cursor() as cur:
         cur.executemany(
-            "INSERT INTO `passport` (`phone`, `openid`, `status`) VALUES (%s, %s, 1)",
+            "INSERT INTO `passport` (`phone`, `openid`, `status`) VALUES ('', %s, 1)",
             missing,
         )
     conn.commit()
@@ -698,15 +698,25 @@ def _passport_id_by_sql(conn, sql, params):
 
 
 def _passport_id_by_phones(conn, phones):
+    """演示账号用 openid 找人。手机号只作为种子里的别名，不写入数据库。"""
     if not phones:
         return {}
-    placeholders = ", ".join(["%s"] * len(phones))
+    openid_by_phone = {phone: openid for phone, openid in MOCK_PASSPORT_ROWS}
+    openids = [openid_by_phone[phone] for phone in phones if phone in openid_by_phone]
+    if not openids:
+        return {}
+    placeholders = ", ".join(["%s"] * len(openids))
     with conn.cursor() as cur:
         cur.execute(
-            f"SELECT `phone`, `id` FROM `passport` WHERE `status`=1 AND `phone` IN ({placeholders})",
-            tuple(phones),
+            f"SELECT `openid`, `id` FROM `passport` WHERE `status`=1 AND `openid` IN ({placeholders})",
+            tuple(openids),
         )
-        return {row[0]: row[1] for row in cur.fetchall()}
+        id_by_openid = {row[0]: row[1] for row in cur.fetchall()}
+    return {
+        phone: id_by_openid[openid]
+        for phone, openid in openid_by_phone.items()
+        if phone in phones and openid in id_by_openid
+    }
 
 
 def _expand_profile(profile):
@@ -725,53 +735,9 @@ def _pack_profile_dim(scope, dim_key, value):
     return (scope, dim_key, 0, 0, value)
 
 
-def _filled_profile_keys(conn, passport_ids):
-    if not passport_ids:
-        return {}
-    placeholders = ", ".join(["%s"] * len(passport_ids))
-    with conn.cursor() as cur:
-        cur.execute(
-            f"""
-            SELECT `passport_id`, `scope`, `dim_key` FROM `profile_attr`
-            WHERE `status`=1 AND `passport_id` IN ({placeholders})
-            """,
-            tuple(passport_ids),
-        )
-        grouped = {}
-        for passport_id, scope, dim_key in cur.fetchall():
-            grouped.setdefault(passport_id, set()).add((scope, dim_key))
-        return grouped
-
-
-def _insert_missing_profiles(conn, specs):
-    """specs: [(passport_id, dims)]。已有维度不覆盖，避免冲掉语音页后来改过的值。"""
-    passport_ids = [passport_id for passport_id, _ in specs if passport_id]
-    filled = _filled_profile_keys(conn, passport_ids)
-    rows = []
-    for passport_id, dims in specs:
-        have = filled.get(passport_id, set())
-        for scope, dim_key, value_min, value_max, value_text in dims:
-            if (scope, dim_key) in have:
-                continue
-            rows.append((passport_id, scope, dim_key, value_min, value_max, value_text))
-    if not rows:
-        logger.info("  [跳过] profile_attr 无需补齐")
-        return
-    with conn.cursor() as cur:
-        cur.executemany(
-            """
-            INSERT INTO `profile_attr`
-                (passport_id, scope, dim_key, value_min, value_max, value_text, status)
-            VALUES (%s, %s, %s, %s, %s, %s, 1)
-            ON DUPLICATE KEY UPDATE
-                value_min=VALUES(value_min), value_max=VALUES(value_max),
-                value_text=VALUES(value_text), status=1
-            """,
-            rows,
-        )
-    conn.commit()
-    passport_ids = sorted({row[0] for row in rows})
-    logger.info("  [写入] profile_attr 补齐 %d 行 passport=%s", len(rows), passport_ids)
+def _insert_missing_profiles(_conn, specs):
+    """演示资料不再写明文。真实资料只在微信登录后按 unionid 加密写入。"""
+    logger.info("  [跳过] profile_attr 不写明文 rows=%s", len(specs or []))
 
 
 def _login_user_profile():

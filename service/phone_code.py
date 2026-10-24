@@ -3,6 +3,7 @@
 """注册短信验证码。Redis 只短时保存，日志不记号码和验证码。"""
 import logging
 
+from service.identity.runtime_key import material_for
 from service.common.phone_number import (
     PHONE_CODE_KEY,
     PHONE_CODE_RESEND_SEC,
@@ -16,8 +17,10 @@ from service.common.phone_number import (
     same_bind_code,
     saved_token,
 )
+from util.const.identity import PURPOSE_PHONE_CODE
 from util.encode import md5_hex
 from util.redis_conn import decode_redis_value, redisConn
+from util.sensitive_cipher import decrypt, encrypt, pack_token, unpack_token
 from util.sms_gateway import post_messages, sms_configured
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,9 @@ class PhoneCodeService(object):
             _release_gap(passport_id, number)
             logger.info("验证码发送失败 passport=%s", passport_id)
             return 'unconfigured'
-        redisConn.set(PHONE_CODE_KEY % passport_id, saved_token(number, code), ex=PHONE_CODE_TTL_SEC)
+        if not _store_token(passport_id, number, code):
+            _release_gap(passport_id, number)
+            return 'invalid'
         logger.info("验证码已发出 passport=%s", passport_id)
         return ''
 
@@ -52,13 +57,35 @@ class PhoneCodeService(object):
         if not passport_id or not number or not code:
             logger.info("验证码不正确 passport=%s", passport_id)
             return ''
-        key = PHONE_CODE_KEY % passport_id
-        saved = decode_redis_value(redisConn.get(key))
+        saved = _load_token(passport_id)
         if not same_bind_code(saved, number, code):
             logger.info("验证码不正确 passport=%s", passport_id)
             return ''
-        redisConn.delete(key)
+        redisConn.delete(PHONE_CODE_KEY % passport_id)
         return number
+
+
+def _store_token(passport_id, number, code):
+    material = material_for(passport_id, PURPOSE_PHONE_CODE)
+    if not material:
+        logger.info("验证码未保存，运行时没有身份密钥 passport=%s", passport_id)
+        return False
+    nonce, cipher = encrypt(material, saved_token(number, code).encode('utf-8'))
+    redisConn.set(PHONE_CODE_KEY % passport_id, pack_token(nonce, cipher), ex=PHONE_CODE_TTL_SEC)
+    return True
+
+
+def _load_token(passport_id):
+    material = material_for(passport_id, PURPOSE_PHONE_CODE)
+    saved = decode_redis_value(redisConn.get(PHONE_CODE_KEY % passport_id))
+    nonce, cipher = unpack_token(saved)
+    if not material or not nonce:
+        return ''
+    try:
+        return decrypt(material, nonce, cipher).decode('utf-8')
+    except (ValueError, UnicodeDecodeError):
+        logger.info("验证码解不开 passport=%s", passport_id)
+        return ''
 
 
 def _reserve_gap(passport_id, number):

@@ -10,7 +10,7 @@ from service.common.profile_board import ProfileBoardService
 from service.common.profile_catalog import SCOPE_INFO, SCOPE_REQUIREMENT, values_from_payload
 from service.common.profile_guard import ProfileWriteOutcome, decide_profile_write
 from service.common.voice_gate import voice_entry_blocked
-from util.const.response import RESP_VOICE_IN_PROGRESS
+from util.const.response import RESP_IDENTITY_INCOMPLETE, RESP_VOICE_IN_PROGRESS
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +58,12 @@ class MatchConfigService(BaseService):
         if outcome.rejected:
             logger.info("资料写入被拒绝 passport=%s code=%s", self.passportId, outcome.msg.get("code"))
             return outcome
-        ProfileBoardService.save_packed(self.passportId, SCOPE_INFO, outcome.info_values)
-        ProfileBoardService.save_packed(self.passportId, SCOPE_REQUIREMENT, outcome.requirement_values)
+        info_saved = ProfileBoardService.save_packed(self.passportId, SCOPE_INFO, outcome.info_values)
+        requirement_saved = ProfileBoardService.save_packed(
+            self.passportId, SCOPE_REQUIREMENT, outcome.requirement_values,
+        )
+        if not info_saved or not requirement_saved:
+            return ProfileWriteOutcome(msg=RESP_IDENTITY_INCOMPLETE, rejected=True)
         if outcome.conflict_labels:
             logger.info(
                 "资料锁定冲突，保留旧值 passport=%s dims=%s",

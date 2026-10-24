@@ -9,8 +9,7 @@ import util.ctx
 from util.log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
-from service.common.phone_number import redact_phone_body
-from util.const.identity import VOICE_TEXT_PATH
+from util.log_redact import redact_body, redact_uri, summarize_for_log
 from util.obj_util import object_2_dict
 
 
@@ -25,25 +24,21 @@ def _body_for_log(handler):
     if 'multipart/form-data' in content_type:
         return 'multipart'
     body = handler.request.body_arguments or handler.request.body
-    return redact_phone_body(handler.request.path, body)
+    return redact_body(body)
 
 
-def _resp_for_log(path, data):
-    logged = object_2_dict(data)
-    if path == VOICE_TEXT_PATH and isinstance(logged, dict) and 'text' in logged:
-        logged = dict(logged)
-        text = logged.get('text') or ''
-        logged['text'] = len(text)
-    return logged
+def _resp_for_log(_path, data):
+    return summarize_for_log(object_2_dict(data))
 
 
 def httpReturn(handler, response, err=None):
     manager = util.ctx.getManager()
     manager.tc_child_out()
-    logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessToken: %s,' \
+    logMsg = 'passportId: %s, method: %s, uri: %s, body: %s, accessTokenLen: %s,' \
              ' respMsg: %s, respData: %s, tc: %s, error: %s, tc_tree=%s' % \
-             (handler.currentPassportId, handler.request.method, str(handler.request.uri), _body_for_log(handler),
-              handler.accessToken, response.msg, _resp_for_log(handler.request.path, response.data),
+             (handler.currentPassportId, handler.request.method, redact_uri(str(handler.request.uri)),
+              _body_for_log(handler), len(handler.accessToken or ''),
+              response.msg, _resp_for_log(handler.request.path, response.data),
               time.time()-handler.timestamp, err, manager.timecost_tree)
     if err is None:
         monitor_logger.info(logMsg)

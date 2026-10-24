@@ -3,8 +3,8 @@
 """最终核查才解密。产品页面不要调用。"""
 import logging
 
-from model.identity_secret import IdentitySecretModel
 from model.sensitive_record import SensitiveRecordModel
+from service.identity.runtime_key import material_for
 from service.sensitive.purpose import purpose_accepted
 from util.sensitive_cipher import decrypt
 
@@ -24,9 +24,7 @@ class SensitiveReveal(object):
         return self._open(passport_id, record, purpose)
 
     def _open(self, passport_id, record, purpose):
-        material = IdentitySecretModel.load_for_sensitive_use(
-            passport_id, record.key_provider, purpose.strip(),
-        )
+        material = material_for(passport_id, purpose.strip())
         if not material:
             logger.error("最终核查缺少密钥 passport=%s record=%s", passport_id, record.id)
             return None

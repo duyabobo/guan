@@ -22,7 +22,17 @@ HKDF_SALT = b'guan-sensitive-salt-v1'
 PURPOSE_ENCRYPT_STORE = 'encrypt_store'
 PURPOSE_SUBSCRIBE_SEND = 'subscribe_send'
 PURPOSE_PHONE_NOTIFY = 'phone_notify'
+PURPOSE_PROFILE = 'profile_store'
+PURPOSE_MEET_SEAT = 'meet_seat'
+PURPOSE_PHONE_CODE = 'phone_code'
 PURPOSE_MIN_LENGTH = 4
+
+# 真实 unionid 只放 Redis。会话令牌换前缀后，旧的可猜测令牌全部失效。
+RUNTIME_UNION_TTL_SEC = 90 * 24 * 3600
+RUNTIME_UNION_KEY = 'runtime_union:%s'
+SESSION_KEY_PREFIX = 'accessToken:v2:'
+LOGIN_PATH = '/login'
+UNION_SEAL_PREFIX = 'guan-seal-v1:'
 
 MAX_VOICE_BYTES = 5 * 1024 * 1024
 VOICE_CONTENT_TYPE = 'audio/mpeg'

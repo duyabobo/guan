@@ -4,15 +4,25 @@ import datetime
 
 from service.common.notice_due import NoticeJob, drop_sent, scheduled_notices, sent_key
 from util.const.match import MODEL_ACTIVITY_STATE_INVITE_SUCCESS, MODEL_ACTIVITY_STATE_INVITING
+from util.const.deposit import (
+    DEPOSIT_YUAN,
+    OUTCOME_AWARD,
+    OUTCOME_FORFEIT,
+    OUTCOME_REFUND,
+    PHASE_BEFORE,
+    PHASE_CLOSED,
+    PHASE_OPEN,
+    award_winner,
+    CHECKIN_RADIUS_METERS,
+    checkin_phase,
+    deposit_fen,
+    pair_outcome,
+    within_checkin_radius,
+)
 from util.const.meet_fee import (
     FEN_PER_YUAN,
-    MEET_FEE_STEP_YUAN,
     format_out_refund_no,
     format_out_trade_no,
-    meet_fee_fen,
-    meet_fee_required,
-    meet_fee_yuan,
-    no_show_notice_note,
     quit_records_no_show,
 )
 from util.const.notice import (
@@ -25,7 +35,7 @@ from util.const.notice import (
     boss_greeting,
     clip_thing,
 )
-from util.const.progress import MEET_AUTO_FIT_WAIT, MEET_CHOICE_WAIT
+from util.const.progress import MEET_AUTO_FIT_WAIT, MEET_CHOICE_WAIT, calc_distance_km
 from util.wx_pay import client_pay_params, sign_v2
 
 
@@ -40,14 +50,24 @@ class _Activity(object):
         self.girl_meet_result = kwargs.get('girl_meet_result', 0)
 
 
-def test_fee_scales_with_no_show_count():
-    assert meet_fee_required(0) is False
-    assert meet_fee_yuan(0) == 0
-    assert meet_fee_yuan(1) == MEET_FEE_STEP_YUAN
-    assert meet_fee_yuan(2) == MEET_FEE_STEP_YUAN * 2
-    assert meet_fee_fen(2) == MEET_FEE_STEP_YUAN * 2 * FEN_PER_YUAN
-    assert '20元' in no_show_notice_note(2)
-    assert len(no_show_notice_note(2)) <= THING_MAX_LEN
+def test_deposit_is_flat_and_checkin_allows_one_hour_late():
+    assert deposit_fen() == DEPOSIT_YUAN * FEN_PER_YUAN
+    start = datetime.datetime(2026, 10, 25, 10, 0, 0)
+    assert checkin_phase(start, start - datetime.timedelta(minutes=1)) == PHASE_BEFORE
+    assert checkin_phase(start, start) == PHASE_OPEN
+    assert checkin_phase(start, start + datetime.timedelta(minutes=60)) == PHASE_CLOSED
+    assert checkin_phase(start, start + datetime.timedelta(minutes=59)) == PHASE_OPEN
+    assert pair_outcome(True, True) == OUTCOME_REFUND
+    assert pair_outcome(True, False) == OUTCOME_AWARD
+    assert pair_outcome(False, False) == OUTCOME_FORFEIT
+    assert award_winner(True, 3, 4) == 3
+    assert award_winner(False, 3, 4) == 4
+    near = calc_distance_km(39.9000, 116.4000, 39.9010, 116.4000)
+    far = calc_distance_km(39.9000, 116.4000, 39.9100, 116.4000)
+    assert near is not None and near * 1000 <= CHECKIN_RADIUS_METERS
+    assert within_checkin_radius(near) is True
+    assert within_checkin_radius(far) is False
+    assert within_checkin_radius(None) is False
 
 
 def test_only_quit_after_agreed_is_no_show():

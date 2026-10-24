@@ -8,6 +8,7 @@ import tornado.web
 from gevent import monkey
 
 import util.config
+from service.sensitive.legacy_seal import seal_legacy_plaintext
 from urls import handlers
 from util.database import engine
 
@@ -29,6 +30,7 @@ def _build_ssl_options():
 
 
 def main():
+    seal_legacy_plaintext()
     port = util.config.get('global', 'port')
     server = util.config.get('global', 'server')
     debug = util.config.get('global', 'debug')

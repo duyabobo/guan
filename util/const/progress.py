@@ -142,7 +142,7 @@ STYLE_END = "end"
 STYLE_RESTORE = "restore"
 
 
-def _button(label, action, style_key, need_confirm, op_type=None, value=None, hint=""):
+def _button(label, action, style_key, need_confirm, op_type=None, value=None, hint="", ask_subscribe=False):
     button = {
         "label": label,
         "action": action,
@@ -155,6 +155,8 @@ def _button(label, action, style_key, need_confirm, op_type=None, value=None, hi
         button["value"] = value
     if hint:
         button["hint"] = hint
+    if ask_subscribe:
+        button["askSubscribe"] = True
     return button
 
 
@@ -192,18 +194,18 @@ def next_results_after_my_fit(boy_result, girl_result, actor_is_boy):
 
 
 def relationship_hold(passport_id, activity):
-    """一场见面占住的名额。约见面=双方已确认且未开始；合适=双方都选了合适。"""
+    """一场见面占住的名额。约见面=双方已确认且还没表态。半心和全心一样，都算已经进入合适。"""
     progress = calc_activity_progress(passport_id, activity)
     if progress == PROGRESS_WAIT_MEET:
         return HOLD_APPOINTMENT
-    if progress == PROGRESS_AGREE:
+    if progress in (PROGRESS_MET, PROGRESS_AGREE):
         return HOLD_FIT
     return ""
 
 
 def hold_block_reason(op, has_appointment, has_fit):
     """已有约见面时，不能再约，也不能做约见面之前的发起和加入。
-    已有合适时，不能再选合适，也不能做合适之前的约见面、发起和加入。
+    已有半心或全心时，不能再选合适，也不能做合适之前的约见面、发起和加入。
     """
     if has_fit and op in (OP_TOWARD_MEET, OP_CHOOSE_FIT):
         return HOLD_FIT
@@ -221,7 +223,10 @@ def _unfit_button():
 
 def _fit_buttons():
     return [
-        _button("合适", "meetResult", STYLE_SUITABLE, True, value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT),
+        _button(
+            "合适", "meetResult", STYLE_SUITABLE, True,
+            value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT, ask_subscribe=True,
+        ),
         _unfit_button(),
     ]
 
@@ -237,8 +242,8 @@ def get_bottom_buttons(progress_status, op_type, choice_ready=False, my_result=0
     """
     if progress_status == PROGRESS_NOT_SELECTED:
         if op_type == GUAN_INFO_OP_TYPE_INVITE:
-            return [_button("发起见面", "operate", STYLE_START_MEET, False, op_type=op_type)]
-        return [_button("见面", "operate", STYLE_MEET, False, op_type=op_type)]
+            return [_button("发起见面", "operate", STYLE_START_MEET, False, op_type=op_type, ask_subscribe=True)]
+        return [_button("见面", "operate", STYLE_MEET, False, op_type=op_type, ask_subscribe=True)]
 
     if progress_status == PROGRESS_WAIT_MEET and choice_ready:
         return _fit_buttons()
@@ -256,8 +261,10 @@ def get_bottom_buttons(progress_status, op_type, choice_ready=False, my_result=0
                         value=MODEL_MEET_RESULT_UNFIT_CHOICE, hint=UNFIT_SYNC_HINT)]
 
     if progress_status == PROGRESS_DISAGREE:
-        return [_button("恢复关系", "meetResult", STYLE_RESTORE, True,
-                        value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT)]
+        return [_button(
+            "恢复关系", "meetResult", STYLE_RESTORE, True,
+            value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT, ask_subscribe=True,
+        )]
 
     return []  # PROGRESS_NO_CONFIG 或其他异常状态
 

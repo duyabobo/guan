@@ -4,13 +4,13 @@
 import logging
 
 from model.activity import ActivityModel
-from model.identity_secret import IdentitySecretModel
 from model.notice_sent import NoticeSentModel
 from model.subscribe_grant import SubscribeGrantModel
 from service.common.notice_due import drop_sent, scheduled_notices
+from service.identity.runtime_key import material_for, materials_for
 from service.meet_fee import openid_belongs_to
 from service.phone_fallback import deliver_missed
-from util.const.identity import PROVIDER_WECHAT, PURPOSE_SUBSCRIBE_SEND
+from util.const.identity import PURPOSE_SUBSCRIBE_SEND
 from util.const.notice import (
     LIST_EXPIRE_LEAD,
     MEET_PAGE,
@@ -28,12 +28,8 @@ logger = logging.getLogger(__name__)
 
 def page_subscribe(viewer):
     if viewer:
-        return {'templateIds': [], 'label': '', 'hint': ''}
-    return {
-        'templateIds': [template_id()],
-        'label': '开启见面提醒',
-        'hint': '提醒都走小程序：加入、取消、见面时和老板打招呼、快消失、该决定是否合适、对方不合适',
-    }
+        return {'templateIds': []}
+    return {'templateIds': [template_id()]}
 
 
 def subscription_accepted(subscribe_res, template):
@@ -53,9 +49,7 @@ class MeetNoticeService(object):
         if not openid_belongs_to(passport_id, openid):
             logger.info("订阅未记下 passport=%s openid 与账号不一致", passport_id)
             return
-        material = IdentitySecretModel.load_for_sensitive_use(
-            passport_id, PROVIDER_WECHAT, PURPOSE_SUBSCRIBE_SEND,
-        )
+        material = material_for(passport_id, PURPOSE_SUBSCRIBE_SEND)
         if not material:
             logger.info("订阅未记下 passport=%s 没有身份密钥", passport_id)
             return
@@ -91,7 +85,7 @@ def _dispatch(jobs, record_sent):
     template = template_id()
     passport_ids = list({job.passport_id for job in jobs})
     grants = SubscribeGrantModel.map_by_passports(passport_ids, template)
-    materials = IdentitySecretModel.load_materials(passport_ids, PROVIDER_WECHAT, PURPOSE_SUBSCRIBE_SEND)
+    materials = materials_for(passport_ids, PURPOSE_SUBSCRIBE_SEND)
     openids = _openids(grants, materials)
     state = miniprogram_state()
     usable = {}

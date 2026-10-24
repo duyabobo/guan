@@ -24,7 +24,9 @@ class GuanInfoHandler(BaseHandler):
         opType = self.getRequestParameter('opType', paraType=int)
         gis = GuanInfoService(activityId, self.currentPassport)
         openid = self.getRequestParameter('openid', '')
-        ret = gis.activityOprete(opType, openid, self.request.remote_ip or '')
+        latitude = self.getRequestParameter('latitude', default=0, paraType=float)
+        longitude = self.getRequestParameter('longitude', default=0, paraType=float)
+        ret = gis.activityOprete(opType, openid, self.request.remote_ip or '', latitude, longitude)
         gis.updateMyInformationPage(ret)
         data = gis.getGuanInfo()
         if gis.pending_pay:

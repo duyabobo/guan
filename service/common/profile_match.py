@@ -88,6 +88,8 @@ class ProfileMatchService(object):
         inviting = []
         matched = set()
         for activity in activities:
+            if getattr(activity, 'seat_locked', False):
+                continue
             inviter_id = inviter_passport_id(activity)
             if not inviter_id:
                 matched.add(activity.id)

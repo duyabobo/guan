@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # 一人一密的请求签名：用会话里的 secret 对 path、method 和参数做 md5，并校验序号防重放。
 from ral.passport import checkUnique, setFailCnt, setSuccessCnt, checkFailedCnt, checkSuccessCnt
+from service.identity.runtime_key import has_unionid, touch_unionid
+from util.const.identity import LOGIN_PATH
 from util.const.meet_fee import PAY_NOTIFY_PATH
 from util.sign_content import sign_digest
 
@@ -28,7 +30,10 @@ class Checker(object):
             return
         checkFailedCnt(self.remote_ip)  # 有爬取用户信息攻击行为时放开，1次redis查询操作
         checkSuccessCnt(self.accessToken)  # 有消耗服务资源攻击行为时放开，1～3次redis操作
+        if self.path == LOGIN_PATH:
+            return
         self.check_sign(self.secret)  # 1次解密操作
+        self.require_runtime_key()
         checkUnique(self.accessToken, self.requestSeq)  # 1～2次redis写入操作
 
     def fail(self):
@@ -38,6 +43,16 @@ class Checker(object):
     def success(self):
         """校验成功处理"""
         setSuccessCnt(self.accessToken)
+
+    def require_runtime_key(self):
+        """已登录请求必须能在 Redis 里找到这次微信登录留下的 unionid。"""
+        if self.path == LOGIN_PATH:
+            return
+        passport_id = int(self.currentPassport.get('id') or 0)
+        if not passport_id:
+            return
+        assert has_unionid(passport_id), 'runtime identity missing'
+        touch_unionid(passport_id)
 
     def check_sign(self, secret):
         digest = sign_digest(

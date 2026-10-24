@@ -2,7 +2,7 @@
 # __author__ = ‘du‘
 # __created_at__ = '2018/12/2'
 import hashlib
-import time
+import secrets
 
 _TEXT_HASH_ENCODING = 'utf-8'
 
@@ -18,17 +18,14 @@ def md5_hex(text):
     return hashlib.md5(payload).hexdigest()
 
 
-def generate_access_token(login_user_id):
-    """
-    md5 生成 accessToken
-    :param login_user_id:
-    :return:
-    """
-    timestamp = str(time.time())
-    return md5_hex(timestamp + str(login_user_id))
+_TOKEN_BYTES = 32
 
 
-def generate_secret(accessToken):
-    """"""
-    timestamp = str(time.time())
-    return md5_hex(timestamp + str(accessToken))
+def generate_access_token(_login_user_id):
+    """随机令牌。不包含用户编号，也不能由时间推算。"""
+    return secrets.token_urlsafe(_TOKEN_BYTES)
+
+
+def generate_secret(_access_token):
+    """每次登录单独的签名密钥，不能由令牌推算出来。"""
+    return secrets.token_urlsafe(_TOKEN_BYTES)

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""见面提醒。文案长度按微信订阅消息 thing 的上限截断。全部走小程序订阅消息。"""
+"""见面提醒。文案长度按微信订阅消息 thing 的上限截断。"""
 import datetime
 
 # 小程序里已经申请的订阅模板。字段名可在 weixin 配置里覆盖。
@@ -26,6 +26,10 @@ SCENE_MEET_SOON = 'meet_soon'
 SCENE_LIST_EXPIRE = 'list_expire'
 SCENE_NO_SHOW = 'no_show'
 SCENE_UNFIT = 'unfit'
+SCENE_DEPOSIT_BACK = 'deposit_back'
+SCENE_DEPOSIT_TAKE = 'deposit_take'
+SCENE_DEPOSIT_LOSE = 'deposit_lose'
+SCENE_DEPOSIT_FORFEIT = 'deposit_forfeit'
 
 _CN_DIGIT = '零一二三四五六七八九'
 BOSS_GREETING = '你好老板，我%s约了人'
@@ -36,8 +40,12 @@ NOTICE_TEXT = {
     SCENE_DECIDE: ('请尽快决定是否合适', '未选满7天会视为合适'),
     SCENE_MEET_SOON: ('见面时间快到了', '和老板打个招呼'),
     SCENE_LIST_EXPIRE: ('这场快从列表消失', '还没有人加入这场见面'),
-    SCENE_NO_SHOW: ('已记录爽约', '之后按爽约次数付费'),
+    SCENE_NO_SHOW: ('定金不退回', '双方定金归对方'),
     SCENE_UNFIT: ('对方选择了不合适', '打开详情可以查看'),
+    SCENE_DEPOSIT_BACK: ('定金将退回', '已在1小时内签到'),
+    SCENE_DEPOSIT_TAKE: ('两笔定金归你', '对方未按时签到'),
+    SCENE_DEPOSIT_LOSE: ('定金不退回', '未在1小时内签到'),
+    SCENE_DEPOSIT_FORFEIT: ('定金不退回', '双方都未按时签到'),
 }
 
 
