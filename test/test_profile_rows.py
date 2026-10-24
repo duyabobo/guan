@@ -11,7 +11,7 @@ from service.common.profile_catalog import (
     SCOPE_REQUIREMENT,
     values_from_payload,
 )
-from service.common.profile_rows import MISSING_MARK, build_rows
+from service.common.profile_rows import MISSING_MARK, build_rows, missing_required_info_keys
 class _Attr(object):
     def __init__(self, scope, dim_key, value_min=0, value_max=0, value_text=""):
         self.scope = scope
@@ -37,6 +37,7 @@ def test_rows_use_catalog_label_and_unit():
     assert height["requirementValue"] == "160-180cm"
     assert height["infoMissing"] is False
     assert height["requirementMissing"] is False
+    assert height["required"] is True
 
 
 def test_missing_side_uses_mark_and_blank_dim_is_omitted():
@@ -51,6 +52,43 @@ def test_missing_side_uses_mark_and_blank_dim_is_omitted():
 def test_choice_index_zero_is_blank():
     rows = build_rows([_Attr(SCOPE_INFO, "sex", value_min=0)])
     assert rows == []
+
+
+def test_required_info_includes_weight_and_hometown():
+    filled = {
+        "sex": _Attr(SCOPE_INFO, "sex", value_min=1),
+        "birth_year": _Attr(SCOPE_INFO, "birth_year", value_min=1996),
+        "height": _Attr(SCOPE_INFO, "height", value_min=175),
+        "weight": _Attr(SCOPE_INFO, "weight", value_min=65),
+        "home_region": _Attr(SCOPE_INFO, "home_region", value_text="北京"),
+    }
+    assert missing_required_info_keys(filled) == []
+    without_weight = dict(filled)
+    without_weight.pop("weight")
+    assert missing_required_info_keys(without_weight) == ["weight"]
+    without_hometown = dict(filled)
+    without_hometown.pop("home_region")
+    assert missing_required_info_keys(without_hometown) == ["home_region"]
+
+
+def test_show_all_keeps_unmentioned_dims_empty():
+    rows = build_rows([
+        _Attr(SCOPE_INFO, "sex", value_min=1),
+    ], show_all=True)
+    assert [row["dimKey"] for row in rows] == [dim.key for dim in ACTIVE_DIMS]
+    sex = rows[0]
+    assert sex["infoValue"] == "男"
+    assert sex["requirementValue"] == MISSING_MARK
+    assert sex["requirementMissing"] is True
+    height = next(row for row in rows if row["dimKey"] == "height")
+    weight = next(row for row in rows if row["dimKey"] == "weight")
+    assert height["infoValue"] == MISSING_MARK
+    assert height["requirementValue"] == MISSING_MARK
+    assert height["required"] is True
+    assert weight["required"] is True
+    hobby = next(row for row in rows if row["dimKey"] == "hobby")
+    assert hobby["required"] is False
+    assert hobby["infoValue"] == MISSING_MARK
 
 
 def test_values_from_payload_packs_single_and_range():

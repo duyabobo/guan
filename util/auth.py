@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # 一人一密的请求签名：用会话里的 secret 对 path、method 和参数做 md5，并校验序号防重放。
 from ral.passport import checkUnique, setFailCnt, setSuccessCnt, checkFailedCnt, checkSuccessCnt
+from util.const.meet_fee import PAY_NOTIFY_PATH
 from util.sign_content import sign_digest
 
 
@@ -23,6 +24,8 @@ class Checker(object):
     def check(self):
         """对请求进行检查，拦截无效/非法/恶意的请求。
         攻击是不能完全防控的，还需要监控日志识别恶意ip和虚假user，并进行管控和清理。"""
+        if self.path == PAY_NOTIFY_PATH:
+            return
         checkFailedCnt(self.remote_ip)  # 有爬取用户信息攻击行为时放开，1次redis查询操作
         checkSuccessCnt(self.accessToken)  # 有消耗服务资源攻击行为时放开，1～3次redis操作
         self.check_sign(self.secret)  # 1次解密操作

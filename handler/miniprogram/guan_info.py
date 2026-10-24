@@ -23,9 +23,13 @@ class GuanInfoHandler(BaseHandler):
         activityId = self.getRequestParameter('guanId', paraType=int)
         opType = self.getRequestParameter('opType', paraType=int)
         gis = GuanInfoService(activityId, self.currentPassport)
-        ret = gis.activityOprete(opType)
+        openid = self.getRequestParameter('openid', '')
+        ret = gis.activityOprete(opType, openid, self.request.remote_ip or '')
         gis.updateMyInformationPage(ret)
-        return Response(data=gis.getGuanInfo(), msg=ret)
+        data = gis.getGuanInfo()
+        if gis.pending_pay:
+            data['pay'] = gis.pending_pay
+        return Response(data=data, msg=ret)
 
 
 class MeetResultHandler(BaseHandler):

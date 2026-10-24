@@ -5,18 +5,29 @@ import logging
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
+from model.meet_fee_order import MeetFeeOrderModel
+from model.meet_no_show import MeetNoShowModel
 from model.passport import PassportModel
 from ral.cache import lock
 from service import BaseService
 from service.common.guan_helper import GuanHelper
+from service.common.notice_due import NoticeJob
 from service.common.page_copy import guan_info_copy
+from service.common.meet_outcome import apply_synced_result, record_my_fit, settle_due_meets
 from service.common.profile_board import ProfileBoardService
-from service.common.profile_match import ProfileMatchService
+from service.common.profile_match import ProfileMatchService, other_passport_id
+from service.meet_fee import MeetFeeService, page_fee
+from service.meet_notice import MeetNoticeService, page_subscribe
 from util.class_helper import lazy_property
 from util.const import match
 from util.const.base import (
     GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE,
+    MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE,
 )
+from util.const.meet_fee import (
+    fee_confirm_hint, meet_fee_fen, meet_fee_required, no_show_notice_note, quit_records_no_show,
+)
+from util.const.notice import SCENE_CANCELLED, SCENE_JOINED, SCENE_NO_SHOW, SCENE_UNFIT
 from util.const.match import (
     MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX,
     MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY,
@@ -24,16 +35,28 @@ from util.const.match import (
 )
 from util.const.mini_program import MYREQUIREMENT_PAGE, MYINFORMATION_PAGE_WITH_ERRMSG
 from util.const.progress import (
+    HOLD_APPOINTMENT, HOLD_FIT, OP_CHOOSE_FIT, OP_TOWARD_MEET,
     PROGRESS_DESC, PROGRESS_NOT_SELECTED, build_meet_share_guide,
-    calc_activity_progress, get_bottom_buttons,
+    calc_activity_progress, fit_marks_only_self, get_bottom_buttons, hold_block_reason,
+    meet_choice_ready, quit_is_allowed, relationship_hold, result_change_allowed,
 )
 from util.const.response import (
-    RESP_OK, RESP_JOIN_ACTIVITY_FAILED, RESP_HAS_ONGOING_ACTIVITY,
+    RESP_OK, RESP_JOIN_ACTIVITY_FAILED, RESP_HAS_APPOINTMENT, RESP_HAS_FIT_PARTNER,
     RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT,
-    RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR
+    RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR, RESP_MEET_FEE_PENDING,
+    RESP_MEET_FEE_UNAVAILABLE, no_show_recorded_msg, meet_fee_required_msg,
 )
 
 logger = logging.getLogger(__name__)
+
+_SEAT_OPS = (GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN)
+
+
+class _OperateResult(object):
+    def __init__(self, msg, notices=None, refund_order_id=0):
+        self.msg = msg
+        self.notices = notices or []
+        self.refund_order_id = refund_order_id
 
 
 class GuanInfoService(BaseService):
@@ -44,6 +67,8 @@ class GuanInfoService(BaseService):
         self.passportId = passport.get('id', 0)
         self.activityRecord = None
         self.myInformationPage = MYINFORMATION_PAGE_WITH_ERRMSG
+        self.pending_pay = None
+        settle_due_meets(self.passportId)
         self.reloadActivityRecord()
         super(GuanInfoService, self).__init__()
 
@@ -92,19 +117,51 @@ class GuanInfoService(BaseService):
     @property
     def bottomButtons(self):
         """根据进展状态返回底部按钮配置（委托纯函数）"""
-        return get_bottom_buttons(self.progressStatus, self.opType)
+        ready = meet_choice_ready(self.activityRecord) if self.activityRecord else False
+        return get_bottom_buttons(self.progressStatus, self.opType, ready, self._my_meet_result())
+
+    def _my_meet_result(self):
+        record = self.activityRecord
+        if not record:
+            return 0
+        if self.passportId == record.boy_passport_id:
+            return record.boy_meet_result or 0
+        if self.passportId == record.girl_passport_id:
+            return record.girl_meet_result or 0
+        return 0
 
     def updateMeetResult(self, meetResultValue):
-        """更新见面结果（含合适/不合适/结束/恢复）"""
-        if self.passportId == self.activityRecord.boy_passport_id:
-            ActivityModel.updateBoyMeetResult(self.activityId, meetResultValue)
-        elif self.passportId == self.activityRecord.girl_passport_id:
-            ActivityModel.updateGirlMeetResult(self.activityId, meetResultValue)
-        else:
+        """合适和恢复关系只记自己。不合适、结束关系同步双方，并用小程序订阅通知对方。"""
+        written = self._locked_meet_result(meetResultValue)
+        if not isinstance(written, _OperateResult):
+            return written
+        MeetNoticeService.dispatch(written.notices, record_sent=False)
+        return written.msg
+
+    @lock("activityOprete:{activityId}", failRet=RESP_MEET_RESULT_ERR)
+    def _locked_meet_result(self, meetResultValue):
+        self.reloadActivityRecord()
+        if not self.activityRecord or not self._is_activity_participant(self.passportId):
             return RESP_MEET_RESULT_ERR
-        logger.info("meet_result updated: activityId=%s passportId=%s value=%s",
-                    self.activityId, self.passportId, meetResultValue)
-        return RESP_OK
+        ready = meet_choice_ready(self.activityRecord)
+        if not result_change_allowed(self.progressStatus, meetResultValue, ready):
+            logger.info(
+                "meet result rejected activity=%s passport=%s value=%s progress=%s ready=%s",
+                self.activityId, self.passportId, meetResultValue, self.progressStatus, ready,
+            )
+            return RESP_MEET_RESULT_ERR
+        if meetResultValue == MODEL_MEET_RESULT_FIT_CHOICE:
+            blocked = self._hold_response(OP_CHOOSE_FIT)
+            if blocked:
+                return blocked
+        notices = []
+        if fit_marks_only_self(self.progressStatus, meetResultValue):
+            record_my_fit(self.activityRecord, self.passportId)
+        else:
+            apply_synced_result(self.activityRecord, self.passportId, meetResultValue)
+            notices = _unfit_notice(self.activityRecord, self.passportId, meetResultValue)
+        self.reloadActivityRecord()
+        return _OperateResult(RESP_OK, notices)
 
     def getGuanInfo(self):
         progress = self.progressStatus
@@ -149,7 +206,11 @@ class GuanInfoService(BaseService):
 
     def _build_page(self, progress, opposite_passport_id, bottom_buttons, viewer):
         copy = guan_info_copy()
-        rows = ProfileBoardService.rows_for(opposite_passport_id) if opposite_passport_id else []
+        rows = ProfileBoardService.rows_for(opposite_passport_id, show_all=False) if opposite_passport_id else []
+        no_show_count = 0 if viewer else MeetNoShowModel.count_of(self.passportId)
+        fee = page_fee(self.passportId, viewer, no_show_count)
+        if not viewer:
+            bottom_buttons = _annotate_fee(bottom_buttons, no_show_count)
         return {
             "guanId": self.activityId,
             "progressStatus": progress,
@@ -170,14 +231,36 @@ class GuanInfoService(BaseService):
                 "myInformationPage": self.myInformationPage,
             },
             "share": build_meet_share_guide(progress, copy["shareLabel"], viewer),
+            "fee": fee,
+            "subscribe": page_subscribe(viewer),
         }
 
     def reloadActivityRecord(self):
         self.activityRecord = ActivityModel.getById(self.activityId, status=match.MODEL_STATUS_YES)
 
-    @property
-    def hasOngoingActivity(self):
-        return bool(ActivityModel.getOngoingActivity(self.passportId))
+    def _hold_response(self, op):
+        """别的场次已经占着约见面或合适时，拦住对应的后续操作。"""
+        activities = ActivityModel.getUserAllActivities(self.passportId)
+        has_appointment = False
+        has_fit = False
+        for activity in activities:
+            if activity.id == self.activityId:
+                continue
+            hold = relationship_hold(self.passportId, activity)
+            if hold == HOLD_APPOINTMENT:
+                has_appointment = True
+            elif hold == HOLD_FIT:
+                has_fit = True
+        reason = hold_block_reason(op, has_appointment, has_fit)
+        logger.info(
+            "relationship hold passport=%s activity=%s op=%s appointment=%s fit=%s reason=%s",
+            self.passportId, self.activityId, op, has_appointment, has_fit, reason or "none",
+        )
+        if reason == HOLD_FIT:
+            return RESP_HAS_FIT_PARTNER
+        if reason == HOLD_APPOINTMENT:
+            return RESP_HAS_APPOINTMENT
+        return None
 
     def _my_slot_taken(self):
         if self.sexIndex == MODEL_SEX_MALE_INDEX:
@@ -223,27 +306,140 @@ class GuanInfoService(BaseService):
     def timeIsConflict(self):
         return bool(ActivityModel.getConflictActivity(self.passportId, self.activityRecord.start_time))
 
-    @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)
-    def activityOprete(self, opType):
-        """对活动进行操作（邀请/加入/退出）"""
+    def _booked_by_other(self, opType):
+        """双方已约上之后，见面开始前本人仍可取消。其余操作按场次已被占处理。"""
+        if opType == GUAN_INFO_OP_TYPE_QUIT:
+            ready = meet_choice_ready(self.activityRecord)
+            return not quit_is_allowed(self.progressStatus, ready)
+        return self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS
+
+    def _operate_block(self, op_type):
+        self.reloadActivityRecord()
+        if not self.activityRecord:
+            return RESP_JOIN_ACTIVITY_FAILED
         if not ProfileBoardService.info_is_filled(self.passportId):
             return RESP_NEED_FILL_INFO
-        if self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS:
+        if self._booked_by_other(op_type):
+            logger.info(
+                "activity operate rejected activity=%s passport=%s op=%s state=%s progress=%s",
+                self.activityId, self.passportId, op_type,
+                self.activityRecord.state, self.progressStatus,
+            )
             return RESP_JOIN_ACTIVITY_FAILED
-        if opType != self.opType:
+        if op_type != self.opType:
             return RESP_JOIN_ACTIVITY_FAILED
-        if self.hasOngoingActivity and opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN]:
-            return RESP_HAS_ONGOING_ACTIVITY
+        if op_type in _SEAT_OPS:
+            blocked = self._hold_response(OP_TOWARD_MEET)
+            if blocked:
+                return blocked
         if self.opType == GUAN_INFO_OP_TYPE_JOIN and not self._can_join():
             return RESP_JOIN_ACTIVITY_FAILED
-        if opType in [GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN] and self.timeIsConflict():
+        if op_type in _SEAT_OPS and self.timeIsConflict():
             return RESP_HAS_TIME_CONFLICT
-        updateParams, whereParams = self.parseUpdataParams(opType, self.sexIndex)
-        ret = ActivityModel.updateById(self.activityId, *whereParams, **updateParams)
-        if not ret:
-            return RESP_JOIN_ACTIVITY_FAILED
-        ActivityChangeRecordModel.addOne(self.activityId, self.passportId, opType)
+        return None
+
+    def activityOprete(self, op_type, openid, client_ip):
+        """邀请、加入、取消。付钱发生在锁外面，写座位在锁里面。"""
+        block = self._operate_block(op_type)
+        order_id = 0
+        if block:
+            return block
+        no_show_count = MeetNoShowModel.count_of(self.passportId)
+        if op_type in _SEAT_OPS and meet_fee_required(no_show_count):
+            outcome = MeetFeeService.ensure(
+                self.passportId, self.activityId, openid, client_ip, meet_fee_fen(no_show_count),
+            )
+            if outcome.order_id:
+                order_id = outcome.order_id
+            elif outcome.pay or outcome.msg:
+                self.pending_pay = outcome.pay
+                return outcome.msg or meet_fee_required_msg(no_show_count)
+            else:
+                return RESP_MEET_FEE_UNAVAILABLE
+        written = self._locked_apply(op_type, order_id)
+        if not isinstance(written, _OperateResult):
+            return written
+        if written.refund_order_id:
+            MeetFeeService.refund(written.refund_order_id)
+        MeetNoticeService.dispatch(written.notices, record_sent=False)
+        return written.msg
+
+    @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)
+    def _locked_apply(self, op_type, order_id):
+        block = self._operate_block(op_type)
+        if block:
+            return _OperateResult(block, refund_order_id=order_id or 0)
+        was_agreed = quit_records_no_show(
+            self.activityRecord.state, MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+        )
+        partner_id = other_passport_id(self.activityRecord, self.passportId)
+        start_time = self.activityRecord.start_time
+        if order_id and not MeetFeeOrderModel.consume(order_id):
+            logger.info("支付单未核销 order=%s passport=%s", order_id, self.passportId)
+            return _OperateResult(RESP_MEET_FEE_PENDING)
+        update_params, where_params = self.parseUpdataParams(op_type, self.sexIndex)
+        updated = ActivityModel.updateById(self.activityId, *where_params, **update_params)
+        if not updated:
+            logger.info(
+                "座位没写上 activity=%s passport=%s op=%s",
+                self.activityId, self.passportId, op_type,
+            )
+            return _OperateResult(RESP_JOIN_ACTIVITY_FAILED, refund_order_id=order_id or 0)
+        ActivityChangeRecordModel.addOne(self.activityId, self.passportId, op_type)
         self.reloadActivityRecord()
-        if opType == GUAN_INFO_OP_TYPE_QUIT:
-            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI
-        return RESP_OK
+        msg, no_show_count = self._result_after_write(op_type, was_agreed)
+        return _OperateResult(
+            msg,
+            _notices_after_write(
+                op_type, was_agreed, partner_id, self.passportId,
+                self.activityId, start_time, no_show_count,
+            ),
+        )
+
+    def _result_after_write(self, op_type, was_agreed):
+        if op_type == GUAN_INFO_OP_TYPE_QUIT and was_agreed:
+            MeetNoShowModel.add_once(self.passportId, self.activityId)
+            count = MeetNoShowModel.count_of(self.passportId)
+            return no_show_recorded_msg(count), count
+        if op_type == GUAN_INFO_OP_TYPE_QUIT:
+            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, 0
+        return RESP_OK, 0
+
+
+def _annotate_fee(buttons, no_show_count):
+    if not meet_fee_required(no_show_count):
+        return buttons
+    hint = fee_confirm_hint(no_show_count)
+    annotated = []
+    for button in buttons or []:
+        if button.get('opType') in _SEAT_OPS:
+            copied = dict(button)
+            copied['needConfirm'] = True
+            copied['hint'] = hint
+            annotated.append(copied)
+        else:
+            annotated.append(button)
+    return annotated
+
+
+def _unfit_notice(activity, actor_passport_id, meet_result_value):
+    if meet_result_value < MODEL_MEET_RESULT_UNFIT_CHOICE or not activity or not activity.start_time:
+        return []
+    partner_id = other_passport_id(activity, actor_passport_id)
+    if not partner_id:
+        logger.info("不合适提醒未发 activity=%s 没有对方", activity.id)
+        return []
+    return [NoticeJob(partner_id, SCENE_UNFIT, activity.id, activity.start_time)]
+
+
+def _notices_after_write(op_type, was_agreed, partner_id, passport_id, activity_id, start_time, no_show_count):
+    notices = []
+    if op_type == GUAN_INFO_OP_TYPE_JOIN and partner_id:
+        notices.append(NoticeJob(partner_id, SCENE_JOINED, activity_id, start_time))
+    if op_type == GUAN_INFO_OP_TYPE_QUIT and was_agreed:
+        if partner_id:
+            notices.append(NoticeJob(partner_id, SCENE_CANCELLED, activity_id, start_time))
+        notices.append(NoticeJob(
+            passport_id, SCENE_NO_SHOW, activity_id, start_time, no_show_notice_note(no_show_count),
+        ))
+    return notices

@@ -8,6 +8,7 @@ from model.address import AddressModel
 from ral.cache import checkCache
 from service import BaseService
 from service.common.guan_helper import GuanHelper
+from service.common.meet_outcome import settle_due_meets
 from service.common.profile_match import ProfileMatchService
 from util.const.match import (
     MODEL_SEX_UNKNOWN_INDEX,
@@ -101,7 +102,7 @@ class GuanguanService(BaseService):
         2. 同级按距离档（每 10km 一级）由近到远
         3. 同档按见面时间由近到远
         4. 心碎/实心/双心永久展示
-        5. 其他：两周内、100km 内、匹配通过，且每 10km 剩余 2 小时内
+        5. 还没约上的：两周内、100km 内、匹配通过，且每 10km 只留 1 小时
         """
         if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
             return [{
@@ -117,6 +118,7 @@ class GuanguanService(BaseService):
 
         now = datetime.datetime.now()
         pool_limit = max(limit * LIST_FETCH_POOL_FACTOR, limit)
+        settle_due_meets(self.passportId)
 
         user_activities = ActivityModel.getUserAllActivities(self.passportId)
         user_activities_with_progress = [(a, self._calcActivityProgress(a)) for a in user_activities]

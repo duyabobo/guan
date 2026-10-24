@@ -6,6 +6,10 @@
 def list_page_copy():
     return {
         "listTitle": "见面",
+        "phoneGateTitle": "授权手机号",
+        "phoneGateHint": "注册时绑定手机号。订阅消息发不出去时，用短信通知你。",
+        "phoneGateButton": "授权并继续",
+        "phoneGateLater": "先看看",
     }
 
 
@@ -16,14 +20,17 @@ def match_config_copy():
         "infoTitle": "我的信息",
         "requirementTitle": "我的期望",
         "emptyText": "说一段话后，这里会整理出个人信息和期望",
+        "voiceBlockTitle": "暂时不能录音",
+        "profileConflictTitle": "已保留原资料",
+        "voiceRejectTitle": "暂时不能更新",
         "privacyEntry": "隐私说明",
         "privacyTitle": "隐私说明",
-        "privacyBody": "点按麦克风后才会开始录音。录音会加密保存，并整理成个人信息和期望，用于匹配。页面上不展示原始录音。你可以随时再说一段，覆盖之前整理出的内容。",
+        "privacyBody": "点按麦克风后才会开始录音。录音会加密保存，并整理成个人信息和期望，用于匹配。页面上不展示原始录音。性别、身高、出生年份和籍贯确认后，不能再用语音改掉；新的说法和原来不一致时，会保留原来的，并等待人工客服确认。已经约好见面，或已经选了合适之后，不能再录音。目前只支持找异性。",
         "privacyConfirm": "知道了",
         "voiceStatus": {
-            "idle": "说说你自己和期望",
+            "idle": "说说你自己和想找的人",
             "recording": "正在录音，再次点击结束",
-            "processing": "正在整理个人信息和期望",
+            "processing": "正在解析，完成后会自动更新",
         },
         "micDeniedTitle": "需要麦克风",
         "micDeniedContent": "语音搜集需要使用麦克风，请在设置里允许录音。",
@@ -37,5 +44,5 @@ def guan_info_copy():
         "infoTitle": "ta的信息",
         "requirementTitle": "ta的期望",
         "emptyText": "还没有可展示的对象资料",
-        "shareLabel": "安全见面，分享好友",
+        "shareLabel": "安全见面，分享亲友",
     }

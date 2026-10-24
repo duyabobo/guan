@@ -48,18 +48,15 @@ def get_section(sect):
     return Configuration().get_section(sect)
 
 
-def get_conf(key: str, default: str = '') -> str:
+def get_conf(key: str, default: str = '', section: str = 'llm') -> str:
     """
-    读取扁平配置项（适用于 LLM 等第三方服务的 key）。
-    查找顺序：
-      1. 环境变量（key 转大写，如 openai_api_key → OPENAI_API_KEY）
-      2. INI 文件 [llm] section（key 原名）
-      3. 返回 default
+    读取扁平配置项。
+    查找顺序：环境变量（key 转大写）→ INI 对应 section → default。
     """
     env_val = os.getenv(key.upper())
     if env_val is not None:
         return env_val
     try:
-        return Configuration().get('llm', key)
+        return Configuration().get(section, key)
     except Exception:
         return default

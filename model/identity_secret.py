@@ -94,3 +94,24 @@ class IdentitySecretModel(BaseModel):
         material = row.secret_material
         getDbSession().expunge(row)
         return material
+
+    @classmethod
+    def load_materials(cls, passport_ids, provider, purpose):
+        """批量读取。调用方必须带用途。一次查询，不在循环里逐个读。"""
+        ids = [passport_id for passport_id in passport_ids if passport_id]
+        if not purpose or not ids:
+            logger.error("拒绝无用途或空列表读取身份密钥 provider=%s", provider)
+            return {}
+        logger.info("读取身份密钥 purpose=%s count=%s", purpose, len(ids))
+        rows = getDbSession().query(cls).filter(
+            cls.passport_id.in_(ids),
+            cls.provider == provider,
+            cls.status == match.MODEL_STATUS_YES,
+        ).all()
+        found = {}
+        session = getDbSession()
+        for row in rows:
+            if row.secret_material:
+                found[row.passport_id] = row.secret_material
+            session.expunge(row)
+        return found

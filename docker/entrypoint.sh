@@ -34,10 +34,13 @@ token=${WX_TOKEN:-}
 EncodingAESKey=${WX_ENCODING_AES_KEY:-}
 subscribe_offline_noti_tid=${WX_SUBSCRIBE_NOTI_TID:-}
 
-[llm]
-openai_api_key=${OPENAI_API_KEY:-}
-openai_api_base=${OPENAI_API_BASE:-https://api.openai.com/v1}
-openai_model=${OPENAI_MODEL:-gpt-4o-mini}
+[volc]
+volc_asr_api_key=${VOLC_ASR_API_KEY:-}
+volc_asr_app_key=${VOLC_ASR_APP_KEY:-}
+volc_asr_access_key=${VOLC_ASR_ACCESS_KEY:-}
+volc_ark_api_key=${VOLC_ARK_API_KEY:-}
+volc_ark_api_base=${VOLC_ARK_API_BASE:-https://ark.cn-beijing.volces.com/api/v3}
+volc_ark_model=${VOLC_ARK_MODEL:-doubao-seed-2-1-lite-260915}
 
 [qiniu]
 access_key=${QINIU_ACCESS_KEY:-}

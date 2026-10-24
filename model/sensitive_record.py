@@ -54,6 +54,23 @@ class SensitiveRecordModel(BaseModel):
         return row
 
     @classmethod
+    def latest_map(cls, passport_ids, kind):
+        """同一用户只留最新一条。一次查询。"""
+        ids = [passport_id for passport_id in passport_ids if passport_id]
+        if not ids or not kind:
+            return {}
+        rows = getDbSession().query(cls).filter(
+            cls.passport_id.in_(ids),
+            cls.kind == kind,
+            cls.status == match.MODEL_STATUS_YES,
+        ).order_by(cls.id.desc()).all()
+        found = {}
+        for row in rows:
+            if row.passport_id not in found:
+                found[row.passport_id] = row
+        return found
+
+    @classmethod
     def latest(cls, passport_id, kind):
         if not passport_id or not kind:
             return None

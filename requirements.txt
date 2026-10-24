@@ -13,5 +13,5 @@ redis>=4.6.0
 # 认证与加密
 pycryptodome>=3.19.0
 
-# AI
+# 火山方舟兼容 OpenAI SDK
 openai>=1.0.0

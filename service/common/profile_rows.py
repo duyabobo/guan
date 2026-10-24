@@ -5,6 +5,7 @@ import re
 
 from service.common.profile_catalog import (
     ACTIVE_DIMS,
+    FILL_REQUIRED_INFO_KEYS,
     KIND_CHOICE,
     KIND_NUMBER,
     KIND_RANGE,
@@ -15,17 +16,21 @@ from service.common.profile_catalog import (
 
 MISSING_MARK = "—"
 _ALL_WORD = "全部"
+_REQUIRED_INFO_KEYS = frozenset(FILL_REQUIRED_INFO_KEYS)
 _REGION_DUP = re.compile(r"(北京市|天津市|上海市|重庆市)\1")
 
 
-def build_rows(attr_rows):
-    """只读 profile_attr。没有对应行的维度不展示。"""
+def build_rows(attr_rows, show_all=False):
+    """只读 profile_attr。默认没填的维度不展示。
+
+    语音页 show_all：目录里的属性都占一行。用户没提到的一侧留空，不填例子。
+    """
     attr_index = {(row.scope, row.dim_key): row for row in attr_rows or []}
     rows = []
     for dim in ACTIVE_DIMS:
         info_value = _side_value(dim, SCOPE_INFO, attr_index)
         requirement_value = _side_value(dim, SCOPE_REQUIREMENT, attr_index)
-        if not info_value and not requirement_value:
+        if not show_all and not info_value and not requirement_value:
             continue
         rows.append({
             "dimKey": dim.key,
@@ -34,8 +39,22 @@ def build_rows(attr_rows):
             "requirementValue": requirement_value or MISSING_MARK,
             "infoMissing": not info_value,
             "requirementMissing": not requirement_value,
+            "required": dim.key in _REQUIRED_INFO_KEYS,
         })
     return rows
+
+
+def missing_required_info_keys(info_rows_by_key):
+    """必填个人信息里还没有值的维度。数字和选项看 value_min，籍贯看文本。"""
+    dims = {dim.key: dim for dim in ACTIVE_DIMS}
+    info_rows_by_key = info_rows_by_key or {}
+    missing = []
+    for key in FILL_REQUIRED_INFO_KEYS:
+        row = info_rows_by_key.get(key)
+        dim = dims.get(key)
+        if dim is None or row is None or not display_from_attr(dim, row):
+            missing.append(key)
+    return missing
 
 
 def display_from_attr(dim, row):

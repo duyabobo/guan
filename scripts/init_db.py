@@ -133,8 +133,8 @@ def run_migrations(conn: pymysql.connections.Connection):
                 try:
                     cur.execute(stmt)
                     conn.commit()
-                except pymysql.err.OperationalError as e:
-                    if e.args[0] in _IDEMPOTENT_ERRORS:
+                except pymysql.err.DatabaseError as e:
+                    if e.args and e.args[0] in _IDEMPOTENT_ERRORS:
                         logger.info("    [跳过] 已存在或不存在（幂等）: %s", e.args[1])
                         conn.rollback()
                     else:
@@ -346,56 +346,122 @@ def ensure_addresses(conn, region_ids: list[int]) -> list[int]:
     return ordered_ids
 
 
+# 伪造账号。前三个保持原手机号，后面几个专门用来测匹配过滤。
+SEX_MALE = 1
+SEX_FEMALE = 2
+HOME_BEIJING = "北京"
+HOME_SHANGHAI = "上海"
+HOME_TIANJIN = "天津"
+HOME_ALL = "全部"
+
+PHONE_BOY_BEIJING = "13800000001"
+PHONE_GIRL_BEIJING = "13800000002"
+PHONE_BOY_SHANGHAI = "13800000003"
+PHONE_GIRL_MATCH_TIANJIN = "13800000011"
+PHONE_GIRL_REQUIRE_SHANGHAI = "13800000012"
+PHONE_GIRL_REQUIRE_SHORT = "13800000013"
+PHONE_GIRL_REQUIRE_OLDER = "13800000014"
+
+MOCK_PASSPORT_ROWS = (
+    (PHONE_BOY_BEIJING, "mock_openid_md5_001"),
+    (PHONE_GIRL_BEIJING, "mock_openid_md5_002"),
+    (PHONE_BOY_SHANGHAI, "mock_openid_md5_003"),
+    (PHONE_GIRL_MATCH_TIANJIN, "mock_openid_md5_011"),
+    (PHONE_GIRL_REQUIRE_SHANGHAI, "mock_openid_md5_012"),
+    (PHONE_GIRL_REQUIRE_SHORT, "mock_openid_md5_013"),
+    (PHONE_GIRL_REQUIRE_OLDER, "mock_openid_md5_014"),
+)
+
+# 数字是单值，二元组是期望区间，字符串是籍贯。没写的维度表示不限。
+MOCK_PROFILE_BY_PHONE = {
+    PHONE_BOY_BEIJING: {
+        "info": {"sex": SEX_MALE, "birth_year": 1996, "height": 178, "weight": 70, "home_region": HOME_BEIJING},
+        "requirement": {
+            "sex": SEX_FEMALE, "birth_year": (1993, 2003), "height": (158, 175),
+            "weight": (45, 65), "home_region": HOME_BEIJING,
+        },
+    },
+    PHONE_GIRL_BEIJING: {
+        "info": {"sex": SEX_FEMALE, "birth_year": 1998, "height": 163, "weight": 52, "home_region": HOME_BEIJING},
+        "requirement": {
+            "sex": SEX_MALE, "birth_year": (1990, 2000), "height": (170, 190),
+            "weight": (60, 90), "home_region": HOME_BEIJING,
+        },
+    },
+    PHONE_BOY_SHANGHAI: {
+        "info": {"sex": SEX_MALE, "birth_year": 1995, "height": 175, "weight": 75, "home_region": HOME_SHANGHAI},
+        "requirement": {
+            "sex": SEX_FEMALE, "birth_year": (1995, 2005), "height": (155, 170),
+            "home_region": HOME_ALL,
+        },
+    },
+    PHONE_GIRL_MATCH_TIANJIN: {
+        "info": {"sex": SEX_FEMALE, "birth_year": 1997, "height": 165, "weight": 50, "home_region": HOME_TIANJIN},
+        "requirement": {
+            "sex": SEX_MALE, "birth_year": (1992, 2000), "height": (175, 185),
+            "weight": (60, 80), "home_region": HOME_BEIJING,
+        },
+    },
+    PHONE_GIRL_REQUIRE_SHANGHAI: {
+        "info": {"sex": SEX_FEMALE, "birth_year": 1999, "height": 168, "weight": 55, "home_region": HOME_SHANGHAI},
+        "requirement": {
+            "sex": SEX_MALE, "birth_year": (1990, 2002), "height": (165, 185),
+            "weight": (50, 80), "home_region": HOME_SHANGHAI,
+        },
+    },
+    PHONE_GIRL_REQUIRE_SHORT: {
+        "info": {"sex": SEX_FEMALE, "birth_year": 1996, "height": 160, "weight": 48, "home_region": HOME_BEIJING},
+        "requirement": {
+            "sex": SEX_MALE, "birth_year": (1990, 2000), "height": (155, 168),
+            "weight": (40, 70), "home_region": HOME_ALL,
+        },
+    },
+    PHONE_GIRL_REQUIRE_OLDER: {
+        "info": {"sex": SEX_FEMALE, "birth_year": 2000, "height": 170, "weight": 58, "home_region": HOME_BEIJING},
+        "requirement": {
+            "sex": SEX_MALE, "birth_year": (1990, 1994), "height": (170, 190),
+            "weight": (60, 85), "home_region": HOME_ALL,
+        },
+    },
+}
+
+
 def seed_passports(conn) -> list[int]:
     rows = [
-        {'phone': '13800000001', 'openid': 'mock_openid_md5_001', 'status': 1},
-        {'phone': '13800000002', 'openid': 'mock_openid_md5_002', 'status': 1},
-        {'phone': '13800000003', 'openid': 'mock_openid_md5_003', 'status': 1},
+        {'phone': phone, 'openid': openid, 'status': 1}
+        for phone, openid in MOCK_PASSPORT_ROWS
     ]
     return _insert_if_empty(conn, 'passport', rows)
 
 
-def seed_profile_attrs(conn, passport_ids: list[int]):
-    """mock 资料：一个维度一行。已有记录的账号不覆盖。"""
-    specs = [
-        (passport_ids[0], (
-            ("info", "sex", 1, 0),
-            ("info", "birth_year", 1996, 0),
-            ("info", "height", 178, 0),
-            ("info", "weight", 70, 0),
-            ("requirement", "sex", 2, 0),
-            ("requirement", "birth_year", 1993, 2003),
-            ("requirement", "height", 158, 175),
-            ("requirement", "weight", 45, 65),
-        )),
-        (passport_ids[1], (
-            ("info", "sex", 2, 0),
-            ("info", "birth_year", 1998, 0),
-            ("info", "height", 163, 0),
-            ("info", "weight", 52, 0),
-            ("requirement", "sex", 1, 0),
-            ("requirement", "birth_year", 1990, 2000),
-            ("requirement", "height", 170, 190),
-            ("requirement", "weight", 60, 90),
-        )),
-        (passport_ids[2], (
-            ("info", "sex", 1, 0),
-            ("info", "birth_year", 1995, 0),
-            ("info", "height", 175, 0),
-            ("info", "weight", 75, 0),
-            ("requirement", "sex", 2, 0),
-            ("requirement", "birth_year", 1995, 2005),
-            ("requirement", "height", 155, 170),
-        )),
-    ]
-    for passport_id, dims in specs:
-        if _profile_attr_count(conn, passport_id):
-            logger.info("  [跳过] profile_attr 已有数据 passport_id=%s", passport_id)
-            continue
-        for scope, dim_key, value_min, value_max in dims:
-            _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min, value_max)
-        logger.info("  [写入] profile_attr passport_id=%s dims=%s", passport_id, len(dims))
+def ensure_mock_passports(conn):
+    """表里已有账号时按手机号补齐，不改已有行。"""
+    phones = [phone for phone, _ in MOCK_PASSPORT_ROWS]
+    existing = _passport_id_by_phones(conn, phones)
+    missing = [(phone, openid) for phone, openid in MOCK_PASSPORT_ROWS if phone not in existing]
+    if not missing:
+        logger.info("  [跳过] mock passport 已齐全")
+        return
+    with conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO `passport` (`phone`, `openid`, `status`) VALUES (%s, %s, 1)",
+            missing,
+        )
     conn.commit()
+    logger.info("  [写入] passport 补齐 %d 个", len(missing))
+
+
+def seed_profile_attrs(conn):
+    """mock 资料按维度补缺，已有维度不覆盖。"""
+    id_by_phone = _passport_id_by_phones(conn, list(MOCK_PROFILE_BY_PHONE))
+    specs = []
+    for phone, profile in MOCK_PROFILE_BY_PHONE.items():
+        passport_id = id_by_phone.get(phone)
+        if not passport_id:
+            logger.warning("  [跳过] 无账号，无法写资料 phone=%s", phone)
+            continue
+        specs.append((passport_id, _expand_profile(profile)))
+    _insert_missing_profiles(conn, specs)
 
 
 def _fmt_time(dt: datetime.datetime) -> str:
@@ -496,13 +562,19 @@ def seed_activities(conn, passport_ids: list[int], address_ids: list[int]) -> li
 
 
 def _address_id_by_name(conn, name: str) -> int | None:
+    return _address_id_by_names(conn, [name]).get(name)
+
+
+def _address_id_by_names(conn, names) -> dict:
+    if not names:
+        return {}
+    placeholders = ", ".join(["%s"] * len(names))
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT `id` FROM `address` WHERE `name` = %s AND `status` = 1 LIMIT 1",
-            (name,),
+            f"SELECT `name`, `id` FROM `address` WHERE `status`=1 AND `name` IN ({placeholders})",
+            tuple(names),
         )
-        row = cur.fetchone()
-    return row[0] if row else None
+        return {row[0]: row[1] for row in cur.fetchall()}
 
 
 def _upsert_demo_empty_activity(conn, address_id: int, start: datetime.datetime) -> int | None:
@@ -540,16 +612,16 @@ def _upsert_demo_empty_activity(conn, address_id: int, start: datetime.datetime)
 
 
 def ensure_empty_slot_activities(conn, address_ids: list[int]) -> list[int]:
-    """补充/刷新空闲（无心）场次：天津演示点 + 北京点，开始时间滚动到未来 1~2 小时内"""
+    """补充/刷新空闲（无心）场次：天津演示点 + 北京点，开始时间落在未来 1 小时内"""
     now = datetime.datetime.now()
     touched_ids = []
 
     tianjin_slots = [
-        ('天津滨江道咖啡', datetime.timedelta(minutes=48)),
-        ('天津意式风情区茶馆', datetime.timedelta(minutes=62)),
-        ('天津古文化街小馆', datetime.timedelta(minutes=78)),
-        ('天津南开大学东门', datetime.timedelta(minutes=95)),
-        ('天津之眼河畔', datetime.timedelta(minutes=110)),
+        ('天津滨江道咖啡', datetime.timedelta(minutes=16)),
+        ('天津意式风情区茶馆', datetime.timedelta(minutes=28)),
+        ('天津古文化街小馆', datetime.timedelta(minutes=40)),
+        ('天津南开大学东门', datetime.timedelta(minutes=50)),
+        ('天津之眼河畔', datetime.timedelta(minutes=58)),
     ]
     for name, delta in tianjin_slots:
         address_id = _address_id_by_name(conn, name)
@@ -563,7 +635,7 @@ def ensure_empty_slot_activities(conn, address_ids: list[int]) -> list[int]:
     if address_ids:
         legacy_slots = [
             (_pick_id(address_ids, 2), datetime.timedelta(minutes=40)),
-            (_pick_id(address_ids, 3), datetime.timedelta(minutes=65)),
+            (_pick_id(address_ids, 3), datetime.timedelta(minutes=55)),
         ]
         for address_id, delta in legacy_slots:
             activity_id = _upsert_demo_empty_activity(conn, address_id, now + delta)
@@ -588,7 +660,7 @@ def seed_shares(conn, passport_ids: list[int]) -> list[int]:
 # ── 当前登录用户的可测数据 ─────────────────────────────────────────────────────
 
 MOCK_OPENID_PREFIX = 'mock_openid_md5_'
-OPPOSITE_PHONE = '13800000002'
+OPPOSITE_PHONE = PHONE_GIRL_BEIJING
 LOGIN_BIRTH_YEAR = 1996
 LOGIN_HEIGHT = 178
 LOGIN_WEIGHT = 70
@@ -598,13 +670,23 @@ MEET_RESULT_FIT = 1
 MEET_RESULT_UNFIT = 100
 MINUTES_PER_DAY = 24 * 60
 
+# 地址名, 邀请人手机号, 相对现在的分钟, 给日志看的预期。
+# 登录用户按男、1996、178cm、70kg、籍贯北京来填。附近的单心/无心要落在 1 小时内。
+MATCH_PROBE_SCENES = (
+    ("北京朝阳公园南门", PHONE_GIRL_MATCH_TIANJIN, 35, "北京侧应出现单心"),
+    ("北京国子监茶馆", PHONE_GIRL_REQUIRE_SHANGHAI, 45, "应被滤掉：期望籍贯上海"),
+    ("北京什刹海小馆", PHONE_GIRL_REQUIRE_SHORT, 60, "应被滤掉：期望身高155-168"),
+    ("天津滨江道咖啡", PHONE_GIRL_MATCH_TIANJIN, 40, "天津侧应出现单心"),
+    ("天津南开大学东门", PHONE_GIRL_REQUIRE_OLDER, 50, "应被滤掉：期望出生年1990-1994"),
+)
+
 # 地址名, 相对现在的分钟, 我是否占男方席位, 对方是否占女方席位, state, 男方结果, 女方结果
 LOGIN_DEMO_SCENES = (
     ('天津古文化街小馆', 3 * MINUTES_PER_DAY, True, True, STATE_SUCCESS, 0, 0),
     ('天津南开大学东门', -2 * MINUTES_PER_DAY, True, True, STATE_SUCCESS, 0, MEET_RESULT_FIT),
     ('天津之眼河畔', -6 * MINUTES_PER_DAY, True, True, STATE_SUCCESS, MEET_RESULT_UNFIT, 0),
     ('北京三里屯咖啡', 55, False, True, STATE_INVITING, 0, 0),
-    ('天津意式风情区茶馆', 70, False, True, STATE_INVITING, 0, 0),
+    ('天津意式风情区茶馆', 50, False, True, STATE_INVITING, 0, 0),
 )
 
 
@@ -615,18 +697,68 @@ def _passport_id_by_sql(conn, sql, params):
     return row[0] if row else None
 
 
-def _profile_attr_count(conn, passport_id):
+def _passport_id_by_phones(conn, phones):
+    if not phones:
+        return {}
+    placeholders = ", ".join(["%s"] * len(phones))
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT COUNT(*) FROM `profile_attr` WHERE `passport_id`=%s AND `status`=1",
-            (passport_id,),
+            f"SELECT `phone`, `id` FROM `passport` WHERE `status`=1 AND `phone` IN ({placeholders})",
+            tuple(phones),
         )
-        return cur.fetchone()[0]
+        return {row[0]: row[1] for row in cur.fetchall()}
 
 
-def _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min=0, value_max=0, value_text=""):
+def _expand_profile(profile):
+    dims = []
+    for scope in ("info", "requirement"):
+        for dim_key, value in profile.get(scope, {}).items():
+            dims.append(_pack_profile_dim(scope, dim_key, value))
+    return dims
+
+
+def _pack_profile_dim(scope, dim_key, value):
+    if isinstance(value, tuple):
+        return (scope, dim_key, value[0], value[1], "")
+    if isinstance(value, int):
+        return (scope, dim_key, value, 0, "")
+    return (scope, dim_key, 0, 0, value)
+
+
+def _filled_profile_keys(conn, passport_ids):
+    if not passport_ids:
+        return {}
+    placeholders = ", ".join(["%s"] * len(passport_ids))
     with conn.cursor() as cur:
         cur.execute(
+            f"""
+            SELECT `passport_id`, `scope`, `dim_key` FROM `profile_attr`
+            WHERE `status`=1 AND `passport_id` IN ({placeholders})
+            """,
+            tuple(passport_ids),
+        )
+        grouped = {}
+        for passport_id, scope, dim_key in cur.fetchall():
+            grouped.setdefault(passport_id, set()).add((scope, dim_key))
+        return grouped
+
+
+def _insert_missing_profiles(conn, specs):
+    """specs: [(passport_id, dims)]。已有维度不覆盖，避免冲掉语音页后来改过的值。"""
+    passport_ids = [passport_id for passport_id, _ in specs if passport_id]
+    filled = _filled_profile_keys(conn, passport_ids)
+    rows = []
+    for passport_id, dims in specs:
+        have = filled.get(passport_id, set())
+        for scope, dim_key, value_min, value_max, value_text in dims:
+            if (scope, dim_key) in have:
+                continue
+            rows.append((passport_id, scope, dim_key, value_min, value_max, value_text))
+    if not rows:
+        logger.info("  [跳过] profile_attr 无需补齐")
+        return
+    with conn.cursor() as cur:
+        cur.executemany(
             """
             INSERT INTO `profile_attr`
                 (passport_id, scope, dim_key, value_min, value_max, value_text, status)
@@ -635,41 +767,35 @@ def _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min=0, value_m
                 value_min=VALUES(value_min), value_max=VALUES(value_max),
                 value_text=VALUES(value_text), status=1
             """,
-            (passport_id, scope, dim_key, value_min, value_max, value_text),
+            rows,
         )
+    conn.commit()
+    passport_ids = sorted({row[0] for row in rows})
+    logger.info("  [写入] profile_attr 补齐 %d 行 passport=%s", len(rows), passport_ids)
 
 
-def _sex_value(conn, passport_id):
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT `value_min` FROM `profile_attr`
-            WHERE `passport_id`=%s AND `scope`='info' AND `dim_key`='sex' AND `status`=1
-            """,
-            (passport_id,),
-        )
-        row = cur.fetchone()
-    return row[0] if row else 0
+def _login_user_profile():
+    return {
+        "info": {
+            "sex": SEX_MALE,
+            "birth_year": LOGIN_BIRTH_YEAR,
+            "height": LOGIN_HEIGHT,
+            "weight": LOGIN_WEIGHT,
+            "home_region": HOME_BEIJING,
+        },
+        "requirement": {
+            "sex": SEX_FEMALE,
+            "birth_year": (1994, 2001),
+            "height": (155, 175),
+            "weight": (45, 65),
+            "home_region": HOME_BEIJING,
+        },
+    }
 
 
 def _fill_login_user_profile(conn, passport_id):
-    """只在还没填性别时写入，避免覆盖语音页后来改过的资料。"""
-    if _sex_value(conn, passport_id):
-        logger.info("  [跳过] 登录用户资料已有性别，不覆盖 passport_id=%s", passport_id)
-        return
-    dims = (
-        ("info", "sex", 1, 0),
-        ("info", "birth_year", LOGIN_BIRTH_YEAR, 0),
-        ("info", "height", LOGIN_HEIGHT, 0),
-        ("info", "weight", LOGIN_WEIGHT, 0),
-        ("requirement", "sex", 2, 0),
-        ("requirement", "birth_year", 1994, 2001),
-        ("requirement", "height", 155, 175),
-        ("requirement", "weight", 45, 65),
-    )
-    for scope, dim_key, value_min, value_max in dims:
-        _upsert_profile_attr(conn, passport_id, scope, dim_key, value_min, value_max)
-    logger.info("  [写入] 登录用户个人信息和期望 passport_id=%s", passport_id)
+    """只补还没有的维度，避免覆盖语音页后来改过的资料。"""
+    _insert_missing_profiles(conn, [(passport_id, _expand_profile(_login_user_profile()))])
 
 
 def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, girl_result, start):
@@ -704,6 +830,29 @@ def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, gi
             (address_id, start_str, boy_id, girl_id, state, boy_result, girl_result),
         )
         return cur.lastrowid
+
+
+def ensure_match_probe_activities(conn) -> list[int]:
+    """女方已入座的邀请。登录用户是男、籍贯北京时，只有落在期望里的场次会变成单心。"""
+    id_by_phone = _passport_id_by_phones(conn, [phone for _, phone, _, _ in MATCH_PROBE_SCENES])
+    address_by_name = _address_id_by_names(conn, [name for name, _, _, _ in MATCH_PROBE_SCENES])
+    now = datetime.datetime.now()
+    activity_ids = []
+    for address_name, phone, minutes, reason in MATCH_PROBE_SCENES:
+        address_id = address_by_name.get(address_name)
+        girl_id = id_by_phone.get(phone)
+        if not address_id or not girl_id:
+            logger.warning("  [跳过] 匹配探针 %s phone=%s", address_name, phone)
+            continue
+        activity_id = _upsert_login_scene(
+            conn, address_id, 0, girl_id, STATE_INVITING, 0, 0,
+            now + datetime.timedelta(minutes=minutes),
+        )
+        if activity_id:
+            activity_ids.append(activity_id)
+            logger.info("  [写入] 匹配探针 activity=%s %s | %s", activity_id, address_name, reason)
+    conn.commit()
+    return activity_ids
 
 
 def ensure_login_user_demo(conn) -> list[int]:
@@ -762,11 +911,13 @@ def main():
         region_ids = ensure_regions(conn)
         seed_addresses(conn, region_ids)
         address_ids   = ensure_addresses(conn, region_ids)
-        passport_ids  = seed_passports(conn)
-        seed_profile_attrs(conn, passport_ids)
+        passport_ids = seed_passports(conn)
+        ensure_mock_passports(conn)
+        seed_profile_attrs(conn)
         seed_activities(conn, passport_ids, address_ids)
         ensure_empty_slot_activities(conn, address_ids)
         seed_shares(conn, passport_ids)
+        ensure_match_probe_activities(conn)
         ensure_login_user_demo(conn)
 
         logger.info("=== 初始化完成 ===")

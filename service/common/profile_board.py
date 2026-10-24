@@ -3,12 +3,8 @@
 import logging
 
 from model.profile_attr import ProfileAttrModel
-from service.common.profile_catalog import (
-    FILL_REQUIRED_INFO_KEYS,
-    SCOPE_INFO,
-    values_from_payload,
-)
-from service.common.profile_rows import build_rows
+from service.common.profile_catalog import SCOPE_INFO
+from service.common.profile_rows import build_rows, missing_required_info_keys
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +13,18 @@ class ProfileBoardService(object):
     """见面详情和个人信息页共用的资料板。值只来自 profile_attr。"""
 
     @staticmethod
-    def rows_for(passport_id):
+    def rows_for(passport_id, show_all=False):
         attr_rows = ProfileAttrModel.listByPassportId(passport_id)
-        rows = build_rows(attr_rows)
-        logger.info("profile board passport=%s dims=%s", passport_id, [row["dimKey"] for row in rows])
+        rows = build_rows(attr_rows, show_all=show_all)
+        logger.info("profile board passport=%s dims=%s show_all=%s", passport_id, [row["dimKey"] for row in rows], show_all)
         return rows
 
     @staticmethod
-    def save_extracted(passport_id, scope, payload):
-        values = values_from_payload(scope, payload)
+    def save_packed(passport_id, scope, values):
+        if not passport_id or not values:
+            return
         ProfileAttrModel.saveScope(passport_id, scope, values)
+        logger.info("profile_attr scope=%s passport=%s dims=%s", scope, passport_id, list(values.keys()))
 
     @staticmethod
     def sex_of(passport_id):
@@ -37,11 +35,10 @@ class ProfileBoardService(object):
 
     @staticmethod
     def info_is_filled(passport_id):
-        rows = _info_map(passport_id)
-        for key in FILL_REQUIRED_INFO_KEYS:
-            row = rows.get(key)
-            if row is None or not row.value_min:
-                return False
+        missing = missing_required_info_keys(_info_map(passport_id))
+        if missing:
+            logger.info("个人信息未齐 passport=%s missing=%s", passport_id, missing)
+            return False
         return True
 
 

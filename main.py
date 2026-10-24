@@ -51,6 +51,8 @@ def main():
     )
     http_server.listen(port)
     logger.info("Starting server at http://localhost:%s/ (mode=%s, debug=%s)", port, server, debug)
+    from service.notice_scan import start_notice_scan
+    start_notice_scan(tornado.ioloop.IOLoop.instance())
     tornado.ioloop.IOLoop.instance().start()
 
 

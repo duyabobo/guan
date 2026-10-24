@@ -37,10 +37,13 @@ services:
       - QINIU_ACCESS_KEY=${QINIU_ACCESS_KEY:-}
       - QINIU_SECRET_KEY=${QINIU_SECRET_KEY:-}
       - QINIU_BUCKET=${QINIU_BUCKET:-}
-      # OpenAI / LLM
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      # 火山引擎：豆包语音 + 方舟
+      - VOLC_ASR_API_KEY=${VOLC_ASR_API_KEY:-}
+      - VOLC_ASR_APP_KEY=${VOLC_ASR_APP_KEY:-}
+      - VOLC_ASR_ACCESS_KEY=${VOLC_ASR_ACCESS_KEY:-}
+      - VOLC_ARK_API_KEY=${VOLC_ARK_API_KEY:-}
+      - VOLC_ARK_API_BASE=${VOLC_ARK_API_BASE:-https://ark.cn-beijing.volces.com/api/v3}
+      - VOLC_ARK_MODEL=${VOLC_ARK_MODEL:-doubao-seed-2-1-lite-260915}
     restart: unless-stopped
 
   # ── MySQL ─────────────────────────────────────────────────────────────────

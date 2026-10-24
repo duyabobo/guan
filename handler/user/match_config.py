@@ -6,7 +6,7 @@ from handler.basehandler import BaseHandler
 from service.match_config import MatchConfigService
 from service.voice_pipeline import VoicePipeline
 from util.const.identity import MAX_VOICE_BYTES
-from util.const.response import RESP_IDENTITY_INCOMPLETE, RESP_NEED_LOGIN, RESP_VOICE_MISSING, RESP_VOICE_TOO_LARGE
+from util.const.response import RESP_NEED_LOGIN, RESP_VOICE_MISSING, RESP_VOICE_TOO_LARGE
 from util.monitor import superMonitor, Response
 
 logger = logging.getLogger(__name__)
@@ -25,13 +25,14 @@ class MatchConfigHandler(BaseHandler):
         voice_text = self.getRequestParameter('voiceText', default='')
         if not voice_text:
             return Response(msg={'code': 1003, 'errMsg': 'voiceText 不能为空'})
-        mcs = MatchConfigService(self.currentPassport)
-        data = mcs.updateFromVoiceText(voice_text)
-        return Response(data=data)
+        outcome = MatchConfigService(self.currentPassport).updateFromVoiceText(voice_text)
+        if outcome.rejected:
+            return Response(msg=outcome.msg)
+        return Response(data=outcome.data, msg=outcome.msg)
 
 
 class VoiceTextHandler(BaseHandler):
-    """上传原始语音：加密保存，再识别并抽取个人信息和期望。"""
+    """上传原始语音：加密保存，再把语音和提示词一次交给方舟提取。"""
 
     @superMonitor
     def post(self):
@@ -43,11 +44,10 @@ class VoiceTextHandler(BaseHandler):
         if len(audio_bytes) > MAX_VOICE_BYTES:
             logger.warning("语音超过大小限制 passport=%s bytes=%s", self.currentPassportId, len(audio_bytes))
             return Response(msg=RESP_VOICE_TOO_LARGE)
-        result = VoicePipeline(self.currentPassport).run(audio_bytes)
-        if result is None:
-            logger.warning("语音加密失败，需要重新登录 passport=%s", self.currentPassportId)
-            return Response(msg=RESP_IDENTITY_INCOMPLETE)
-        return Response(data=result)
+        outcome = VoicePipeline(self.currentPassport).run(audio_bytes)
+        if outcome.rejected:
+            return Response(msg=outcome.msg)
+        return Response(data=outcome.data, msg=outcome.msg)
 
     def _audio_bytes(self):
         audio_data = self.request.files.get('audio')

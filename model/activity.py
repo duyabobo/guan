@@ -12,8 +12,12 @@ from model import BaseModel
 from util.const import match
 from util.const.base import MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE, \
     UNFIX_SHOW_DELAY_DAYS
-from util.const.match import MODEL_ACTIVITY_AVALIABLE_STATE_LIST, MODEL_ACTIVITY_STATE_EMPTY, \
-    MODEL_ACTIVITY_STATE_INVITE_SUCCESS
+from util.const.match import (
+    MODEL_ACTIVITY_AVALIABLE_STATE_LIST,
+    MODEL_ACTIVITY_STATE_EMPTY,
+    MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+    MODEL_ACTIVITY_STATE_INVITING,
+)
 from util.ctx import getDbSession
 from util.time_cost import timecost
 from util.util_time import datetime2hommization
@@ -45,6 +49,66 @@ class ActivityModel(BaseModel):
     def updateGirlMeetResult(cls, activityId, meetResultValue):
         getDbSession().query(cls).filter(cls.id == activityId).update({cls.girl_meet_result: meetResultValue})
         getDbSession().commit()
+
+    @classmethod
+    @timecost
+    def updateEachMeetResult(cls, activity_id, boy_result, girl_result):
+        getDbSession().query(cls).filter(cls.id == activity_id).update({
+            cls.boy_meet_result: boy_result,
+            cls.girl_meet_result: girl_result,
+        }, synchronize_session=False)
+        getDbSession().commit()
+
+    @classmethod
+    @timecost
+    def updateBothMeetResults(cls, activityId, meetResultValue):
+        cls.updateBothMeetResultsByIds([activityId], meetResultValue)
+
+    @classmethod
+    @timecost
+    def updateBothMeetResultsByIds(cls, activity_ids, meetResultValue):
+        ids = [activity_id for activity_id in activity_ids if activity_id]
+        if not ids:
+            return
+        getDbSession().query(cls).filter(cls.id.in_(ids)).update({
+            cls.boy_meet_result: meetResultValue,
+            cls.girl_meet_result: meetResultValue,
+        }, synchronize_session=False)
+        getDbSession().commit()
+
+    @classmethod
+    def list_notice_candidates(cls, now, decide_start, soon_end, expire_end, limit):
+        """可能需要到点提醒的场次。窗口由调用方算好，这里只查一次。"""
+        return getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            or_(
+                and_(
+                    cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+                    cls.boy_meet_result == 0,
+                    cls.girl_meet_result == 0,
+                    cls.start_time >= decide_start,
+                    cls.start_time <= soon_end,
+                ),
+                and_(
+                    cls.state == MODEL_ACTIVITY_STATE_INVITING,
+                    cls.start_time > now,
+                    cls.start_time <= expire_end,
+                ),
+            ),
+        ).order_by(cls.start_time.asc()).limit(limit).all()
+
+    @classmethod
+    def listUnsetSuccess(cls, passport_id):
+        """双方都还没表态、且已经约上的见面。时间是否到期由调用方判断。"""
+        if not passport_id:
+            return []
+        return getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            cls.state == match.MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            or_(cls.boy_passport_id == passport_id, cls.girl_passport_id == passport_id),
+            cls.boy_meet_result == 0,
+            cls.girl_meet_result == 0,
+        ).all()
 
     @classmethod
     @timecost
@@ -100,27 +164,6 @@ class ActivityModel(BaseModel):
         ret = getDbSession().query(cls).filter(cls.id == activityId, *whereParams).update(updateParams)
         getDbSession().commit()
         return ret
-
-    @classmethod
-    @timecost
-    def getOngoingActivity(cls, passportId):
-        """参与活动，且关系发展中"""
-        if not passportId:
-            return None
-        return getDbSession().query(cls).filter(
-            cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-            cls.start_time <= datetime.datetime.now(),
-            or_(
-                and_(
-                    cls.boy_passport_id == passportId,
-                    cls.boy_meet_result.in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
-                ),
-                and_(
-                    cls.girl_passport_id == passportId,
-                    cls.girl_meet_result.in_([MODEL_MEET_RESULT_UNKNOWN, MODEL_MEET_RESULT_FIT_CHOICE]),
-                )
-            )
-        ).first()
 
     @classmethod
     def getLastFreeActivity(cls, addressId):

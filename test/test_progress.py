@@ -21,15 +21,21 @@ from util.const.progress import (
     PROGRESS_NO_CONFIG, PROGRESS_NOT_SELECTED, PROGRESS_SELECTED,
     PROGRESS_WAIT_MEET, PROGRESS_MET, PROGRESS_AGREE, PROGRESS_DISAGREE,
     PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
-    HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_SINGLE, HEART_KIND_SOLID,
-    build_meet_share_guide, calc_activity_progress, calc_list_has_match, calc_list_heart_kind, get_bottom_buttons,
+    HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_HALF, HEART_KIND_SINGLE,
+    HEART_KIND_SOLID,
+    HOLD_APPOINTMENT, HOLD_FIT, OP_CHOOSE_FIT, OP_TOWARD_MEET,
+    HALF_FIT_HINT, UNFIT_SYNC_HINT,
+    build_meet_share_guide, calc_activity_progress, calc_list_has_match, calc_list_heart_kind,
+    fit_marks_only_self, get_bottom_buttons,
+    hold_block_reason, meet_choice_ready, next_results_after_my_fit, quit_is_allowed, relationship_hold,
+    result_change_allowed,
     guanguan_list_sort_key, limit_solid_heart_items, should_include_activity_for_match,
     should_show_guanguan_item, MAX_LIST_DISTANCE_KM,
 )
 from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING
 from util.const.base import (
     GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_QUIT,
-    MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE
+    MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE, MODEL_MEET_RESULT_UNKNOWN
 )
 from util.const.match import (
     MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING,
@@ -118,14 +124,25 @@ class TestCalcActivityProgress:
         )
         assert calc_activity_progress(MY_PID, activity) == PROGRESS_WAIT_MEET
 
-    def test_met_both_unknown_result(self):
+    def test_unset_after_meet_stays_wait_meet(self):
+        """没选合适或不合适时，过了见面时间仍是约见面。"""
         past = datetime.datetime.now() - datetime.timedelta(days=1)
         activity = make_activity(
             state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
             boy_pid=MY_PID, girl_pid=OTHER_PID,
             start_time=past, boy_result=0, girl_result=0
         )
-        assert calc_activity_progress(MY_PID, activity) == PROGRESS_MET
+        assert calc_activity_progress(MY_PID, activity) == PROGRESS_WAIT_MEET
+        assert calc_list_heart_kind(PROGRESS_WAIT_MEET) == HEART_KIND_DOUBLE
+
+    def test_unset_after_seven_days_counts_as_fit(self):
+        past = datetime.datetime.now() - datetime.timedelta(days=8)
+        activity = make_activity(
+            state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            boy_pid=MY_PID, girl_pid=OTHER_PID,
+            start_time=past, boy_result=0, girl_result=0
+        )
+        assert calc_activity_progress(MY_PID, activity) == PROGRESS_AGREE
 
     def test_agree_both_fit(self):
         past = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -149,6 +166,8 @@ class TestCalcActivityProgress:
             girl_result=MODEL_MEET_RESULT_FIT_CHOICE,
         )
         assert calc_activity_progress(MY_PID, activity) == PROGRESS_DISAGREE
+        assert calc_activity_progress(OTHER_PID, activity) == PROGRESS_DISAGREE
+        assert calc_list_heart_kind(PROGRESS_DISAGREE) == HEART_KIND_BROKEN
 
     def test_disagree_opposite_unfit(self):
         """对方选了不合适"""
@@ -161,6 +180,8 @@ class TestCalcActivityProgress:
             girl_result=MODEL_MEET_RESULT_UNFIT_CHOICE,
         )
         assert calc_activity_progress(MY_PID, activity) == PROGRESS_DISAGREE
+        assert calc_activity_progress(OTHER_PID, activity) == PROGRESS_DISAGREE
+        assert calc_list_heart_kind(PROGRESS_DISAGREE) == HEART_KIND_BROKEN
 
     def test_disagree_both_unfit(self):
         past = datetime.datetime.now() - datetime.timedelta(days=1)
@@ -174,7 +195,7 @@ class TestCalcActivityProgress:
         assert calc_activity_progress(MY_PID, activity) == PROGRESS_DISAGREE
 
     def test_met_partial_result_only_me(self):
-        """自己已选择合适，对方尚未选择 → 已见面"""
+        """自己已选择合适，对方尚未选择 → 半实心"""
         past = datetime.datetime.now() - datetime.timedelta(days=1)
         activity = make_activity(
             state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
@@ -184,9 +205,11 @@ class TestCalcActivityProgress:
             girl_result=0,
         )
         assert calc_activity_progress(MY_PID, activity) == PROGRESS_MET
+        assert calc_activity_progress(OTHER_PID, activity) == PROGRESS_MET
+        assert calc_list_heart_kind(PROGRESS_MET) == HEART_KIND_HALF
 
     def test_met_partial_result_only_opposite(self):
-        """对方已选择合适，自己尚未选择 → 已见面"""
+        """对方已选择合适，自己尚未选择 → 半实心"""
         past = datetime.datetime.now() - datetime.timedelta(days=1)
         activity = make_activity(
             state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
@@ -240,6 +263,37 @@ class TestGetBottomButtons:
         assert buttons[0]['label'] == '取消'
         assert buttons[0]['needConfirm'] is True
 
+    def test_quit_allowed_only_before_choice_buttons(self):
+        assert quit_is_allowed(PROGRESS_SELECTED) is True
+        assert quit_is_allowed(PROGRESS_WAIT_MEET) is True
+        assert quit_is_allowed(PROGRESS_WAIT_MEET, True) is False
+        assert quit_is_allowed(PROGRESS_MET) is False
+        assert quit_is_allowed(PROGRESS_AGREE) is False
+        assert quit_is_allowed(PROGRESS_NOT_SELECTED) is False
+
+    def test_choice_buttons_one_hour_after_meet(self):
+        start = datetime.datetime(2026, 10, 24, 18, 0, 0)
+        activity = make_activity(
+            state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=start,
+        )
+        before = start + datetime.timedelta(minutes=59)
+        after = start + datetime.timedelta(hours=1, minutes=1)
+        assert meet_choice_ready(activity, before) is False
+        assert meet_choice_ready(activity, after) is True
+        early = get_bottom_buttons(PROGRESS_WAIT_MEET, GUAN_INFO_OP_TYPE_QUIT, False)
+        late = get_bottom_buttons(PROGRESS_WAIT_MEET, GUAN_INFO_OP_TYPE_QUIT, True)
+        assert early[0]['label'] == '取消'
+        assert [btn['label'] for btn in late] == ['合适', '不合适']
+        assert late[0]['hint'] == HALF_FIT_HINT
+        assert late[1]['hint'] == UNFIT_SYNC_HINT
+
+    def test_fit_and_unfit_actions_are_allowed_only_in_window(self):
+        assert result_change_allowed(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_FIT_CHOICE, False) is False
+        assert result_change_allowed(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_FIT_CHOICE, True) is True
+        assert result_change_allowed(PROGRESS_AGREE, MODEL_MEET_RESULT_UNFIT_CHOICE, False) is True
+        assert result_change_allowed(PROGRESS_DISAGREE, MODEL_MEET_RESULT_FIT_CHOICE, False) is True
+
     def test_met_shows_fit_and_unfit(self):
         buttons = get_bottom_buttons(PROGRESS_MET, GUAN_INFO_OP_TYPE_QUIT)
         labels = {b['label'] for b in buttons}
@@ -253,13 +307,36 @@ class TestGetBottomButtons:
         fit_btn = next(b for b in buttons if b['label'] == '合适')
         unfit_btn = next(b for b in buttons if b['label'] == '不合适')
         assert fit_btn['value'] == MODEL_MEET_RESULT_FIT_CHOICE
+        assert fit_btn['hint'] == HALF_FIT_HINT
         assert unfit_btn['value'] == MODEL_MEET_RESULT_UNFIT_CHOICE
+
+    def test_half_hides_fit_after_i_chose(self):
+        buttons = get_bottom_buttons(
+            PROGRESS_MET, GUAN_INFO_OP_TYPE_QUIT, my_result=MODEL_MEET_RESULT_FIT_CHOICE,
+        )
+        assert [btn['label'] for btn in buttons] == ['不合适']
+
+    def test_fit_click_marks_only_self_until_both_choose(self):
+        assert fit_marks_only_self(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_FIT_CHOICE) is True
+        assert fit_marks_only_self(PROGRESS_MET, MODEL_MEET_RESULT_FIT_CHOICE) is True
+        assert fit_marks_only_self(PROGRESS_DISAGREE, MODEL_MEET_RESULT_FIT_CHOICE) is True
+        assert fit_marks_only_self(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_UNFIT_CHOICE) is False
+
+    def test_restore_clears_partner_unfit(self):
+        boy_result, girl_result = next_results_after_my_fit(
+            MODEL_MEET_RESULT_UNFIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE, True,
+        )
+        assert boy_result == MODEL_MEET_RESULT_FIT_CHOICE
+        assert girl_result == MODEL_MEET_RESULT_UNKNOWN
+        both_fit = next_results_after_my_fit(0, MODEL_MEET_RESULT_FIT_CHOICE, True)
+        assert both_fit == (MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_FIT_CHOICE)
 
     def test_agree_shows_end_relationship(self):
         buttons = get_bottom_buttons(PROGRESS_AGREE, GUAN_INFO_OP_TYPE_QUIT)
         assert len(buttons) == 1
         assert buttons[0]['label'] == '结束关系'
         assert buttons[0]['value'] == MODEL_MEET_RESULT_UNFIT_CHOICE
+        assert buttons[0]['hint'] == UNFIT_SYNC_HINT
         assert buttons[0]['needConfirm'] is True
 
     def test_disagree_shows_restore_relationship(self):
@@ -267,7 +344,53 @@ class TestGetBottomButtons:
         assert len(buttons) == 1
         assert buttons[0]['label'] == '恢复关系'
         assert buttons[0]['value'] == MODEL_MEET_RESULT_FIT_CHOICE
+        assert buttons[0]['hint'] == HALF_FIT_HINT
         assert buttons[0]['needConfirm'] is True
+
+
+class TestRelationshipHold:
+
+    def test_future_success_holds_appointment(self):
+        future = datetime.datetime.now() + datetime.timedelta(days=2)
+        activity = make_activity(
+            state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=future,
+        )
+        assert relationship_hold(MY_PID, activity) == HOLD_APPOINTMENT
+
+    def test_both_fit_holds_fit(self):
+        past = datetime.datetime.now() - datetime.timedelta(days=1)
+        activity = make_activity(
+            state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=past,
+            boy_result=MODEL_MEET_RESULT_FIT_CHOICE,
+            girl_result=MODEL_MEET_RESULT_FIT_CHOICE,
+        )
+        assert relationship_hold(MY_PID, activity) == HOLD_FIT
+
+    def test_met_or_disagree_holds_nothing(self):
+        past = datetime.datetime.now() - datetime.timedelta(days=1)
+        met = make_activity(
+            state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=past,
+            boy_result=MODEL_MEET_RESULT_FIT_CHOICE,
+        )
+        disagree = make_activity(
+            state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
+            boy_pid=MY_PID, girl_pid=OTHER_PID, start_time=past,
+            boy_result=MODEL_MEET_RESULT_UNFIT_CHOICE,
+        )
+        assert relationship_hold(MY_PID, met) == ""
+        assert relationship_hold(MY_PID, disagree) == ""
+
+    def test_appointment_blocks_new_meeting_only(self):
+        assert hold_block_reason(OP_TOWARD_MEET, True, False) == HOLD_APPOINTMENT
+        assert hold_block_reason(OP_CHOOSE_FIT, True, False) == ""
+
+    def test_fit_blocks_meeting_and_another_fit(self):
+        assert hold_block_reason(OP_TOWARD_MEET, False, True) == HOLD_FIT
+        assert hold_block_reason(OP_CHOOSE_FIT, False, True) == HOLD_FIT
+        assert hold_block_reason(OP_CHOOSE_FIT, True, True) == HOLD_FIT
 
     def test_no_config_returns_empty(self):
         buttons = get_bottom_buttons(PROGRESS_NO_CONFIG, GUAN_INFO_OP_TYPE_INVITE)
@@ -277,19 +400,19 @@ class TestGetBottomButtons:
 class TestMeetShareGuide:
 
     def test_wait_meet_can_share(self):
-        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享好友", viewer=False)
-        assert guide == {"enabled": True, "label": "安全见面，分享好友"}
+        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享亲友", viewer=False)
+        assert guide == {"enabled": True, "label": "安全见面，分享亲友"}
 
     def test_other_progress_cannot_share(self):
         for status in (
             PROGRESS_NOT_SELECTED, PROGRESS_SELECTED, PROGRESS_MET,
             PROGRESS_AGREE, PROGRESS_DISAGREE, PROGRESS_NO_CONFIG,
         ):
-            guide = build_meet_share_guide(status, "安全见面，分享好友", viewer=False)
+            guide = build_meet_share_guide(status, "安全见面，分享亲友", viewer=False)
             assert guide == {"enabled": False, "label": ""}
 
     def test_viewer_cannot_share(self):
-        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享好友", viewer=True)
+        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享亲友", viewer=True)
         assert guide == {"enabled": False, "label": ""}
 
 
@@ -338,7 +461,7 @@ class TestGuanguanHeartKind:
     def test_heart_kind_mapping(self):
         assert calc_list_heart_kind(PROGRESS_DISAGREE) == HEART_KIND_BROKEN
         assert calc_list_heart_kind(PROGRESS_AGREE) == HEART_KIND_SOLID
-        assert calc_list_heart_kind(PROGRESS_MET) == HEART_KIND_SOLID
+        assert calc_list_heart_kind(PROGRESS_MET) == HEART_KIND_HALF
         assert calc_list_heart_kind(PROGRESS_WAIT_MEET) == HEART_KIND_DOUBLE
         assert calc_list_heart_kind(PROGRESS_SELECTED) == HEART_KIND_SINGLE
         assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=True) == HEART_KIND_SINGLE
@@ -350,10 +473,15 @@ class TestGuanguanHeartKind:
         assert calc_list_has_match(PROGRESS_WAIT_MEET, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, set()) is False
 
     def test_transient_item_time_window_by_distance(self):
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 90) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 130) is False
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 200) is True
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 250) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 50) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 70) is False
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 110) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 130) is False
+        assert should_show_guanguan_item(HEART_KIND_DOUBLE, 5, 99999) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, 60) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, 61) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, 120) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, 121) is False
 
     def test_hide_items_beyond_max_distance(self):
         assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, 30) is True
@@ -379,7 +507,7 @@ class TestGuanguanHeartKind:
 
     def test_hide_items_beyond_two_weeks(self):
         from util.const.progress import LIST_WINDOW_MINUTES
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, 90) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, 40) is True
         assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES + 1) is False
 
     def test_guanguan_list_sort_priority(self):
@@ -392,11 +520,13 @@ class TestGuanguanHeartKind:
             (guanguan_list_sort_key(HEART_KIND_SINGLE, 5, near_time, now), 'single'),
             (guanguan_list_sort_key(HEART_KIND_DOUBLE, 15, far_time, now), 'double'),
             (guanguan_list_sort_key(HEART_KIND_BROKEN, 5, far_time, now), 'broken'),
+            (guanguan_list_sort_key(HEART_KIND_HALF, 20, far_time, now), 'half'),
             (guanguan_list_sort_key(HEART_KIND_SOLID, 25, far_time, now), 'solid'),
             (guanguan_list_sort_key(HEART_KIND_SINGLE, 25, near_time, now), 'single_far'),
         ], key=lambda item: item[0])
         labels = [label for _, label in ranked]
-        assert labels.index('solid') < labels.index('broken')
+        assert labels.index('solid') < labels.index('half')
+        assert labels.index('half') < labels.index('broken')
         assert labels.index('broken') < labels.index('double')
         assert labels.index('double') < labels.index('single')
         assert labels.index('single') < labels.index('empty')
@@ -425,7 +555,7 @@ class TestGuanguanHeartKind:
     def test_permanent_hearts_always_show(self):
         now = datetime.datetime.now()
         future = now + datetime.timedelta(days=30)
-        for kind in (HEART_KIND_BROKEN, HEART_KIND_SOLID, HEART_KIND_DOUBLE):
+        for kind in (HEART_KIND_BROKEN, HEART_KIND_SOLID, HEART_KIND_HALF, HEART_KIND_DOUBLE):
             assert should_show_guanguan_item(kind, 50, 99999) is True
             assert guanguan_list_sort_key(kind, 50, future, now)[0] < guanguan_list_sort_key(
                 HEART_KIND_EMPTY, 1, future, now

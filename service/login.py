@@ -7,6 +7,7 @@ from model.passport import PassportModel
 from model.share import ShareModel
 from ral.passport import putSession
 from service import BaseService
+from service.phone_bind import PhoneBindService
 from util.const.identity import PROVIDER_WECHAT
 from util.encode import generate_access_token
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class LoginService(BaseService):
 
-    def login(self, assertion, share_openid):
+    def login(self, assertion, share_openid, phone_code=''):
         """登录只把通行证放进会话。身份密钥另表保存，不进入会话。"""
         passport = self._passport_for(assertion, share_openid)
         saved = IdentitySecretModel.save_material(
@@ -26,6 +27,8 @@ class LoginService(BaseService):
         )
         if not saved:
             return None
+        if phone_code:
+            PhoneBindService().bind(passport.id, phone_code)
         logger.info(
             "登录完成，身份密钥已单独保存，未写入会话 passport=%s provider=%s",
             passport.id,
@@ -34,7 +37,8 @@ class LoginService(BaseService):
         access_token = generate_access_token(passport.id)
         sign_secret = putSession(access_token, passport.id)
         openid = assertion.account_key if assertion.provider == PROVIDER_WECHAT else ''
-        return access_token, sign_secret, openid
+        phone_bound = PhoneBindService().bound(passport.id)
+        return access_token, sign_secret, openid, phone_bound
 
     def _passport_for(self, assertion, share_openid):
         if assertion.provider == PROVIDER_WECHAT:

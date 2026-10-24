@@ -45,6 +45,25 @@ def inviter_passport_id(activity):
     return 0
 
 
+def other_passport_id(activity, passport_id):
+    """座位上的另一个人。没有对方时是 0。"""
+    boy_id = activity.boy_passport_id or 0
+    girl_id = activity.girl_passport_id or 0
+    if passport_id == boy_id:
+        return girl_id
+    if passport_id == girl_id:
+        return boy_id
+    return 0
+
+
+def seated_passport_ids(activity):
+    ids = []
+    for passport_id in (activity.boy_passport_id or 0, activity.girl_passport_id or 0):
+        if passport_id:
+            ids.append(passport_id)
+    return ids
+
+
 class ProfileMatchService(object):
 
     @staticmethod
