@@ -9,6 +9,7 @@ import util.ctx
 from util.log import monitor_logger
 from util.auth import Checker
 from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
+from service.common.phone_number import redact_phone_body
 from util.const.identity import VOICE_TEXT_PATH
 from util.obj_util import object_2_dict
 
@@ -23,7 +24,8 @@ def _body_for_log(handler):
     content_type = handler.request.headers.get('Content-Type', '') or ''
     if 'multipart/form-data' in content_type:
         return 'multipart'
-    return handler.request.body_arguments or handler.request.body
+    body = handler.request.body_arguments or handler.request.body
+    return redact_phone_body(handler.request.path, body)
 
 
 def _resp_for_log(path, data):

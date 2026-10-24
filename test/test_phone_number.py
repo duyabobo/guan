@@ -2,25 +2,59 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from service.common.phone_number import PHONE_DIGIT_COUNT, mainland_mobile
+from service.common.phone_number import (
+    PHONE_CODE_LENGTH,
+    PHONE_CODE_TTL_MINUTES,
+    PHONE_DIGIT_COUNT,
+    bind_code,
+    bind_code_text,
+    mainland_mobile,
+    new_bind_code,
+    redact_phone_body,
+    same_bind_code,
+    saved_token,
+)
 from util.const.notice import SCENE_MEET_SOON, SCENE_NO_SHOW, notice_sms_text
 
 
-def test_mainland_mobile_accepts_cn_eleven_digits():
-    info = {'countryCode': '86', 'purePhoneNumber': '13800138000'}
-    assert mainland_mobile(info) == '13800138000'
-    assert len(mainland_mobile(info)) == PHONE_DIGIT_COUNT
+def test_mainland_mobile_accepts_eleven_digits():
+    assert mainland_mobile('13800138000') == '13800138000'
+    assert len(mainland_mobile('13800138000')) == PHONE_DIGIT_COUNT
 
 
-def test_mainland_mobile_accepts_numeric_country():
-    info = {'countryCode': 86, 'purePhoneNumber': '13800138000'}
-    assert mainland_mobile(info) == '13800138000'
-
-
-def test_mainland_mobile_rejects_other_country_and_short_number():
-    assert mainland_mobile({'countryCode': '1', 'purePhoneNumber': '13800138000'}) == ''
-    assert mainland_mobile({'countryCode': '86', 'purePhoneNumber': '1380013800'}) == ''
+def test_mainland_mobile_rejects_short_and_empty():
+    assert mainland_mobile('1380013800') == ''
+    assert mainland_mobile('') == ''
     assert mainland_mobile(None) == ''
+
+
+def test_bind_code_text_is_only_the_code():
+    text = bind_code_text('123456')
+    assert '123456' in text
+    assert ('%s分钟' % PHONE_CODE_TTL_MINUTES) in text
+    assert '通知' not in text
+
+
+def test_bind_code_roundtrip():
+    code = new_bind_code()
+    assert len(code) == PHONE_CODE_LENGTH
+    assert code.isdigit()
+    assert bind_code(code) == code
+    assert bind_code('12345') == ''
+    saved = saved_token('13800138000', code)
+    wrong = '000001' if code == '000000' else '000000'
+    assert same_bind_code(saved, '13800138000', code)
+    assert not same_bind_code(saved, '13800138000', wrong)
+    assert not same_bind_code(saved, '13800138001', code)
+
+
+def test_phone_body_log_keeps_length_only():
+    body = {'phone': '13800138000', 'code': ['123456'], 'requestSeq': 'abc'}
+    logged = redact_phone_body('/phone', body)
+    assert logged['phone'] == PHONE_DIGIT_COUNT
+    assert logged['code'] == PHONE_CODE_LENGTH
+    assert logged['requestSeq'] == 'abc'
+    assert '13800138000' not in str(logged)
 
 
 def test_sms_meet_soon_uses_boss_greeting():

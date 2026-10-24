@@ -29,11 +29,7 @@ class LoginHandler(BaseHandler):
         if not assertion:
             raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
 
-        logged = LoginService().login(
-            assertion,
-            self.getRequestParameter('shareOpenid'),
-            self.getRequestParameter('phoneCode', default=''),
-        )
+        logged = LoginService().login(assertion, self.getRequestParameter('shareOpenid'))
         if not logged:
             raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
         access_token, sign_secret, openid, phone_bound = logged

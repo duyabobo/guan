@@ -1,23 +1,21 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""注册时绑定手机号。明文只进加密库，不写通行证上的 phone 列。"""
+"""短信验证码通过后绑定手机号。明文只进加密库。"""
 import logging
 
 from model.sensitive_record import SensitiveRecordModel
-from service.common.phone_number import mainland_mobile
+from service.phone_code import PhoneCodeService
 from service.sensitive.vault import SensitiveVault
 from util.const.identity import KIND_PHONE, PHONE_CONTENT_TYPE
-from util.wx_phone import phone_info
 
 logger = logging.getLogger(__name__)
 
 
 class PhoneBindService(object):
 
-    def bind(self, passport_id, phone_code):
-        number = mainland_mobile(phone_info(phone_code))
+    def bind(self, passport_id, raw_phone, raw_code):
+        number = PhoneCodeService().take(passport_id, raw_phone, raw_code)
         if not number:
-            logger.info("手机号未绑定 passport=%s", passport_id)
             return False
         row_id = SensitiveVault().store(
             passport_id,
@@ -25,6 +23,8 @@ class PhoneBindService(object):
             number.encode('utf-8'),
             PHONE_CONTENT_TYPE,
         )
+        if not row_id:
+            logger.info("手机号未写入 passport=%s", passport_id)
         return bool(row_id)
 
     def bound(self, passport_id):

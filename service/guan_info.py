@@ -18,6 +18,7 @@ from service.common.profile_board import ProfileBoardService
 from service.common.profile_match import ProfileMatchService, other_passport_id
 from service.meet_fee import MeetFeeService, page_fee
 from service.meet_notice import MeetNoticeService, page_subscribe
+from service.phone_bind import PhoneBindService
 from util.class_helper import lazy_property
 from util.const import match
 from util.const.base import (
@@ -233,6 +234,7 @@ class GuanInfoService(BaseService):
             "share": build_meet_share_guide(progress, copy["shareLabel"], viewer),
             "fee": fee,
             "subscribe": page_subscribe(viewer),
+            "phoneBound": PhoneBindService().bound(self.passportId),
         }
 
     def reloadActivityRecord(self):

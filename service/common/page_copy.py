@@ -1,15 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """小程序里和见面、个人资料相关的展示文案。只从接口下发，不写进小程序包。"""
+from service.common.phone_number import PHONE_CODE_LENGTH, PHONE_DIGIT_COUNT
 
 
 def list_page_copy():
     return {
         "listTitle": "见面",
-        "phoneGateTitle": "授权手机号",
-        "phoneGateHint": "注册时绑定手机号。订阅消息发不出去时，用短信通知你。",
-        "phoneGateButton": "授权并继续",
-        "phoneGateLater": "先看看",
     }
 
 
@@ -45,4 +42,12 @@ def guan_info_copy():
         "requirementTitle": "ta的期望",
         "emptyText": "还没有可展示的对象资料",
         "shareLabel": "安全见面，分享亲友",
+        "phoneGateTitle": "绑定手机号",
+        "phonePlaceholder": "手机号",
+        "codePlaceholder": "验证码",
+        "sendCodeButton": "获取验证码",
+        "phoneGateButton": "完成",
+        "phoneGateLater": "先看看",
+        "phoneDigitCount": PHONE_DIGIT_COUNT,
+        "codeLength": PHONE_CODE_LENGTH,
     }

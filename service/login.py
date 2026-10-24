@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class LoginService(BaseService):
 
-    def login(self, assertion, share_openid, phone_code=''):
+    def login(self, assertion, share_openid):
         """登录只把通行证放进会话。身份密钥另表保存，不进入会话。"""
         passport = self._passport_for(assertion, share_openid)
         saved = IdentitySecretModel.save_material(
@@ -27,8 +27,6 @@ class LoginService(BaseService):
         )
         if not saved:
             return None
-        if phone_code:
-            PhoneBindService().bind(passport.id, phone_code)
         logger.info(
             "登录完成，身份密钥已单独保存，未写入会话 passport=%s provider=%s",
             passport.id,
