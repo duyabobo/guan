@@ -117,7 +117,8 @@ def _try_subscribe(job, template, openids, usable, used, state):
     if left <= 0 or not openid:
         return False
     data = build_data(job.scene, job.start_time, NOTICE_TEXT, job.note)
-    if not send_subscribe(openid, template, MEET_PAGE % job.activity_id, data, state):
+    page = job.page or (MEET_PAGE % job.activity_id)
+    if not send_subscribe(openid, template, page, data, state):
         return False
     used[job.passport_id] = used.get(job.passport_id, 0) + 1
     return True

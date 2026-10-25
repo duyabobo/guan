@@ -80,6 +80,27 @@ class ActivityModel(BaseModel):
         getDbSession().commit()
 
     @classmethod
+    def list_future_inviting(cls, now, until, limit):
+        """还没开始的邀请。窗口和条数由调用方限制，避免一次扫全表。"""
+        rows = getDbSession().query(cls).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            cls.state == MODEL_ACTIVITY_STATE_INVITING,
+            cls.start_time > now,
+            cls.start_time <= until,
+        ).order_by(cls.start_time.asc()).limit(limit).all()
+        return _fill(rows)
+
+    @classmethod
+    def list_by_ids(cls, activity_ids):
+        ids = [activity_id for activity_id in activity_ids if activity_id]
+        if not ids:
+            return []
+        return getDbSession().query(cls).filter(
+            cls.id.in_(ids),
+            cls.status == match.MODEL_STATUS_YES,
+        ).all()
+
+    @classmethod
     def list_notice_candidates(cls, now, decide_start, soon_end, expire_end, limit):
         """可能需要到点提醒的场次。窗口由调用方算好，这里只查一次。"""
         rows = getDbSession().query(cls).filter(

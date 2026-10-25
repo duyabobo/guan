@@ -31,6 +31,19 @@ class NoticeSentModel(BaseModel):
     create_time = Column(TIMESTAMP, default=func.now())
 
     @classmethod
+    def recent_passport_ids(cls, passport_ids, scene, since):
+        ids = [passport_id for passport_id in passport_ids if passport_id]
+        if not ids or not scene or not since:
+            return set()
+        rows = getDbSession().query(cls.passport_id).filter(
+            cls.passport_id.in_(ids),
+            cls.scene == scene,
+            cls.status == match.MODEL_STATUS_YES,
+            cls.create_time >= since,
+        ).all()
+        return {row.passport_id for row in rows}
+
+    @classmethod
     def sent_keys_for(cls, activity_ids):
         ids = [activity_id for activity_id in activity_ids if activity_id]
         slot_of = _slot_of(ids)

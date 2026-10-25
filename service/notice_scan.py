@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""进程内定时扫描到点提醒。"""
+"""进程内定时扫描到点提醒，并顺带做促活。"""
 import datetime
 import logging
 
 import tornado.ioloop
 
 from service.meet_notice import MeetNoticeService
+from service.reactivate_notice import ReactivateNoticeService
 from util.const.notice import NOTICE_SCAN_LOCK_KEY, SCAN_INTERVAL_MS, SCAN_LOCK_SEC
 from util.ctx import LocalContext
 from util.database import SessionFactory
@@ -32,11 +33,16 @@ def scan_due_notices():
 
 
 def _scan_in_session():
+    _commit_scan(MeetNoticeService.scan)
+    _commit_scan(ReactivateNoticeService.scan)
+
+
+def _commit_scan(scan):
     session = SessionFactory()
     holder = _DbHolder(session)
     try:
         with LocalContext(lambda: holder):
-            MeetNoticeService.scan(datetime.datetime.now())
+            scan(datetime.datetime.now())
         session.commit()
     finally:
         session.close()

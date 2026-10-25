@@ -44,6 +44,16 @@ class PassportModel(BaseModel):
         return passport
 
     @classmethod
+    def list_ids_after(cls, after_id, limit):
+        if limit <= 0:
+            return []
+        rows = getDbSession().query(cls.id).filter(
+            cls.status == match.MODEL_STATUS_YES,
+            cls.id > int(after_id or 0),
+        ).order_by(cls.id.asc()).limit(limit).all()
+        return [row.id for row in rows]
+
+    @classmethod
     def getById(cls, passport_id):
         if not passport_id:
             return None

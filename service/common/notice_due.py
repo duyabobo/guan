@@ -18,12 +18,13 @@ from util.const.progress import MEET_AUTO_FIT_WAIT, MEET_CHOICE_WAIT
 
 
 class NoticeJob(object):
-    def __init__(self, passport_id, scene, activity_id, start_time, note=''):
+    def __init__(self, passport_id, scene, activity_id, start_time, note='', page=''):
         self.passport_id = passport_id
         self.scene = scene
         self.activity_id = activity_id
         self.start_time = start_time
         self.note = note or ''
+        self.page = page or ''
 
 
 def _results_unset(activity):

@@ -43,8 +43,15 @@ class ActivitySeatModel(BaseModel):
     def list_by_passport(cls, passport_id):
         if not passport_id:
             return []
+        return cls.list_by_passports([passport_id])
+
+    @classmethod
+    def list_by_passports(cls, passport_ids):
+        ids = [passport_id for passport_id in passport_ids if passport_id]
+        if not ids:
+            return []
         return getDbSession().query(cls).filter(
-            cls.passport_id == passport_id,
+            cls.passport_id.in_(ids),
             cls.status == match.MODEL_STATUS_YES,
         ).all()
 

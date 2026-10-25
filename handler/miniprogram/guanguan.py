@@ -1,5 +1,6 @@
 from handler.basehandler import BaseHandler
 from service.common.page_copy import list_page_copy
+from service.common.presence import remember_location
 from service.common.profile_board import ProfileBoardService
 from service.guanguan import GuanguanService, UNKNOWN_NEGATIVE_ONE
 from service.phone_bind import PhoneBindService
@@ -23,6 +24,7 @@ class GuanguanHandler(BaseHandler):
         limit = self.getIntParameter(
             'limit', default=GUANGUAN_LIST_DEFAULT_LIMIT, minimum=1, maximum=GUANGUAN_LIST_MAX_LIMIT)
 
+        _remember_list_location(self.currentPassportId, latitude, longitude)
         ggs = GuanguanService(self.currentPassportId)
         config_sufficient = ProfileBoardService.info_is_filled(self.currentPassportId) if self.currentPassportId else False
 
@@ -34,3 +36,9 @@ class GuanguanHandler(BaseHandler):
         if self.currentPassportId:
             data["phoneBound"] = PhoneBindService().bound(self.currentPassportId)
         return Response(data=data)
+
+
+def _remember_list_location(passport_id, latitude, longitude):
+    if not passport_id or latitude == UNKNOWN_NEGATIVE_ONE or longitude == UNKNOWN_NEGATIVE_ONE:
+        return
+    remember_location(passport_id, latitude, longitude)

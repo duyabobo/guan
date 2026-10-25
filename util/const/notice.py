@@ -26,6 +26,7 @@ SCENE_MEET_SOON = 'meet_soon'
 SCENE_MEET_ARRIVE = 'meet_arrive'
 SCENE_LIST_EXPIRE = 'list_expire'
 SCENE_UNFIT = 'unfit'
+SCENE_REACTIVATE = 'reactivate'
 
 _CN_DIGIT = '零一二三四五六七八九'
 BOSS_GREETING = '你好老板，我%s约了人'
@@ -38,6 +39,7 @@ NOTICE_TEXT = {
     SCENE_MEET_ARRIVE: ('请到达约定地点', '见面时间已到，请准时到场'),
     SCENE_LIST_EXPIRE: ('这场快从列表消失', '还没有人加入这场见面'),
     SCENE_UNFIT: ('对方选择了不合适', '打开详情可以查看'),
+    SCENE_REACTIVATE: ('有适合的人在等', '去选时间和地点见面'),
 }
 
 # 这两条不只靠订阅。订阅发完仍发短信，避免人没打开小程序。
@@ -99,4 +101,11 @@ MINIPROGRAM_STATE_DEVELOPER = 'developer'
 ONLINE_SERVER = 'online'
 
 MEET_PAGE = 'page/guan_info/guan_info?guanId=%s'
+HOME_PAGE = 'page/guanguan/guanguan'
+REACTIVATE_IDLE = datetime.timedelta(days=3)
+REACTIVATE_COOLDOWN = datetime.timedelta(days=7)
+REACTIVATE_PASSPORT_LIMIT = 200
+REACTIVATE_ACTIVITY_LIMIT = 100
+REACTIVATE_CURSOR_KEY = 'reactivate_cursor'
+PASSPORT_LOC_KEY = 'passport_loc:%s'
 WX_TOKEN_CACHE_KEY = 'wx_mini_access_token'

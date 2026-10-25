@@ -51,6 +51,24 @@ def apply_seat_changes(activity_id, role_to_passport):
     return True
 
 
+def activity_ids_by_passport(passport_ids):
+    """一批人各自坐过的场次。一次查出座位，再一次性解开。"""
+    rows = ActivitySeatModel.list_by_passports(passport_ids)
+    if not rows:
+        return {}
+    materials = materials_for([row.passport_id for row in rows], PURPOSE_MEET_SEAT)
+    found = {}
+    for row in rows:
+        payload = _open_seat(row, materials.get(row.passport_id, ''))
+        activity_id = int(payload.get('activity_id') or 0) if payload else 0
+        if not activity_id:
+            continue
+        bucket = found.setdefault(row.passport_id, [])
+        if activity_id not in bucket:
+            bucket.append(activity_id)
+    return found
+
+
 def activity_ids_of(passport_id):
     material = material_for(passport_id, PURPOSE_MEET_SEAT)
     if not passport_id or not material:
