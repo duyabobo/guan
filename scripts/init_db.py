@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 """
-数据库初始化脚本：幂等执行 DDL + 写入 Mock 测试数据
+数据库初始化脚本：幂等执行 DDL，清空旧的用户与见面数据后按密文重写演示数据。
 
 用法:
   python scripts/init_db.py                             # 本地（读 .env）
   docker-compose exec app python scripts/init_db.py    # 容器内
 
-幂等保证:
-  - DDL 使用 CREATE TABLE IF NOT EXISTS，可重复执行
-  - Mock 数据通过主键/唯一标识检查，已存在则跳过
+地点数据按名称补齐。账号、资料、见面、座位每次都丢掉再按加密存储重写。
 """
 import datetime
 import logging
@@ -17,10 +15,21 @@ import os
 import sys
 
 import pymysql
+import redis
 
 # 支持从项目根目录或 scripts/ 子目录运行
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
+
+from util.const.identity import (
+    PROVIDER_WECHAT,
+    RUNTIME_UNION_KEY,
+    RUNTIME_UNION_TTL_SEC,
+    UNION_SEAL_PREFIX,
+)
+from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
+from util.sensitive_cipher import open_json, seal_json, seal_unionid, union_lookup
+from util.slot_blind import activity_slot_key
 
 logging.basicConfig(
     level=logging.INFO,
@@ -346,6 +355,28 @@ def ensure_addresses(conn, region_ids: list[int]) -> list[int]:
     return ordered_ids
 
 
+# 用户和见面每次清空后重写。地点不是敏感数据，按名称保留。
+USER_DATA_TABLES = (
+    'meet_deposit_payout',
+    'meet_deposit_settle',
+    'meet_checkin',
+    'meet_fee_order',
+    'meet_no_show',
+    'notice_sent',
+    'subscribe_grant',
+    'sensitive_record',
+    'activity_change_record',
+    'activity_seat',
+    'share',
+    'profile_attr',
+    'identity_secret',
+    'activity',
+    'passport',
+)
+SEAT_BOY = MODEL_SEX_MALE_INDEX
+SEAT_GIRL = MODEL_SEX_FEMALE_INDEX
+MOCK_UNION_PREFIX = 'mock-union-'
+
 # 伪造账号。前三个保持原手机号，后面几个专门用来测匹配过滤。
 SEX_MALE = 1
 SEX_FEMALE = 2
@@ -426,6 +457,74 @@ MOCK_PROFILE_BY_PHONE = {
 }
 
 
+def reset_user_data(conn):
+    """丢掉旧账号、明文资料和明文席位。地点表不动。"""
+    removed = 0
+    with conn.cursor() as cur:
+        cur.execute("SET FOREIGN_KEY_CHECKS = 0")
+        for table in USER_DATA_TABLES:
+            try:
+                cur.execute(f"TRUNCATE TABLE `{table}`")
+            except pymysql.err.DatabaseError as exc:
+                if exc.args and exc.args[0] == 1146:
+                    logger.info("  [跳过] 表不存在 %s", table)
+                    continue
+                raise
+            removed += 1
+        cur.execute("SET FOREIGN_KEY_CHECKS = 1")
+    conn.commit()
+    logger.info("  [清空] 用户与见面表 %d 张", removed)
+
+
+def _wx_pepper():
+    secret = os.environ.get('WX_SECRET', '')
+    if not secret:
+        raise RuntimeError('WX_SECRET 为空，无法计算见面盲索引')
+    return secret
+
+
+def _mock_unionid(phone):
+    return MOCK_UNION_PREFIX + phone
+
+
+def _redis_client():
+    host = os.environ.get('REDIS_HOST', '127.0.0.1')
+    port = int(os.environ.get('REDIS_PORT') or os.environ.get('REDIS_EXPOSE_PORT') or 6379)
+    return redis.StrictRedis(host=host, port=port)
+
+
+def _remember_runtime_union(client, passport_id, unionid):
+    client.set(RUNTIME_UNION_KEY % int(passport_id), unionid, ex=RUNTIME_UNION_TTL_SEC)
+
+
+def _mock_union_by_passport(conn):
+    id_by_phone = _passport_id_by_phones(conn, [phone for phone, _ in MOCK_PASSPORT_ROWS])
+    return {passport_id: _mock_unionid(phone) for phone, passport_id in id_by_phone.items()}
+
+
+def seed_identity(conn):
+    """演示 unionid 自加密封存，并把同一把密钥放进 Redis，列表才能解开资料和座位。"""
+    union_by_passport = _mock_union_by_passport(conn)
+    if len(union_by_passport) != len(MOCK_PASSPORT_ROWS):
+        raise RuntimeError('演示账号不齐，无法封存身份密钥')
+    client = _redis_client()
+    rows = []
+    for passport_id, unionid in union_by_passport.items():
+        rows.append((passport_id, PROVIDER_WECHAT, union_lookup(unionid), seal_unionid(unionid), 1))
+        _remember_runtime_union(client, passport_id, unionid)
+    with conn.cursor() as cur:
+        cur.executemany(
+            """
+            INSERT INTO `identity_secret`
+                (`passport_id`, `provider`, `account_key`, `secret_material`, `status`)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            rows,
+        )
+    conn.commit()
+    logger.info("  [写入] identity_secret 封存 %d 个，运行时密钥已写入", len(rows))
+
+
 def seed_passports(conn) -> list[int]:
     rows = [
         {'phone': '', 'openid': openid, 'status': 1}
@@ -469,17 +568,11 @@ def _fmt_time(dt: datetime.datetime) -> str:
 
 
 def seed_activities(conn, passport_ids: list[int], address_ids: list[int]) -> list[int]:
-    """首页演示：两周内场次 + 双心/实心/心碎常驻场景"""
-    with conn.cursor() as cur:
-        cur.execute("SELECT COUNT(*) FROM `activity`")
-        if cur.fetchone()[0] > 0:
-            existing_ids = _list_table_ids(conn, 'activity')
-            logger.info("  [跳过] activity 已有数据，复用 ids: %s", existing_ids)
-            return existing_ids
-
+    """首页演示：两周内场次 + 双心/实心/心碎常驻场景。席位只写密文。"""
     if not address_ids:
         logger.warning("  [跳过] activity seed：无可用 address_id")
         return []
+    _require_empty(conn, 'activity')
 
     now = datetime.datetime.now()
     p0, p1, p2 = _pick_id(passport_ids, 0), _pick_id(passport_ids, 1), _pick_id(passport_ids, 2)
@@ -558,7 +651,13 @@ def seed_activities(conn, passport_ids: list[int], address_ids: list[int]) -> li
             'state': 0, 'boy_meet_result': 0, 'girl_meet_result': 0, 'status': 1,
         },
     ]
-    return _insert_if_empty(conn, 'activity', rows)
+    occupants = [(row['boy_passport_id'], row['girl_passport_id']) for row in rows]
+    for row in rows:
+        row['boy_passport_id'] = 0
+        row['girl_passport_id'] = 0
+    activity_ids = _insert_if_empty(conn, 'activity', rows)
+    _seal_meeting_seats(conn, list(zip(activity_ids, occupants)))
+    return activity_ids
 
 
 def _address_id_by_name(conn, name: str) -> int | None:
@@ -661,9 +760,6 @@ def seed_shares(conn, passport_ids: list[int]) -> list[int]:
 
 MOCK_OPENID_PREFIX = 'mock_openid_md5_'
 OPPOSITE_PHONE = PHONE_GIRL_BEIJING
-LOGIN_BIRTH_YEAR = 1996
-LOGIN_HEIGHT = 178
-LOGIN_WEIGHT = 70
 STATE_INVITING = 1
 STATE_SUCCESS = 100
 MEET_RESULT_FIT = 1
@@ -735,67 +831,106 @@ def _pack_profile_dim(scope, dim_key, value):
     return (scope, dim_key, 0, 0, value)
 
 
-def _insert_missing_profiles(_conn, specs):
-    """演示资料不再写明文。真实资料只在微信登录后按 unionid 加密写入。"""
-    logger.info("  [跳过] profile_attr 不写明文 rows=%s", len(specs or []))
+def _insert_missing_profiles(conn, specs):
+    """按演示 unionid 写入资料密文。明文列保持空。"""
+    union_by_passport = _mock_union_by_passport(conn)
+    written = 0
+    with conn.cursor() as cur:
+        for passport_id, dims in specs or []:
+            material = union_by_passport.get(passport_id)
+            if not material:
+                logger.error("没有演示身份密钥，跳过资料 passport=%s", passport_id)
+                continue
+            written += _write_profile_cipher(cur, passport_id, material, dims)
+    conn.commit()
+    logger.info("  [写入] profile_attr 密文 %d 行", written)
 
 
-def _login_user_profile():
-    return {
-        "info": {
-            "sex": SEX_MALE,
-            "birth_year": LOGIN_BIRTH_YEAR,
-            "height": LOGIN_HEIGHT,
-            "weight": LOGIN_WEIGHT,
-            "home_region": HOME_BEIJING,
-        },
-        "requirement": {
-            "sex": SEX_FEMALE,
-            "birth_year": (1994, 2001),
-            "height": (155, 175),
-            "weight": (45, 65),
-            "home_region": HOME_BEIJING,
-        },
-    }
+def _write_profile_cipher(cur, passport_id, material, dims):
+    written = 0
+    for scope, dim_key, value_min, value_max, value_text in dims:
+        payload = {'value_min': value_min, 'value_max': value_max, 'value_text': value_text}
+        nonce, cipher = seal_json(material, payload)
+        opened = open_json(material, nonce, cipher)
+        if opened != payload:
+            raise RuntimeError('资料密文无法按原值解开')
+        cur.execute(
+            """
+            INSERT INTO `profile_attr` (
+                `passport_id`, `scope`, `dim_key`,
+                `value_min`, `value_max`, `value_text`,
+                `value_nonce`, `value_cipher`, `status`
+            ) VALUES (%s, %s, %s, 0, 0, '', %s, %s, 1)
+            """,
+            (passport_id, scope, dim_key, nonce, cipher),
+        )
+        written += 1
+    return written
 
 
-def _fill_login_user_profile(conn, passport_id):
-    """只补还没有的维度，避免覆盖语音页后来改过的资料。"""
-    _insert_missing_profiles(conn, [(passport_id, _expand_profile(_login_user_profile()))])
+def _require_empty(conn, table):
+    with conn.cursor() as cur:
+        cur.execute(f"SELECT COUNT(*) FROM `{table}`")
+        count = cur.fetchone()[0]
+    if count:
+        raise RuntimeError('%s 仍有 %s 条，拒绝在旧数据上补写' % (table, count))
+
+
+def _seal_meeting_seats(conn, seated):
+    """活动表上的护照编号保持 0，座位写进 activity_seat 密文。"""
+    union_by_passport = _mock_union_by_passport(conn)
+    pepper = _wx_pepper()
+    written = 0
+    with conn.cursor() as cur:
+        for activity_id, occupants in seated:
+            boy_id, girl_id = occupants
+            written += _insert_seat(cur, union_by_passport, pepper, activity_id, boy_id, SEAT_BOY)
+            written += _insert_seat(cur, union_by_passport, pepper, activity_id, girl_id, SEAT_GIRL)
+    conn.commit()
+    logger.info("  [写入] activity_seat 密文 %d 个", written)
+
+
+def _insert_seat(cur, union_by_passport, pepper, activity_id, passport_id, role):
+    if not passport_id:
+        return 0
+    material = union_by_passport.get(passport_id)
+    slot = activity_slot_key(activity_id, pepper)
+    if not material or not slot:
+        raise RuntimeError('无法封存见面座位 activity=%s passport=%s' % (activity_id, passport_id))
+    payload = {'activity_id': int(activity_id), 'role': int(role)}
+    nonce, cipher = seal_json(material, payload)
+    if open_json(material, nonce, cipher) != payload:
+        raise RuntimeError('座位密文无法按原值解开')
+    cur.execute(
+        """
+        INSERT INTO `activity_seat` (`passport_id`, `slot_key`, `nonce`, `cipher_text`, `status`)
+        VALUES (%s, %s, %s, %s, 1)
+        """,
+        (passport_id, slot, nonce, cipher),
+    )
+    return 1
+
+
+def _fill_login_user_profile(_conn, passport_id):
+    """真实用户的资料密钥只在微信登录时出现，这里不代写。"""
+    logger.info("  [跳过] 真实用户资料不在种子里写 passport=%s", passport_id)
 
 
 def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, girl_result, start):
-    start_str = _fmt_time(start)
+    """新建一场。席位只进密文，活动表上的护照编号保持 0。"""
     with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT `id` FROM `activity`
-            WHERE `address_id`=%s AND `boy_passport_id`=%s AND `girl_passport_id`=%s AND `status`=1
-            ORDER BY `id` DESC LIMIT 1
-            """,
-            (address_id, boy_id, girl_id),
-        )
-        row = cur.fetchone()
-        if row:
-            cur.execute(
-                """
-                UPDATE `activity` SET
-                    start_time=%s, state=%s, boy_meet_result=%s, girl_meet_result=%s
-                WHERE id=%s
-                """,
-                (start_str, state, boy_result, girl_result, row[0]),
-            )
-            return row[0]
         cur.execute(
             """
             INSERT INTO `activity` (
                 address_id, start_time, boy_passport_id, girl_passport_id,
                 state, boy_meet_result, girl_meet_result, status
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
+            ) VALUES (%s, %s, 0, 0, %s, %s, %s, 1)
             """,
-            (address_id, start_str, boy_id, girl_id, state, boy_result, girl_result),
+            (address_id, _fmt_time(start), state, boy_result, girl_result),
         )
-        return cur.lastrowid
+        activity_id = cur.lastrowid
+    _seal_meeting_seats(conn, [(activity_id, (boy_id, girl_id))])
+    return activity_id
 
 
 def ensure_match_probe_activities(conn) -> list[int]:
@@ -831,11 +966,7 @@ def ensure_login_user_demo(conn) -> list[int]:
     if not passport_id:
         logger.info("  [跳过] 还没有真实登录用户")
         return []
-    opposite_id = _passport_id_by_sql(
-        conn,
-        "SELECT `id` FROM `passport` WHERE `phone`=%s AND `status`=1 LIMIT 1",
-        (OPPOSITE_PHONE,),
-    )
+    opposite_id = _passport_id_by_phones(conn, [OPPOSITE_PHONE]).get(OPPOSITE_PHONE)
     _fill_login_user_profile(conn, passport_id)
 
     now = datetime.datetime.now()
@@ -872,19 +1003,22 @@ def main():
         logger.info("=== Step 1.5: 执行增量迁移 ===")
         run_migrations(conn)
 
-        logger.info("=== Step 2: 写入 Mock 数据（幂等）===")
+        logger.info("=== Step 2: 清空旧用户数据并按密文重写 ===")
+        reset_user_data(conn)
         seed_regions(conn)
         region_ids = ensure_regions(conn)
         seed_addresses(conn, region_ids)
         address_ids   = ensure_addresses(conn, region_ids)
         passport_ids = seed_passports(conn)
         ensure_mock_passports(conn)
+        seed_identity(conn)
         seed_profile_attrs(conn)
         seed_activities(conn, passport_ids, address_ids)
         ensure_empty_slot_activities(conn, address_ids)
         seed_shares(conn, passport_ids)
         ensure_match_probe_activities(conn)
         ensure_login_user_demo(conn)
+        _assert_no_plaintext(conn)
 
         logger.info("=== 初始化完成 ===")
         _print_summary(conn)
@@ -892,10 +1026,36 @@ def main():
         conn.close()
 
 
+def _assert_no_plaintext(conn):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT COUNT(*) FROM `activity` WHERE `boy_passport_id`<>0 OR `girl_passport_id`<>0"
+        )
+        plain_seats = cur.fetchone()[0]
+        cur.execute(
+            """
+            SELECT COUNT(*) FROM `profile_attr`
+            WHERE `value_text`<>'' OR `value_min`<>0 OR `value_max`<>0
+               OR `value_cipher` IS NULL OR OCTET_LENGTH(`value_cipher`)=0
+            """
+        )
+        plain_profiles = cur.fetchone()[0]
+        cur.execute(
+            "SELECT COUNT(*) FROM `identity_secret` WHERE `secret_material` NOT LIKE %s",
+            (UNION_SEAL_PREFIX + '%',),
+        )
+        plain_identity = cur.fetchone()[0]
+    if plain_seats or plain_profiles or plain_identity:
+        raise RuntimeError(
+            '仍有明文 seats=%s profiles=%s identity=%s' % (plain_seats, plain_profiles, plain_identity)
+        )
+    logger.info("  [核对] 资料、座位、身份密钥均为密文")
+
+
 def _print_summary(conn):
     tables = [
-        'region', 'address',
-        'passport', 'profile_attr', 'activity', 'share',
+        'region', 'address', 'passport', 'identity_secret',
+        'profile_attr', 'activity', 'activity_seat', 'share',
     ]
     logger.info("─── 数据总览 ───────────────────────────────")
     with conn.cursor() as cur:
