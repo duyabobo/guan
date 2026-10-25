@@ -156,46 +156,13 @@ CREATE TABLE IF NOT EXISTS `notice_sent` (
     `activity_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '不再写入真实场次编号',
     `slot_key`    CHAR(64)        NOT NULL DEFAULT '' COMMENT '场次盲索引',
     `passport_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `scene`       VARCHAR(32)     NOT NULL DEFAULT '' COMMENT 'meet_soon / decide / list_expire',
+    `scene`       VARCHAR(32)     NOT NULL DEFAULT '' COMMENT 'meet_soon / meet_arrive / decide / list_expire',
     `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
     `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_slot_passport_scene` (`slot_key`, `passport_id`, `scene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='已发出的到点提醒';
-
--- ── meet_no_show：已约上后又取消，记一次爽约 ───────────────────────────────
-CREATE TABLE IF NOT EXISTS `meet_no_show` (
-    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `activity_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '不再写入真实场次编号',
-    `slot_key`    CHAR(64)        NOT NULL DEFAULT '' COMMENT '场次盲索引',
-    `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_passport_slot` (`passport_id`, `slot_key`),
-    KEY `idx_passport` (`passport_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='爽约记录';
-
--- ── meet_fee_order：单次见面支付 ───────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `meet_fee_order` (
-    `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `activity_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '不再写入真实场次编号',
-    `slot_key`          CHAR(64)        NOT NULL DEFAULT '' COMMENT '场次盲索引',
-    `out_trade_no`      VARCHAR(32)     NOT NULL DEFAULT '' COMMENT '商户订单号',
-    `amount_fen`        INT UNSIGNED    NOT NULL DEFAULT 0 COMMENT '金额，分',
-    `pay_status`        TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待支付 1已支付 2已核销 3待退款 4已退款 5已关闭 6记给对方 7不退',
-    `prepay_id`         VARCHAR(64)     NOT NULL DEFAULT '',
-    `wx_transaction_id` VARCHAR(64)     NOT NULL DEFAULT '',
-    `status`            TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_out_trade_no` (`out_trade_no`),
-    KEY `idx_passport_activity` (`passport_id`, `activity_id`, `pay_status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='单次见面支付单';
 
 -- ── activity_seat：谁坐在哪一场。场次编号只在密文里 ─────────────────────────
 CREATE TABLE IF NOT EXISTS `activity_seat` (
@@ -211,46 +178,3 @@ CREATE TABLE IF NOT EXISTS `activity_seat` (
     UNIQUE KEY `uk_passport_slot` (`passport_id`, `slot_key`),
     KEY `idx_slot` (`slot_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面座位。场次在密文里';
-
--- ── meet_checkin：对着一笔定金签到 ─────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `meet_checkin` (
-    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `slot_key`    CHAR(64)        NOT NULL DEFAULT '' COMMENT '场次盲索引',
-    `order_id`    BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已核销的定金单',
-    `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_passport_order` (`passport_id`, `order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面签到';
-
--- ── meet_deposit_settle：一对定金只结算一次 ────────────────────────────────
-CREATE TABLE IF NOT EXISTS `meet_deposit_settle` (
-    `id`                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `slot_key`           CHAR(64)        NOT NULL DEFAULT '' COMMENT '场次盲索引',
-    `order_low_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `order_high_id`      BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `outcome`            VARCHAR(16)     NOT NULL DEFAULT '' COMMENT 'refund / award / forfeit / skip',
-    `winner_passport_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `status`             TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_slot_orders` (`slot_key`, `order_low_id`, `order_high_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定金结算';
-
--- ── meet_deposit_payout：记给对方的那一笔，微信退款打不出去 ────────────────
-CREATE TABLE IF NOT EXISTS `meet_deposit_payout` (
-    `id`              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`     BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '拿走这笔的人',
-    `slot_key`        CHAR(64)        NOT NULL DEFAULT '' COMMENT '场次盲索引',
-    `source_order_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '被扣下的定金单',
-    `amount_fen`      INT UNSIGNED    NOT NULL DEFAULT 0,
-    `pay_status`      TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待打款',
-    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_source_order` (`source_order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='记给对方的定金';

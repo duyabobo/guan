@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-from handler.miniprogram import guan_info, guanguan, pay_notify, subscribe
+from handler.miniprogram import guan_info, guanguan, subscribe
 from handler.pc import index
 from service.common.phone_number import PHONE_BIND_PATH, PHONE_CODE_PATH
 from handler.user import login, match_config, phone
@@ -18,5 +18,4 @@ handlers = [
     (r'/match_config$', match_config.MatchConfigHandler),
     (r'/voice_text$', match_config.VoiceTextHandler),
     (r'/subscribe_cb$', subscribe.SubscribeCBHandler),
-    (r'/wx_pay_notify$', pay_notify.WxPayNotifyHandler),
 ]

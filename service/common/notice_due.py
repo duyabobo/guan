@@ -7,9 +7,11 @@ from service.common.profile_match import inviter_passport_id, seated_passport_id
 from util.const.match import MODEL_ACTIVITY_STATE_INVITE_SUCCESS, MODEL_ACTIVITY_STATE_INVITING
 from util.const.notice import (
     LIST_EXPIRE_LEAD,
+    MEET_ARRIVE_WINDOW,
     MEET_SOON_LEAD,
     SCENE_DECIDE,
     SCENE_LIST_EXPIRE,
+    SCENE_MEET_ARRIVE,
     SCENE_MEET_SOON,
 )
 from util.const.progress import MEET_AUTO_FIT_WAIT, MEET_CHOICE_WAIT
@@ -39,6 +41,7 @@ def scheduled_notices(activity, now):
     jobs = []
     jobs.extend(_list_expire_jobs(activity, now))
     jobs.extend(_meet_soon_jobs(activity, now))
+    jobs.extend(_meet_arrive_jobs(activity, now))
     jobs.extend(_decide_jobs(activity, now))
     return jobs
 
@@ -62,6 +65,17 @@ def _meet_soon_jobs(activity, now):
     if remaining is None or remaining <= datetime.timedelta(0) or remaining > MEET_SOON_LEAD:
         return []
     return _for_each_seated(activity, SCENE_MEET_SOON)
+
+
+def _meet_arrive_jobs(activity, now):
+    if activity.state != MODEL_ACTIVITY_STATE_INVITE_SUCCESS or not _results_unset(activity):
+        return []
+    if not activity.start_time:
+        return []
+    elapsed = now - activity.start_time
+    if elapsed < datetime.timedelta(0) or elapsed > MEET_ARRIVE_WINDOW:
+        return []
+    return _for_each_seated(activity, SCENE_MEET_ARRIVE)
 
 
 def _decide_jobs(activity, now):

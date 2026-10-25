@@ -23,13 +23,9 @@ SCENE_JOINED = 'joined'
 SCENE_CANCELLED = 'cancelled'
 SCENE_DECIDE = 'decide'
 SCENE_MEET_SOON = 'meet_soon'
+SCENE_MEET_ARRIVE = 'meet_arrive'
 SCENE_LIST_EXPIRE = 'list_expire'
-SCENE_NO_SHOW = 'no_show'
 SCENE_UNFIT = 'unfit'
-SCENE_DEPOSIT_BACK = 'deposit_back'
-SCENE_DEPOSIT_TAKE = 'deposit_take'
-SCENE_DEPOSIT_LOSE = 'deposit_lose'
-SCENE_DEPOSIT_FORFEIT = 'deposit_forfeit'
 
 _CN_DIGIT = '零一二三四五六七八九'
 BOSS_GREETING = '你好老板，我%s约了人'
@@ -39,14 +35,13 @@ NOTICE_TEXT = {
     SCENE_CANCELLED: ('对方取消了见面', '对方已离开，座位已退回'),
     SCENE_DECIDE: ('请尽快决定是否合适', '未选满7天会视为合适'),
     SCENE_MEET_SOON: ('见面时间快到了', '和老板打个招呼'),
+    SCENE_MEET_ARRIVE: ('请到达约定地点', '见面时间已到，请准时到场'),
     SCENE_LIST_EXPIRE: ('这场快从列表消失', '还没有人加入这场见面'),
-    SCENE_NO_SHOW: ('定金不退回', '双方定金归对方'),
     SCENE_UNFIT: ('对方选择了不合适', '打开详情可以查看'),
-    SCENE_DEPOSIT_BACK: ('定金将退回', '已在1小时内签到'),
-    SCENE_DEPOSIT_TAKE: ('两笔定金归你', '对方未按时签到'),
-    SCENE_DEPOSIT_LOSE: ('定金不退回', '未在1小时内签到'),
-    SCENE_DEPOSIT_FORFEIT: ('定金不退回', '双方都未按时签到'),
 }
+
+# 这两条不只靠订阅。订阅发完仍发短信，避免人没打开小程序。
+SMS_REQUIRED_SCENES = (SCENE_MEET_SOON, SCENE_MEET_ARRIVE)
 
 
 def _cn_number(value):
@@ -78,7 +73,7 @@ def boss_greeting(start_time):
 
 
 def notice_sms_text(scene, start_time, note=''):
-    """订阅发不出去时的短信。见面那条仍用和老板打招呼的句子。"""
+    """短信正文。快到和到达这两条用和老板打招呼的句子。"""
     title, default_note = NOTICE_TEXT.get(scene, ('', ''))
     shown = _sms_note(scene, start_time, note, default_note)
     clock = start_time.strftime('%m月%d日 %H:%M') if start_time else ''
@@ -86,11 +81,12 @@ def notice_sms_text(scene, start_time, note=''):
 
 
 def _sms_note(scene, start_time, note, default_note):
-    if scene == SCENE_MEET_SOON and start_time:
+    if scene in SMS_REQUIRED_SCENES and start_time:
         return boss_greeting(start_time)
     return note or default_note
 
 MEET_SOON_LEAD = datetime.timedelta(minutes=60)
+MEET_ARRIVE_WINDOW = datetime.timedelta(minutes=15)
 LIST_EXPIRE_LEAD = datetime.timedelta(minutes=15)
 SCAN_INTERVAL_MS = 60 * 1000
 SCAN_LOCK_SEC = 120

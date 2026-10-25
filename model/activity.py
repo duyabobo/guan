@@ -102,17 +102,6 @@ class ActivityModel(BaseModel):
         return _fill(rows)
 
     @classmethod
-    def list_deposit_due(cls, earliest, deadline, limit):
-        """已经约上、过了签到时限、还在回溯窗口里的场次。"""
-        rows = getDbSession().query(cls).filter(
-            cls.status == match.MODEL_STATUS_YES,
-            cls.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-            cls.start_time >= earliest,
-            cls.start_time <= deadline,
-        ).order_by(cls.start_time.asc()).limit(limit).all()
-        return _fill(rows)
-
-    @classmethod
     def listUnsetSuccess(cls, passport_id):
         """双方都还没表态、且已经约上的见面。时间是否到期由调用方判断。"""
         activity_ids = _seat_ids(passport_id)

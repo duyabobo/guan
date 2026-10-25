@@ -5,7 +5,6 @@ import logging
 from model.activity import ActivityModel
 from model.activity_change_record import ActivityChangeRecordModel
 from model.address import AddressModel
-from model.meet_fee_order import MeetFeeOrderModel
 from model.passport import PassportModel
 from ral.cache import lock
 from service import BaseService
@@ -15,20 +14,15 @@ from service.common.page_copy import guan_info_copy
 from service.common.meet_outcome import apply_synced_result, record_my_fit, settle_due_meets
 from service.common.profile_board import ProfileBoardService
 from service.common.profile_match import ProfileMatchService, other_passport_id
-from service.deposit import check_in, holds, on_agreed_cancel, on_solo_cancel, present
-from service.meet_fee import MeetFeeService
 from service.meet_notice import MeetNoticeService, page_subscribe
 from service.phone_bind import PhoneBindService
 from util.class_helper import lazy_property
 from util.const import match
 from util.const.base import (
     GUAN_INFO_OP_TYPE_QUIT, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_INVITE,
-    GUAN_INFO_OP_TYPE_CHECKIN, GUAN_INFO_OP_TYPE_REDEPOSIT,
     MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE,
 )
-from util.const.deposit import deposit_fen
-from util.const.meet_fee import quit_records_no_show
-from util.const.notice import SCENE_JOINED, SCENE_UNFIT
+from util.const.notice import SCENE_CANCELLED, SCENE_JOINED, SCENE_UNFIT
 from util.const.match import (
     MODEL_SEX_MALE_INDEX, MODEL_SEX_FEMALE_INDEX,
     MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_EMPTY,
@@ -44,8 +38,7 @@ from util.const.progress import (
 from util.const.response import (
     RESP_OK, RESP_JOIN_ACTIVITY_FAILED, RESP_HAS_APPOINTMENT, RESP_HAS_FIT_PARTNER,
     RESP_NEED_FILL_INFO, RESP_HAS_TIME_CONFLICT,
-    RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR, RESP_MEET_FEE_PENDING,
-    RESP_MEET_FEE_UNAVAILABLE, RESP_PARTNER_DEPOSIT, no_show_recorded_msg, meet_fee_required_msg,
+    RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, RESP_MEET_RESULT_ERR,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,10 +47,9 @@ _SEAT_OPS = (GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN)
 
 
 class _OperateResult(object):
-    def __init__(self, msg, notices=None, refund_order_id=0):
+    def __init__(self, msg, notices=None):
         self.msg = msg
         self.notices = notices or []
-        self.refund_order_id = refund_order_id
 
 
 class GuanInfoService(BaseService):
@@ -68,7 +60,6 @@ class GuanInfoService(BaseService):
         self.passportId = passport.get('id', 0)
         self.activityRecord = None
         self.myInformationPage = MYINFORMATION_PAGE_WITH_ERRMSG
-        self.pending_pay = None
         settle_due_meets(self.passportId)
         self.reloadActivityRecord()
         super(GuanInfoService, self).__init__()
@@ -197,9 +188,6 @@ class GuanInfoService(BaseService):
     def _build_page(self, progress, opposite_passport_id, bottom_buttons, viewer):
         copy = guan_info_copy()
         rows = [] if viewer else self._opposite_rows(opposite_passport_id)
-        bottom_buttons, fee = present(
-            bottom_buttons, self.activityRecord, self.passportId, progress, viewer,
-        )
         return {
             "guanId": self.activityId,
             "progressStatus": progress,
@@ -220,7 +208,6 @@ class GuanInfoService(BaseService):
                 "myInformationPage": self.myInformationPage,
             },
             "share": build_meet_share_guide(progress, copy["shareLabel"], viewer),
-            "fee": fee,
             "subscribe": page_subscribe(viewer),
             "phoneBound": PhoneBindService().bound(self.passportId),
         }
@@ -332,60 +319,29 @@ class GuanInfoService(BaseService):
                 return blocked
         if self.opType == GUAN_INFO_OP_TYPE_JOIN and not self._can_join():
             return RESP_JOIN_ACTIVITY_FAILED
-        if self.opType == GUAN_INFO_OP_TYPE_JOIN and not holds(self.oppositePassportId, self.activityId):
-            logger.info("加入被拒绝，对方没有定金 activity=%s passport=%s", self.activityId, self.passportId)
-            return RESP_PARTNER_DEPOSIT
         if op_type in _SEAT_OPS and self.timeIsConflict():
             return RESP_HAS_TIME_CONFLICT
         return None
 
-    def activityOprete(self, op_type, openid, client_ip, latitude=0, longitude=0):
-        """邀请、加入、取消、签到、补定金。付钱发生在锁外面，写座位在锁里面。"""
-        if op_type == GUAN_INFO_OP_TYPE_CHECKIN:
-            self.reloadActivityRecord()
-            place = self.addressRecord
-            return check_in(
-                self.activityRecord, self.passportId, latitude, longitude,
-                place.latitude if place else 0, place.longitude if place else 0,
-            )
-        if op_type == GUAN_INFO_OP_TYPE_REDEPOSIT:
-            return self._redeposit(openid, client_ip)
+    def activityOprete(self, op_type):
+        """邀请、加入、取消。写座位在锁里面。"""
         block = self._operate_block(op_type)
-        order_id = 0
         if block:
             return block
-        if op_type in _SEAT_OPS:
-            outcome = MeetFeeService.ensure(
-                self.passportId, self.activityId, openid, client_ip, deposit_fen(),
-            )
-            if outcome.order_id:
-                order_id = outcome.order_id
-            elif outcome.pay or outcome.msg:
-                self.pending_pay = outcome.pay
-                return outcome.msg or meet_fee_required_msg()
-            else:
-                return RESP_MEET_FEE_UNAVAILABLE
-        written = self._locked_apply(op_type, order_id)
+        written = self._locked_apply(op_type)
         if not isinstance(written, _OperateResult):
             return written
-        if written.refund_order_id:
-            MeetFeeService.refund(written.refund_order_id)
         MeetNoticeService.dispatch(written.notices, record_sent=False)
         return written.msg
 
     @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)
-    def _locked_apply(self, op_type, order_id):
+    def _locked_apply(self, op_type):
         block = self._operate_block(op_type)
         if block:
-            return _OperateResult(block, refund_order_id=order_id or 0)
-        was_agreed = quit_records_no_show(
-            self.activityRecord.state, MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
-        )
+            return block
+        was_agreed = self.activityRecord.state == MODEL_ACTIVITY_STATE_INVITE_SUCCESS
         partner_id = other_passport_id(self.activityRecord, self.passportId)
         start_time = self.activityRecord.start_time
-        if order_id and not MeetFeeOrderModel.consume(order_id):
-            logger.info("支付单未核销 order=%s passport=%s", order_id, self.passportId)
-            return _OperateResult(RESP_MEET_FEE_PENDING)
         update_params, where_params = self.parseUpdataParams(op_type, self.sexIndex)
         updated = ActivityModel.updateById(self.activityId, *where_params, **update_params)
         if not updated:
@@ -393,61 +349,22 @@ class GuanInfoService(BaseService):
                 "座位没写上 activity=%s passport=%s op=%s",
                 self.activityId, self.passportId, op_type,
             )
-            return _OperateResult(RESP_JOIN_ACTIVITY_FAILED, refund_order_id=order_id or 0)
+            return RESP_JOIN_ACTIVITY_FAILED
         ActivityChangeRecordModel.addOne(self.activityId, self.passportId, op_type)
         self.reloadActivityRecord()
-        msg, refund_order_id, notices = self._after_seat(op_type, was_agreed, partner_id, start_time)
-        return _OperateResult(msg, notices, refund_order_id)
+        msg, notices = self._after_seat(op_type, was_agreed, partner_id, start_time)
+        return _OperateResult(msg, notices)
 
     def _after_seat(self, op_type, was_agreed, partner_id, start_time):
-        if op_type == GUAN_INFO_OP_TYPE_QUIT and was_agreed:
-            refund_id, notices = on_agreed_cancel(self.activityRecord, self.passportId, partner_id)
-            return no_show_recorded_msg(), refund_id, notices
         if op_type == GUAN_INFO_OP_TYPE_QUIT:
-            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, on_solo_cancel(self.passportId, self.activityId), []
+            notices = []
+            if was_agreed and partner_id and start_time:
+                notices.append(NoticeJob(partner_id, SCENE_CANCELLED, self.activityId, start_time))
+            return RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI, notices
         notices = []
         if op_type == GUAN_INFO_OP_TYPE_JOIN and partner_id and start_time:
             notices.append(NoticeJob(partner_id, SCENE_JOINED, self.activityId, start_time))
-        return RESP_OK, 0, notices
-
-    def _redeposit(self, openid, client_ip):
-        """留下的人定金已经结清时，重新支付，不改座位。"""
-        self.reloadActivityRecord()
-        if not self._waiting_alone():
-            logger.info("补定金被拒绝 activity=%s passport=%s", self.activityId, self.passportId)
-            return RESP_JOIN_ACTIVITY_FAILED
-        if holds(self.passportId, self.activityId):
-            return RESP_OK
-        outcome = MeetFeeService.ensure(
-            self.passportId, self.activityId, openid, client_ip, deposit_fen(),
-        )
-        if outcome.pay or outcome.msg:
-            self.pending_pay = outcome.pay
-            return outcome.msg or meet_fee_required_msg()
-        if not outcome.order_id:
-            return RESP_MEET_FEE_UNAVAILABLE
-        written = self._locked_redeposit(outcome.order_id)
-        if isinstance(written, _OperateResult) and written.refund_order_id:
-            MeetFeeService.refund(written.refund_order_id)
-            return written.msg
-        return written
-
-    def _waiting_alone(self):
-        record = self.activityRecord
-        if not record or record.state != MODEL_ACTIVITY_STATE_INVITING:
-            return False
-        return self.passportId in (record.boy_passport_id or 0, record.girl_passport_id or 0)
-
-    @lock("activityOprete:{activityId}", failRet=RESP_JOIN_ACTIVITY_FAILED)
-    def _locked_redeposit(self, order_id):
-        self.reloadActivityRecord()
-        if not self._waiting_alone():
-            return _OperateResult(RESP_JOIN_ACTIVITY_FAILED, refund_order_id=order_id)
-        if not MeetFeeOrderModel.consume(order_id):
-            logger.info("补定金未核销 order=%s passport=%s", order_id, self.passportId)
-            return RESP_MEET_FEE_PENDING
-        logger.info("已重新支付定金 activity=%s passport=%s", self.activityId, self.passportId)
-        return RESP_OK
+        return RESP_OK, notices
 
 
 def _unfit_notice(activity, actor_passport_id, meet_result_value):

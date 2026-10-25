@@ -358,11 +358,6 @@ def ensure_addresses(conn, region_ids: list[int]) -> list[int]:
 
 # 用户和见面每次清空后重写。地点不是敏感数据，按名称保留。
 USER_DATA_TABLES = (
-    'meet_deposit_payout',
-    'meet_deposit_settle',
-    'meet_checkin',
-    'meet_fee_order',
-    'meet_no_show',
     'notice_sent',
     'subscribe_grant',
     'sensitive_record',

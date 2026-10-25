@@ -20,14 +20,8 @@ _LINK_TABLES = (
         'new_index': 'uk_slot_passport_scene',
         'new_ddl': 'ADD UNIQUE KEY `uk_slot_passport_scene` (`slot_key`, `passport_id`, `scene`)',
     },
-    {
-        'table': 'meet_no_show',
-        'old_index': 'uk_passport_activity',
-        'new_index': 'uk_passport_slot',
-        'new_ddl': 'ADD UNIQUE KEY `uk_passport_slot` (`passport_id`, `slot_key`)',
-    },
 )
-_PLAIN_LINK_TABLES = ('notice_sent', 'meet_no_show', 'meet_fee_order', 'activity_change_record')
+_PLAIN_LINK_TABLES = ('notice_sent', 'activity_change_record')
 
 
 def seal_legacy_plaintext():

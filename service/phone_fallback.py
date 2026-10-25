@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""订阅消息发不出去时，用已绑定手机号发短信。没配短信地址就只记日志。"""
+"""用已绑定手机号发短信。没配短信地址就只记日志。"""
 import logging
 
 from model.sensitive_record import SensitiveRecordModel

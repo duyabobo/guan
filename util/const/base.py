@@ -8,8 +8,6 @@ EMPTY_STR = u""
 GUAN_INFO_OP_TYPE_INVITE = 1  # 邀请
 GUAN_INFO_OP_TYPE_JOIN = 2  # 加入
 GUAN_INFO_OP_TYPE_QUIT = 3  # 退出
-GUAN_INFO_OP_TYPE_CHECKIN = 4  # 签到
-GUAN_INFO_OP_TYPE_REDEPOSIT = 5  # 留下的人重新付定金
 
 # 根据自己的选择结果，影响活动结束后在首页的展示。
 #   见面时间开始以后，0/1 会持续展示在自己首页，且不会推荐其他见面。
@@ -24,7 +22,7 @@ MODEL_MEET_RESULT_MAP = {
     MODEL_MEET_RESULT_UNKNOWN: "尚未表达意向",
     MODEL_MEET_RESULT_FIT_CHOICE: "合适",
     MODEL_MEET_RESULT_UNFIT_CHOICE: "不合适",
-    101: "不合适（信息造假）",  # > 100的选择，会扣除保证金，而且会展示在自己的信息中（直到联系客服解除）
+    101: "不合适（信息造假）",
     102: "不合适（迟到爽约）",
     103: "不合适（涉嫌pua）",
     104: "不合适（骗财骗色）",

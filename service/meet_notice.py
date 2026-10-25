@@ -5,10 +5,10 @@ import logging
 
 from model.activity import ActivityModel
 from model.notice_sent import NoticeSentModel
+from model.passport import PassportModel
 from model.subscribe_grant import SubscribeGrantModel
-from service.common.notice_due import drop_sent, scheduled_notices
+from service.common.notice_due import drop_sent, scheduled_notices, sent_key
 from service.identity.runtime_key import material_for, materials_for
-from service.meet_fee import openid_belongs_to
 from service.phone_fallback import deliver_missed
 from util.const.identity import PURPOSE_SUBSCRIBE_SEND
 from util.const.notice import (
@@ -17,8 +17,10 @@ from util.const.notice import (
     MEET_SOON_LEAD,
     NOTICE_TEXT,
     SCAN_ACTIVITY_LIMIT,
+    SMS_REQUIRED_SCENES,
     SUBSCRIBE_ACCEPT,
 )
+from util.encode import md5_hex
 from util.const.progress import MEET_AUTO_FIT_WAIT
 from util.sensitive_cipher import decrypt, encrypt
 from util.wx_subscribe import build_data, miniprogram_state, send_subscribe, template_id
@@ -46,7 +48,7 @@ class MeetNoticeService(object):
         if not subscription_accepted(subscribe_res, template):
             logger.info("订阅未授权 passport=%s", passport_id)
             return
-        if not openid_belongs_to(passport_id, openid):
+        if not _openid_belongs_to(passport_id, openid):
             logger.info("订阅未记下 passport=%s openid 与账号不一致", passport_id)
             return
         material = material_for(passport_id, PURPOSE_SUBSCRIBE_SEND)
@@ -88,31 +90,50 @@ def _dispatch(jobs, record_sent):
     materials = materials_for(passport_ids, PURPOSE_SUBSCRIBE_SEND)
     openids = _openids(grants, materials)
     state = miniprogram_state()
-    usable = {}
-    for passport_id, grant in grants.items():
-        usable[passport_id] = grant.remain or 0
+    usable = {passport_id: (grant.remain or 0) for passport_id, grant in grants.items()}
     used = {}
-    sent_jobs = []
-    missed = []
+    recorded = {}
+    sms_jobs = []
     for job in jobs:
-        left = usable.get(job.passport_id, 0) - used.get(job.passport_id, 0)
-        openid = openids.get(job.passport_id)
-        if left <= 0 or not openid:
-            missed.append(job)
-            continue
-        data = build_data(job.scene, job.start_time, NOTICE_TEXT, job.note)
-        sent = send_subscribe(openid, template, MEET_PAGE % job.activity_id, data, state)
-        if not sent:
-            missed.append(job)
-            continue
-        used[job.passport_id] = used.get(job.passport_id, 0) + 1
-        sent_jobs.append(job)
+        subscribed = _try_subscribe(job, template, openids, usable, used, state)
+        if subscribed:
+            _remember(recorded, job)
+        if job.scene in SMS_REQUIRED_SCENES or not subscribed:
+            sms_jobs.append(job)
+    sms_sent = deliver_missed(sms_jobs)
+    for job in sms_sent:
+        _remember(recorded, job)
     for passport_id, count in used.items():
         SubscribeGrantModel.consume_remain(passport_id, template, count)
-    sent_jobs.extend(deliver_missed(missed))
+    sent_jobs = list(recorded.values())
     if record_sent:
         NoticeSentModel.add_jobs(sent_jobs)
-    logger.info("见面提醒 sent=%s missed=%s", len(sent_jobs), len(missed))
+    logger.info("见面提醒 sent=%s sms_sent=%s sms_try=%s", len(sent_jobs), len(sms_sent), len(sms_jobs))
+
+
+def _try_subscribe(job, template, openids, usable, used, state):
+    left = usable.get(job.passport_id, 0) - used.get(job.passport_id, 0)
+    openid = openids.get(job.passport_id)
+    if left <= 0 or not openid:
+        return False
+    data = build_data(job.scene, job.start_time, NOTICE_TEXT, job.note)
+    if not send_subscribe(openid, template, MEET_PAGE % job.activity_id, data, state):
+        return False
+    used[job.passport_id] = used.get(job.passport_id, 0) + 1
+    return True
+
+
+def _remember(recorded, job):
+    recorded[sent_key(job.activity_id, job.passport_id, job.scene)] = job
+
+
+def _openid_belongs_to(passport_id, openid):
+    if not passport_id or not openid:
+        return False
+    passport = PassportModel.getById(passport_id)
+    if not passport or not passport.openid:
+        return False
+    return passport.openid == md5_hex(openid)
 
 
 def _openids(grants, materials):

@@ -1,14 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""进程内定时扫描到点提醒和未完成的退款。"""
+"""进程内定时扫描到点提醒。"""
 import datetime
 import logging
 
 import tornado.ioloop
 from sqlalchemy.orm import sessionmaker
 
-from service.deposit import settle_due
-from service.meet_fee import MeetFeeService
 from service.meet_notice import MeetNoticeService
 from util.const.notice import NOTICE_SCAN_LOCK_KEY, SCAN_INTERVAL_MS, SCAN_LOCK_SEC
 from util.ctx import LocalContext
@@ -39,10 +37,7 @@ def _scan_in_session():
     holder = _DbHolder(session)
     try:
         with LocalContext(lambda: holder):
-            now = datetime.datetime.now()
-            MeetNoticeService.scan(now)
-            settle_due(now)
-            MeetFeeService.retry_refunds()
+            MeetNoticeService.scan(datetime.datetime.now())
         session.commit()
     finally:
         session.close()

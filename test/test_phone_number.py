@@ -14,7 +14,7 @@ from service.common.phone_number import (
     same_bind_code,
     saved_token,
 )
-from util.const.notice import SCENE_MEET_SOON, SCENE_NO_SHOW, notice_sms_text
+from util.const.notice import SCENE_MEET_ARRIVE, SCENE_MEET_SOON, notice_sms_text
 
 
 def test_mainland_mobile_accepts_eleven_digits():
@@ -64,8 +64,9 @@ def test_sms_meet_soon_uses_boss_greeting():
     assert '你好老板，我十点半约了人' in notice_sms_text(SCENE_MEET_SOON, half)
 
 
-def test_sms_uses_passed_note():
+def test_sms_arrive_uses_boss_greeting():
     start = datetime.datetime(2026, 10, 24, 10, 0)
-    text = notice_sms_text(SCENE_NO_SHOW, start, '双方定金归对方')
-    assert '双方定金归对方' in text
-    assert '定金不退回' in text
+    text = notice_sms_text(SCENE_MEET_ARRIVE, start)
+    assert '请到达约定地点' in text
+    assert '你好老板，我十点约了人' in text
+    assert '定金' not in text
