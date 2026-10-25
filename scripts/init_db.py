@@ -4,7 +4,8 @@
 数据库初始化脚本：幂等执行 DDL，清空旧的用户与见面数据后按密文重写演示数据。
 
 用法:
-  python scripts/init_db.py                             # 本地（读 .env）
+  python scripts/init_db.py                             # 本地（读 .env），清空后重写演示数据
+  python scripts/init_db.py --current-user              # 只给当前真实账号补密文资料和见面
   docker-compose exec app python scripts/init_db.py    # 容器内
 
 地点数据按名称补齐。账号、资料、见面、座位每次都丢掉再按加密存储重写。
@@ -497,6 +498,16 @@ def _remember_runtime_union(client, passport_id, unionid):
     client.set(RUNTIME_UNION_KEY % int(passport_id), unionid, ex=RUNTIME_UNION_TTL_SEC)
 
 
+def _runtime_union(passport_id):
+    """登录时写入的 unionid。库里的封存值解不开。"""
+    if not passport_id:
+        return ''
+    value = _redis_client().get(RUNTIME_UNION_KEY % int(passport_id))
+    if isinstance(value, bytes):
+        value = value.decode('utf-8')
+    return value or ''
+
+
 def _mock_union_by_passport(conn):
     id_by_phone = _passport_id_by_phones(conn, [phone for phone, _ in MOCK_PASSPORT_ROWS])
     return {passport_id: _mock_unionid(phone) for phone, passport_id in id_by_phone.items()}
@@ -760,6 +771,9 @@ def seed_shares(conn, passport_ids: list[int]) -> list[int]:
 
 MOCK_OPENID_PREFIX = 'mock_openid_md5_'
 OPPOSITE_PHONE = PHONE_GIRL_BEIJING
+LOGIN_BIRTH_YEAR = 1996
+LOGIN_HEIGHT = 178
+LOGIN_WEIGHT = 70
 STATE_INVITING = 1
 STATE_SUCCESS = 100
 MEET_RESULT_FIT = 1
@@ -876,9 +890,11 @@ def _require_empty(conn, table):
         raise RuntimeError('%s 仍有 %s 条，拒绝在旧数据上补写' % (table, count))
 
 
-def _seal_meeting_seats(conn, seated):
+def _seal_meeting_seats(conn, seated, extra_unions=None):
     """活动表上的护照编号保持 0，座位写进 activity_seat 密文。"""
     union_by_passport = _mock_union_by_passport(conn)
+    if extra_unions:
+        union_by_passport.update(extra_unions)
     pepper = _wx_pepper()
     written = 0
     with conn.cursor() as cur:
@@ -911,12 +927,51 @@ def _insert_seat(cur, union_by_passport, pepper, activity_id, passport_id, role)
     return 1
 
 
-def _fill_login_user_profile(_conn, passport_id):
-    """真实用户的资料密钥只在微信登录时出现，这里不代写。"""
-    logger.info("  [跳过] 真实用户资料不在种子里写 passport=%s", passport_id)
+def _login_user_profile():
+    return {
+        "info": {
+            "sex": SEX_MALE,
+            "birth_year": LOGIN_BIRTH_YEAR,
+            "height": LOGIN_HEIGHT,
+            "weight": LOGIN_WEIGHT,
+            "home_region": HOME_BEIJING,
+        },
+        "requirement": {
+            "sex": SEX_FEMALE,
+            "birth_year": (1994, 2001),
+            "height": (155, 175),
+            "weight": (45, 65),
+            "home_region": HOME_BEIJING,
+        },
+    }
 
 
-def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, girl_result, start):
+def _existing_profile_keys(conn, passport_id):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT `scope`, `dim_key` FROM `profile_attr` WHERE `passport_id`=%s AND `status`=1",
+            (passport_id,),
+        )
+        return {(row[0], row[1]) for row in cur.fetchall()}
+
+
+def _fill_login_user_profile(conn, passport_id, material):
+    """只补还没有的维度。用这次登录留在 Redis 里的 unionid 加密。"""
+    existing = _existing_profile_keys(conn, passport_id)
+    dims = [
+        dim for dim in _expand_profile(_login_user_profile())
+        if (dim[0], dim[1]) not in existing
+    ]
+    if not dims:
+        logger.info("  [跳过] 登录用户资料已齐 passport=%s", passport_id)
+        return
+    with conn.cursor() as cur:
+        written = _write_profile_cipher(cur, passport_id, material, dims)
+    conn.commit()
+    logger.info("  [写入] 登录用户资料密文 passport=%s rows=%s", passport_id, written)
+
+
+def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, girl_result, start, extra_unions=None):
     """新建一场。席位只进密文，活动表上的护照编号保持 0。"""
     with conn.cursor() as cur:
         cur.execute(
@@ -929,7 +984,7 @@ def _upsert_login_scene(conn, address_id, boy_id, girl_id, state, boy_result, gi
             (address_id, _fmt_time(start), state, boy_result, girl_result),
         )
         activity_id = cur.lastrowid
-    _seal_meeting_seats(conn, [(activity_id, (boy_id, girl_id))])
+    _seal_meeting_seats(conn, [(activity_id, (boy_id, girl_id))], extra_unions)
     return activity_id
 
 
@@ -956,24 +1011,36 @@ def ensure_match_probe_activities(conn) -> list[int]:
     return activity_ids
 
 
-def ensure_login_user_demo(conn) -> list[int]:
-    """给最近一个真实登录用户补资料，并挂上各状态见面，便于走通页面。"""
-    passport_id = _passport_id_by_sql(
+def _current_login_passport_id(conn):
+    return _passport_id_by_sql(
         conn,
         "SELECT `id` FROM `passport` WHERE `status`=1 AND `openid` NOT LIKE %s ORDER BY `id` DESC LIMIT 1",
         (MOCK_OPENID_PREFIX + '%',),
     )
+
+
+def ensure_login_user_demo(conn) -> list[int]:
+    """给最近一个真实登录用户补资料，并挂上各状态见面。座位用他的运行时密钥加密。"""
+    passport_id = _current_login_passport_id(conn)
     if not passport_id:
         logger.info("  [跳过] 还没有真实登录用户")
         return []
+    material = _runtime_union(passport_id)
+    if not material:
+        logger.error("真实用户没有运行时身份密钥，无法伪造资料和座位 passport=%s", passport_id)
+        return []
     opposite_id = _passport_id_by_phones(conn, [OPPOSITE_PHONE]).get(OPPOSITE_PHONE)
-    _fill_login_user_profile(conn, passport_id)
+    if not opposite_id:
+        logger.error("缺少对方演示账号，无法挂见面")
+        return []
+    _fill_login_user_profile(conn, passport_id, material)
+    extra_unions = {passport_id: material}
 
     now = datetime.datetime.now()
     activity_ids = []
     for address_name, minutes, boy_is_me, girl_is_opp, state, boy_result, girl_result in LOGIN_DEMO_SCENES:
         address_id = _address_id_by_name(conn, address_name)
-        if not address_id or not opposite_id:
+        if not address_id:
             logger.warning("  [跳过] 登录用户场次 %s", address_name)
             continue
         boy_id = passport_id if boy_is_me else 0
@@ -981,6 +1048,7 @@ def ensure_login_user_demo(conn) -> list[int]:
         activity_id = _upsert_login_scene(
             conn, address_id, boy_id, girl_id, state, boy_result, girl_result,
             now + datetime.timedelta(minutes=minutes),
+            extra_unions,
         )
         if activity_id:
             activity_ids.append(activity_id)
@@ -990,6 +1058,19 @@ def ensure_login_user_demo(conn) -> list[int]:
         passport_id, opposite_id, activity_ids,
     )
     return activity_ids
+
+
+def seed_current_user(conn):
+    """不清空已有演示数据。只给当前真实账号补密文资料、座位，并刷新附近空场时间。"""
+    if not _current_login_passport_id(conn):
+        raise RuntimeError('还没有真实登录用户，微信登录后再补')
+    region_ids = ensure_regions(conn)
+    address_ids = ensure_addresses(conn, region_ids)
+    ensure_empty_slot_activities(conn, address_ids)
+    activity_ids = ensure_login_user_demo(conn)
+    if not activity_ids:
+        raise RuntimeError('当前账号的演示见面没有写上')
+    _assert_no_plaintext(conn)
 
 
 # ── 主流程 ─────────────────────────────────────────────────────────────────────
@@ -1067,4 +1148,14 @@ def _print_summary(conn):
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--current-user':
+        current = _connect()
+        try:
+            logger.info("=== 按当前登录账号补演示数据 ===")
+            seed_current_user(current)
+            logger.info("=== 当前账号演示数据完成 ===")
+            _print_summary(current)
+        finally:
+            current.close()
+    else:
+        main()
