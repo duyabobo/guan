@@ -33,9 +33,16 @@ def test_parse_wechat_session_drops_session_key():
     assert 'openid-1' not in repr(item)
 
 
+def test_parse_uses_openid_when_unionid_missing():
+    item = parse_wechat_session({'openid': 'openid-1'})
+    assert item.provider == PROVIDER_WECHAT
+    assert item.account_key == 'openid-1'
+    assert item.secret_material == 'openid-1'
+
+
 def test_parse_rejects_incomplete_session():
-    assert parse_wechat_session({'openid': 'openid-1'}) is None
     assert parse_wechat_session({'errcode': 40029, 'errmsg': 'invalid code'}) is None
+    assert parse_wechat_session({}) is None
     assert parse_wechat_session(None) is None
 
 

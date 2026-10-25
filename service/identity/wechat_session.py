@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_wechat_session(payload):
-    """从 jscode2session 取出 openid 和 unionid。session_key 不保留。"""
+    """从 jscode2session 取出 openid。绑定了开放平台时再用 unionid 做身份密钥。"""
     if not isinstance(payload, dict):
         logger.warning("微信登录响应无效")
         return None
@@ -19,7 +19,10 @@ def parse_wechat_session(payload):
         return None
     openid = (payload.get('openid') or '').strip()
     unionid = (payload.get('unionid') or '').strip()
-    if not openid or not unionid:
-        logger.warning("微信登录未返回 openid 或 unionid")
+    if not openid:
+        logger.warning("微信登录未返回 openid keys=%s", sorted(payload.keys()))
         return None
+    if not unionid:
+        logger.info("微信未返回 unionid，身份密钥使用 openid")
+        unionid = openid
     return IdentityAssertion(PROVIDER_WECHAT, openid, unionid)

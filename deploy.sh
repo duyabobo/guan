@@ -61,7 +61,7 @@ setup_dirs() {
 cmd_start() {
     log_title "启动服务"
     log_info "拉取基础镜像..."
-    docker-compose pull mysql redis rabbitmq 2>/dev/null || true
+    docker-compose pull mysql redis 2>/dev/null || true
 
     log_info "构建应用镜像并启动所有容器..."
     docker-compose up -d --build
@@ -135,13 +135,10 @@ cmd_status() {
 print_access_info() {
     local app_port
     app_port="$(grep -E '^APP_PORT=' .env | cut -d= -f2 || echo 8888)"
-    local mq_port
-    mq_port="$(grep -E '^RABBITMQ_MGMT_PORT=' .env | cut -d= -f2 || echo 15672)"
 
     echo ""
     log_info "┌──────────────────────────────────────────────┐"
     log_info "│  应用地址:          http://localhost:${app_port}     │"
-    log_info "│  RabbitMQ 管理界面: http://localhost:${mq_port}    │"
     log_info "└──────────────────────────────────────────────┘"
 }
 

@@ -26,12 +26,6 @@ def _joined_urls(requests):
 def asyncRequest(url, data_json, method='GET', timeout=1, need_retry=False, quiet=False):
     """
     对Tornado AsyncHttpClient的封装。支持重试。
-    @param url:
-    @param data_json:
-    @param method:
-    @param timeout:
-    @param need_retry: 是否需要重试，如果是，还会自动重试2次。
-    @return:
     """
     # warning：如果调用不是幂等的，不要重试。这个有调用方控制。
     # warning: 如果是请求超时，不会重试。这个是实现方控制。
@@ -48,6 +42,7 @@ def asyncRequest(url, data_json, method='GET', timeout=1, need_retry=False, quie
     http_client = AsyncHTTPClient()
 
     retry_cnt = 3 if need_retry else 1
+    last_error = None
     for r in range(retry_cnt):
         try:
             headers = {'Content-Type': 'application/json'}
@@ -66,13 +61,14 @@ def asyncRequest(url, data_json, method='GET', timeout=1, need_retry=False, quie
             monitor_logger.info('异步调用http接口 成功 method=%s url=%s body=%s res.code=%s resp=%s rps_detail=%s',
                                 method, logged_url, logged_body, res.code, logged_resp, logged_detail)
             raise gen.Return(resp)
-        except tornado.gen.Return as e:
-            raise e
-        except Exception as e:
-            logged_exc = type(e).__name__ if quiet else str(e.__dict__)
+        except tornado.gen.Return:
+            raise
+        except Exception as exc:
+            last_error = exc
+            logged_exc = type(exc).__name__ if quiet else str(exc.__dict__)
             monitor_logger.exception('异步调用http接口 异常 method=%s url=%s body=%s type_e=%s exc=%s',
-                                    method, logged_url, logged_body, type(e), logged_exc)
+                                    method, logged_url, logged_body, type(exc), logged_exc)
 
         if r == retry_cnt - 1:
             monitor_logger.error('异步调用http接口 重试结束调用失败 retry_cnt=%s r=%s', retry_cnt, r)
-            raise e
+            raise last_error

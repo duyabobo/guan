@@ -7,6 +7,7 @@ from service.common.phone_number import PHONE_CODE_LENGTH, PHONE_DIGIT_COUNT
 def list_page_copy():
     return {
         "listTitle": "见面",
+        "loginHint": "登录后查看",
     }
 
 

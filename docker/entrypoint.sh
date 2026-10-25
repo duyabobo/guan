@@ -24,9 +24,6 @@ database=${MYSQL_DATABASE:-guan}
 host=${REDIS_HOST:-redis}
 port=${REDIS_PORT:-6379}
 
-[rabbitmq]
-host=${RABBITMQ_HOST:-rabbitmq}
-
 [weixin]
 appid=${WX_APPID:-}
 secret=${WX_SECRET:-}

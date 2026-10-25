@@ -27,14 +27,6 @@ def get_monitor_logger(logger_name: str) -> logging.Logger:
     return logger
 
 
-def mq_logger(logger_name: str) -> logging.Logger:
-    log_file = os.path.join(LOG_DIR, f'{logger_name}.log')
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(_build_rotating_handler(log_file))
-    return logger
-
-
 def offline_script_logger(logger_name: str) -> logging.Logger:
     log_file = os.path.join(LOG_DIR, f'{logger_name}.log')
     logger = logging.getLogger(logger_name)
