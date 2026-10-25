@@ -33,6 +33,11 @@ class Configuration:
     def get(self, sect, opt):
         return self._config.get(sect, opt)
 
+    def get_optional(self, sect, opt, default=''):
+        if not self._config.has_option(sect, opt):
+            return default
+        return self._config.get(sect, opt)
+
     def get_section(self, section):
         if not self._config.has_section(section):
             return {}
@@ -42,6 +47,11 @@ class Configuration:
 
 def get(sect, opt):
     return Configuration().get(sect, opt)
+
+
+def get_optional(sect, opt, default=''):
+    """可选配置项：配置文件里没有就返回 default，不抛异常。"""
+    return Configuration().get_optional(sect, opt, default)
 
 
 def get_section(sect):
@@ -56,7 +66,4 @@ def get_conf(key: str, default: str = '', section: str = 'llm') -> str:
     env_val = os.getenv(key.upper())
     if env_val is not None:
         return env_val
-    try:
-        return Configuration().get(section, key)
-    except Exception:
-        return default
+    return Configuration().get_optional(section, key, default)

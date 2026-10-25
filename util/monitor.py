@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding=utf-8 -*-
 import functools
+import logging
 import time
 
 from tornado import gen
@@ -8,9 +9,12 @@ from tornado import gen
 import util.ctx
 from util.log import monitor_logger
 from util.auth import Checker
-from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK
+from util.const.response import RESP_TOP_MONITOR_ERROR, RESP_SIGN_INVALID, RESP_OK, RESP_PARAM_INVALID
+from util.errors import InvalidParameter, RequestRejected
 from util.log_redact import redact_body, redact_uri, summarize_for_log
 from util.obj_util import object_2_dict
+
+logger = logging.getLogger(__name__)
 
 
 class Response(object):
@@ -47,6 +51,23 @@ def httpReturn(handler, response, err=None):
     return handler.response(response)
 
 
+def _reject_response(handler, checker, exc):
+    """校验阶段没通过。预期内的拒绝（签名、重放、限频）只记一行，其它异常才带堆栈。"""
+    checker.fail()
+    if isinstance(exc, RequestRejected):
+        logger.warning("请求被拒绝 path=%s reason=%s", handler.request.path, exc)
+        return httpReturn(handler, Response(msg=RESP_SIGN_INVALID))
+    return httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=exc)
+
+
+def _failure_response(handler, exc):
+    """业务处理阶段出错。入参不合法是调用方的问题，其余按服务器错误处理。"""
+    if isinstance(exc, InvalidParameter):
+        logger.info("入参不合法 path=%s reason=%s", handler.request.path, exc)
+        return httpReturn(handler, Response(msg=RESP_PARAM_INVALID))
+    return httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=exc)
+
+
 def superMonitor(func):
     @functools.wraps(func)
     def wrapper(handler, *args, **kwargs):
@@ -55,8 +76,7 @@ def superMonitor(func):
         try:
             checker.check()
         except Exception as e:  # 校验失败
-            checker.fail()
-            httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
+            _reject_response(handler, checker, e)
             return
         else:  # 校验成功
             checker.success()
@@ -64,7 +84,7 @@ def superMonitor(func):
         try:
             response = func(handler, *args, **kwargs)
         except Exception as e:  # 处理失败
-            httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
+            _failure_response(handler, e)
             return
         else:  # 处理成功
             httpReturn(handler, response)
@@ -82,8 +102,7 @@ def superGenMonitor(func):
         try:
             checker.check()
         except Exception as e:  # 校验失败
-            checker.fail()
-            httpReturn(handler, Response(msg=RESP_SIGN_INVALID), err=e)
+            _reject_response(handler, checker, e)
             return
         else:  # 校验成功
             checker.success()
@@ -91,7 +110,7 @@ def superGenMonitor(func):
         try:
             response = yield func(handler, *args, **kwargs)
         except Exception as e:  # 处理失败
-            httpReturn(handler, Response(msg=RESP_TOP_MONITOR_ERROR), err=e)
+            _failure_response(handler, e)
             return
         else:  # 处理成功
             httpReturn(handler, response)

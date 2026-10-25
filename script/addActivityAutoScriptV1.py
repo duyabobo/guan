@@ -10,18 +10,17 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.dirname(current_dir))
 import datetime
-from sqlalchemy.orm import sessionmaker
 
 from handler.basehandler import Manager
 from model.activity import ActivityModel
 from model.address import AddressModel
-from util.database import engine
+from util.database import SessionFactory
 from util.ctx import LocalContext
 
 
 class ActivityAutoCreater(object):
     def __init__(self):
-        self.dbSession = sessionmaker(bind=engine)()
+        self.dbSession = SessionFactory()
         self.dbSession.__enter__ = lambda: None
         self.dbSession.__exit__ = lambda type, value, traceback: None
 

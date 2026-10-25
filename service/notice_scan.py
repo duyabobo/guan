@@ -5,12 +5,11 @@ import datetime
 import logging
 
 import tornado.ioloop
-from sqlalchemy.orm import sessionmaker
 
 from service.meet_notice import MeetNoticeService
 from util.const.notice import NOTICE_SCAN_LOCK_KEY, SCAN_INTERVAL_MS, SCAN_LOCK_SEC
 from util.ctx import LocalContext
-from util.database import engine
+from util.database import SessionFactory
 from util.redis_conn import redisConn
 
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ def scan_due_notices():
 
 
 def _scan_in_session():
-    session = sessionmaker(bind=engine)()
+    session = SessionFactory()
     holder = _DbHolder(session)
     try:
         with LocalContext(lambda: holder):

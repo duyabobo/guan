@@ -28,6 +28,7 @@ services:
       # Redis
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       # 第三方平台（在 .env 里配置真实值）
       - WX_APPID=${WX_APPID:-}
       - WX_SECRET=${WX_SECRET:-}
@@ -37,13 +38,26 @@ services:
       - QINIU_ACCESS_KEY=${QINIU_ACCESS_KEY:-}
       - QINIU_SECRET_KEY=${QINIU_SECRET_KEY:-}
       - QINIU_BUCKET=${QINIU_BUCKET:-}
-      # 火山引擎：豆包语音 + 方舟
-      - VOLC_ASR_API_KEY=${VOLC_ASR_API_KEY:-}
-      - VOLC_ASR_APP_KEY=${VOLC_ASR_APP_KEY:-}
-      - VOLC_ASR_ACCESS_KEY=${VOLC_ASR_ACCESS_KEY:-}
+      # 火山引擎：方舟（语音和提示词一次送入提取资料）
       - VOLC_ARK_API_KEY=${VOLC_ARK_API_KEY:-}
       - VOLC_ARK_API_BASE=${VOLC_ARK_API_BASE:-https://ark.cn-beijing.volces.com/api/v3}
       - VOLC_ARK_MODEL=${VOLC_ARK_MODEL:-doubao-seed-2-1-lite-260915}
+    healthcheck:
+      # 探活走 /health：MySQL 和 Redis 都能响应才算健康。线上是 HTTPS，不校验自签证书
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import os, ssl, sys, urllib.request
+          online = os.environ.get('SERVER_ENV') == 'online'
+          url = '%s://127.0.0.1:%s/health' % ('https' if online else 'http', os.environ.get('PORT', '8888'))
+          context = ssl._create_unverified_context() if online else None
+          sys.exit(0 if urllib.request.urlopen(url, timeout=3, context=context).status == 200 else 1)
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
   # ── MySQL ─────────────────────────────────────────────────────────────────
@@ -55,7 +69,8 @@ services:
       MYSQL_USER: ${MYSQL_USER:-guan}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-guan123}
     ports:
-      - "${MYSQL_EXPOSE_PORT:-3306}:3306"
+      # 默认只绑本机。需要对外开放时显式设置 MYSQL_BIND_ADDR=0.0.0.0，并先换掉默认口令
+      - "${MYSQL_BIND_ADDR:-127.0.0.1}:${MYSQL_EXPOSE_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       # 将 sql/init/ 下所有 .sql 文件作为初始化脚本（仅首次建库执行）
@@ -72,12 +87,28 @@ services:
   # ── Redis ─────────────────────────────────────────────────────────────────
   redis:
     image: docker.1panel.live/library/redis:7-alpine
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    # Redis 里存着运行时身份密钥：丢了用户资料就永久解不开，所以必须落盘（AOF 每秒刷盘），并且设了密码就要求认证
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          exec redis-server --appendonly yes --appendfsync everysec --requirepass "$$REDIS_PASSWORD"
+        fi
+        exec redis-server --appendonly yes --appendfsync everysec
     ports:
-      - "${REDIS_EXPOSE_PORT:-6379}:6379"
+      # 默认只绑本机。需要对外开放时显式设置 REDIS_BIND_ADDR=0.0.0.0，并必须设置 REDIS_PASSWORD
+      - "${REDIS_BIND_ADDR:-127.0.0.1}:${REDIS_EXPOSE_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        - CMD-SHELL
+        - |
+          if [ -n "$$REDIS_PASSWORD" ]; then export REDISCLI_AUTH="$$REDIS_PASSWORD"; fi
+          redis-cli ping | grep -q PONG
       interval: 5s
       timeout: 3s
       retries: 5

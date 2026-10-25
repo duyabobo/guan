@@ -4,16 +4,23 @@
 # __created_at__ = '2020/1/1'
 import functools
 import json
+import logging
+import math
 import time
 
-from sqlalchemy.orm import sessionmaker
 from tornado.web import RequestHandler
 
 from ral import passport
+from util.database import SessionFactory
 from util.const.response import RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.ctx import LocalContext
+from util.errors import InvalidParameter
 from util.monitor import superMonitor
 from util.obj_util import object_2_dict
+
+logger = logging.getLogger(__name__)
+
+JSON_CONTENT_TYPE = 'application/json'
 
 
 def packaging_response_data(fn):
@@ -77,6 +84,7 @@ class BaseHandler(RequestHandler):
         self._requestSeq = ''
         self._dbSession = None
         self._currentPassport = None
+        self._parsedJsonBody = None
         super(BaseHandler, self).__init__(self.application, request, **kwargs)
 
     def __getattribute__(self, name):
@@ -93,7 +101,7 @@ class BaseHandler(RequestHandler):
         """
         if hasattr(self, '_dbSession') and self._dbSession:
             return self._dbSession
-        self._dbSession = sessionmaker(bind=self.application.engine)()
+        self._dbSession = SessionFactory()
         return self._dbSession
 
     @property
@@ -152,25 +160,86 @@ class BaseHandler(RequestHandler):
         """
         return self.currentPassport.get('id', 0)
 
+    def _jsonBody(self):
+        """请求体按 JSON 解析一次并缓存。不是 JSON 对象时当作空字典，由参数校验去拒绝缺失的参数。"""
+        if self._parsedJsonBody is not None:
+            return self._parsedJsonBody
+        parsed = {}
+        content_type = (self.request.headers.get('Content-Type') or '').lower()
+        if JSON_CONTENT_TYPE in content_type and self.request.body:
+            try:
+                loaded = json.loads(self.request.body)
+            except ValueError:
+                logger.info("请求体不是合法 JSON path=%s", self.request.path)
+                loaded = None
+            if isinstance(loaded, dict):
+                parsed = loaded
+        self._parsedJsonBody = parsed
+        return parsed
+
+    def _rawParameter(self, paraName):
+        """取原始参数值，没有返回 None。顺序: url —— > body(x-www-form-urlencoded) ——> body(json)"""
+        value = self.get_argument(paraName, default=None)
+        if value:
+            return value
+        return self._jsonBody().get(paraName)
+
     def getRequestParameter(self, paraName, default='', paraType=str):
         """
-        获取请求体中的参数，获取的优先顺序: url —— > body(x-www-form-urlencoded) ——> body(json)
+        获取请求中的参数，缺失或转型失败都返回 default。必填或有取值范围的参数用 getIntParameter / getFloatParameter。
         :param paraName:
         :param default:
         :param paraType:
         :return:
         """
-        def __getParameterFromBody():
-            if self.request.headers.get("Content-Type") == 'application/json' and self.request.body:
-                return json.loads(self.request.body).get(paraName, default)
+        raw = self._rawParameter(paraName)
+        if raw is None:
             return default
-        requestParameter = self.get_argument(paraName, default=default)
-        if not requestParameter:
-            requestParameter = __getParameterFromBody()
         try:
-            return paraType(requestParameter)
-        except:
+            return paraType(raw)
+        except (TypeError, ValueError):
             return default
+
+    def getIntParameter(self, paraName, default=None, minimum=None, maximum=None, choices=None):
+        """整数参数。default 为 None 表示必填。缺失、不是整数、越界、不在 choices 里都抛 InvalidParameter。"""
+        raw = self._rawParameter(paraName)
+        if raw is None or raw == '':
+            return self._requiredOrDefault(paraName, default)
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise InvalidParameter('%s 不是整数' % paraName)
+        self._checkRange(paraName, value, minimum, maximum)
+        if choices is not None and value not in choices:
+            raise InvalidParameter('%s 不在允许的取值内' % paraName)
+        return value
+
+    def getFloatParameter(self, paraName, default=None, minimum=None, maximum=None):
+        """浮点参数。default 为 None 表示必填。NaN、无穷大一律拒绝。"""
+        raw = self._rawParameter(paraName)
+        if raw is None or raw == '':
+            return self._requiredOrDefault(paraName, default)
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            raise InvalidParameter('%s 不是数字' % paraName)
+        if not math.isfinite(value):
+            raise InvalidParameter('%s 不是有限数字' % paraName)
+        self._checkRange(paraName, value, minimum, maximum)
+        return value
+
+    @staticmethod
+    def _requiredOrDefault(paraName, default):
+        if default is None:
+            raise InvalidParameter('缺少参数 %s' % paraName)
+        return default
+
+    @staticmethod
+    def _checkRange(paraName, value, minimum, maximum):
+        if minimum is not None and value < minimum:
+            raise InvalidParameter('%s 小于下限 %s' % (paraName, minimum))
+        if maximum is not None and value > maximum:
+            raise InvalidParameter('%s 大于上限 %s' % (paraName, maximum))
 
     def response(self, response):
         respData = response.data

@@ -35,6 +35,7 @@ LOGIN_PATH = '/login'
 UNION_SEAL_PREFIX = 'guan-seal-v1:'
 
 MAX_VOICE_BYTES = 5 * 1024 * 1024
+MAX_VOICE_TEXT_CHARS = 2000  # 文字版提取同样要限长：全文会拼进提示词发给大模型
 VOICE_CONTENT_TYPE = 'audio/mpeg'
 PHONE_CONTENT_TYPE = 'text/plain'
 

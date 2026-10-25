@@ -3,6 +3,10 @@ from service.common.page_copy import list_page_copy
 from service.common.profile_board import ProfileBoardService
 from service.guanguan import GuanguanService, UNKNOWN_NEGATIVE_ONE
 from service.phone_bind import PhoneBindService
+from util.const.match import (
+    GUANGUAN_LIST_DEFAULT_LIMIT, GUANGUAN_LIST_MAX_LIMIT,
+    LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN,
+)
 from util.monitor import superMonitor, Response
 from util.time_cost import timecost
 
@@ -12,9 +16,12 @@ class GuanguanHandler(BaseHandler):
     @superMonitor
     @timecost
     def get(self):
-        longitude = self.getRequestParameter('longitude', default=UNKNOWN_NEGATIVE_ONE, paraType=float)
-        latitude = self.getRequestParameter('latitude', default=UNKNOWN_NEGATIVE_ONE, paraType=float)
-        limit = self.getRequestParameter('limit', paraType=int, default=20)
+        longitude = self.getFloatParameter(
+            'longitude', default=UNKNOWN_NEGATIVE_ONE, minimum=LONGITUDE_MIN, maximum=LONGITUDE_MAX)
+        latitude = self.getFloatParameter(
+            'latitude', default=UNKNOWN_NEGATIVE_ONE, minimum=LATITUDE_MIN, maximum=LATITUDE_MAX)
+        limit = self.getIntParameter(
+            'limit', default=GUANGUAN_LIST_DEFAULT_LIMIT, minimum=1, maximum=GUANGUAN_LIST_MAX_LIMIT)
 
         ggs = GuanguanService(self.currentPassportId)
         config_sufficient = ProfileBoardService.info_is_filled(self.currentPassportId) if self.currentPassportId else False

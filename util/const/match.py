@@ -18,3 +18,11 @@ MODEL_SEX_UNKNOWN_INDEX = 0
 MODEL_SEX_MALE_INDEX = 1
 MODEL_SEX_FEMALE_INDEX = 2
 SEX_CHOICE_LIST = [u"未知", u"男", u"女"]  # 可以追加元素，但不要改已有元素的顺序。因为数据库存储的枚举值对应这个数组的下标
+
+# 首页列表的分页和坐标范围。limit 由调用方传入，必须有上限，否则会放大成候选集和查询规模
+GUANGUAN_LIST_DEFAULT_LIMIT = 20
+GUANGUAN_LIST_MAX_LIMIT = 50
+LONGITUDE_MIN = -180.0
+LONGITUDE_MAX = 180.0
+LATITUDE_MIN = -90.0
+LATITUDE_MAX = 90.0

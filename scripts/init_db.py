@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # coding=utf-8
 """
-数据库初始化脚本：幂等执行 DDL，清空旧的用户与见面数据后按密文重写演示数据。
+数据库初始化脚本：幂等执行 DDL 和迁移，补齐地区和地点。默认不碰任何用户数据。
 
 用法:
-  python scripts/init_db.py                             # 本地（读 .env），清空后重写演示数据
+  python scripts/init_db.py                             # 只建表、跑迁移、补地点，不动用户数据
+  python scripts/init_db.py --reset-demo                # 仅限开发库：清空用户与见面数据，按密文重写演示数据
   python scripts/init_db.py --current-user              # 只给当前真实账号补密文资料和见面
   docker-compose exec app python scripts/init_db.py    # 容器内
 
-地点数据按名称补齐。账号、资料、见面、座位每次都丢掉再按加密存储重写。
+--reset-demo 会 TRUNCATE 账号、资料、见面、座位等表，SERVER_ENV=online 时拒绝执行。
 """
+import argparse
 import datetime
 import logging
 import os
@@ -28,6 +30,7 @@ from util.const.identity import (
     RUNTIME_UNION_TTL_SEC,
     UNION_SEAL_PREFIX,
 )
+from util.const.notice import ONLINE_SERVER
 from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
 from util.sensitive_cipher import open_json, seal_json, seal_unionid, union_lookup
 from util.slot_blind import activity_slot_key
@@ -486,7 +489,7 @@ def _mock_unionid(phone):
 def _redis_client():
     host = os.environ.get('REDIS_HOST', '127.0.0.1')
     port = int(os.environ.get('REDIS_PORT') or os.environ.get('REDIS_EXPOSE_PORT') or 6379)
-    return redis.StrictRedis(host=host, port=port)
+    return redis.StrictRedis(host=host, port=port, password=os.environ.get('REDIS_PASSWORD') or None)
 
 
 def _remember_runtime_union(client, passport_id, unionid):
@@ -1070,32 +1073,52 @@ def seed_current_user(conn):
 
 # ── 主流程 ─────────────────────────────────────────────────────────────────────
 
-def main():
+def _refuse_reset_on_online():
+    """清库只允许在开发库上做。线上一旦误跑就是整库用户数据丢失。"""
+    _load_env_file()
+    if os.environ.get('SERVER_ENV', '') == ONLINE_SERVER:
+        raise SystemExit('SERVER_ENV=online，拒绝执行 --reset-demo')
+
+
+def prepare_schema_and_places(conn):
+    """建表、迁移、补地区和地点。全部幂等，不删除任何用户数据。"""
+    logger.info("=== Step 1: 执行 DDL（幂等）===")
+    run_ddl(conn)
+
+    logger.info("=== Step 1.5: 执行增量迁移 ===")
+    run_migrations(conn)
+
+    seed_regions(conn)
+    region_ids = ensure_regions(conn)
+    seed_addresses(conn, region_ids)
+    return region_ids
+
+
+def reset_and_seed_demo(conn, region_ids):
+    """清空用户与见面数据，按密文重写演示数据。只在开发库上使用。"""
+    logger.info("=== Step 2: 清空旧用户数据并按密文重写 ===")
+    reset_user_data(conn)
+    address_ids = ensure_addresses(conn, region_ids)
+    passport_ids = seed_passports(conn)
+    ensure_mock_passports(conn)
+    seed_identity(conn)
+    seed_profile_attrs(conn)
+    seed_activities(conn, passport_ids, address_ids)
+    ensure_empty_slot_activities(conn, address_ids)
+    seed_shares(conn, passport_ids)
+    ensure_match_probe_activities(conn)
+    ensure_login_user_demo(conn)
+    _assert_no_plaintext(conn)
+
+
+def main(reset_demo=False):
+    if reset_demo:
+        _refuse_reset_on_online()
     conn = _connect()
     try:
-        logger.info("=== Step 1: 执行 DDL（幂等）===")
-        run_ddl(conn)
-
-        logger.info("=== Step 1.5: 执行增量迁移 ===")
-        run_migrations(conn)
-
-        logger.info("=== Step 2: 清空旧用户数据并按密文重写 ===")
-        reset_user_data(conn)
-        seed_regions(conn)
-        region_ids = ensure_regions(conn)
-        seed_addresses(conn, region_ids)
-        address_ids   = ensure_addresses(conn, region_ids)
-        passport_ids = seed_passports(conn)
-        ensure_mock_passports(conn)
-        seed_identity(conn)
-        seed_profile_attrs(conn)
-        seed_activities(conn, passport_ids, address_ids)
-        ensure_empty_slot_activities(conn, address_ids)
-        seed_shares(conn, passport_ids)
-        ensure_match_probe_activities(conn)
-        ensure_login_user_demo(conn)
-        _assert_no_plaintext(conn)
-
+        region_ids = prepare_schema_and_places(conn)
+        if reset_demo:
+            reset_and_seed_demo(conn, region_ids)
         logger.info("=== 初始化完成 ===")
         _print_summary(conn)
     finally:
@@ -1142,8 +1165,16 @@ def _print_summary(conn):
     logger.info("────────────────────────────────────────────")
 
 
+def _parse_args():
+    parser = argparse.ArgumentParser(description='关关雎鸠数据库初始化')
+    parser.add_argument('--reset-demo', action='store_true', help='仅限开发库：清空用户数据并重写演示数据')
+    parser.add_argument('--current-user', action='store_true', help='只给当前真实账号补演示数据')
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--current-user':
+    args = _parse_args()
+    if args.current_user:
         current = _connect()
         try:
             logger.info("=== 按当前登录账号补演示数据 ===")
@@ -1153,4 +1184,4 @@ if __name__ == '__main__':
         finally:
             current.close()
     else:
-        main()
+        main(reset_demo=args.reset_demo)

@@ -5,7 +5,6 @@
 
 from contextvars import ContextVar
 
-from util.database import mysql_offline_session
 
 # 每个请求的协程/线程拥有独立的 manager 上下文
 _manager_ctx: ContextVar = ContextVar('manager', default=None)
@@ -37,7 +36,8 @@ def getManager():
 
 
 def getDbSession():
+    """当前请求（或后台任务）的 Session。没有上下文就是用法错误，不能悄悄退回一个全局共享的 Session。"""
     manager = getManager()
     if not manager:
-        return mysql_offline_session
+        raise RuntimeError('没有请求上下文：先用 LocalContext 包住，再访问数据库')
     return manager.dbSession

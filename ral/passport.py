@@ -2,16 +2,24 @@
 # coding=utf-8
 # __author__ = ‘duyabo‘
 # __created_at__ = '2020/1/1'
+import logging
 import time
 
 from util.const.identity import RUNTIME_UNION_TTL_SEC, SESSION_KEY_PREFIX
 from util.encode import generate_secret
+from util.errors import RateLimitExceeded, ReplayDetected
 from util.redis_conn import decode_redis_value, redisConn
 from util.session_payload import session_payload
 
+logger = logging.getLogger(__name__)
+
 UNIQUE_EXP_KEY = 'unique:{accessToken}:{exp}'
-FAILED_CNT_ONE_MINUTE = 'failed_cnt:one_minute:{remote_ip}'
-SUCCESS_CNT_ONE_MINUTE = 'success_cnt:one_minute:{accessToken}'
+# 限频按固定窗口计数：窗口编号写进键里，窗口换了键自然换，不依赖"有没有设上过期"
+FAILED_CNT_KEY = 'failed_cnt:{remote_ip}:{window}'
+SUCCESS_CNT_KEY = 'success_cnt:{accessToken}:{window}'
+RATE_WINDOW_SEC = 60
+RATE_KEY_TTL_SEC = RATE_WINDOW_SEC * 2
+UNIQUE_REQUEST_TTL_SEC = 60
 FAILED_CNT_LIMIT_ONE_MINUTE = 60
 SUCCESS_CNT_LIMIT_ONE_MINUTE = 300
 
@@ -33,8 +41,10 @@ def putSession(accessToken, passport_id):
     secret = generate_secret(accessToken)  # 签名校验的密钥
     currentUserInfoJson = session_payload(passport_id, secret)
     loginKey = getLoginKey(accessToken)
-    redisConn.hmset(loginKey, currentUserInfoJson)
-    redisConn.expire(loginKey, RUNTIME_UNION_TTL_SEC)
+    pipe = redisConn.pipeline()
+    pipe.hset(loginKey, mapping=currentUserInfoJson)
+    pipe.expire(loginKey, RUNTIME_UNION_TTL_SEC)
+    pipe.execute()
     return secret
 
 
@@ -70,38 +80,50 @@ def getSession(accessToken):
 
 
 def checkUnique(accessToken, requestSeq):
+    """同一令牌的同一请求序号在有效期内只能出现一次。"""
     key = UNIQUE_EXP_KEY.format(accessToken=accessToken, exp=requestSeq)
-    ret = redisConn.set(key, 1, nx=True, ex=60)
-    assert int(ret), 'set unique error'
+    if not redisConn.set(key, 1, nx=True, ex=UNIQUE_REQUEST_TTL_SEC):
+        raise ReplayDetected('request seq reused')
+
+
+def _window_key(template, **fields):
+    return template.format(window=int(time.time() // RATE_WINDOW_SEC), **fields)
+
+
+def _incr_in_window(key):
+    """计数加一，并保证这个键一定带过期时间。一次往返。"""
+    pipe = redisConn.pipeline()
+    pipe.incr(key)
+    pipe.expire(key, RATE_KEY_TTL_SEC)
+    count, _ = pipe.execute()
+    return count
+
+
+def _count_in_window(key):
+    return int(decode_redis_value(redisConn.get(key)) or 0)
 
 
 def setFailCnt(remote_ip):
     """失败请求处理"""
-    failed_key = FAILED_CNT_ONE_MINUTE.format(remote_ip=remote_ip)
-    failed_cnt = redisConn.incr(failed_key)
-    if failed_cnt < 10:  # 前十次都重置过期时间，防止某一次重置过期时间失败
-        redisConn.expire(failed_key, 60)
+    _incr_in_window(_window_key(FAILED_CNT_KEY, remote_ip=remote_ip))
 
 
 def setSuccessCnt(accessToken):
     """成功请求处理"""
-    success_cnt_key = SUCCESS_CNT_ONE_MINUTE.format(accessToken=accessToken)
-    success_cnt = redisConn.incr(success_cnt_key)
-    if success_cnt < 10:  # 前十次都重置过期时间，防止某一次重置过期时间失败
-        redisConn.expire(success_cnt_key, 60)
+    _incr_in_window(_window_key(SUCCESS_CNT_KEY, accessToken=accessToken))
 
 
 def checkFailedCnt(remote_ip):
     """失败频次检查"""
-    failed_key = FAILED_CNT_ONE_MINUTE.format(remote_ip=remote_ip)
-    failed_cnt = decode_redis_value(redisConn.get(failed_key)) or 0
-    assert int(failed_cnt) < FAILED_CNT_LIMIT_ONE_MINUTE, 'failed too frequent'
+    failed_cnt = _count_in_window(_window_key(FAILED_CNT_KEY, remote_ip=remote_ip))
+    if failed_cnt >= FAILED_CNT_LIMIT_ONE_MINUTE:
+        logger.warning("失败请求过于频繁 remote_ip=%s count=%s", remote_ip, failed_cnt)
+        raise RateLimitExceeded('failed too frequent')
 
 
 def checkSuccessCnt(accessToken):
-    """成功频次检查"""
-    success_cnt_key = SUCCESS_CNT_ONE_MINUTE.format(accessToken=accessToken)
-    success_cnt = decode_redis_value(redisConn.get(success_cnt_key)) or 0
-    if int(success_cnt) > SUCCESS_CNT_LIMIT_ONE_MINUTE:
-        redisConn.delete(success_cnt_key)
-        raise Exception('success too frequent')
+    """成功频次检查。超限只拒绝，不清计数，窗口内持续有效。"""
+    success_cnt = _count_in_window(_window_key(SUCCESS_CNT_KEY, accessToken=accessToken))
+    if success_cnt > SUCCESS_CNT_LIMIT_ONE_MINUTE:
+        logger.warning("成功请求过于频繁 count=%s", success_cnt)
+        raise RateLimitExceeded('success too frequent')

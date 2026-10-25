@@ -23,18 +23,16 @@ database=${MYSQL_DATABASE:-guan}
 [redis]
 host=${REDIS_HOST:-redis}
 port=${REDIS_PORT:-6379}
+password=${REDIS_PASSWORD:-}
 
 [weixin]
 appid=${WX_APPID:-}
 secret=${WX_SECRET:-}
 token=${WX_TOKEN:-}
 EncodingAESKey=${WX_ENCODING_AES_KEY:-}
-subscribe_offline_noti_tid=${WX_SUBSCRIBE_NOTI_TID:-}
+subscribe_template_id=${WX_SUBSCRIBE_NOTI_TID:-}
 
 [volc]
-volc_asr_api_key=${VOLC_ASR_API_KEY:-}
-volc_asr_app_key=${VOLC_ASR_APP_KEY:-}
-volc_asr_access_key=${VOLC_ASR_ACCESS_KEY:-}
 volc_ark_api_key=${VOLC_ARK_API_KEY:-}
 volc_ark_api_base=${VOLC_ARK_API_BASE:-https://ark.cn-beijing.volces.com/api/v3}
 volc_ark_model=${VOLC_ARK_MODEL:-doubao-seed-2-1-lite-260915}

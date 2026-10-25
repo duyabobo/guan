@@ -5,8 +5,10 @@ import logging
 from handler.basehandler import BaseHandler
 from service.match_config import MatchConfigService
 from service.voice_pipeline import VoicePipeline
-from util.const.identity import MAX_VOICE_BYTES
-from util.const.response import RESP_NEED_LOGIN, RESP_VOICE_MISSING, RESP_VOICE_TOO_LARGE
+from util.const.identity import MAX_VOICE_BYTES, MAX_VOICE_TEXT_CHARS
+from util.const.response import (
+    RESP_NEED_LOGIN, RESP_PARAM_INVALID, RESP_VOICE_MISSING, RESP_VOICE_TEXT_MISSING, RESP_VOICE_TOO_LARGE,
+)
 from util.monitor import superMonitor, Response
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,10 @@ class MatchConfigHandler(BaseHandler):
     def put(self):
         voice_text = self.getRequestParameter('voiceText', default='')
         if not voice_text:
-            return Response(msg={'code': 1003, 'errMsg': 'voiceText 不能为空'})
+            return Response(msg=RESP_VOICE_TEXT_MISSING)
+        if len(voice_text) > MAX_VOICE_TEXT_CHARS:
+            logger.warning("文字超过长度限制 passport=%s chars=%s", self.currentPassportId, len(voice_text))
+            return Response(msg=RESP_PARAM_INVALID)
         outcome = MatchConfigService(self.currentPassport).updateFromVoiceText(voice_text)
         if outcome.rejected:
             return Response(msg=outcome.msg)
