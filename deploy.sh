@@ -17,6 +17,16 @@ log_warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 log_title() { echo -e "\n${CYAN}=== $* ===${NC}"; }
 
+DEFAULT_SSL_CERT_HOST=/home/guan/service.pem
+DEFAULT_SSL_KEY_HOST=/home/guan/service.key
+
+env_value() {
+    local key="$1"
+    local line
+    line="$(grep -E "^${key}=" .env | tail -n 1 || true)"
+    printf '%s' "${line#*=}"
+}
+
 # ── 前置检查 ──────────────────────────────────────────────────────────────────
 check_deps() {
     local missing=()
@@ -57,9 +67,63 @@ setup_dirs() {
     fi
 }
 
+# ── 线上证书必须是宿主机上的非空文件，再挂进容器 ────────────────────────────
+ensure_ssl_mount() {
+    local server_env cert key
+    server_env="$(env_value SERVER_ENV)"
+    cert="$(env_value SSL_CERT_HOST)"
+    key="$(env_value SSL_KEY_HOST)"
+    cert="${cert:-${DEFAULT_SSL_CERT_HOST}}"
+    key="${key:-${DEFAULT_SSL_KEY_HOST}}"
+
+    if [[ "${server_env}" == "online" ]]; then
+        require_ssl_file "${cert}"
+        require_ssl_file "${key}"
+        log_info "HTTPS 证书就绪 (${cert})"
+        return
+    fi
+
+    prepare_offline_ssl_file "${cert}"
+    prepare_offline_ssl_file "${key}"
+}
+
+require_ssl_file() {
+    local path="$1"
+    if [[ -d "${path}" ]]; then
+        log_error "证书路径是目录，请删掉后放上文件: ${path}"
+        exit 1
+    fi
+    if [[ ! -s "${path}" ]]; then
+        log_error "HTTPS 证书不存在或为空: ${path}"
+        exit 1
+    fi
+}
+
+prepare_offline_ssl_file() {
+    local path="$1"
+    if [[ -d "${path}" ]]; then
+        log_error "证书路径是目录，请删掉后放上文件: ${path}"
+        exit 1
+    fi
+    if [[ -f "${path}" ]]; then
+        return
+    fi
+    case "${path}" in
+        /*)
+            log_warn "本机没有证书 ${path}，offline 不会读取；docker compose 挂载可能失败"
+            ;;
+        *)
+            mkdir -p "$(dirname "${path}")"
+            touch "${path}"
+            log_info "offline 占位证书 ${path}"
+            ;;
+    esac
+}
+
 # ── 启动服务 ──────────────────────────────────────────────────────────────────
 cmd_start() {
     log_title "启动服务"
+    ensure_ssl_mount
     log_info "拉取基础镜像..."
     docker-compose pull mysql redis 2>/dev/null || true
 

@@ -8,6 +8,10 @@ app.conf
 *.conf
 .env
 
+# 本机占位证书，不入库
+certs/*.pem
+certs/*.key
+
 # 运行产物
 *.pyc
 __pycache__/

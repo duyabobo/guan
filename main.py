@@ -11,6 +11,7 @@ import util.config
 from service.sensitive.legacy_seal import seal_legacy_plaintext
 from urls import handlers
 from util.const.notice import ONLINE_SERVER
+from util.https_cert import build_ssl_options
 
 # tornado 支持 https，如果要使用 gevent，需要 patch_all 的时候，把 ssl 设置为 False
 monkey.patch_all(ssl=False, thread=False, socket=False)
@@ -20,13 +21,6 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
 )
 logger = logging.getLogger(__name__)
-
-
-def _build_ssl_options():
-    return {
-        "certfile": '/home/guan/service.pem',
-        "keyfile": '/home/guan/service.key',
-    }
 
 
 def main():
@@ -45,7 +39,7 @@ def main():
 
     is_online = server == ONLINE_SERVER
     http_server = (
-        tornado.httpserver.HTTPServer(application, ssl_options=_build_ssl_options())
+        tornado.httpserver.HTTPServer(application, ssl_options=build_ssl_options())
         if is_online
         else tornado.httpserver.HTTPServer(application)
     )
