@@ -12,7 +12,11 @@ from util.sensitive_cipher import (
     encrypt,
     is_sealed_unionid,
     open_json,
+    open_json_or_none,
+    open_phone,
     seal_json,
+    seal_json_or_none,
+    seal_phone,
     seal_unionid,
     stored_unionid_accepts,
     union_lookup,
@@ -71,9 +75,24 @@ def test_unionid_seal_hides_plaintext_and_roundtrips():
     assert unionid not in union_lookup(unionid)
 
 
+def test_phone_seal_hides_plaintext_and_roundtrips():
+    number = '13800000001'
+    sealed = seal_phone('union-id', number)
+    assert number not in sealed
+    assert open_phone('union-id', sealed) == number
+    failed = False
+    try:
+        open_phone('other-union', sealed)
+    except ValueError:
+        failed = True
+    assert failed
+
+
 def test_json_seal_roundtrip():
     nonce, cipher = seal_json('union-id', {'value_min': 1996, 'value_text': '北京'})
     assert open_json('union-id', nonce, cipher)['value_text'] == '北京'
+    assert seal_json_or_none('', {'value_text': '北京'}) is None
+    assert open_json_or_none('other', nonce, cipher) is None
 
 
 def test_empty_plain_rejected():

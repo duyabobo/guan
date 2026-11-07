@@ -3,6 +3,7 @@
 """最近一次打开列表的坐标，以及是不是已经好几天没来。"""
 import logging
 
+from service.identity.runtime_key import unique_passport_ids
 from util.const.identity import RUNTIME_UNION_KEY, RUNTIME_UNION_TTL_SEC
 from util.const.match import LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN
 from util.const.notice import PASSPORT_LOC_KEY, REACTIVATE_IDLE
@@ -24,7 +25,7 @@ def remember_location(passport_id, latitude, longitude):
 
 
 def locations_of(passport_ids):
-    ids = _ids(passport_ids)
+    ids = unique_passport_ids(passport_ids)
     if not ids:
         return {}
     values = redisConn.mget([PASSPORT_LOC_KEY % passport_id for passport_id in ids])
@@ -38,7 +39,7 @@ def locations_of(passport_ids):
 
 def idle_passport_ids(passport_ids):
     """每次已登录请求都会把 unionid 的过期时间拨回满额。剩余寿命变短，就是这段时间没来。"""
-    ids = _ids(passport_ids)
+    ids = unique_passport_ids(passport_ids)
     if not ids:
         return []
     pipe = redisConn.pipeline()
@@ -61,20 +62,6 @@ def _quiet_seconds(remain_ms):
     if remain_ms < 0:
         return 0
     return RUNTIME_UNION_TTL_SEC - (remain_ms / 1000.0)
-
-
-def _ids(passport_ids):
-    ids = []
-    seen = set()
-    for passport_id in passport_ids or []:
-        if not passport_id:
-            continue
-        number = int(passport_id)
-        if number in seen:
-            continue
-        seen.add(number)
-        ids.append(number)
-    return ids
 
 
 def _inside(latitude, longitude):

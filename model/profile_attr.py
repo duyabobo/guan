@@ -14,7 +14,7 @@ from service.identity.runtime_key import material_for, materials_for
 from util.const import match
 from util.const.identity import PURPOSE_PROFILE
 from util.ctx import getDbSession
-from util.sensitive_cipher import open_json, seal_json
+from util.sensitive_cipher import open_json_or_none, seal_json_or_none
 
 logger = logging.getLogger(__name__)
 
@@ -110,13 +110,12 @@ def _open_row(row, material):
 
 
 def _open_cipher(row, material):
-    if not material:
-        logger.info("资料解不开，运行时没有身份密钥 passport=%s dim=%s", row.passport_id, row.dim_key)
-        return None
-    try:
-        payload = open_json(material, row.value_nonce, row.value_cipher)
-    except (ValueError, UnicodeDecodeError):
-        logger.error("资料解密失败 passport=%s dim=%s", row.passport_id, row.dim_key)
+    payload = open_json_or_none(material, row.value_nonce, row.value_cipher)
+    if payload is None:
+        if material:
+            logger.error("资料解密失败 passport=%s dim=%s", row.passport_id, row.dim_key)
+        else:
+            logger.info("资料解不开，运行时没有身份密钥 passport=%s dim=%s", row.passport_id, row.dim_key)
         return None
     return ProfileValue(
         row.passport_id,
@@ -135,12 +134,11 @@ def _legacy_plaintext(row):
 def _seal_values(material, values_by_key):
     sealed = {}
     for dim_key, value in values_by_key.items():
-        try:
-            nonce, cipher = seal_json(material, value)
-        except ValueError:
+        packed = seal_json_or_none(material, value)
+        if packed is None:
             logger.error("资料加密失败 dim=%s", dim_key)
             return None
-        sealed[dim_key] = (nonce, cipher)
+        sealed[dim_key] = packed
     return sealed
 
 

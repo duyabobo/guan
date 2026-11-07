@@ -35,14 +35,16 @@ class LoginHandler(BaseHandler):
         if not assertion:
             raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
 
-        logged = LoginService().login(assertion, self.getRequestParameter('shareOpenid'))
+        share_passport_id = self.getIntParameter('sharePassportId', default=0, minimum=0)
+        logged = LoginService().login(assertion, share_passport_id)
         if not logged:
             raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
-        access_token, sign_secret, openid, phone_bound = logged
+        access_token, sign_secret, openid, phone_bound, passport_id = logged
         data = {
             'accessToken': access_token,
             'secret': sign_secret,
             'phoneBound': phone_bound,
+            'passportId': passport_id,
         }
         if openid:
             data['openid'] = openid

@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from util.log_redact import redact_body, redact_uri, summarize_for_log
 from util.session_payload import session_payload
-from util.slot_blind import activity_slot_key
+from util.slot_blind import activity_slot_key, activity_slot_map
 
 
 def test_session_still_has_no_unionid():
@@ -26,6 +26,7 @@ def test_slot_key_does_not_reveal_activity_id():
     assert len(first) == 64
     assert first != '18'
     assert activity_slot_key(0, pepper) == ''
+    assert activity_slot_map([18, 0, 19], pepper) == {first: 18, other: 19}
 
 
 def test_log_hides_login_code_and_phone():

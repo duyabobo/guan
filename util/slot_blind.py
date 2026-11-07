@@ -27,5 +27,17 @@ def activity_slot_key(activity_id, pepper=None):
     return hmac.new(secret, message, hashlib.sha256).hexdigest()
 
 
+def activity_slot_map(activity_ids, pepper=None):
+    """盲索引到场次编号。空编号和算不出索引的场次跳过。"""
+    found = {}
+    for activity_id in activity_ids or []:
+        if not activity_id:
+            continue
+        slot = activity_slot_key(activity_id, pepper)
+        if slot:
+            found[slot] = int(activity_id)
+    return found
+
+
 def _weixin_secret():
     return get_conf(_SECRET_KEY, '', _WEIXIN_SECTION)

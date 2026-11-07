@@ -109,6 +109,22 @@ def unionid_matches(unionid, stored):
     return _same_text(plain.decode('utf-8'), unionid)
 
 
+def seal_phone(secret_material, number):
+    """手机号用身份密钥材料加密，存成 nonce.密文。"""
+    text = (number or '').strip()
+    if not text:
+        raise ValueError('empty phone')
+    nonce, cipher = encrypt(secret_material, text.encode('utf-8'))
+    return pack_token(nonce, cipher)
+
+
+def open_phone(secret_material, stored):
+    nonce, packed = unpack_token(stored)
+    if not nonce or not packed:
+        raise ValueError('bad phone seal')
+    return decrypt(secret_material, nonce, packed).decode('utf-8')
+
+
 def seal_json(secret_material, payload):
     plain = json.dumps(payload, ensure_ascii=False, separators=_JSON_SEPARATORS).encode('utf-8')
     return encrypt(secret_material, plain)
@@ -117,6 +133,64 @@ def seal_json(secret_material, payload):
 def open_json(secret_material, nonce_text, packed):
     plain = decrypt(secret_material, nonce_text, packed)
     return json.loads(plain.decode('utf-8'))
+
+
+def seal_json_or_none(secret_material, payload):
+    if not secret_material:
+        return None
+    try:
+        return seal_json(secret_material, payload)
+    except ValueError:
+        return None
+
+
+def open_json_or_none(secret_material, nonce_text, packed):
+    if not secret_material or not packed:
+        return None
+    try:
+        return open_json(secret_material, nonce_text, packed)
+    except (ValueError, UnicodeDecodeError):
+        return None
+
+
+def seal_bytes_or_none(secret_material, plain):
+    if not secret_material or not plain:
+        return None
+    try:
+        return encrypt(secret_material, plain)
+    except ValueError:
+        return None
+
+
+def open_bytes_or_none(secret_material, nonce_text, packed):
+    if not secret_material or not packed:
+        return None
+    try:
+        return decrypt(secret_material, nonce_text, packed)
+    except (ValueError, UnicodeDecodeError):
+        return None
+
+
+def open_text_or_none(secret_material, nonce_text, packed):
+    plain = open_bytes_or_none(secret_material, nonce_text, packed)
+    if plain is None:
+        return None
+    if isinstance(plain, str):
+        return plain
+    try:
+        return plain.decode('utf-8')
+    except UnicodeDecodeError:
+        return None
+
+
+def open_phone_or_none(secret_material, stored):
+    if not secret_material or not stored:
+        return None
+    try:
+        text = open_phone(secret_material, stored)
+    except (ValueError, UnicodeDecodeError):
+        return None
+    return text or None
 
 
 def pack_token(nonce_text, packed):

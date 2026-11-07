@@ -24,15 +24,10 @@ import redis
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
-from util.const.identity import (
-    PROVIDER_WECHAT,
-    RUNTIME_UNION_KEY,
-    RUNTIME_UNION_TTL_SEC,
-    UNION_SEAL_PREFIX,
-)
+from util.const.identity import RUNTIME_UNION_KEY, RUNTIME_UNION_TTL_SEC
 from util.const.notice import ONLINE_SERVER
 from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
-from util.sensitive_cipher import open_json, seal_json, seal_unionid, union_lookup
+from util.sensitive_cipher import open_json, seal_json, union_lookup
 from util.slot_blind import activity_slot_key
 
 logging.basicConfig(
@@ -368,7 +363,6 @@ USER_DATA_TABLES = (
     'activity_seat',
     'share',
     'profile_attr',
-    'identity_secret',
     'activity',
     'passport',
 )
@@ -392,14 +386,14 @@ PHONE_GIRL_REQUIRE_SHANGHAI = "13800000012"
 PHONE_GIRL_REQUIRE_SHORT = "13800000013"
 PHONE_GIRL_REQUIRE_OLDER = "13800000014"
 
-MOCK_PASSPORT_ROWS = (
-    (PHONE_BOY_BEIJING, "mock_openid_md5_001"),
-    (PHONE_GIRL_BEIJING, "mock_openid_md5_002"),
-    (PHONE_BOY_SHANGHAI, "mock_openid_md5_003"),
-    (PHONE_GIRL_MATCH_TIANJIN, "mock_openid_md5_011"),
-    (PHONE_GIRL_REQUIRE_SHANGHAI, "mock_openid_md5_012"),
-    (PHONE_GIRL_REQUIRE_SHORT, "mock_openid_md5_013"),
-    (PHONE_GIRL_REQUIRE_OLDER, "mock_openid_md5_014"),
+MOCK_PASSPORT_PHONES = (
+    PHONE_BOY_BEIJING,
+    PHONE_GIRL_BEIJING,
+    PHONE_BOY_SHANGHAI,
+    PHONE_GIRL_MATCH_TIANJIN,
+    PHONE_GIRL_REQUIRE_SHANGHAI,
+    PHONE_GIRL_REQUIRE_SHORT,
+    PHONE_GIRL_REQUIRE_OLDER,
 )
 
 # 数字是单值，二元组是期望区间，字符串是籍贯。没写的维度表示不限。
@@ -507,52 +501,43 @@ def _runtime_union(passport_id):
 
 
 def _mock_union_by_passport(conn):
-    id_by_phone = _passport_id_by_phones(conn, [phone for phone, _ in MOCK_PASSPORT_ROWS])
+    id_by_phone = _passport_id_by_phones(conn, list(MOCK_PASSPORT_PHONES))
     return {passport_id: _mock_unionid(phone) for phone, passport_id in id_by_phone.items()}
 
 
-def seed_identity(conn):
-    """演示 unionid 自加密封存，并把同一把密钥放进 Redis，列表才能解开资料和座位。"""
+def seed_runtime_unions(conn):
+    """把演示 unionid 放进 Redis。库里只留查找值，列表才能解开资料和座位。"""
     union_by_passport = _mock_union_by_passport(conn)
-    if len(union_by_passport) != len(MOCK_PASSPORT_ROWS):
-        raise RuntimeError('演示账号不齐，无法封存身份密钥')
+    if len(union_by_passport) != len(MOCK_PASSPORT_PHONES):
+        raise RuntimeError('演示账号不齐，无法写入运行时身份密钥')
     client = _redis_client()
-    rows = []
     for passport_id, unionid in union_by_passport.items():
-        rows.append((passport_id, PROVIDER_WECHAT, union_lookup(unionid), seal_unionid(unionid), 1))
         _remember_runtime_union(client, passport_id, unionid)
-    with conn.cursor() as cur:
-        cur.executemany(
-            """
-            INSERT INTO `identity_secret`
-                (`passport_id`, `provider`, `account_key`, `secret_material`, `status`)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            rows,
-        )
-    conn.commit()
-    logger.info("  [写入] identity_secret 封存 %d 个，运行时密钥已写入", len(rows))
+    logger.info("  [写入] 运行时身份密钥 %d 个", len(union_by_passport))
 
 
 def seed_passports(conn) -> list[int]:
     rows = [
-        {'phone': '', 'openid': openid, 'status': 1}
-        for _, openid in MOCK_PASSPORT_ROWS
+        {'phone': '', 'unionid': union_lookup(_mock_unionid(phone)), 'status': 1}
+        for phone in MOCK_PASSPORT_PHONES
     ]
     return _insert_if_empty(conn, 'passport', rows)
 
 
 def ensure_mock_passports(conn):
-    """按演示 openid 补齐。手机号不入库。"""
-    phones = [phone for phone, _ in MOCK_PASSPORT_ROWS]
-    existing = _passport_id_by_phones(conn, phones)
-    missing = [(openid,) for phone, openid in MOCK_PASSPORT_ROWS if phone not in existing]
+    """按演示 unionid 查找值补齐。手机号不入库。"""
+    existing = _passport_id_by_phones(conn, list(MOCK_PASSPORT_PHONES))
+    missing = [
+        (union_lookup(_mock_unionid(phone)),)
+        for phone in MOCK_PASSPORT_PHONES
+        if phone not in existing
+    ]
     if not missing:
         logger.info("  [跳过] mock passport 已齐全")
         return
     with conn.cursor() as cur:
         cur.executemany(
-            "INSERT INTO `passport` (`phone`, `openid`, `status`) VALUES ('', %s, 1)",
+            "INSERT INTO `passport` (`phone`, `unionid`, `status`) VALUES ('', %s, 1)",
             missing,
         )
     conn.commit()
@@ -767,7 +752,6 @@ def seed_shares(conn, passport_ids: list[int]) -> list[int]:
 
 # ── 当前登录用户的可测数据 ─────────────────────────────────────────────────────
 
-MOCK_OPENID_PREFIX = 'mock_openid_md5_'
 OPPOSITE_PHONE = PHONE_GIRL_BEIJING
 LOGIN_BIRTH_YEAR = 1996
 LOGIN_HEIGHT = 178
@@ -806,24 +790,27 @@ def _passport_id_by_sql(conn, sql, params):
 
 
 def _passport_id_by_phones(conn, phones):
-    """演示账号用 openid 找人。手机号只作为种子里的别名，不写入数据库。"""
+    """演示账号用 unionid 查找值找人。手机号只作为种子里的别名，不写入数据库。"""
     if not phones:
         return {}
-    openid_by_phone = {phone: openid for phone, openid in MOCK_PASSPORT_ROWS}
-    openids = [openid_by_phone[phone] for phone in phones if phone in openid_by_phone]
-    if not openids:
+    key_by_phone = {
+        phone: union_lookup(_mock_unionid(phone))
+        for phone in phones
+        if phone in MOCK_PASSPORT_PHONES
+    }
+    if not key_by_phone:
         return {}
-    placeholders = ", ".join(["%s"] * len(openids))
+    placeholders = ", ".join(["%s"] * len(key_by_phone))
     with conn.cursor() as cur:
         cur.execute(
-            f"SELECT `openid`, `id` FROM `passport` WHERE `status`=1 AND `openid` IN ({placeholders})",
-            tuple(openids),
+            f"SELECT `unionid`, `id` FROM `passport` WHERE `status`=1 AND `unionid` IN ({placeholders})",
+            tuple(key_by_phone.values()),
         )
-        id_by_openid = {row[0]: row[1] for row in cur.fetchall()}
+        id_by_key = {row[0]: row[1] for row in cur.fetchall()}
     return {
-        phone: id_by_openid[openid]
-        for phone, openid in openid_by_phone.items()
-        if phone in phones and openid in id_by_openid
+        phone: id_by_key[union_key]
+        for phone, union_key in key_by_phone.items()
+        if union_key in id_by_key
     }
 
 
@@ -1010,10 +997,14 @@ def ensure_match_probe_activities(conn) -> list[int]:
 
 
 def _current_login_passport_id(conn):
+    mock_keys = [union_lookup(_mock_unionid(phone)) for phone in MOCK_PASSPORT_PHONES]
+    placeholders = ", ".join(["%s"] * len(mock_keys))
     return _passport_id_by_sql(
         conn,
-        "SELECT `id` FROM `passport` WHERE `status`=1 AND `openid` NOT LIKE %s ORDER BY `id` DESC LIMIT 1",
-        (MOCK_OPENID_PREFIX + '%',),
+        "SELECT `id` FROM `passport` WHERE `status`=1 "
+        f"AND (`unionid` IS NULL OR `unionid` NOT IN ({placeholders})) "
+        "ORDER BY `id` DESC LIMIT 1",
+        tuple(mock_keys),
     )
 
 
@@ -1101,7 +1092,7 @@ def reset_and_seed_demo(conn, region_ids):
     address_ids = ensure_addresses(conn, region_ids)
     passport_ids = seed_passports(conn)
     ensure_mock_passports(conn)
-    seed_identity(conn)
+    seed_runtime_unions(conn)
     seed_profile_attrs(conn)
     seed_activities(conn, passport_ids, address_ids)
     ensure_empty_slot_activities(conn, address_ids)
@@ -1140,20 +1131,20 @@ def _assert_no_plaintext(conn):
         )
         plain_profiles = cur.fetchone()[0]
         cur.execute(
-            "SELECT COUNT(*) FROM `identity_secret` WHERE `secret_material` NOT LIKE %s",
-            (UNION_SEAL_PREFIX + '%',),
+            "SELECT COUNT(*) FROM `passport` WHERE `phone`<>'' AND `phone` NOT LIKE %s",
+            ('%.%',),
         )
-        plain_identity = cur.fetchone()[0]
-    if plain_seats or plain_profiles or plain_identity:
+        plain_phones = cur.fetchone()[0]
+    if plain_seats or plain_profiles or plain_phones:
         raise RuntimeError(
-            '仍有明文 seats=%s profiles=%s identity=%s' % (plain_seats, plain_profiles, plain_identity)
+            '仍有明文 seats=%s profiles=%s phones=%s' % (plain_seats, plain_profiles, plain_phones)
         )
-    logger.info("  [核对] 资料、座位、身份密钥均为密文")
+    logger.info("  [核对] 资料、座位、手机号均为密文")
 
 
 def _print_summary(conn):
     tables = [
-        'region', 'address', 'passport', 'identity_secret',
+        'region', 'address', 'passport',
         'profile_attr', 'activity', 'activity_seat', 'share',
     ]
     logger.info("─── 数据总览 ───────────────────────────────")

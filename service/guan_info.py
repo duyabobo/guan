@@ -159,9 +159,9 @@ class GuanInfoService(BaseService):
         progress = self.progressStatus
         return self._build_page(progress, self.oppositePassportId, self.bottomButtons, viewer=False)
 
-    def getViewerGuanInfo(self, share_openid):
+    def getViewerGuanInfo(self, share_passport_id):
         """亲友从分享打开：只看时间地点，不返回对方资料，也不能操作。"""
-        sharer_id = self._sharer_passport_id(share_openid)
+        sharer_id = self._sharer_passport_id(share_passport_id)
         if not self._is_activity_participant(sharer_id):
             logger.info("viewer rejected activityId=%s sharerId=%s", self.activityId, sharer_id)
             return self._build_page(PROGRESS_NOT_SELECTED, 0, [], viewer=True)
@@ -172,10 +172,11 @@ class GuanInfoService(BaseService):
         )
         return self._build_page(progress, 0, [], viewer=True)
 
-    def _sharer_passport_id(self, share_openid):
-        if not share_openid:
+    def _sharer_passport_id(self, share_passport_id):
+        sharer_id = int(share_passport_id or 0)
+        if sharer_id <= 0:
             return 0
-        sharer = PassportModel.getByOpenid(share_openid)
+        sharer = PassportModel.getById(sharer_id)
         if not sharer:
             return 0
         return sharer.id

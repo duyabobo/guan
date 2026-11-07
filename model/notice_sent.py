@@ -13,7 +13,7 @@ from sqlalchemy.sql import or_, and_
 from model import BaseModel
 from util.const import match
 from util.ctx import getDbSession
-from util.slot_blind import activity_slot_key
+from util.slot_blind import activity_slot_key, activity_slot_map
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class NoticeSentModel(BaseModel):
     @classmethod
     def sent_keys_for(cls, activity_ids):
         ids = [activity_id for activity_id in activity_ids if activity_id]
-        slot_of = _slot_of(ids)
+        slot_of = activity_slot_map(ids)
         if not ids:
             return set()
         legacy = and_(cls.activity_id.in_(ids), cls.slot_key == '')
@@ -78,15 +78,6 @@ class NoticeSentModel(BaseModel):
             kept += 1
         session.flush()
         logger.info("已记到点提醒 count=%s", kept)
-
-
-def _slot_of(activity_ids):
-    found = {}
-    for activity_id in activity_ids:
-        slot = activity_slot_key(activity_id)
-        if slot:
-            found[slot] = activity_id
-    return found
 
 
 def _sent_key(row, slot_of):

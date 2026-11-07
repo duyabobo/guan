@@ -23,8 +23,8 @@ class GuanInfoHandler(BaseHandler):
         viewer = self.getRequestParameter('viewer', default=0, paraType=int)
         gis = GuanInfoService(activityId, self.currentPassport)
         if viewer == MEET_VIEWER_MODE:
-            share_openid = self.getRequestParameter('shareOpenid', '')
-            return Response(data=gis.getViewerGuanInfo(share_openid))
+            share_passport_id = self.getIntParameter('sharePassportId', default=0, minimum=0)
+            return Response(data=gis.getViewerGuanInfo(share_passport_id))
         return Response(data=gis.getGuanInfo())
 
     @superMonitor

@@ -5,7 +5,6 @@ import logging
 
 from model.activity import ActivityModel
 from model.notice_sent import NoticeSentModel
-from model.passport import PassportModel
 from model.subscribe_grant import SubscribeGrantModel
 from service.common.notice_due import drop_sent, scheduled_notices, sent_key
 from service.identity.runtime_key import material_for, materials_for
@@ -20,9 +19,8 @@ from util.const.notice import (
     SMS_REQUIRED_SCENES,
     SUBSCRIBE_ACCEPT,
 )
-from util.encode import md5_hex
 from util.const.progress import MEET_AUTO_FIT_WAIT
-from util.sensitive_cipher import decrypt, encrypt
+from util.sensitive_cipher import open_text_or_none, seal_bytes_or_none
 from util.wx_subscribe import build_data, miniprogram_state, send_subscribe, template_id
 
 logger = logging.getLogger(__name__)
@@ -48,15 +46,18 @@ class MeetNoticeService(object):
         if not subscription_accepted(subscribe_res, template):
             logger.info("订阅未授权 passport=%s", passport_id)
             return
-        if not _openid_belongs_to(passport_id, openid):
-            logger.info("订阅未记下 passport=%s openid 与账号不一致", passport_id)
+        if not openid:
+            logger.info("订阅未记下 passport=%s 没有 openid", passport_id)
             return
         material = material_for(passport_id, PURPOSE_SUBSCRIBE_SEND)
         if not material:
             logger.info("订阅未记下 passport=%s 没有身份密钥", passport_id)
             return
-        nonce, cipher_bytes = encrypt(material, openid.encode('utf-8'))
-        SubscribeGrantModel.grant(passport_id, template, nonce, cipher_bytes)
+        packed = seal_bytes_or_none(material, openid.encode('utf-8'))
+        if packed is None:
+            logger.info("订阅未记下 passport=%s 加密失败", passport_id)
+            return
+        SubscribeGrantModel.grant(passport_id, template, packed[0], packed[1])
 
     @staticmethod
     def dispatch(jobs, record_sent):
@@ -128,27 +129,15 @@ def _remember(recorded, job):
     recorded[sent_key(job.activity_id, job.passport_id, job.scene)] = job
 
 
-def _openid_belongs_to(passport_id, openid):
-    if not passport_id or not openid:
-        return False
-    passport = PassportModel.getById(passport_id)
-    if not passport or not passport.openid:
-        return False
-    return passport.openid == md5_hex(openid)
-
-
 def _openids(grants, materials):
     found = {}
     for passport_id, grant in grants.items():
         material = materials.get(passport_id)
         if not material or not grant.openid_nonce or not grant.openid_cipher:
             continue
-        try:
-            plain = decrypt(material, grant.openid_nonce, grant.openid_cipher)
-        except Exception:
+        plain = open_text_or_none(material, grant.openid_nonce, grant.openid_cipher)
+        if not plain:
             logger.info("订阅 openid 解不开 passport=%s", passport_id)
             continue
-        if isinstance(plain, bytes):
-            plain = plain.decode('utf-8')
         found[passport_id] = plain
     return found

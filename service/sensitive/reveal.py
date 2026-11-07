@@ -6,7 +6,7 @@ import logging
 from model.sensitive_record import SensitiveRecordModel
 from service.identity.runtime_key import material_for
 from service.sensitive.purpose import purpose_accepted
-from util.sensitive_cipher import decrypt
+from util.sensitive_cipher import open_bytes_or_none
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +28,8 @@ class SensitiveReveal(object):
         if not material:
             logger.error("最终核查缺少密钥 passport=%s record=%s", passport_id, record.id)
             return None
-        try:
-            plain = decrypt(material, record.nonce, record.cipher_text)
-        except ValueError:
+        plain = open_bytes_or_none(material, record.nonce, record.cipher_text)
+        if plain is None:
             logger.error("最终核查解密失败 passport=%s record=%s", passport_id, record.id)
             return None
         logger.warning(

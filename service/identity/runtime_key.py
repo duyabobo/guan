@@ -30,30 +30,7 @@ def touch_unionid(passport_id):
         redisConn.expire(_key(passport_id), RUNTIME_UNION_TTL_SEC)
 
 
-def material_for(passport_id, purpose):
-    found = materials_for([passport_id], purpose)
-    return found.get(int(passport_id or 0), '')
-
-
-def materials_for(passport_ids, purpose):
-    """一次取回。调用方必须带用途。值不写日志。"""
-    if not purpose_accepted(purpose):
-        logger.error("拒绝无用途读取运行时身份密钥")
-        return {}
-    ids = _unique_ids(passport_ids)
-    if not ids:
-        return {}
-    logger.info("读取运行时身份密钥 purpose=%s count=%s", purpose.strip(), len(ids))
-    values = redisConn.mget([_key(passport_id) for passport_id in ids])
-    found = {}
-    for passport_id, value in zip(ids, values):
-        text = decode_redis_value(value)
-        if text:
-            found[passport_id] = text
-    return found
-
-
-def _unique_ids(passport_ids):
+def unique_passport_ids(passport_ids):
     ids = []
     seen = set()
     for passport_id in passport_ids or []:
@@ -65,6 +42,29 @@ def _unique_ids(passport_ids):
         seen.add(number)
         ids.append(number)
     return ids
+
+
+def material_for(passport_id, purpose):
+    found = materials_for([passport_id], purpose)
+    return found.get(int(passport_id or 0), '')
+
+
+def materials_for(passport_ids, purpose):
+    """一次取回。调用方必须带用途。值不写日志。"""
+    if not purpose_accepted(purpose):
+        logger.error("拒绝无用途读取运行时身份密钥")
+        return {}
+    ids = unique_passport_ids(passport_ids)
+    if not ids:
+        return {}
+    logger.info("读取运行时身份密钥 purpose=%s count=%s", purpose.strip(), len(ids))
+    values = redisConn.mget([_key(passport_id) for passport_id in ids])
+    found = {}
+    for passport_id, value in zip(ids, values):
+        text = decode_redis_value(value)
+        if text:
+            found[passport_id] = text
+    return found
 
 
 def _key(passport_id):

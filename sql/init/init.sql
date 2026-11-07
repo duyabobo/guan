@@ -32,16 +32,16 @@ CREATE TABLE IF NOT EXISTS `address` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面地点';
 
--- ── passport：账号 ──────────────────────────────────────────────────────────
+-- ── passport：账号。身份只留编号、手机号密文、unionid 查找值 ───────────────
 CREATE TABLE IF NOT EXISTS `passport` (
-    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
-    `phone`       VARCHAR(32)     NOT NULL DEFAULT '' COMMENT '手机号',
-    `openid`      VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '微信openid(md5)',
+    `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '通行证编号',
+    `phone`       VARCHAR(128)    NOT NULL DEFAULT '' COMMENT '手机号密文，用 unionid 材料加密；空表示未绑定',
+    `unionid`     VARCHAR(64)     NULL DEFAULT NULL COMMENT '身份密钥材料的 HMAC，不存明文',
     `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1,
     `create_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    INDEX `idx_openid` (`openid`)
+    UNIQUE KEY `uk_unionid` (`unionid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号';
 
 -- ── activity：见面活动 ──────────────────────────────────────────────────────
@@ -103,26 +103,11 @@ CREATE TABLE IF NOT EXISTS `profile_attr` (
     UNIQUE KEY `uk_passport_scope_dim` (`passport_id`, `scope`, `dim_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='个人资料与期望，一个维度一行';
 
--- ── identity_secret：身份密钥，业务查询不要读 ──────────────────────────────
-CREATE TABLE IF NOT EXISTS `identity_secret` (
-    `id`              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `passport_id`     BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `provider`        VARCHAR(32)     NOT NULL DEFAULT '' COMMENT 'wechat / national_network',
-    `account_key`     VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '登录主体的摘要，不存明文 openid',
-    `secret_material` VARCHAR(512)    NOT NULL DEFAULT '' COMMENT 'unionid 用自己加密后的封存值，不是明文',
-    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `create_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_provider_account` (`provider`, `account_key`),
-    UNIQUE KEY `uk_passport_provider` (`passport_id`, `provider`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='身份密钥。仅加密写入和最终核查读取';
-
--- ── sensitive_record：敏感信息密文 ──────────────────────────────────────────
+-- ── sensitive_record：敏感信息密文。手机号在 passport.phone，不进这张表 ──
 CREATE TABLE IF NOT EXISTS `sensitive_record` (
     `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `passport_id`   BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `kind`          VARCHAR(16)     NOT NULL DEFAULT '' COMMENT 'voice/phone/mail/photo',
+    `kind`          VARCHAR(16)     NOT NULL DEFAULT '' COMMENT 'voice/mail/photo',
     `key_provider`  VARCHAR(32)     NOT NULL DEFAULT '' COMMENT '加密时使用的身份提供方',
     `nonce`         VARCHAR(32)     NOT NULL DEFAULT '' COMMENT 'AES-GCM nonce, base64',
     `cipher_text`   MEDIUMBLOB      NOT NULL COMMENT '密文，不含密钥',

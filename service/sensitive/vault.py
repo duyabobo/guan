@@ -6,7 +6,7 @@ from model.sensitive_record import SensitiveRecordModel
 from service.identity.runtime_key import material_for
 from util.const.identity import ACTIVE_KEY_PROVIDER, PURPOSE_ENCRYPT_STORE, SENSITIVE_KINDS
 from util.ctx import getDbSession
-from util.sensitive_cipher import encrypt
+from util.sensitive_cipher import seal_bytes_or_none
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,11 @@ class SensitiveVault(object):
         if not material:
             logger.error("加密时没有身份密钥 passport=%s kind=%s", passport_id, kind)
             return None
-        nonce, cipher_text = encrypt(material, plain)
+        packed = seal_bytes_or_none(material, plain)
+        if packed is None:
+            logger.error("敏感信息加密失败 passport=%s kind=%s", passport_id, kind)
+            return None
+        nonce, cipher_text = packed
         return SealedRecord(
             passport_id, kind, ACTIVE_KEY_PROVIDER, nonce, cipher_text, content_type, len(plain),
         )

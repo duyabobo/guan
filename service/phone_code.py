@@ -22,7 +22,7 @@ from service.common.phone_number import (
 from util.const.identity import PURPOSE_PHONE_CODE
 from util.encode import md5_hex
 from util.redis_conn import decode_redis_value, redisConn
-from util.sensitive_cipher import decrypt, encrypt, pack_token, unpack_token
+from util.sensitive_cipher import open_text_or_none, pack_token, seal_bytes_or_none, unpack_token
 from util.sms_gateway import post_messages, sms_configured
 
 logger = logging.getLogger(__name__)
@@ -89,8 +89,11 @@ def _store_token(passport_id, number, code):
     if not material:
         logger.info("验证码未保存，运行时没有身份密钥 passport=%s", passport_id)
         return False
-    nonce, cipher = encrypt(material, saved_token(number, code).encode('utf-8'))
-    redisConn.set(PHONE_CODE_KEY % passport_id, pack_token(nonce, cipher), ex=PHONE_CODE_TTL_SEC)
+    packed = seal_bytes_or_none(material, saved_token(number, code).encode('utf-8'))
+    if packed is None:
+        logger.info("验证码未保存，加密失败 passport=%s", passport_id)
+        return False
+    redisConn.set(PHONE_CODE_KEY % passport_id, pack_token(*packed), ex=PHONE_CODE_TTL_SEC)
     return True
 
 
@@ -100,11 +103,11 @@ def _load_token(passport_id):
     nonce, cipher = unpack_token(saved)
     if not material or not nonce:
         return ''
-    try:
-        return decrypt(material, nonce, cipher).decode('utf-8')
-    except (ValueError, UnicodeDecodeError):
+    text = open_text_or_none(material, nonce, cipher)
+    if text is None:
         logger.info("验证码解不开 passport=%s", passport_id)
         return ''
+    return text
 
 
 def _reserve_gap(passport_id, number):

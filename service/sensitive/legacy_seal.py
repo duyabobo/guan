@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from service.meet_seat import SEAT_BOY, SEAT_GIRL
 from util.database import engine
-from util.sensitive_cipher import is_sealed_unionid, seal_json, seal_unionid, union_lookup
+from util.sensitive_cipher import is_sealed_unionid, pack_token, seal_json
 from util.slot_blind import activity_slot_key
 
 logger = logging.getLogger(__name__)
@@ -34,9 +34,14 @@ def seal_legacy_plaintext():
         _seal_seats(conn, union_by_passport)
         _clear_unkeyed_profiles(conn)
         _clear_unkeyed_activity_passports(conn, set(union_by_passport))
-        _seal_identity_rows(conn, union_by_passport)
+        _copy_union_keys(conn)
+        _fold_phone_records(conn)
+        _clear_plaintext_phones(conn)
         _backfill_slots(conn)
-        _clear_phones(conn)
+    with engine.connect().execution_options(isolation_level='AUTOCOMMIT') as conn:
+        _ensure_union_unique(conn)
+        _drop_openid(conn)
+        _drop_identity_secret(conn)
     _swap_link_indexes()
     with engine.begin() as conn:
         _zero_link_activity_ids(conn)
@@ -76,10 +81,19 @@ def _ensure_schema(conn):
     for table in _PLAIN_LINK_TABLES:
         _ensure_column(conn, table, 'slot_key',
                        "ALTER TABLE `%s` ADD COLUMN `slot_key` CHAR(64) NOT NULL DEFAULT ''" % table)
+    _ensure_column(conn, 'passport', 'unionid',
+                   "ALTER TABLE `passport` ADD COLUMN `unionid` VARCHAR(64) NULL DEFAULT NULL "
+                   "COMMENT '身份密钥材料的 HMAC，不存明文'")
+    conn.execute(text(
+        "ALTER TABLE `passport` MODIFY COLUMN `phone` VARCHAR(128) NOT NULL DEFAULT '' "
+        "COMMENT '手机号密文，用 unionid 材料加密；空表示未绑定'"
+    ))
     logger.info("敏感数据表结构已就绪")
 
 
 def _legacy_unionids(conn):
+    if 'identity_secret' not in _table_names(conn):
+        return {}
     rows = conn.execute(text(
         "SELECT passport_id, secret_material FROM identity_secret "
         "WHERE status=1 AND secret_material<>''"
@@ -189,19 +203,71 @@ def _clear_unkeyed_activity_passports(conn, keyed_ids):
     logger.info("已清掉无法封存的见面护照编号 count=%s", len(params))
 
 
-def _seal_identity_rows(conn, union_by_passport):
-    params = []
-    for passport_id, unionid in union_by_passport.items():
-        params.append({
-            'passport_id': passport_id,
-            'account_key': union_lookup(unionid),
-            'sealed': seal_unionid(unionid),
-        })
+def _copy_union_keys(conn):
+    if 'identity_secret' not in _table_names(conn):
+        return
+    if 'unionid' not in _column_names(conn, 'passport'):
+        return
+    result = conn.execute(text(
+        "UPDATE passport p INNER JOIN identity_secret s "
+        "ON s.passport_id = p.id AND s.provider = 'wechat' AND s.status = 1 AND s.account_key <> '' "
+        "SET p.unionid = s.account_key "
+        "WHERE p.unionid IS NULL OR p.unionid = ''"
+    ))
+    logger.info("已把身份查找值写入通行证 count=%s", result.rowcount)
+
+
+def _fold_phone_records(conn):
+    if 'sensitive_record' not in _table_names(conn):
+        return
+    rows = conn.execute(text(
+        "SELECT passport_id, nonce, cipher_text FROM sensitive_record "
+        "WHERE kind = 'phone' AND status = 1 ORDER BY id ASC"
+    )).fetchall()
+    by_passport = {}
+    for passport_id, nonce, cipher in rows:
+        if not passport_id or not nonce or not cipher:
+            continue
+        by_passport[int(passport_id)] = pack_token(nonce, cipher)
+    params = [{'id': passport_id, 'phone': sealed} for passport_id, sealed in by_passport.items()]
     _execute_many(conn, (
-        "UPDATE identity_secret SET account_key=:account_key, secret_material=:sealed "
-        "WHERE passport_id=:passport_id AND status=1"
+        "UPDATE passport SET phone = :phone WHERE id = :id AND (phone = '' OR phone NOT LIKE '%.%')"
     ), params)
-    logger.info("已自加密封存身份密钥 count=%s", len(params))
+    conn.execute(text("DELETE FROM sensitive_record WHERE kind = 'phone'"))
+    logger.info("手机号已从敏感记录并入通行证 count=%s", len(params))
+
+
+def _clear_plaintext_phones(conn):
+    result = conn.execute(text(
+        "UPDATE passport SET phone = '' WHERE phone <> '' AND phone NOT LIKE '%.%'"
+    ))
+    logger.info("已清掉通行证上的手机号明文 count=%s", result.rowcount)
+
+
+def _ensure_union_unique(conn):
+    if 'unionid' not in _column_names(conn, 'passport'):
+        return
+    conn.execute(text("UPDATE passport SET unionid = NULL WHERE unionid = ''"))
+    if 'uk_unionid' in _index_names(conn, 'passport'):
+        return
+    conn.execute(text("ALTER TABLE passport ADD UNIQUE KEY uk_unionid (unionid)"))
+    logger.info("通行证 unionid 已唯一")
+
+
+def _drop_openid(conn):
+    if 'openid' not in _column_names(conn, 'passport'):
+        return
+    if 'idx_openid' in _index_names(conn, 'passport'):
+        conn.execute(text("ALTER TABLE passport DROP INDEX idx_openid"))
+    conn.execute(text("ALTER TABLE passport DROP COLUMN openid"))
+    logger.info("已去掉通行证上的 openid")
+
+
+def _drop_identity_secret(conn):
+    if 'identity_secret' not in _table_names(conn):
+        return
+    conn.execute(text("DROP TABLE identity_secret"))
+    logger.info("已删除 identity_secret")
 
 
 def _backfill_slots(conn):
@@ -225,11 +291,6 @@ def _backfill_slots(conn):
             "UPDATE `%s` SET slot_key=CONCAT('cleared-', id) WHERE slot_key='' AND activity_id=0" % table
         ))
     logger.info("已补见面盲索引 count=%s", len(params))
-
-
-def _clear_phones(conn):
-    result = conn.execute(text("UPDATE passport SET phone='' WHERE phone<>''"))
-    logger.info("已清掉账号上的手机号明文 count=%s", result.rowcount)
 
 
 def _swap_link_indexes():
