@@ -6,6 +6,7 @@
 用法:
   python scripts/init_db.py                             # 只建表、跑迁移、补地点，不动用户数据
   python scripts/init_db.py --reset-demo                # 仅限开发库：清空用户与见面数据，按密文重写演示数据
+  python scripts/clear_user_data.py                     # 只清空账号、资料、见面和登录态，不重写演示数据
   python scripts/init_db.py --current-user              # 只给当前真实账号补密文资料和见面
   docker-compose exec app python scripts/init_db.py    # 容器内
 
@@ -21,11 +22,13 @@ import pymysql
 import redis
 
 # 支持从项目根目录或 scripts/ 子目录运行
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, PROJECT_ROOT)
+sys.path.insert(0, SCRIPT_DIR)
 
+from clear_user_data import refuse_if_online, truncate_user_tables
 from util.const.identity import RUNTIME_UNION_KEY, RUNTIME_UNION_TTL_SEC
-from util.const.notice import ONLINE_SERVER
 from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
 from util.sensitive_cipher import open_json, seal_json, union_lookup
 from util.slot_blind import activity_slot_key
@@ -354,18 +357,6 @@ def ensure_addresses(conn, region_ids: list[int]) -> list[int]:
     return ordered_ids
 
 
-# 用户和见面每次清空后重写。地点不是敏感数据，按名称保留。
-USER_DATA_TABLES = (
-    'notice_sent',
-    'subscribe_grant',
-    'sensitive_record',
-    'activity_change_record',
-    'activity_seat',
-    'share',
-    'profile_attr',
-    'activity',
-    'passport',
-)
 SEAT_BOY = MODEL_SEX_MALE_INDEX
 SEAT_GIRL = MODEL_SEX_FEMALE_INDEX
 MOCK_UNION_PREFIX = 'mock-union-'
@@ -448,25 +439,6 @@ MOCK_PROFILE_BY_PHONE = {
         },
     },
 }
-
-
-def reset_user_data(conn):
-    """丢掉旧账号、明文资料和明文席位。地点表不动。"""
-    removed = 0
-    with conn.cursor() as cur:
-        cur.execute("SET FOREIGN_KEY_CHECKS = 0")
-        for table in USER_DATA_TABLES:
-            try:
-                cur.execute(f"TRUNCATE TABLE `{table}`")
-            except pymysql.err.DatabaseError as exc:
-                if exc.args and exc.args[0] == 1146:
-                    logger.info("  [跳过] 表不存在 %s", table)
-                    continue
-                raise
-            removed += 1
-        cur.execute("SET FOREIGN_KEY_CHECKS = 1")
-    conn.commit()
-    logger.info("  [清空] 用户与见面表 %d 张", removed)
 
 
 def _wx_pepper():
@@ -1067,8 +1039,7 @@ def seed_current_user(conn):
 def _refuse_reset_on_online():
     """清库只允许在开发库上做。线上一旦误跑就是整库用户数据丢失。"""
     _load_env_file()
-    if os.environ.get('SERVER_ENV', '') == ONLINE_SERVER:
-        raise SystemExit('SERVER_ENV=online，拒绝执行 --reset-demo')
+    refuse_if_online(os.environ.get('SERVER_ENV', ''))
 
 
 def prepare_schema_and_places(conn):
@@ -1088,7 +1059,7 @@ def prepare_schema_and_places(conn):
 def reset_and_seed_demo(conn, region_ids):
     """清空用户与见面数据，按密文重写演示数据。只在开发库上使用。"""
     logger.info("=== Step 2: 清空旧用户数据并按密文重写 ===")
-    reset_user_data(conn)
+    truncate_user_tables(conn)
     address_ids = ensure_addresses(conn, region_ids)
     passport_ids = seed_passports(conn)
     ensure_mock_passports(conn)

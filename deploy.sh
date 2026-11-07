@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 关关雎鸠 一键部署脚本
-# 用法：bash deploy.sh [start|stop|restart|logs|status]
+# 用法：bash deploy.sh [start|stop|restart|logs|status|init-db|clear-db]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -102,12 +102,9 @@ cmd_logs() {
     docker-compose logs -f --tail=100 "${service}"
 }
 
-# ── 初始化数据库（DDL + Mock 数据）──────────────────────────────────────────
-cmd_init_db() {
-    log_title "初始化数据库"
+# ── 等待 MySQL ────────────────────────────────────────────────────────────────
+wait_mysql() {
     log_info "等待 MySQL 就绪..."
-
-    # 等待 MySQL 健康（最多 60s）
     local elapsed=0
     until docker-compose exec mysql mysqladmin ping -h localhost -u root \
         "-p$(grep MYSQL_ROOT_PASSWORD .env | cut -d= -f2)" --silent 2>/dev/null; do
@@ -119,10 +116,22 @@ cmd_init_db() {
         fi
         log_info "  等待 MySQL... (${elapsed}s)"
     done
+}
 
-    # 直接本地执行（MySQL 端口已暴露到宿主机，无需 app 容器就绪）
+# ── 初始化数据库（DDL + 地点，默认不清用户数据）──────────────────────────────
+cmd_init_db() {
+    log_title "初始化数据库"
+    wait_mysql
     log_info "执行初始化脚本..."
     python "${SCRIPT_DIR}/scripts/init_db.py"
+}
+
+# ── 清空账号、资料、见面。地区和地点保留 ─────────────────────────────────────
+cmd_clear_db() {
+    log_title "清空用户数据"
+    wait_mysql
+    log_info "执行清空脚本..."
+    python "${SCRIPT_DIR}/scripts/clear_user_data.py"
 }
 
 # ── 查看状态 ──────────────────────────────────────────────────────────────────
@@ -171,14 +180,18 @@ main() {
         init-db)
             cmd_init_db
             ;;
+        clear-db)
+            cmd_clear_db
+            ;;
         *)
-            echo "用法: bash deploy.sh [start|stop|restart|logs|status|init-db]"
-            echo "  start   - 构建并启动所有服务（默认）"
-            echo "  stop    - 停止并移除所有容器"
-            echo "  restart - 重启所有服务"
-            echo "  logs    - 查看日志（默认 app，可指定服务名）"
-            echo "  status  - 查看容器状态"
-            echo "  init-db - 幂等执行 DDL + 写入 Mock 测试数据"
+            echo "用法: bash deploy.sh [start|stop|restart|logs|status|init-db|clear-db]"
+            echo "  start    - 构建并启动所有服务（默认）"
+            echo "  stop     - 停止并移除所有容器"
+            echo "  restart  - 重启所有服务"
+            echo "  logs     - 查看日志（默认 app，可指定服务名）"
+            echo "  status   - 查看容器状态"
+            echo "  init-db  - 幂等建表、迁移、补地点，不清用户数据"
+            echo "  clear-db - 清空账号、资料、见面和登录态，地区和地点保留"
             exit 1
             ;;
     esac
