@@ -10,7 +10,7 @@
   python scripts/init_db.py --current-user              # 只给当前真实账号补密文资料和见面
   docker-compose exec app python scripts/init_db.py    # 容器内
 
---reset-demo 会 TRUNCATE 账号、资料、见面、座位等表，SERVER_ENV=online 时拒绝执行。
+--reset-demo 会清掉登录态，再 TRUNCATE 账号、资料、见面、座位等表，SERVER_ENV=online 时拒绝执行。
 """
 import argparse
 import datetime
@@ -27,7 +27,7 @@ PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, PROJECT_ROOT)
 sys.path.insert(0, SCRIPT_DIR)
 
-from clear_user_data import refuse_if_online, truncate_user_tables
+from clear_user_data import refuse_if_online, wipe_user_state
 from util.const.identity import RUNTIME_UNION_KEY, RUNTIME_UNION_TTL_SEC
 from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
 from util.sensitive_cipher import open_json, seal_json, union_lookup
@@ -1059,7 +1059,7 @@ def prepare_schema_and_places(conn):
 def reset_and_seed_demo(conn, region_ids):
     """清空用户与见面数据，按密文重写演示数据。只在开发库上使用。"""
     logger.info("=== Step 2: 清空旧用户数据并按密文重写 ===")
-    truncate_user_tables(conn)
+    wipe_user_state(conn, _redis_client())
     address_ids = ensure_addresses(conn, region_ids)
     passport_ids = seed_passports(conn)
     ensure_mock_passports(conn)

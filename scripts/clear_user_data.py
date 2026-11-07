@@ -115,17 +115,23 @@ def clear_user_redis(client):
     return deleted
 
 
+def wipe_user_state(conn, redis_client):
+    """先清登录态。Redis 失败就不动表，避免账号没了会话还在。"""
+    clear_user_redis(redis_client)
+    return truncate_user_tables(conn)
+
+
 def main():
     from init_db import _connect, _load_env_file, _redis_client
 
     _load_env_file()
     refuse_if_online(os.environ.get('SERVER_ENV', ''))
+    redis_client = _redis_client()
     conn = _connect()
     try:
-        truncate_user_tables(conn)
+        wipe_user_state(conn, redis_client)
     finally:
         conn.close()
-    clear_user_redis(_redis_client())
     logger.info('=== 用户数据已清空，地区和地点仍在 ===')
 
 
