@@ -5,6 +5,7 @@ import logging
 from model.profile_attr import ProfileAttrModel
 from service.common.profile_catalog import SCOPE_INFO
 from service.common.profile_rows import build_rows, missing_required_info_keys
+from service.common.review_mode import under_review
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,9 @@ class ProfileBoardService(object):
 
     @staticmethod
     def info_is_filled(passport_id):
+        if under_review():
+            logger.info("审核模式视为资料已齐 passport=%s", passport_id)
+            return True
         missing = missing_required_info_keys(_info_map(passport_id))
         if missing:
             logger.info("个人信息未齐 passport=%s missing=%s", passport_id, missing)

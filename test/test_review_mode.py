@@ -14,6 +14,7 @@ from service.common.profile_catalog import (
     SCOPE_REQUIREMENT,
     SMOKE_CHOICES,
 )
+from service.common.profile_board import ProfileBoardService
 from service.common.profile_guard import decide_profile_write
 from service.common.profile_rows import build_rows
 from service.common.review_mode import (
@@ -160,6 +161,11 @@ def test_review_pages_use_activity_words(monkeypatch):
     assert _banned_in(listing) == []
     assert _banned_in(detail) == []
     assert _banned_in(profile) == []
+
+
+def test_review_profile_counts_as_filled(monkeypatch):
+    _review_on(monkeypatch)
+    assert ProfileBoardService.info_is_filled(0) is True
 
 
 def test_review_rows_relabel_dating_dims(monkeypatch):
