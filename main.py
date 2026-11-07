@@ -11,7 +11,6 @@ import util.config
 from service.sensitive.legacy_seal import seal_legacy_plaintext
 from urls import handlers
 from util.const.notice import ONLINE_SERVER
-from util.startup_check import assert_online_config_safe
 
 # tornado 支持 https，如果要使用 gevent，需要 patch_all 的时候，把 ssl 设置为 False
 monkey.patch_all(ssl=False, thread=False, socket=False)
@@ -32,8 +31,6 @@ def _build_ssl_options():
 
 def main():
     server = util.config.get('global', 'server')
-    if server == ONLINE_SERVER:
-        assert_online_config_safe()
     seal_legacy_plaintext()
     port = util.config.get('global', 'port')
     debug = util.config.get('global', 'debug')
@@ -46,7 +43,7 @@ def main():
         'static_path': 'handler/static',
     })
 
-    is_online = server == 'online'
+    is_online = server == ONLINE_SERVER
     http_server = (
         tornado.httpserver.HTTPServer(application, ssl_options=_build_ssl_options())
         if is_online
