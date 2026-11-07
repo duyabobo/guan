@@ -4,6 +4,7 @@ import logging
 
 from handler.basehandler import BaseHandler
 from service.match_config import MatchConfigService
+from service.phone_bind import PhoneBindService
 from service.voice_pipeline import VoicePipeline
 from util.const.identity import MAX_VOICE_BYTES, MAX_VOICE_TEXT_CHARS
 from util.const.response import (
@@ -24,6 +25,11 @@ class MatchConfigHandler(BaseHandler):
 
     @superMonitor
     def put(self):
+        if not self.currentPassportId:
+            return Response(msg=RESP_NEED_LOGIN)
+        blocked = PhoneBindService().block_if_unbound(self.currentPassportId)
+        if blocked:
+            return Response(msg=blocked)
         voice_text = self.getRequestParameter('voiceText', default='')
         if not voice_text:
             return Response(msg=RESP_VOICE_TEXT_MISSING)
@@ -43,6 +49,9 @@ class VoiceTextHandler(BaseHandler):
     def post(self):
         if not self.currentPassportId:
             return Response(msg=RESP_NEED_LOGIN)
+        blocked = PhoneBindService().block_if_unbound(self.currentPassportId)
+        if blocked:
+            return Response(msg=blocked)
         audio_bytes = self._audio_bytes()
         if not audio_bytes:
             return Response(msg=RESP_VOICE_MISSING)

@@ -300,6 +300,10 @@ class GuanInfoService(BaseService):
         self.reloadActivityRecord()
         if not self.activityRecord:
             return RESP_JOIN_ACTIVITY_FAILED
+        if op_type in _SEAT_OPS:
+            unbound = PhoneBindService().block_if_unbound(self.passportId)
+            if unbound:
+                return unbound
         if getattr(self.activityRecord, 'seat_locked', False) and not self._is_activity_participant(self.passportId):
             logger.info("座位解不开，拒绝操作 activity=%s passport=%s", self.activityId, self.passportId)
             return RESP_JOIN_ACTIVITY_FAILED

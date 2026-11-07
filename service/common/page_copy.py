@@ -11,8 +11,21 @@ def list_page_copy():
     }
 
 
-def match_config_copy():
+def phone_gate_copy():
     return {
+        "phoneGateTitle": "绑定手机号",
+        "phonePlaceholder": "手机号",
+        "codePlaceholder": "验证码",
+        "sendCodeButton": "获取验证码",
+        "phoneGateButton": "完成",
+        "phoneGateLater": "先看看",
+        "phoneDigitCount": PHONE_DIGIT_COUNT,
+        "codeLength": PHONE_CODE_LENGTH,
+    }
+
+
+def match_config_copy():
+    copy = {
         "pageTitle": "关关雎鸠",
         "transcriptLabel": "刚才说的",
         "infoTitle": "我的信息",
@@ -23,7 +36,7 @@ def match_config_copy():
         "voiceRejectTitle": "暂时不能更新",
         "privacyEntry": "隐私说明",
         "privacyTitle": "隐私说明",
-        "privacyBody": "点按麦克风后才会开始录音。录音会加密保存，并整理成个人信息和期望，用于匹配。页面上不展示原始录音。性别、身高、出生年份和籍贯确认后，不能再用语音改掉；新的说法和原来不一致时，会保留原来的，并等待人工客服确认。已经约好见面，或已经选了合适之后，不能再录音。目前只支持找异性。",
+        "privacyBody": "点按麦克风后，还没验证手机号会先验证，通过后才开始录音。录音会加密保存，并整理成个人信息和期望，用于匹配。页面上不展示原始录音。性别、身高、出生年份和籍贯确认后，不能再用语音改掉；新的说法和原来不一致时，会保留原来的，并等待人工客服确认。已经约好见面，或已经选了合适之后，不能再录音。目前只支持找异性。",
         "privacyConfirm": "知道了",
         "voiceStatus": {
             "idle": "说说你自己和想找的人",
@@ -34,21 +47,17 @@ def match_config_copy():
         "micDeniedContent": "语音搜集需要使用麦克风，请在设置里允许录音。",
         "micDeniedConfirm": "去设置",
     }
+    copy.update(phone_gate_copy())
+    return copy
 
 
 def guan_info_copy():
-    return {
+    copy = {
         "pageTitle": "见面详情",
         "infoTitle": "ta的信息",
         "requirementTitle": "ta的期望",
         "emptyText": "还没有可展示的对象资料",
         "shareLabel": "安全见面，分享亲友",
-        "phoneGateTitle": "绑定手机号",
-        "phonePlaceholder": "手机号",
-        "codePlaceholder": "验证码",
-        "sendCodeButton": "获取验证码",
-        "phoneGateButton": "完成",
-        "phoneGateLater": "先看看",
-        "phoneDigitCount": PHONE_DIGIT_COUNT,
-        "codeLength": PHONE_CODE_LENGTH,
     }
+    copy.update(phone_gate_copy())
+    return copy

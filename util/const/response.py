@@ -17,6 +17,7 @@ RESP_PHONE_INVALID = {'code': 1005, 'errMsg': '请填写手机号'}
 RESP_PHONE_CODE_TOO_SOON = {'code': 1005, 'errMsg': '请稍后再获取验证码'}
 RESP_SMS_UNAVAILABLE = {'code': 1005, 'errMsg': '验证码暂时发不出去'}
 RESP_PHONE_BIND_FAILED = {'code': 1005, 'errMsg': '验证码不正确'}
+RESP_PHONE_REQUIRED = {'code': 1006, 'errMsg': '请先完成手机号验证'}
 RESP_PROFILE_CONFLICT_CODE = 9002
 RESP_JOIN_ACTIVITY_FAILED = {'code': 1201, 'errMsg': '本次见面已被别人预约，请返回重新选择'}
 RESP_HAS_APPOINTMENT = {'code': 1202, 'errMsg': '已经有一场约好的见面，不能再约别的'}

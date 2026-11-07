@@ -7,6 +7,7 @@ from model.passport import PassportModel
 from service.identity.runtime_key import material_for
 from service.phone_code import PhoneCodeService
 from util.const.identity import PURPOSE_ENCRYPT_STORE
+from util.const.response import RESP_PHONE_REQUIRED
 from util.sensitive_cipher import seal_phone
 
 logger = logging.getLogger(__name__)
@@ -29,3 +30,10 @@ class PhoneBindService(object):
         if not passport_id:
             return False
         return bool(PassportModel.phone_cipher(passport_id))
+
+    def block_if_unbound(self, passport_id):
+        """发起、加入和语音提交之前必须已经绑定手机号。"""
+        if self.bound(passport_id):
+            return None
+        logger.info("手机号未验证，拒绝继续 passport=%s", passport_id)
+        return RESP_PHONE_REQUIRED

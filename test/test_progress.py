@@ -259,12 +259,13 @@ class TestGetBottomButtons:
         assert buttons[0]['label'] == '取消'
         assert buttons[0]['opType'] == GUAN_INFO_OP_TYPE_QUIT
         assert buttons[0]['needConfirm'] is True
-        assert 'askSubscribe' not in buttons[0]
+        assert buttons[0]['askSubscribe'] is True
 
     def test_wait_meet_shows_cancel_with_confirm(self):
         buttons = get_bottom_buttons(PROGRESS_WAIT_MEET, GUAN_INFO_OP_TYPE_QUIT)
         assert buttons[0]['label'] == '取消'
         assert buttons[0]['needConfirm'] is True
+        assert buttons[0]['askSubscribe'] is True
 
     def test_quit_allowed_only_before_choice_buttons(self):
         assert quit_is_allowed(PROGRESS_SELECTED) is True
@@ -291,7 +292,7 @@ class TestGetBottomButtons:
         assert late[0]['hint'] == HALF_FIT_HINT
         assert late[0]['askSubscribe'] is True
         assert late[1]['hint'] == UNFIT_SYNC_HINT
-        assert 'askSubscribe' not in late[1]
+        assert late[1]['askSubscribe'] is True
 
     def test_fit_and_unfit_actions_are_allowed_only_in_window(self):
         assert result_change_allowed(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_FIT_CHOICE, False) is False
@@ -306,6 +307,7 @@ class TestGetBottomButtons:
         assert '不合适' in labels
         assert len(buttons) == 2
         assert all(b['needConfirm'] for b in buttons)
+        assert all(b['askSubscribe'] for b in buttons)
 
     def test_met_buttons_correct_values(self):
         buttons = get_bottom_buttons(PROGRESS_MET, GUAN_INFO_OP_TYPE_QUIT)
@@ -320,6 +322,7 @@ class TestGetBottomButtons:
             PROGRESS_MET, GUAN_INFO_OP_TYPE_QUIT, my_result=MODEL_MEET_RESULT_FIT_CHOICE,
         )
         assert [btn['label'] for btn in buttons] == ['不合适']
+        assert buttons[0]['askSubscribe'] is True
 
     def test_fit_click_marks_only_self_until_both_choose(self):
         assert fit_marks_only_self(PROGRESS_WAIT_MEET, MODEL_MEET_RESULT_FIT_CHOICE) is True
@@ -343,7 +346,7 @@ class TestGetBottomButtons:
         assert buttons[0]['value'] == MODEL_MEET_RESULT_UNFIT_CHOICE
         assert buttons[0]['hint'] == UNFIT_SYNC_HINT
         assert buttons[0]['needConfirm'] is True
-        assert 'askSubscribe' not in buttons[0]
+        assert buttons[0]['askSubscribe'] is True
 
     def test_disagree_shows_restore_relationship(self):
         buttons = get_bottom_buttons(PROGRESS_DISAGREE, GUAN_INFO_OP_TYPE_QUIT)

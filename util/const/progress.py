@@ -142,12 +142,14 @@ STYLE_END = "end"
 STYLE_RESTORE = "restore"
 
 
-def _button(label, action, style_key, need_confirm, op_type=None, value=None, hint="", ask_subscribe=False):
+def _button(label, action, style_key, need_confirm, op_type=None, value=None, hint=""):
+    """详情页每个操作按钮都申请一次订阅。用户点允许，额度加一。"""
     button = {
         "label": label,
         "action": action,
         "styleKey": style_key,
         "needConfirm": need_confirm,
+        "askSubscribe": True,
     }
     if op_type is not None:
         button["opType"] = op_type
@@ -155,8 +157,6 @@ def _button(label, action, style_key, need_confirm, op_type=None, value=None, hi
         button["value"] = value
     if hint:
         button["hint"] = hint
-    if ask_subscribe:
-        button["askSubscribe"] = True
     return button
 
 
@@ -225,7 +225,7 @@ def _fit_buttons():
     return [
         _button(
             "合适", "meetResult", STYLE_SUITABLE, True,
-            value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT, ask_subscribe=True,
+            value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT,
         ),
         _unfit_button(),
     ]
@@ -242,8 +242,8 @@ def get_bottom_buttons(progress_status, op_type, choice_ready=False, my_result=0
     """
     if progress_status == PROGRESS_NOT_SELECTED:
         if op_type == GUAN_INFO_OP_TYPE_INVITE:
-            return [_button("发起见面", "operate", STYLE_START_MEET, False, op_type=op_type, ask_subscribe=True)]
-        return [_button("见面", "operate", STYLE_MEET, False, op_type=op_type, ask_subscribe=True)]
+            return [_button("发起见面", "operate", STYLE_START_MEET, False, op_type=op_type)]
+        return [_button("见面", "operate", STYLE_MEET, False, op_type=op_type)]
 
     if progress_status == PROGRESS_WAIT_MEET and choice_ready:
         return _fit_buttons()
@@ -263,7 +263,7 @@ def get_bottom_buttons(progress_status, op_type, choice_ready=False, my_result=0
     if progress_status == PROGRESS_DISAGREE:
         return [_button(
             "恢复关系", "meetResult", STYLE_RESTORE, True,
-            value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT, ask_subscribe=True,
+            value=MODEL_MEET_RESULT_FIT_CHOICE, hint=HALF_FIT_HINT,
         )]
 
     return []  # PROGRESS_NO_CONFIG 或其他异常状态

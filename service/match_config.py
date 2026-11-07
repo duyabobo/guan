@@ -10,6 +10,7 @@ from service.common.profile_board import ProfileBoardService
 from service.common.profile_catalog import SCOPE_INFO, SCOPE_REQUIREMENT, values_from_payload
 from service.common.profile_guard import ProfileWriteOutcome, decide_profile_write
 from service.common.voice_gate import voice_entry_blocked
+from service.phone_bind import PhoneBindService
 from util.const.response import RESP_IDENTITY_INCOMPLETE, RESP_VOICE_IN_PROGRESS
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class MatchConfigService(BaseService):
             "rows": ProfileBoardService.rows_for(self.passportId, show_all=True),
             "voiceEnabled": not blocked,
             "voiceBlockText": RESP_VOICE_IN_PROGRESS["errMsg"] if blocked else "",
+            "phoneBound": PhoneBindService().bound(self.passportId),
         }
 
     def updateFromVoiceText(self, voice_text):

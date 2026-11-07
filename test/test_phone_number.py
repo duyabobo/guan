@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import datetime
 
+from service.phone_bind import PhoneBindService
+from util.const.response import RESP_PHONE_REQUIRED
 from service.common.phone_number import (
     PHONE_CODE_LENGTH,
     PHONE_CODE_TTL_MINUTES,
@@ -70,3 +72,20 @@ def test_sms_arrive_uses_boss_greeting():
     assert '请到达约定地点' in text
     assert '你好老板，我十点约了人' in text
     assert '定金' not in text
+
+
+def test_unbound_phone_blocks_join_and_voice(monkeypatch):
+    monkeypatch.setattr(PhoneBindService, 'bound', lambda self, passport_id: False)
+    blocked = PhoneBindService().block_if_unbound(7)
+    assert blocked['code'] == RESP_PHONE_REQUIRED['code']
+
+
+def test_bound_phone_allows_join_and_voice(monkeypatch):
+    monkeypatch.setattr(PhoneBindService, 'bound', lambda self, passport_id: True)
+    assert PhoneBindService().block_if_unbound(7) is None
+
+
+def test_missing_passport_counts_as_unbound():
+    blocked = PhoneBindService().block_if_unbound(0)
+    assert blocked['code'] == RESP_PHONE_REQUIRED['code']
+    assert PhoneBindService().block_if_unbound(None)['code'] == RESP_PHONE_REQUIRED['code']
