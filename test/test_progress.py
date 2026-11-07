@@ -510,6 +510,7 @@ class TestGuanguanHeartKind:
             HEART_KIND_EMPTY, None, LIST_WINDOW_MINUTES + 1, ignore_distance=True,
         ) is True
         assert should_show_guanguan_item(HEART_KIND_SINGLE, None, -1, ignore_distance=True) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, None, None, ignore_distance=True) is False
         assert should_show_guanguan_item(HEART_KIND_DOUBLE, None, -1, ignore_distance=True) is True
 
     def test_match_filter_for_candidates(self):

@@ -104,11 +104,11 @@ class GuanguanService(BaseService):
         3. 同档按见面时间由近到远
         4. 心碎/实心/双心永久展示
         5. 还没约上的：两周内、100km 内、匹配通过，且每 10km 只留 1 小时
-        审核模式不按距离筛，未开始的空场和邀请都返回。
+        审核模式不按距离和条数截断。未开始且匹配通过的场次都返回。
         """
         reviewing = under_review()
         if reviewing:
-            logger.info("审核模式列出全部未开始的活动，不按距离筛选 passport=%s", self.passportId)
+            logger.info("审核模式不按距离筛选活动 passport=%s", self.passportId)
         if not reviewing and (longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE):
             return [{
                 "id": UNKNOWN_NEGATIVE_ONE,
