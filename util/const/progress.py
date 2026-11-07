@@ -392,18 +392,20 @@ def calc_list_has_match(progress_status, activity_state, in_matched_activity_ids
     return bool(in_matched_activity_ids)
 
 
-def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start):
+def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start, ignore_distance=False):
     if heart_kind in PERMANENT_HEART_KINDS:
+        return True
+    if minutes_until_start is None or minutes_until_start < 0:
+        return False
+    if heart_kind not in (HEART_KIND_EMPTY, HEART_KIND_SINGLE):
+        return False
+    if ignore_distance:
         return True
     if distance_km is None or distance_km > MAX_LIST_DISTANCE_KM:
         return False
-    if minutes_until_start is None or minutes_until_start < 0:
-        return False
     if minutes_until_start > LIST_WINDOW_MINUTES:
         return False
-    if heart_kind in (HEART_KIND_EMPTY, HEART_KIND_SINGLE):
-        return minutes_until_start <= max_lead_minutes_for_transient(distance_km)
-    return False
+    return minutes_until_start <= max_lead_minutes_for_transient(distance_km)
 
 
 def should_include_activity_for_match(progress_status, activity_id, activity_state, matched_activity_ids, activity_state_empty):

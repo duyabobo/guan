@@ -30,7 +30,7 @@ from util.const.progress import (
     hold_block_reason, meet_choice_ready, next_results_after_my_fit, quit_is_allowed, relationship_hold,
     result_change_allowed,
     guanguan_list_sort_key, limit_solid_heart_items, should_include_activity_for_match,
-    should_show_guanguan_item, MAX_LIST_DISTANCE_KM,
+    should_show_guanguan_item, LIST_WINDOW_MINUTES, MAX_LIST_DISTANCE_KM,
 )
 from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING
 from util.const.base import (
@@ -501,6 +501,16 @@ class TestGuanguanHeartKind:
         assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, 30) is True
         assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM + 1, 30) is False
         assert should_show_guanguan_item(HEART_KIND_BROKEN, MAX_LIST_DISTANCE_KM + 1, 30) is True
+
+    def test_ignore_distance_keeps_future_items(self):
+        assert should_show_guanguan_item(
+            HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM + 1, 30, ignore_distance=True,
+        ) is True
+        assert should_show_guanguan_item(
+            HEART_KIND_EMPTY, None, LIST_WINDOW_MINUTES + 1, ignore_distance=True,
+        ) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, None, -1, ignore_distance=True) is False
+        assert should_show_guanguan_item(HEART_KIND_DOUBLE, None, -1, ignore_distance=True) is True
 
     def test_match_filter_for_candidates(self):
         assert should_include_activity_for_match(

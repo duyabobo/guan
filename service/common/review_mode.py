@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """审核开关。为 1 时，对外文案改成线下活动报名，详情只保留参加，并且不校验手机号。
 
+列表不按距离筛选，未开始的活动都返回。
+
 资料维度和选项下标仍用原来的目录，只换展示。
 """
 import logging
@@ -79,7 +81,7 @@ def under_review():
     enabled = get_conf(REVIEW_KEY, REVIEW_OFF, REVIEW_SECTION).strip() == REVIEW_ON
     global _announced
     if enabled and not _announced:
-        logger.info("审核开关为 1，文案按活动报名返回，详情只保留参加，不校验手机号")
+        logger.info("审核开关为 1，文案按活动报名返回，详情只保留参加，不校验手机号，列表不按距离筛选")
         _announced = True
     return enabled
 
