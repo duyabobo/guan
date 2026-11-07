@@ -41,6 +41,13 @@ volc_ark_model=${VOLC_ARK_MODEL:-doubao-seed-2-1-lite-260915}
 access_key=${QINIU_ACCESS_KEY:-}
 secret_key=${QINIU_SECRET_KEY:-}
 head_img_bucket_name=${QINIU_BUCKET:-}
+
+[aliyun_sms]
+aliyun_sms_access_key_id=${ALIYUN_SMS_ACCESS_KEY_ID:-}
+aliyun_sms_access_key_secret=${ALIYUN_SMS_ACCESS_KEY_SECRET:-}
+aliyun_sms_sign_name=${ALIYUN_SMS_SIGN_NAME:-}
+aliyun_sms_verify_template_code=${ALIYUN_SMS_VERIFY_TEMPLATE_CODE:-}
+aliyun_sms_notice_template_code=${ALIYUN_SMS_NOTICE_TEMPLATE_CODE:-}
 EOF
 
 echo "[entrypoint] Config ready. Starting application..."

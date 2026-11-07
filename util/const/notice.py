@@ -74,11 +74,20 @@ def boss_greeting(start_time):
     return BOSS_GREETING % boss_clock(start_time)
 
 
-def notice_sms_text(scene, start_time, note=''):
-    """短信正文。快到和到达这两条用和老板打招呼的句子。"""
+NOTICE_SMS_CLOCK = '%m月%d日 %H:%M'
+
+
+def notice_sms_parts(scene, start_time, note=''):
+    """通知短信的三个模板变量：标题、钟点、附言。"""
     title, default_note = NOTICE_TEXT.get(scene, ('', ''))
     shown = _sms_note(scene, start_time, note, default_note)
-    clock = start_time.strftime('%m月%d日 %H:%M') if start_time else ''
+    clock = start_time.strftime(NOTICE_SMS_CLOCK) if start_time else ''
+    return title, clock, shown
+
+
+def notice_sms_text(scene, start_time, note=''):
+    """短信正文。快到和到达这两条用和老板打招呼的句子。"""
+    title, clock, shown = notice_sms_parts(scene, start_time, note)
     return '关关雎鸠：%s。%s。%s' % (title, clock, shown)
 
 

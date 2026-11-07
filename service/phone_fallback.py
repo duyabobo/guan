@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""用通行证上的手机号密文发短信。没配短信地址就只记日志。"""
+"""用通行证上的手机号密文发阿里云通知短信。没配齐就只记日志。"""
 import logging
 
 from model.passport import PassportModel
 from service.identity.runtime_key import materials_for
 from util.const.identity import PURPOSE_PHONE_NOTIFY
-from util.const.notice import notice_sms_text
+from util.aliyun_sms import notice_configured, send_notices
+from util.const.notice import notice_sms_parts
 from util.sensitive_cipher import open_phone_or_none
-from util.sms_gateway import post_messages, sms_configured
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def deliver_missed(jobs):
     if not jobs:
         return []
-    if not sms_configured():
+    if not notice_configured():
         logger.info("手机兜底未发出 count=%s 未配置短信", len(jobs))
         return []
     numbers = _bound_numbers([job.passport_id for job in jobs])
@@ -62,10 +62,13 @@ def _outbound(jobs, numbers):
         if not number:
             missing += 1
             continue
+        title, when, note = notice_sms_parts(job.scene, job.start_time, job.note)
         outbound.append({
             'job': job,
             'phone': number,
-            'text': notice_sms_text(job.scene, job.start_time, job.note),
+            'title': title,
+            'when': when,
+            'note': note,
         })
     return outbound, missing
 
@@ -73,7 +76,4 @@ def _outbound(jobs, numbers):
 def _deliver(outbound):
     if not outbound:
         return []
-    messages = [{'phone': item['phone'], 'text': item['text']} for item in outbound]
-    if not post_messages(messages):
-        return []
-    return [item['job'] for item in outbound]
+    return [item['job'] for item in send_notices(outbound)]

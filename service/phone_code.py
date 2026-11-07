@@ -13,7 +13,6 @@ from service.common.phone_number import (
     PHONE_GAP_PASSPORT_KEY,
     PHONE_TRY_KEY,
     bind_code,
-    bind_code_text,
     mainland_mobile,
     new_bind_code,
     same_bind_code,
@@ -23,7 +22,7 @@ from util.const.identity import PURPOSE_PHONE_CODE
 from util.encode import md5_hex
 from util.redis_conn import decode_redis_value, redisConn
 from util.sensitive_cipher import open_text_or_none, pack_token, seal_bytes_or_none, unpack_token
-from util.sms_gateway import post_messages, sms_configured
+from util.aliyun_sms import send_verify_code, verify_configured
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +34,14 @@ class PhoneCodeService(object):
         if not passport_id or not number:
             logger.info("验证码未发出 passport=%s", passport_id)
             return 'invalid'
-        if not sms_configured():
+        if not verify_configured():
             logger.info("验证码未发出 passport=%s 未配置短信", passport_id)
             return 'unconfigured'
         if not _reserve_gap(passport_id, number):
             logger.info("验证码发送过快 passport=%s", passport_id)
             return 'soon'
         code = new_bind_code()
-        sent = post_messages([{'phone': number, 'text': bind_code_text(code)}])
+        sent = send_verify_code(number, code)
         if not sent:
             _release_gap(passport_id, number)
             logger.info("验证码发送失败 passport=%s", passport_id)
