@@ -1,14 +1,31 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""小程序里和见面、个人资料相关的展示文案。只从接口下发，不写进小程序包。"""
+"""小程序里和活动、个人资料相关的展示文案。只从接口下发，不写进小程序包。"""
 from service.common.phone_number import PHONE_CODE_LENGTH, PHONE_DIGIT_COUNT
+from service.common.review_mode import under_review
+
+_REVIEW_PRIVACY_BODY = (
+    "点按麦克风后，还没验证手机号会先验证，通过后才开始录音。"
+    "录音会加密保存，并整理成报名信息和参与偏好，用于线下活动报名。页面上不展示原始录音。"
+    "性别、身高、出生年份和所在地区确认后，不能再用语音改掉；"
+    "新的说法和原来不一致时，会保留原来的，并等待人工客服确认。已经报名或确认参加之后，不能再录音。"
+)
 
 
 def list_page_copy():
-    return {
+    copy = {
         "listTitle": "见面",
+        "entryTitle": "关关雎鸠",
+        "shareTitle": "关关雎鸠",
+        "showHeart": True,
         "loginHint": "登录后查看",
     }
+    if under_review():
+        copy["listTitle"] = "活动"
+        copy["entryTitle"] = ""
+        copy["shareTitle"] = "线下活动"
+        copy["showHeart"] = False
+    return copy
 
 
 def phone_gate_copy():
@@ -47,6 +64,13 @@ def match_config_copy():
         "micDeniedContent": "语音搜集需要使用麦克风，请在设置里允许录音。",
         "micDeniedConfirm": "去设置",
     }
+    if under_review():
+        copy["pageTitle"] = "活动报名"
+        copy["infoTitle"] = "报名信息"
+        copy["requirementTitle"] = "参与偏好"
+        copy["emptyText"] = "说一段话后，这里会整理出报名信息和参与偏好"
+        copy["privacyBody"] = _REVIEW_PRIVACY_BODY
+        copy["voiceStatus"]["idle"] = "说说你自己和想参加的活动"
     copy.update(phone_gate_copy())
     return copy
 
@@ -58,6 +82,16 @@ def guan_info_copy():
         "requirementTitle": "ta的期望",
         "emptyText": "还没有可展示的对象资料",
         "shareLabel": "安全见面，分享亲友",
+        "shareCardTitle": "安全见面",
+        "shareTitle": "关关雎鸠",
     }
+    if under_review():
+        copy["pageTitle"] = "活动详情"
+        copy["infoTitle"] = "报名信息"
+        copy["requirementTitle"] = "参与偏好"
+        copy["emptyText"] = "还没有可展示的报名资料"
+        copy["shareLabel"] = "分享这场活动"
+        copy["shareCardTitle"] = "线下活动"
+        copy["shareTitle"] = "线下活动"
     copy.update(phone_gate_copy())
     return copy

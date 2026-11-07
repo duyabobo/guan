@@ -10,6 +10,7 @@ from service import BaseService
 from service.common.guan_helper import GuanHelper
 from service.common.meet_outcome import settle_due_meets
 from service.common.profile_match import ProfileMatchService
+from service.common.review_mode import present_progress_desc
 from util.const.match import (
     MODEL_SEX_UNKNOWN_INDEX,
     MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING,
@@ -174,7 +175,7 @@ class GuanguanService(BaseService):
                 "time": activity.startTimeStr,
                 "startTime": activity.start_time.strftime("%Y-%m-%d %H:%M") if activity.start_time else "",
                 "progressStatus": progress,
-                "progressDesc": PROGRESS_DESC.get(progress, ""),
+                "progressDesc": present_progress_desc(PROGRESS_DESC.get(progress, "")),
                 "heartKind": heart_kind,
                 "hasMatch": calc_list_has_match(progress, activity.state, activity.id in matched_activity_ids),
                 "img": GuanHelper.getActivityImg(address, True),

@@ -18,6 +18,7 @@ services:
       - TZ=Asia/Shanghai
       - SERVER_ENV=${SERVER_ENV:-offline}
       - DEBUG=${DEBUG:-false}
+      - UNDER_REVIEW=${UNDER_REVIEW:-0}
       - COOKIE_SECRET=${COOKIE_SECRET:-change_me_in_production}
       # MySQL
       - MYSQL_HOST=mysql

@@ -6,6 +6,7 @@ import logging
 from model.profile_attr import ProfileAttrModel
 from service import BaseService
 from service.common.page_copy import match_config_copy
+from service.common.review_mode import phone_required, present_sentence
 from service.common.profile_board import ProfileBoardService
 from service.common.profile_catalog import SCOPE_INFO, SCOPE_REQUIREMENT, values_from_payload
 from service.common.profile_guard import ProfileWriteOutcome, decide_profile_write
@@ -29,8 +30,9 @@ class MatchConfigService(BaseService):
             "copy": match_config_copy(),
             "rows": ProfileBoardService.rows_for(self.passportId, show_all=True),
             "voiceEnabled": not blocked,
-            "voiceBlockText": RESP_VOICE_IN_PROGRESS["errMsg"] if blocked else "",
+            "voiceBlockText": present_sentence(RESP_VOICE_IN_PROGRESS["errMsg"]) if blocked else "",
             "phoneBound": PhoneBindService().bound(self.passportId),
+            "phoneRequired": phone_required(),
         }
 
     def updateFromVoiceText(self, voice_text):

@@ -47,7 +47,8 @@ redis.StrictRedis = lambda *args, **kwargs: fakeredis.FakeStrictRedis(server=_fa
 
 
 @pytest.fixture(autouse=True)
-def _flush_fake_redis():
-    """每个用例都从空 Redis 开始。"""
+def _flush_fake_redis(monkeypatch):
+    """每个用例都从空 Redis 开始，审核开关默认关闭。"""
+    monkeypatch.delenv("UNDER_REVIEW", raising=False)
     fakeredis.FakeStrictRedis(server=_fake_server).flushall()
     yield

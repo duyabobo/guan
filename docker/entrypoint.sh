@@ -12,6 +12,7 @@ port=${PORT:-8888}
 server=${SERVER_ENV:-offline}
 debug=${DEBUG:-false}
 cookie_secret=${COOKIE_SECRET:-change_me_in_production}
+under_review=${UNDER_REVIEW:-0}
 
 [mysql]
 username=${MYSQL_USER:-guan}
