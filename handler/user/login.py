@@ -39,6 +39,7 @@ class LoginHandler(BaseHandler):
                 len(self.request.query or ''),
                 len(self.request.body or b''),
             )
+            raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
         assertion = yield provider.authenticate(code)
         if not assertion:
             raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
@@ -58,6 +59,7 @@ class LoginHandler(BaseHandler):
             data['openid'] = openid
         raise gen.Return(Response(data=data))
 
+    # 小程序把 code 放在 JSON 请求体里提交，和 GET 走同一段登录。
     post = get
 
     @superMonitor

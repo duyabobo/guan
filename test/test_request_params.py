@@ -72,6 +72,11 @@ def test_request_parameter_reads_login_code_from_json_body():
     assert handler.getIntParameter('sharePassportId', default=0, minimum=0) == 3
 
 
+def test_login_code_in_json_without_content_type_is_ignored():
+    handler = _handler(body=json.dumps({'code': 'js-code'}).encode())
+    assert handler.getRequestParameter('code', default='') == ''
+
+
 def test_request_parameter_falls_back_to_default_instead_of_raising():
     assert _handler('/x?n=abc').getRequestParameter('n', default=5, paraType=int) == 5
     assert _handler('/x').getRequestParameter('n', default='') == ''
