@@ -31,7 +31,15 @@ class LoginHandler(BaseHandler):
         if not provider:
             raise gen.Return(Response(msg=RESP_NEED_LOGIN))
 
-        assertion = yield provider.authenticate(self.getRequestParameter('code'))
+        code = self.getRequestParameter('code')
+        if not code:
+            logger.warning(
+                "登录请求没有微信 code method=%s queryLen=%s bodyLen=%s",
+                self.request.method,
+                len(self.request.query or ''),
+                len(self.request.body or b''),
+            )
+        assertion = yield provider.authenticate(code)
         if not assertion:
             raise gen.Return(Response(msg=RESP_IDENTITY_INCOMPLETE))
 
@@ -49,6 +57,8 @@ class LoginHandler(BaseHandler):
         if openid:
             data['openid'] = openid
         raise gen.Return(Response(data=data))
+
+    post = get
 
     @superMonitor
     def put(self, *args, **kwargs):

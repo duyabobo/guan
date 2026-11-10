@@ -63,6 +63,15 @@ def test_float_parameter_default_and_value():
     assert _handler('/x').getFloatParameter('longitude', default=-1) == -1
 
 
+def test_request_parameter_reads_login_code_from_json_body():
+    handler = _handler(
+        body=json.dumps({'code': 'js-code', 'sharePassportId': '3'}).encode(),
+        content_type='application/json',
+    )
+    assert handler.getRequestParameter('code') == 'js-code'
+    assert handler.getIntParameter('sharePassportId', default=0, minimum=0) == 3
+
+
 def test_request_parameter_falls_back_to_default_instead_of_raising():
     assert _handler('/x?n=abc').getRequestParameter('n', default=5, paraType=int) == 5
     assert _handler('/x').getRequestParameter('n', default='') == ''
