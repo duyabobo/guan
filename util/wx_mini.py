@@ -5,7 +5,9 @@ import json
 import logging
 import random
 import socket
+import ssl
 import struct
+import threading
 import time
 from urllib import parse as urlparse
 
@@ -18,8 +20,8 @@ from util.const.mini_program import WX_MINIPROGRAM_CODE_TO_SESSION
 
 logger = logging.getLogger(__name__)
 
-CODE_TO_SESSION_TIMEOUT = 8
-CONNECT_TIMEOUT_SECONDS = 2
+CODE_TO_SESSION_TIMEOUT = 5
+MAX_RACE_ADDRESSES = 4
 HTTPS_PORT = 443
 HTTP_STATUS_OK = 200
 
@@ -46,6 +48,7 @@ PUBLIC_DNS_RESOLVERS = ('223.5.5.5', '119.29.29.29')
 ADDRESS_CACHE_SECONDS = 300
 
 _address_cache = {}
+_preferred_address = {}
 
 
 class WxHelper(object):
@@ -55,20 +58,37 @@ class WxHelper(object):
 
     @gen.coroutine
     def codeToSession(self, js_code):
-        """向微信换登录态。解析和连接都算在总超时里，一个地址失败就换下一个。"""
+        """向微信换登录态。几个地址一起问，先返回的那个生效。"""
         if not js_code:
             logger.warning("微信 code 为空")
             raise gen.Return({})
-        logger.info("开始向微信换登录态")
+        if not self.appid or not self.secret:
+            logger.warning(
+                "微信登录配置为空 appidLen=%s secretLen=%s",
+                len(self.appid or ''), len(self.secret or ''),
+            )
+            raise gen.Return({})
+        logger.info(
+            "开始向微信换登录态 appidLen=%s secretLen=%s",
+            len(self.appid or ''), len(self.secret or ''),
+        )
         path = _session_path({
             'js_code': js_code,
             'appid': self.appid,
             'secret': self.secret,
             'grant_type': 'authorization_code',
         })
-        payload = yield IOLoop.current().run_in_executor(
-            None, _fetch_session, path, CODE_TO_SESSION_TIMEOUT)
-        logger.info("微信登录态已返回")
+        started = time.time()
+        try:
+            payload = yield IOLoop.current().run_in_executor(
+                None, _fetch_session, path, CODE_TO_SESSION_TIMEOUT)
+        except (TimeoutError, socket.timeout, OSError, http.client.HTTPException) as exc:
+            logger.warning(
+                "微信换登录态失败 err=%s cost=%.3f",
+                type(exc).__name__, time.time() - started,
+            )
+            raise gen.Return({})
+        logger.info("微信登录态已返回 cost=%.3f", time.time() - started)
         raise gen.Return(json.loads(payload) if payload else {})
 
 
@@ -86,19 +106,75 @@ def _fetch_session(path, timeout):
 
 
 def _request_until(addresses, path, deadline):
-    last_error = TimeoutError('wechat connect timed out')
+    remaining = deadline - time.time()
+    candidates = _attempt_addresses(addresses)
+    if remaining <= 0 or not candidates:
+        raise TimeoutError('wechat connect timed out')
+    return _first_response(candidates, path, remaining)
+
+
+def _attempt_addresses(addresses):
+    preferred = _preferred_address.get(WX_API_HOST)
+    ordered = list(addresses or [])
+    if preferred in ordered:
+        ordered.remove(preferred)
+        ordered.insert(0, preferred)
+    return ordered[:MAX_RACE_ADDRESSES]
+
+
+def _first_response(addresses, path, timeout):
+    """同时问这些地址。先拿到响应的那个生效，没通的地址不能把登录拖住。"""
+    state = {'left': len(addresses)}
+    lock = threading.Lock()
+    finished = threading.Event()
     for ip in addresses:
-        remaining = deadline - time.time()
-        if remaining <= 0:
-            break
-        attempt_timeout = CONNECT_TIMEOUT_SECONDS if remaining > CONNECT_TIMEOUT_SECONDS else remaining
-        try:
-            return _request_one(ip, path, attempt_timeout)
-        except (TimeoutError, socket.timeout, OSError, http.client.HTTPException) as exc:
-            last_error = exc
-            logger.warning("微信地址连接失败 ip=%s err=%s", ip, type(exc).__name__)
+        threading.Thread(
+            target=_attempt_address,
+            args=(ip, path, timeout, state, lock, finished),
+            daemon=True,
+        ).start()
+    if not finished.wait(timeout):
+        _drop_address_cache(WX_API_HOST)
+        raise TimeoutError('wechat connect timed out')
+    with lock:
+        payload = state.get('payload')
+        ip = state.get('ip')
+        error = state.get('error')
+    if payload is not None:
+        _remember_address(WX_API_HOST, ip)
+        logger.info("微信地址已连通 ip=%s", ip)
+        return payload
     _drop_address_cache(WX_API_HOST)
-    raise last_error
+    if error:
+        raise error
+    raise TimeoutError('wechat connect timed out')
+
+
+def _attempt_address(ip, path, timeout, state, lock, finished):
+    payload = None
+    error = None
+    try:
+        payload = _request_one(ip, path, timeout)
+    except (TimeoutError, socket.timeout, OSError, http.client.HTTPException) as exc:
+        error = exc
+        logger.warning("微信地址连接失败 ip=%s err=%s", ip, type(exc).__name__)
+    with lock:
+        _record_attempt(state, ip, payload, error, finished)
+
+
+def _record_attempt(state, ip, payload, error, finished):
+    state['left'] -= 1
+    if payload is not None and 'payload' not in state:
+        state['payload'] = payload
+        state['ip'] = ip
+    elif error is not None and 'error' not in state:
+        state['error'] = error
+    if 'payload' in state or state['left'] <= 0:
+        finished.set()
+
+
+def _remember_address(host, ip):
+    _preferred_address[host] = ip
 
 
 def _addresses_for(host, deadline):
@@ -128,6 +204,7 @@ def _store_addresses(host, addresses, now):
 
 def _drop_address_cache(host):
     _address_cache.pop(host, None)
+    _preferred_address.pop(host, None)
 
 
 def _resolve_ipv4(host, budget):
@@ -257,10 +334,29 @@ class _AddressPinnedHTTPSConnection(http.client.HTTPSConnection):
         self._ip = ip
 
     def connect(self):
-        sock = socket.create_connection((self._ip, self.port), self.timeout)
-        sock.settimeout(self.timeout)
-        self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
-        self.sock.settimeout(self.timeout)
+        raw = _connect_ip(self._ip, self.timeout)
+        context = getattr(self, '_context', None) or ssl.create_default_context()
+        wrapped = context.wrap_socket(
+            raw, server_hostname=self.host, do_handshake_on_connect=False)
+        wrapped.settimeout(self.timeout)
+        try:
+            wrapped.do_handshake()
+        except OSError:
+            wrapped.close()
+            raise
+        self.sock = wrapped
+
+
+def _connect_ip(ip, timeout):
+    """直连已解析的地址。create_connection 会再走一次解析，解析卡住时这次连接不会回来。"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    try:
+        sock.connect((ip, HTTPS_PORT))
+    except OSError:
+        sock.close()
+        raise
+    return sock
 
 
 def _request_one(ip, path, timeout):

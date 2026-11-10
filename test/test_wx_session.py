@@ -4,6 +4,7 @@ import os
 import socket
 import struct
 import sys
+import threading
 import time
 
 import pytest
@@ -28,8 +29,10 @@ _FLAGS_REFUSED = wx_mini.DNS_FLAG_RESPONSE | _RCODE_REFUSED
 @pytest.fixture(autouse=True)
 def _clear_address_cache():
     wx_mini._address_cache.clear()
+    wx_mini._preferred_address.clear()
     yield
     wx_mini._address_cache.clear()
+    wx_mini._preferred_address.clear()
 
 
 def _name_pointer(offset):
@@ -80,9 +83,11 @@ def test_parse_rejects_bad_packet():
 
 def test_second_address_is_used_when_first_times_out(monkeypatch):
     calls = []
+    both_started = threading.Barrier(2)
 
     def request_one(ip, path, timeout):
         calls.append(ip)
+        both_started.wait(1)
         if ip == '1.1.1.1':
             raise socket.timeout()
         return b'{"openid":"o"}'
@@ -90,7 +95,7 @@ def test_second_address_is_used_when_first_times_out(monkeypatch):
     monkeypatch.setattr(wx_mini, '_addresses_for', lambda host, deadline: ['1.1.1.1', '2.2.2.2'])
     monkeypatch.setattr(wx_mini, '_request_one', request_one)
     assert wx_mini._fetch_session('/sns/jscode2session', wx_mini.CODE_TO_SESSION_TIMEOUT) == b'{"openid":"o"}'
-    assert calls == ['1.1.1.1', '2.2.2.2']
+    assert set(calls) == {'1.1.1.1', '2.2.2.2'}
 
 
 def test_fetch_without_address(monkeypatch):
@@ -99,26 +104,74 @@ def test_fetch_without_address(monkeypatch):
         wx_mini._fetch_session('/sns/jscode2session', _RESOLVE_BUDGET)
 
 
-def test_fetch_stops_at_deadline(monkeypatch):
-    clock = {'now': _CLOCK_START}
-    calls = []
-    attempt_cost = wx_mini.CONNECT_TIMEOUT_SECONDS + 1
-    budget = wx_mini.CONNECT_TIMEOUT_SECONDS * 2 + 1
+def test_slow_address_does_not_hold_login(monkeypatch):
+    release = threading.Event()
 
-    def now():
-        return clock['now']
+    def request_one(ip, path, timeout):
+        if ip != '3.3.3.3':
+            release.wait(2)
+            raise socket.timeout()
+        return b'{"openid":"o"}'
+
+    monkeypatch.setattr(
+        wx_mini, '_addresses_for',
+        lambda host, deadline: ['1.1.1.1', '2.2.2.2', '3.3.3.3'])
+    monkeypatch.setattr(wx_mini, '_request_one', request_one)
+    started = time.time()
+    try:
+        assert wx_mini._fetch_session('/sns/jscode2session', 5) == b'{"openid":"o"}'
+        assert time.time() - started < 0.5
+    finally:
+        release.set()
+    assert wx_mini._preferred_address[wx_mini.WX_API_HOST] == '3.3.3.3'
+
+
+def test_race_stops_at_address_cap(monkeypatch):
+    calls = []
+    seen = threading.Event()
 
     def request_one(ip, path, timeout):
         calls.append(ip)
-        clock['now'] += attempt_cost
+        if len(calls) >= wx_mini.MAX_RACE_ADDRESSES:
+            seen.set()
         raise socket.timeout()
 
-    monkeypatch.setattr(wx_mini.time, 'time', now)
-    monkeypatch.setattr(wx_mini, '_addresses_for', lambda host, deadline: ['1.1.1.1', '2.2.2.2', '3.3.3.3'])
+    monkeypatch.setattr(
+        wx_mini, '_addresses_for',
+        lambda host, deadline: ['1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4', '5.5.5.5'])
     monkeypatch.setattr(wx_mini, '_request_one', request_one)
     with pytest.raises(socket.timeout):
-        wx_mini._fetch_session('/sns/jscode2session', budget)
-    assert calls == ['1.1.1.1', '2.2.2.2']
+        wx_mini._fetch_session('/sns/jscode2session', 5)
+    assert seen.wait(1)
+    assert set(calls) == {'1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4'}
+
+
+def test_working_address_is_remembered(monkeypatch):
+    def request_one(ip, path, timeout):
+        if ip == '2.2.2.2':
+            return b'{}'
+        raise socket.timeout()
+
+    monkeypatch.setattr(wx_mini, '_addresses_for', lambda host, deadline: ['1.1.1.1', '2.2.2.2'])
+    monkeypatch.setattr(wx_mini, '_request_one', request_one)
+    assert wx_mini._fetch_session('/sns/jscode2session', 5) == b'{}'
+    assert wx_mini._preferred_address[wx_mini.WX_API_HOST] == '2.2.2.2'
+
+
+def test_blackhole_connect_returns_within_timeout():
+    outcome = {}
+
+    def run():
+        try:
+            wx_mini._connect_ip('192.0.2.1', 0.2)
+        except OSError as exc:
+            outcome['error'] = exc
+
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+    thread.join(1)
+    assert not thread.is_alive()
+    assert outcome.get('error') is not None
 
 
 def test_failed_fetch_drops_cached_address(monkeypatch):
