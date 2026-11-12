@@ -1,5 +1,5 @@
 # Web 框架
-tornado==6.4.1
+tornado==6.6
 gevent>=22.10.0
 greenlet>=2.0.0
 
