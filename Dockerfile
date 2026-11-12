@@ -7,7 +7,13 @@ WORKDIR /app
 RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    cron \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo Asia/Shanghai > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Asia/Shanghai
 
 # 先复制依赖文件，利用 Docker 层缓存
 COPY requirements.txt .
@@ -27,6 +33,8 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8888
 
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh \
+    && cp docker/fill-weekend-activities /etc/cron.d/fill-weekend-activities \
+    && chmod 644 /etc/cron.d/fill-weekend-activities
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -12,6 +12,9 @@ app.conf
 certs/*.pem
 certs/*.key
 
+# 门店导入进度，重跑时用来跳过已完成的城市
+script/data/
+
 # 运行产物
 *.pyc
 __pycache__/

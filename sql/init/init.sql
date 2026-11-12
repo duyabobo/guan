@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS `address` (
     `status`       TINYINT UNSIGNED NOT NULL DEFAULT 1,
     `create_time`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_lng_lat` (`longitude`, `latitude`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面地点';
 
 -- ── passport：账号。身份只留编号、手机号密文、unionid 查找值 ───────────────

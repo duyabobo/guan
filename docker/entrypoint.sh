@@ -51,5 +51,11 @@ aliyun_sms_verify_template_code=${ALIYUN_SMS_VERIFY_TEMPLATE_CODE:-}
 aliyun_sms_notice_template_code=${ALIYUN_SMS_NOTICE_TEMPLATE_CODE:-}
 EOF
 
-echo "[entrypoint] Config ready. Starting application..."
+echo "[entrypoint] Config ready. Filling weekend activities..."
+python script/fill_weekend_activities.py || echo "[entrypoint] weekend activity fill failed, continue starting"
+
+echo "[entrypoint] Starting cron..."
+cron
+
+echo "[entrypoint] Starting application..."
 exec python main.py
