@@ -15,3 +15,6 @@ pycryptodome>=3.19.0
 
 # 火山方舟兼容 OpenAI SDK
 openai>=1.0.0
+
+# OSM PBF 门店导入
+osmium>=3.7.0

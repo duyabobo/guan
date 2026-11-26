@@ -3,13 +3,14 @@ FROM docker.1panel.live/library/python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# 安装系统依赖（pymysql/gcc/gevent 编译需要）
+# 安装系统依赖（gcc/gevent 编译；libexpat1 给 osmium 运行时）
 # 构建网络访问 deb.debian.org、中科大镜像不稳定，改走阿里云
 RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     cron \
     tzdata \
+    libexpat1 \
     && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo Asia/Shanghai > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*

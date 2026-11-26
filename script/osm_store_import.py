@@ -1,42 +1,42 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""从 OpenStreetMap 一次性导入各大城市肯德基、麦当劳门店。
+"""从 Geofabrik 的 OSM 数据包导入各大城市肯德基、麦当劳门店。
 
-数据来自 Overpass API，免费、无需 Key。OSM 坐标是 WGS-84，写入前转成
-国测局 GCJ-02，和小程序定位一致。国内 OSM 覆盖不如商业地图全，漏店可接受。
+下载中国 .osm.pbf（约 1.5GB）后在本地筛选，不依赖在线 Overpass，也不要高德 Key。
+坐标从 WGS-84 转成国测局 GCJ-02，和小程序定位一致。国内 OSM 会漏店，大城市一般够用。
 
 用法（在 guan 目录，或容器内 /app）:
-  python -m script.osm_store_import --dry-run
-  python -m script.osm_store_import --city 北京市
-  python -m script.osm_store_import
+  python -m script.osm_store_import --download --dry-run
+  python -m script.osm_store_import --download
+  python -m script.osm_store_import --pbf /path/to/china-latest.osm.pbf --city 北京市
 """
 import argparse
-import json
 import logging
 import math
 import os
 import ssl
 import sys
-import time
-import urllib.parse
 import urllib.request
-from collections import namedtuple
+from collections import Counter, namedtuple
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+import osmium
 import pymysql
 
 from util.const.match import MODEL_STATUS_YES
 
 logger = logging.getLogger("osm_store_import")
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-HTTP_TIMEOUT_SEC = 180
-OVERPASS_QUERY_TIMEOUT_SEC = 120
-REQUEST_INTERVAL_SEC = 2.0
+GEOFABRIK_CHINA_PBF_URL = "https://download.geofabrik.de/asia/china-latest.osm.pbf"
+DEFAULT_PBF_PATH = os.path.join(SCRIPT_DIR, "data", "china-latest.osm.pbf")
+DOWNLOAD_TIMEOUT_SEC = 600
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
+DOWNLOAD_LOG_STEP_PERCENT = 5
+BYTES_PER_MB = 1024 * 1024
 NAME_LIMIT = 256
 DESCRIPTION_LIMIT = 512
 COORD_DECIMALS = 5
@@ -47,11 +47,9 @@ CHINA_LNG_MIN = 73.0
 CHINA_LNG_MAX = 136.0
 CHINA_LAT_MIN = 3.0
 CHINA_LAT_MAX = 54.0
-USER_AGENT = "guan-osm-store-import/1.0"
-PROGRESS_PATH = os.path.join(SCRIPT_DIR, "data", "osm_store_progress.json")
+USER_AGENT = "guan-osm-store-import/2.0"
 EXCLUDE_NAME_PARTS = ("宅急送", "外卖", "配送", "配送站")
 
-# 克拉索夫斯基椭球参数，WGS-84 → GCJ-02 纠偏用
 KRASOVSKY_A = 6378245.0
 EE = 0.00669342162296594323
 GCJ_OFFSET_LNG = 105.0
@@ -100,10 +98,6 @@ INSERT INTO region (province, city, area, status) VALUES (%s, %s, %s, %s)
 """
 
 
-class OverpassError(Exception):
-    pass
-
-
 def clip(text, limit):
     if len(text) <= limit:
         return text
@@ -140,7 +134,6 @@ def _transform_lng(x, y):
 
 
 def wgs84_to_gcj02(longitude, latitude):
-    """把 OSM 的 WGS-84 转成国测局 GCJ-02。"""
     if out_of_china(longitude, latitude):
         return longitude, latitude
     dlat = _transform_lat(longitude - GCJ_OFFSET_LNG, latitude - GCJ_OFFSET_LAT)
@@ -156,6 +149,10 @@ def wgs84_to_gcj02(longitude, latitude):
 
 def store_identity(name, longitude, latitude):
     return (name, round(float(longitude), COORD_DECIMALS), round(float(latitude), COORD_DECIMALS))
+
+
+def tags_to_dict(tags):
+    return {tag.k: tag.v for tag in tags}
 
 
 def brand_of_tags(tags):
@@ -177,27 +174,30 @@ def brand_of_tags(tags):
     return None
 
 
-def element_point(element):
-    if "lat" in element and "lon" in element:
-        return float(element["lon"]), float(element["lat"])
-    center = element.get("center") or {}
-    if "lat" in center and "lon" in center:
-        return float(center["lon"]), float(center["lat"])
+def city_selected(city, names):
+    if not names:
+        return True
+    city_stem = city.name.rstrip("市")
+    for name in names:
+        if city.name == name or city_stem == name.rstrip("市"):
+            return True
+    return False
+
+
+def city_containing(longitude, latitude, cities):
+    for city in cities:
+        if city.south <= latitude <= city.north and city.west <= longitude <= city.east:
+            return city
     return None
 
 
-def store_from_element(element, city):
-    tags = element.get("tags") or {}
+def store_from_wgs(tags, wgs_lng, wgs_lat, city):
     brand = brand_of_tags(tags)
     if brand is None:
         return None
     name = clip(plain_text(tags.get("name") or tags.get("name:zh") or brand.keyword), NAME_LIMIT)
     if any(part in name for part in EXCLUDE_NAME_PARTS):
         return None
-    point = element_point(element)
-    if not point:
-        return None
-    wgs_lng, wgs_lat = point
     if out_of_china(wgs_lng, wgs_lat):
         return None
     longitude, latitude = wgs84_to_gcj02(wgs_lng, wgs_lat)
@@ -248,47 +248,64 @@ def address_values(store, region_id):
     )
 
 
-def overpass_query(city):
-    bbox = "%s,%s,%s,%s" % (city.south, city.west, city.north, city.east)
-    parts = []
-    for brand in BRANDS:
-        parts.append('  nwr["brand:wikidata"="%s"](%s);' % (brand.wikidata, bbox))
-        parts.append('  nwr["name"~"%s"](%s);' % (brand.keyword, bbox))
-        parts.append('  nwr["brand"~"%s"](%s);' % (brand.keyword, bbox))
-    return "\n".join([
-        "[out:json][timeout:%s];" % OVERPASS_QUERY_TIMEOUT_SEC,
-        "(",
-        *parts,
-        ");",
-        "out center tags;",
-    ])
+def way_center(way):
+    if not way.nodes:
+        return None
+    lons = []
+    lats = []
+    for node in way.nodes:
+        if not node.location.valid():
+            return None
+        lons.append(node.lon)
+        lats.append(node.lat)
+    return sum(lons) / len(lons), sum(lats) / len(lats)
 
 
-def city_selected(city, names):
-    if not names:
-        return True
-    city_stem = city.name.rstrip("市")
-    for name in names:
-        name_stem = name.rstrip("市")
-        if city.name == name or city_stem == name_stem:
-            return True
-    return False
+class BrandHandler(osmium.SimpleHandler):
+    """扫 PBF，只留下肯德基/麦当劳的点位（WGS-84）。"""
+
+    def __init__(self):
+        super(BrandHandler, self).__init__()
+        self.points = []
+
+    def node(self, node):
+        if not node.location.valid():
+            return
+        self._keep(node.tags, node.location.lon, node.location.lat)
+
+    def way(self, way):
+        if brand_of_tags(way.tags) is None:
+            return
+        point = way_center(way)
+        if point is None:
+            return
+        longitude, latitude = point
+        self.points.append((tags_to_dict(way.tags), longitude, latitude))
+
+    def _keep(self, osm_tags, longitude, latitude):
+        if brand_of_tags(osm_tags) is None:
+            return
+        self.points.append((tags_to_dict(osm_tags), longitude, latitude))
 
 
-def load_done(path):
-    if not os.path.exists(path):
-        return set()
-    with open(path, encoding="utf-8") as progress_file:
-        data = json.load(progress_file)
-    return set(data.get("done") or [])
+def collect_brand_points(pbf_path):
+    handler = BrandHandler()
+    logger.info("开始扫描 PBF path=%s", pbf_path)
+    handler.apply_file(pbf_path, locations=True)
+    logger.info("扫描完成 brand_points=%s", len(handler.points))
+    return handler.points
 
 
-def save_done(path, done):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    temporary = path + ".tmp"
-    with open(temporary, "w", encoding="utf-8") as progress_file:
-        json.dump({"done": sorted(done)}, progress_file, ensure_ascii=False)
-    os.replace(temporary, path)
+def stores_from_points(points, cities):
+    stores = []
+    for tags, wgs_lng, wgs_lat in points:
+        city = city_containing(wgs_lng, wgs_lat, cities)
+        if city is None:
+            continue
+        store = store_from_wgs(tags, wgs_lng, wgs_lat, city)
+        if store:
+            stores.append(store)
+    return dedup_stores(stores)
 
 
 def load_env_file():
@@ -306,42 +323,38 @@ def load_env_file():
                 os.environ[key] = value.strip()
 
 
-def http_post_json(url, body):
-    encoded = urllib.parse.urlencode({"data": body}).encode("utf-8")
-    request = urllib.request.Request(
-        url,
-        data=encoded,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-        },
-        method="POST",
-    )
+def download_pbf(url, path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    temporary = path + ".part"
+    logger.info("开始下载 url=%s -> %s", url, path)
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(
-        request, timeout=HTTP_TIMEOUT_SEC, context=ssl.create_default_context(),
+        request, timeout=DOWNLOAD_TIMEOUT_SEC, context=ssl.create_default_context(),
     ) as response:
-        return json.loads(response.read().decode("utf-8"))
-
-
-class OverpassClient(object):
-    def __init__(self, post_json, pause):
-        self.post_json = post_json
-        self.pause = pause
-
-    def fetch_city(self, city):
-        self.pause()
-        payload = self.post_json(OVERPASS_URL, overpass_query(city))
-        if not isinstance(payload, dict):
-            raise OverpassError("响应不是 JSON 对象 city=%s" % city.name)
-        elements = payload.get("elements") or []
-        if not isinstance(elements, list):
-            return []
-        stores = []
-        for element in elements:
-            store = store_from_element(element, city)
-            if store:
-                stores.append(store)
-        return dedup_stores(stores)
+        total = int(response.headers.get("Content-Length") or 0)
+        read_bytes = 0
+        last_logged = -DOWNLOAD_LOG_STEP_PERCENT
+        with open(temporary, "wb") as out:
+            while True:
+                chunk = response.read(DOWNLOAD_CHUNK_BYTES)
+                if not chunk:
+                    break
+                out.write(chunk)
+                read_bytes += len(chunk)
+                if total <= 0:
+                    continue
+                percent = int(read_bytes * 100 / total)
+                if percent >= last_logged + DOWNLOAD_LOG_STEP_PERCENT:
+                    logger.info(
+                        "下载进度 %s%% (%s/%s MB)",
+                        percent,
+                        read_bytes // BYTES_PER_MB,
+                        total // BYTES_PER_MB,
+                    )
+                    last_logged = percent
+    os.replace(temporary, path)
+    logger.info("下载完成 path=%s size_mb=%s", path, os.path.getsize(path) // BYTES_PER_MB)
+    return path
 
 
 class AddressWriter(object):
@@ -441,32 +454,38 @@ class AddressWriter(object):
 
 
 def parse_args(argv):
-    parser = argparse.ArgumentParser(description="从 OSM 导入各大城市肯德基、麦当劳门店")
+    parser = argparse.ArgumentParser(description="从 OSM PBF 导入各大城市肯德基、麦当劳门店")
+    parser.add_argument("--pbf", default="", help="本地 .osm.pbf 路径，默认 script/data/china-latest.osm.pbf")
+    parser.add_argument("--download", action="store_true", help="从 Geofabrik 下载中国数据包")
     parser.add_argument("--city", action="append", default=[], help="城市名，可重复。默认一线+新一线")
-    parser.add_argument("--dry-run", action="store_true", help="只查询并打印数量，不写数据库")
+    parser.add_argument("--dry-run", action="store_true", help="只统计数量，不写数据库")
     return parser.parse_args(argv)
 
 
-def run_import(client, writer, cities, done, record_done):
-    inserted_total = 0
-    for city in cities:
-        if city.name in done:
-            logger.info("已完成，跳过 city=%s", city.name)
-            continue
-        stores = client.fetch_city(city)
-        if writer is None:
-            inserted = len(stores)
-        else:
-            inserted = writer.insert_stores(stores)
-        inserted_total += inserted
-        logger.info(
-            "city=%s fetched=%s inserted=%s",
-            city.name, len(stores), inserted,
-        )
-        if record_done:
-            done.add(city.name)
-            save_done(PROGRESS_PATH, done)
-    return inserted_total
+def resolve_pbf_path(args):
+    path = args.pbf.strip() or DEFAULT_PBF_PATH
+    if os.path.exists(path):
+        if args.download:
+            logger.info("PBF 已存在，跳过下载 path=%s", path)
+        return path
+    if not args.download:
+        logger.error("找不到 PBF：%s 。请加 --download，或用 --pbf 指定已下载文件", path)
+        return ""
+    download_pbf(GEOFABRIK_CHINA_PBF_URL, path)
+    return path
+
+
+def run_import(pbf_path, writer, cities):
+    points = collect_brand_points(pbf_path)
+    stores = stores_from_points(points, cities)
+    for city_name, count in sorted(Counter(store.city for store in stores).items()):
+        logger.info("city=%s stores=%s", city_name, count)
+    if writer is None:
+        logger.info("dry-run 合计 stores=%s", len(stores))
+        return len(stores)
+    inserted = writer.insert_stores(stores)
+    logger.info("入库完成 fetched=%s inserted=%s", len(stores), inserted)
+    return inserted
 
 
 def main(argv=None):
@@ -476,15 +495,16 @@ def main(argv=None):
     if args.city and not cities:
         logger.error("城市不在内置名单里：%s", "、".join(args.city))
         return EXIT_CONFIG
+    pbf_path = resolve_pbf_path(args)
+    if not pbf_path:
+        return EXIT_CONFIG
     brand_names = "、".join(brand.keyword for brand in BRANDS)
-    logger.info("准备导入 cities=%s brands=%s", len(cities), brand_names)
-    client = OverpassClient(http_post_json, lambda: time.sleep(REQUEST_INTERVAL_SEC))
+    logger.info("准备导入 cities=%s brands=%s pbf=%s", len(cities), brand_names, pbf_path)
     if args.dry_run:
-        run_import(client, None, cities, set(), False)
+        run_import(pbf_path, None, cities)
         return 0
-    done = load_done(PROGRESS_PATH)
     with AddressWriter.connect() as writer:
-        run_import(client, writer, cities, done, True)
+        run_import(pbf_path, writer, cities)
     return 0
 
 
