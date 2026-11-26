@@ -1,4 +1,5 @@
-FROM docker.1ms.run/library/python:3.11-slim-bookworm
+# 与 compose 里 mysql/redis 同一镜像源；docker.1ms.run 经常拉不动
+FROM docker.1panel.live/library/python:3.11-slim-bookworm
 
 WORKDIR /app
 
