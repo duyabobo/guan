@@ -30,29 +30,9 @@ REVIEW_ON = "1"
 
 _announced = False
 
-# 选项下标必须和目录一致，只换展示文字。
-_REVIEW_CHOICES = {
-    "marriage": ["未知", "第一次", "参加过", "暂不参加"],
-    "has_house": ["未知", "公共交通", "自驾"],
-    "smoking": ["未知", "良好", "一般", "需注意"],
-    "drinking": ["未知", "无忌口", "少油少辣", "有忌口"],
-}
-
 _REVIEW_DIM_LABEL = {
     "home_region": "所在地区",
-    "live_region": "常住城市",
-    "income": "预算",
     "school": "学校",
-    "first_degree": "学历",
-    "has_house": "交通",
-    "house_region": "集合地点",
-    "marriage": "参加经验",
-    "smoking": "身体状况",
-    "drinking": "饮食",
-}
-
-_REVIEW_DIM_UNIT = {
-    "income": "元",
 }
 
 REVIEW_JOIN_LABEL = "参加"
@@ -93,14 +73,10 @@ def client_label(dim):
 
 
 def client_unit(dim):
-    if under_review() and dim.key in _REVIEW_DIM_UNIT:
-        return _REVIEW_DIM_UNIT[dim.key]
     return dim.unit
 
 
 def client_choices(dim):
-    if under_review() and dim.key in _REVIEW_CHOICES:
-        return _REVIEW_CHOICES[dim.key]
     return dim.choices
 
 

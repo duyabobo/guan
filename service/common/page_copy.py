@@ -4,24 +4,23 @@
 from service.common.phone_number import PHONE_CODE_LENGTH, PHONE_DIGIT_COUNT
 from service.common.review_mode import under_review
 
-_REVIEW_PRIVACY_BODY = (
-    "点按麦克风后，还没验证手机号会先验证，通过后才开始录音。"
-    "录音会加密保存，并整理成报名信息和参与偏好，用于线下活动报名。页面上不展示原始录音。"
-    "性别、身高、出生年份和所在地区确认后，不能再用语音改掉；"
-    "新的说法和原来不一致时，会保留原来的，并等待人工客服确认。已经报名或确认参加之后，不能再录音。"
+_PRIVACY_BODY = (
+    "点按麦克风后，未验证手机号将先完成验证。"
+    "录音加密保存，并整理为报名信息与参与偏好，用于帮助您找到适合的线下活动；页面不展示原始录音。"
+    "性别、身高、出生年月等关键信息一经确认，不能再用语音修改；不一致时保留原信息并转人工确认。"
+    "已报名或确认参加后，不能再录音。"
 )
 
 
 def list_page_copy():
     copy = {
-        "listTitle": "见面",
+        "listTitle": "活动",
         "entryTitle": "关关雎鸠",
         "shareTitle": "关关雎鸠",
         "showHeart": True,
         "loginHint": "登录后查看",
     }
     if under_review():
-        copy["listTitle"] = "活动"
         copy["entryTitle"] = ""
         copy["shareTitle"] = "线下活动"
         copy["showHeart"] = False
@@ -53,10 +52,10 @@ def match_config_copy():
         "voiceRejectTitle": "暂时不能更新",
         "privacyEntry": "隐私说明",
         "privacyTitle": "隐私说明",
-        "privacyBody": "点按麦克风后，还没验证手机号会先验证，通过后才开始录音。录音会加密保存，并整理成个人信息和期望，用于匹配。页面上不展示原始录音。性别、身高、出生年份和籍贯确认后，不能再用语音改掉；新的说法和原来不一致时，会保留原来的，并等待人工客服确认。已经约好见面，或已经选了合适之后，不能再录音。目前只支持找异性。",
+        "privacyBody": _PRIVACY_BODY,
         "privacyConfirm": "知道了",
         "voiceStatus": {
-            "idle": "说说你自己和想找的人",
+            "idle": "勇敢发声",
             "recording": "正在录音，再次点击结束",
             "processing": "正在解析，完成后会自动更新",
         },
@@ -69,8 +68,6 @@ def match_config_copy():
         copy["infoTitle"] = "报名信息"
         copy["requirementTitle"] = "参与偏好"
         copy["emptyText"] = "说一段话后，这里会整理出报名信息和参与偏好"
-        copy["privacyBody"] = _REVIEW_PRIVACY_BODY
-        copy["voiceStatus"]["idle"] = "说说你自己和想参加的活动"
     copy.update(phone_gate_copy())
     return copy
 

@@ -46,7 +46,7 @@ def build_rows(attr_rows, show_all=False):
 
 
 def missing_required_info_keys(info_rows_by_key):
-    """必填个人信息里还没有值的维度。数字和选项看 value_min，籍贯看文本。"""
+    """必填个人信息里还没有值的维度。数字和选项看 value_min，文本看正文。"""
     dims = {dim.key: dim for dim in ACTIVE_DIMS}
     info_rows_by_key = info_rows_by_key or {}
     missing = []

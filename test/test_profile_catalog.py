@@ -15,26 +15,29 @@ from service.common.profile_catalog import (
 )
 
 _LIVE_DIMS = (
-    "sex", "birth_year", "height", "weight", "home_region", "live_region",
-    "job", "income", "school", "first_degree", "major", "has_house", "house_region",
-    "marriage", "smoking", "drinking", "hobby",
+    "sex", "birth_year", "height", "weight", "home_region",
+    "school", "major", "job", "hobby",
 )
 
 
 def test_catalog_keeps_personal_dims_only():
     assert tuple(dim.key for dim in ACTIVE_DIMS) == _LIVE_DIMS
-    assert FILL_REQUIRED_INFO_KEYS == ("sex", "birth_year", "height", "weight", "home_region")
+    assert FILL_REQUIRED_INFO_KEYS == ("sex", "birth_year", "height", "weight")
+    labels = {dim.key: dim.label for dim in ACTIVE_DIMS}
+    assert labels["birth_year"] == "出生年月"
+    assert labels["hobby"] == "兴趣爱好"
 
 
 def test_extraction_hint_follows_catalog():
     hint = extraction_hint()
     assert "home_region" in hint
-    assert "live_region" in hint
     assert "min_weight" in hint
-    assert "未婚" in hint
     assert "school" in hint
-    assert "first_degree" in hint
-    assert "本科" in hint
+    assert "major" in hint
+    assert "hobby" in hint
+    assert "live_region" not in hint
+    assert "first_degree" not in hint
+    assert "marriage" not in hint
     assert "education_level" not in hint
     assert "study_from_year" not in hint
 
@@ -46,6 +49,7 @@ def test_payload_packs_school_and_ignores_unknown_fields():
         "school": "某大学",
         "education_level": 4,
         "study_from_year": 2014,
+        "marriage": "未婚",
     })
     requirement = values_from_payload(SCOPE_REQUIREMENT, {
         "home_region": "北京",
@@ -56,22 +60,15 @@ def test_payload_packs_school_and_ignores_unknown_fields():
     assert info["home_region"]["value_text"] == "天津"
     assert "education_level" not in info
     assert "study_from_year" not in info
+    assert "marriage" not in info
     assert requirement["job"]["value_text"] == "工程师"
     assert "work" not in requirement
 
 
 def test_choice_label_packs_to_catalog_index():
-    info = values_from_payload(SCOPE_INFO, {
-        "marriage": "未婚",
-        "smoking": "经常吸烟",
-        "first_degree": "本科",
-        "has_house": "已购房",
-    })
-    assert info["marriage"]["value_min"] == 1
-    assert info["smoking"]["value_min"] == 3
-    assert info["first_degree"]["value_min"] == 3
-    assert info["has_house"]["value_min"] == 2
-    assert values_from_payload(SCOPE_INFO, {"marriage": "没听清"}) == {}
+    info = values_from_payload(SCOPE_INFO, {"sex": "男"})
+    assert info["sex"]["value_min"] == 1
+    assert values_from_payload(SCOPE_INFO, {"sex": "没听清"}) == {}
 
 
 def test_empty_payload_packs_nothing():

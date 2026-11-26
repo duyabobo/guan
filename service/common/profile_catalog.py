@@ -25,13 +25,6 @@ MATCH_RULE_TEXT = "text"
 
 _EMPTY_PACK = {"value_min": 0, "value_max": 0, "value_text": ""}
 
-# 下标 0 表示没说。已有下标不要改，库里存的是这个位置。
-MARRIAGE_CHOICES = ["未知", "未婚", "离异", "丧偶"]
-SMOKE_CHOICES = ["未知", "不吸烟", "偶尔吸烟", "经常吸烟"]
-DRINK_CHOICES = ["未知", "不喝酒", "偶尔喝酒", "经常喝酒"]
-DEGREE_CHOICES = ["未知", "高中及以下", "专科", "本科", "硕士", "博士"]
-HOUSE_CHOICES = ["未知", "未购房", "已购房"]
-
 
 def _default_match_rule(requirement_kind):
     if requirement_kind == KIND_RANGE:
@@ -83,7 +76,7 @@ ACTIVE_DIMS = [
         info_field="sex", requirement_field="sex",
     ),
     ProfileDim(
-        "birth_year", "出生年份",
+        "birth_year", "出生年月",
         info_kind=KIND_NUMBER, requirement_kind=KIND_RANGE,
         info_field="birth_year",
         requirement_min_field="min_birth_year", requirement_max_field="max_birth_year",
@@ -106,30 +99,9 @@ ACTIVE_DIMS = [
         info_field="home_region", requirement_field="home_region",
     ),
     ProfileDim(
-        "live_region", "现居",
-        info_kind=KIND_TEXT, requirement_kind=KIND_TEXT,
-        info_field="live_region", requirement_field="live_region",
-    ),
-    ProfileDim(
-        "job", "职业",
-        info_kind=KIND_TEXT, requirement_kind=KIND_TEXT,
-        info_field="job", requirement_field="job",
-    ),
-    ProfileDim(
-        "income", "收入", unit="元/月",
-        info_kind=KIND_NUMBER, requirement_kind=KIND_RANGE,
-        info_field="income",
-        requirement_min_field="min_income", requirement_max_field="max_income",
-    ),
-    ProfileDim(
         "school", "毕业学校",
         info_kind=KIND_TEXT, requirement_kind=KIND_TEXT,
         info_field="school", requirement_field="school",
-    ),
-    ProfileDim(
-        "first_degree", "第一学历",
-        info_kind=KIND_CHOICE, requirement_kind=KIND_CHOICE, choices=DEGREE_CHOICES,
-        info_field="first_degree", requirement_field="first_degree",
     ),
     ProfileDim(
         "major", "专业",
@@ -137,39 +109,19 @@ ACTIVE_DIMS = [
         info_field="major", requirement_field="major",
     ),
     ProfileDim(
-        "has_house", "是否购房",
-        info_kind=KIND_CHOICE, requirement_kind=KIND_CHOICE, choices=HOUSE_CHOICES,
-        info_field="has_house", requirement_field="has_house",
-    ),
-    ProfileDim(
-        "house_region", "在哪里购房",
+        "job", "职业",
         info_kind=KIND_TEXT, requirement_kind=KIND_TEXT,
-        info_field="house_region", requirement_field="house_region",
+        info_field="job", requirement_field="job",
     ),
     ProfileDim(
-        "marriage", "婚姻",
-        info_kind=KIND_CHOICE, requirement_kind=KIND_CHOICE, choices=MARRIAGE_CHOICES,
-        info_field="marriage", requirement_field="marriage",
-    ),
-    ProfileDim(
-        "smoking", "吸烟",
-        info_kind=KIND_CHOICE, requirement_kind=KIND_CHOICE, choices=SMOKE_CHOICES,
-        info_field="smoking", requirement_field="smoking",
-    ),
-    ProfileDim(
-        "drinking", "饮酒",
-        info_kind=KIND_CHOICE, requirement_kind=KIND_CHOICE, choices=DRINK_CHOICES,
-        info_field="drinking", requirement_field="drinking",
-    ),
-    ProfileDim(
-        "hobby", "兴趣",
+        "hobby", "兴趣爱好",
         info_kind=KIND_TEXT, requirement_kind=KIND_TEXT,
         info_field="hobby", requirement_field="hobby",
     ),
 ]
 
 # 加入见面之前，个人信息里这些维度必须有值。顺序与上面的展示顺序一致。
-FILL_REQUIRED_INFO_KEYS = ("sex", "birth_year", "height", "weight", "home_region")
+FILL_REQUIRED_INFO_KEYS = ("sex", "birth_year", "height", "weight")
 
 # 一旦有值就不能再用语音改。冲突时保留旧值，交给人工确认。
 LOCKED_INFO_KEYS = ("sex", "birth_year", "height", "home_region")

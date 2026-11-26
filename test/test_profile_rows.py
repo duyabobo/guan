@@ -12,6 +12,8 @@ from service.common.profile_catalog import (
     values_from_payload,
 )
 from service.common.profile_rows import MISSING_MARK, build_rows, missing_required_info_keys
+
+
 class _Attr(object):
     def __init__(self, scope, dim_key, value_min=0, value_max=0, value_text=""):
         self.scope = scope
@@ -54,21 +56,20 @@ def test_choice_index_zero_is_blank():
     assert rows == []
 
 
-def test_required_info_includes_weight_and_hometown():
+def test_required_info_includes_weight_not_hometown():
     filled = {
         "sex": _Attr(SCOPE_INFO, "sex", value_min=1),
         "birth_year": _Attr(SCOPE_INFO, "birth_year", value_min=1996),
         "height": _Attr(SCOPE_INFO, "height", value_min=175),
         "weight": _Attr(SCOPE_INFO, "weight", value_min=65),
-        "home_region": _Attr(SCOPE_INFO, "home_region", value_text="北京"),
     }
     assert missing_required_info_keys(filled) == []
     without_weight = dict(filled)
     without_weight.pop("weight")
     assert missing_required_info_keys(without_weight) == ["weight"]
-    without_hometown = dict(filled)
-    without_hometown.pop("home_region")
-    assert missing_required_info_keys(without_hometown) == ["home_region"]
+    without_sex = dict(filled)
+    without_sex.pop("sex")
+    assert missing_required_info_keys(without_sex) == ["sex"]
 
 
 def test_show_all_keeps_unmentioned_dims_empty():

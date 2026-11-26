@@ -6,14 +6,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from service.common.page_copy import guan_info_copy, list_page_copy, match_config_copy
-from service.common.profile_catalog import (
-    DRINK_CHOICES,
-    HOUSE_CHOICES,
-    MARRIAGE_CHOICES,
-    SCOPE_INFO,
-    SCOPE_REQUIREMENT,
-    SMOKE_CHOICES,
-)
+from service.common.profile_catalog import SCOPE_INFO
 from service.common.profile_board import ProfileBoardService
 from service.common.profile_guard import decide_profile_write
 from service.common.profile_rows import build_rows
@@ -115,14 +108,15 @@ def _review_on(monkeypatch):
 
 def test_default_copy_stays_dating_words(monkeypatch):
     monkeypatch.delenv("UNDER_REVIEW", raising=False)
-    assert list_page_copy()["listTitle"] == "见面"
+    assert list_page_copy()["listTitle"] == "活动"
     assert list_page_copy()["entryTitle"] == "关关雎鸠"
     assert list_page_copy()["showHeart"] is True
     assert guan_info_copy()["pageTitle"] == "见面详情"
     detail = match_config_copy()
     assert detail["infoTitle"] == "我的信息"
     assert detail["requirementTitle"] == "我的期望"
-    assert "见面" in detail["privacyBody"]
+    assert "线下活动" in detail["privacyBody"]
+    assert _banned_in(detail["privacyBody"]) == []
     assert present_client_msg(RESP_EXPECT_SAME_SEX) is RESP_EXPECT_SAME_SEX
     kept = present_buttons([{"label": "发起见面", "hint": HALF_FIT_HINT}])
     assert kept[0]["label"] == "发起见面"
@@ -134,15 +128,18 @@ def test_default_copy_stays_dating_words(monkeypatch):
 def test_default_rows_keep_catalog_words():
     rows = build_rows([
         _Attr(SCOPE_INFO, "height", value_min=170),
-        _Attr(SCOPE_INFO, "marriage", value_min=MARRIAGE_CHOICES.index("未婚")),
-        _Attr(SCOPE_INFO, "income", value_min=8000),
+        _Attr(SCOPE_INFO, "birth_year", value_min=1996),
+        _Attr(SCOPE_INFO, "hobby", value_text="跑步"),
+        _Attr(SCOPE_INFO, "job", value_text="工程师"),
     ])
     by_key = {row["dimKey"]: row for row in rows}
     assert by_key["height"]["label"] == "身高"
     assert by_key["height"]["infoValue"] == "170cm"
-    assert by_key["marriage"]["label"] == "婚姻"
-    assert by_key["marriage"]["infoValue"] == "未婚"
-    assert by_key["income"]["infoValue"] == "8000元/月"
+    assert by_key["birth_year"]["label"] == "出生年月"
+    assert by_key["birth_year"]["infoValue"] == "1996"
+    assert by_key["hobby"]["label"] == "兴趣爱好"
+    assert by_key["hobby"]["infoValue"] == "跑步"
+    assert by_key["job"]["infoValue"] == "工程师"
 
 
 def test_review_pages_use_activity_words(monkeypatch):
@@ -157,7 +154,7 @@ def test_review_pages_use_activity_words(monkeypatch):
     assert profile["infoTitle"] == "报名信息"
     assert profile["requirementTitle"] == "参与偏好"
     assert profile["pageTitle"] == "活动报名"
-    assert profile["voiceStatus"]["idle"] == "说说你自己和想参加的活动"
+    assert profile["voiceStatus"]["idle"] == "说说自己吧"
     assert _banned_in(listing) == []
     assert _banned_in(detail) == []
     assert _banned_in(profile) == []
@@ -173,43 +170,27 @@ def test_review_rows_relabel_dating_dims(monkeypatch):
     rows = build_rows([
         _Attr(SCOPE_INFO, "sex", value_min=1),
         _Attr(SCOPE_INFO, "height", value_min=170),
-        _Attr(SCOPE_INFO, "income", value_min=8000),
-        _Attr(SCOPE_INFO, "marriage", value_min=MARRIAGE_CHOICES.index("未婚")),
-        _Attr(SCOPE_REQUIREMENT, "marriage", value_min=MARRIAGE_CHOICES.index("离异")),
-        _Attr(SCOPE_INFO, "has_house", value_min=HOUSE_CHOICES.index("已购房")),
-        _Attr(SCOPE_INFO, "smoking", value_min=SMOKE_CHOICES.index("经常吸烟")),
-        _Attr(SCOPE_INFO, "drinking", value_min=DRINK_CHOICES.index("不喝酒")),
+        _Attr(SCOPE_INFO, "home_region", value_text="北京"),
+        _Attr(SCOPE_INFO, "school", value_text="某大学"),
+        _Attr(SCOPE_INFO, "hobby", value_text="跑步"),
     ], show_all=True)
     by_key = {row["dimKey"]: row for row in rows}
     assert by_key["sex"]["label"] == "性别"
     assert by_key["sex"]["infoValue"] == "男"
     assert by_key["height"]["label"] == "身高"
     assert by_key["height"]["infoValue"] == "170cm"
-    assert by_key["income"]["label"] == "预算"
-    assert by_key["income"]["infoValue"] == "8000元"
-    assert by_key["marriage"]["label"] == "参加经验"
-    assert by_key["marriage"]["infoValue"] == "第一次"
-    assert by_key["marriage"]["requirementValue"] == "参加过"
-    assert by_key["has_house"]["infoValue"] == "自驾"
-    assert by_key["smoking"]["infoValue"] == "需注意"
-    assert by_key["drinking"]["infoValue"] == "无忌口"
-    blank = build_rows([_Attr(SCOPE_INFO, "marriage", value_min=0)])
+    assert by_key["home_region"]["label"] == "所在地区"
+    assert by_key["school"]["label"] == "学校"
+    assert by_key["hobby"]["label"] == "兴趣爱好"
+    blank = build_rows([_Attr(SCOPE_INFO, "sex", value_min=0)])
     assert blank == []
     assert _banned_in(rows) == []
 
 
-def test_review_choice_last_index_stays_visible(monkeypatch):
+def test_review_sex_choice_stays_visible(monkeypatch):
     _review_on(monkeypatch)
-    catalogs = (
-        ("marriage", MARRIAGE_CHOICES),
-        ("has_house", HOUSE_CHOICES),
-        ("smoking", SMOKE_CHOICES),
-        ("drinking", DRINK_CHOICES),
-    )
-    for key, catalog in catalogs:
-        rows = build_rows([_Attr(SCOPE_INFO, key, value_min=len(catalog) - 1)])
-        assert rows[0]["infoValue"]
-        assert rows[0]["infoValue"] != catalog[-1]
+    rows = build_rows([_Attr(SCOPE_INFO, "sex", value_min=2)])
+    assert rows[0]["infoValue"] == "女"
 
 
 def test_review_buttons_progress_and_errors(monkeypatch):
