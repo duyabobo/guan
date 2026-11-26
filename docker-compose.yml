@@ -24,6 +24,7 @@ services:
       - SSL_KEY_FILE=/home/guan/service.key
       - DEBUG=${DEBUG:-false}
       - UNDER_REVIEW=${UNDER_REVIEW:-0}
+      - LIST_MAX_DISTANCE_KM=${LIST_MAX_DISTANCE_KM:-100}
       - COOKIE_SECRET=${COOKIE_SECRET:-change_me_in_production}
       # MySQL
       - MYSQL_HOST=mysql

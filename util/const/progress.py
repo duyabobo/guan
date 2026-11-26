@@ -6,8 +6,10 @@
 （无 DB 依赖，可直接单元测试）
 """
 import datetime
+import logging
 import math
 
+from util.config import get_conf
 from util.const.base import (
     GUAN_INFO_OP_TYPE_INVITE, GUAN_INFO_OP_TYPE_JOIN, GUAN_INFO_OP_TYPE_QUIT,
     MODEL_MEET_RESULT_FIT_CHOICE, MODEL_MEET_RESULT_UNFIT_CHOICE, MODEL_MEET_RESULT_UNKNOWN
@@ -15,6 +17,8 @@ from util.const.base import (
 from util.const.match import (
     MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING, MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
 )
+
+logger = logging.getLogger(__name__)
 
 # PROGRESS_STATUS - 进展状态常量
 PROGRESS_NO_CONFIG = -1   # 匹配配置不足，需完善信息
@@ -309,14 +313,39 @@ HEART_SORT_ORDER = {
 DISTANCE_BUCKET_KM = 10
 LIST_WINDOW_DAYS = 14
 LIST_WINDOW_MINUTES = LIST_WINDOW_DAYS * 24 * 60
+# 列表未约上场次的默认最远距离（公里）。运行时可用 LIST_MAX_DISTANCE_KM 覆盖。
 MAX_LIST_DISTANCE_KM = 100
+_LIST_DISTANCE_CONF_KEY = "list_max_distance_km"
+_LIST_DISTANCE_CONF_SECTION = "global"
 MINUTES_PER_HOUR = 60
 LEAD_HOURS_PER_DISTANCE_BUCKET = 1
 LEAD_MINUTES_PER_DISTANCE_BUCKET = LEAD_HOURS_PER_DISTANCE_BUCKET * MINUTES_PER_HOUR
-MAX_TRANSIENT_LEAD_MINUTES = int(
-    math.ceil(MAX_LIST_DISTANCE_KM / float(DISTANCE_BUCKET_KM)) * LEAD_MINUTES_PER_DISTANCE_BUCKET
-)
 EARTH_RADIUS_KM = 6371.0
+
+
+def list_max_distance_km():
+    """首页未约上场次最远可见距离（公里）。环境变量 LIST_MAX_DISTANCE_KM，默认见 MAX_LIST_DISTANCE_KM。"""
+    raw = get_conf(
+        _LIST_DISTANCE_CONF_KEY, str(MAX_LIST_DISTANCE_KM), _LIST_DISTANCE_CONF_SECTION,
+    ).strip()
+    if raw.isdigit():
+        value = int(raw)
+        if value > 0:
+            return value
+    if raw != str(MAX_LIST_DISTANCE_KM):
+        logger.warning(
+            "LIST_MAX_DISTANCE_KM 无效，回退默认 km=%s raw=%s",
+            MAX_LIST_DISTANCE_KM, raw,
+        )
+    return MAX_LIST_DISTANCE_KM
+
+
+def max_transient_lead_minutes():
+    """未约上场次按距离档换算的最长提前可见分钟数，随 list_max_distance_km 变化。"""
+    return int(
+        math.ceil(list_max_distance_km() / float(DISTANCE_BUCKET_KM))
+        * LEAD_MINUTES_PER_DISTANCE_BUCKET
+    )
 
 
 def calc_distance_km(latitude_a, longitude_a, latitude_b, longitude_b):
@@ -401,7 +430,7 @@ def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start, igno
         return False
     if ignore_distance:
         return True
-    if distance_km is None or distance_km > MAX_LIST_DISTANCE_KM:
+    if distance_km is None or distance_km > list_max_distance_km():
         return False
     if minutes_until_start > LIST_WINDOW_MINUTES:
         return False

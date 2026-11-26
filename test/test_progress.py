@@ -8,8 +8,9 @@
   - 两个函数均为纯函数，无 DB 依赖，可直接单元测试。
 """
 import datetime
-import sys
+import math
 import os
+import sys
 
 # 确保 guan 目录在 Python 路径中
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -501,6 +502,28 @@ class TestGuanguanHeartKind:
         assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, 30) is True
         assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM + 1, 30) is False
         assert should_show_guanguan_item(HEART_KIND_BROKEN, MAX_LIST_DISTANCE_KM + 1, 30) is True
+
+    def test_list_max_distance_follows_env(self, monkeypatch):
+        from util.const.progress import (
+            DISTANCE_BUCKET_KM,
+            LEAD_MINUTES_PER_DISTANCE_BUCKET,
+            list_max_distance_km,
+            max_transient_lead_minutes,
+        )
+
+        configured_km = 50
+        monkeypatch.setenv("LIST_MAX_DISTANCE_KM", str(configured_km))
+        assert list_max_distance_km() == configured_km
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km, 30) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km + 1, 30) is False
+        assert max_transient_lead_minutes() == int(
+            math.ceil(configured_km / float(DISTANCE_BUCKET_KM)) * LEAD_MINUTES_PER_DISTANCE_BUCKET
+        )
+
+        monkeypatch.setenv("LIST_MAX_DISTANCE_KM", "0")
+        assert list_max_distance_km() == MAX_LIST_DISTANCE_KM
+        monkeypatch.setenv("LIST_MAX_DISTANCE_KM", "abc")
+        assert list_max_distance_km() == MAX_LIST_DISTANCE_KM
 
     def test_ignore_distance_keeps_future_items(self):
         assert should_show_guanguan_item(
