@@ -13,7 +13,6 @@ from service.common.profile_catalog import (
     SCOPE_INFO,
     SCOPE_REQUIREMENT,
 )
-from service.common.review_mode import client_choices, client_label, client_unit
 
 MISSING_MARK = "—"
 _ALL_WORD = "全部"
@@ -35,7 +34,7 @@ def build_rows(attr_rows, show_all=False):
             continue
         rows.append({
             "dimKey": dim.key,
-            "label": client_label(dim),
+            "label": dim.label,
             "infoValue": info_value or MISSING_MARK,
             "requirementValue": requirement_value or MISSING_MARK,
             "infoMissing": not info_value,
@@ -63,11 +62,11 @@ def display_from_attr(dim, row):
     if kind == KIND_TEXT:
         return _present_text(row.value_text)
     if kind == KIND_CHOICE:
-        return _choice_text(client_choices(dim), row.value_min)
+        return _choice_text(dim.choices, row.value_min)
     if kind == KIND_RANGE:
-        return format_range(row.value_min, row.value_max, client_unit(dim))
+        return format_range(row.value_min, row.value_max, dim.unit)
     if kind == KIND_NUMBER:
-        return _number_text(row.value_min, client_unit(dim))
+        return _number_text(row.value_min, dim.unit)
     return ""
 
 

@@ -35,6 +35,10 @@ def test_extraction_hint_follows_catalog():
     assert "school" in hint
     assert "major" in hint
     assert "hobby" in hint
+    assert "报名信息" in hint
+    assert "参与偏好" in hint
+    assert "个人信息" not in hint
+    assert "个人期望" not in hint
     assert "live_region" not in hint
     assert "first_degree" not in hint
     assert "marriage" not in hint

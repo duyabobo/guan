@@ -11,7 +11,7 @@ from service import BaseService
 from service.common.guan_helper import GuanHelper
 from service.common.notice_due import NoticeJob
 from service.common.page_copy import guan_info_copy
-from service.common.review_mode import phone_required, present_buttons, present_progress_desc, present_sentence
+from service.common.review_mode import phone_required
 from service.common.meet_outcome import apply_synced_result, record_my_fit, settle_due_meets
 from service.common.profile_board import ProfileBoardService
 from service.common.profile_match import ProfileMatchService, other_passport_id
@@ -193,7 +193,7 @@ class GuanInfoService(BaseService):
         return {
             "guanId": self.activityId,
             "progressStatus": progress,
-            "progressDesc": present_progress_desc(PROGRESS_DESC.get(progress, "")),
+            "progressDesc": PROGRESS_DESC.get(progress, ""),
             "viewer": viewer,
             "copy": copy,
             "activity": {
@@ -205,7 +205,7 @@ class GuanInfoService(BaseService):
                 "rows": rows,
             },
             "operate": {
-                "bottomButtons": present_buttons(bottom_buttons),
+                "bottomButtons": bottom_buttons,
                 "matchConfigPage": MYREQUIREMENT_PAGE,
                 "myInformationPage": self.myInformationPage,
             },
@@ -286,7 +286,7 @@ class GuanInfoService(BaseService):
 
     def updateMyInformationPage(self, ret):
         if ret['code'] == RESP_NEED_FILL_INFO['code']:
-            self.myInformationPage = self.myInformationPage + present_sentence(ret['errMsg'])
+            self.myInformationPage = self.myInformationPage + ret['errMsg']
 
     def timeIsConflict(self):
         return bool(ActivityModel.getConflictActivity(self.passportId, self.activityRecord.start_time))

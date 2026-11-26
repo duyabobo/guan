@@ -133,12 +133,12 @@ def extraction_hint():
     for dim in ACTIVE_DIMS:
         note = _choice_note(dim)
         if dim.info_field:
-            lines.append("%s（个人信息）: %s%s" % (dim.label, dim.info_field, note))
+            lines.append("%s（报名信息）: %s%s" % (dim.label, dim.info_field, note))
         if dim.requirement_kind == KIND_RANGE and dim.requirement_min_field:
-            lines.append("%s（个人期望）: %s / %s" % (
+            lines.append("%s（参与偏好）: %s / %s" % (
                 dim.label, dim.requirement_min_field, dim.requirement_max_field))
         elif dim.requirement_field:
-            lines.append("%s（个人期望）: %s%s" % (dim.label, dim.requirement_field, note))
+            lines.append("%s（参与偏好）: %s%s" % (dim.label, dim.requirement_field, note))
     return "\n".join(lines)
 
 

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """小程序里和活动、个人资料相关的展示文案。只从接口下发，不写进小程序包。"""
 from service.common.phone_number import PHONE_CODE_LENGTH, PHONE_DIGIT_COUNT
-from service.common.review_mode import under_review
 
 _PRIVACY_BODY = (
     "点按麦克风后，未验证手机号将先完成验证。"
@@ -13,18 +12,13 @@ _PRIVACY_BODY = (
 
 
 def list_page_copy():
-    copy = {
+    return {
         "listTitle": "活动",
         "entryTitle": "关关雎鸠",
         "shareTitle": "关关雎鸠",
         "showHeart": True,
         "loginHint": "登录后查看",
     }
-    if under_review():
-        copy["entryTitle"] = ""
-        copy["shareTitle"] = "线下活动"
-        copy["showHeart"] = False
-    return copy
 
 
 def phone_gate_copy():
@@ -63,11 +57,6 @@ def match_config_copy():
         "micDeniedContent": "语音搜集需要使用麦克风，请在设置里允许录音。",
         "micDeniedConfirm": "去设置",
     }
-    if under_review():
-        copy["pageTitle"] = "活动报名"
-        copy["infoTitle"] = "报名信息"
-        copy["requirementTitle"] = "参与偏好"
-        copy["emptyText"] = "说一段话后，这里会整理出报名信息和参与偏好"
     copy.update(phone_gate_copy())
     return copy
 
@@ -82,13 +71,5 @@ def guan_info_copy():
         "shareCardTitle": "安全见面",
         "shareTitle": "关关雎鸠",
     }
-    if under_review():
-        copy["pageTitle"] = "活动详情"
-        copy["infoTitle"] = "报名信息"
-        copy["requirementTitle"] = "参与偏好"
-        copy["emptyText"] = "还没有可展示的报名资料"
-        copy["shareLabel"] = "分享这场活动"
-        copy["shareCardTitle"] = "线下活动"
-        copy["shareTitle"] = "线下活动"
     copy.update(phone_gate_copy())
     return copy

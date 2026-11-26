@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
-import logging
 
 from model.activity import ActivityModel
 from model.address import AddressModel
@@ -10,7 +9,6 @@ from service import BaseService
 from service.common.guan_helper import GuanHelper
 from service.common.meet_outcome import settle_due_meets
 from service.common.profile_match import ProfileMatchService
-from service.common.review_mode import present_progress_desc, under_review
 from util.const.match import (
     MODEL_SEX_UNKNOWN_INDEX,
     MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING,
@@ -29,8 +27,6 @@ from util.const.progress import (
     should_show_guanguan_item,
 )
 from util.time_cost import timecost
-
-logger = logging.getLogger(__name__)
 
 UNKNOWN_NEGATIVE_ONE = -1
 LIST_FETCH_POOL_FACTOR = 5
@@ -104,12 +100,8 @@ class GuanguanService(BaseService):
         3. 同档按见面时间由近到远
         4. 心碎/实心/双心永久展示
         5. 还没约上的：两周内、100km 内、匹配通过，且每 10km 只留 1 小时
-        审核模式不按距离和条数截断。未开始且匹配通过的场次都返回。
         """
-        reviewing = under_review()
-        if reviewing:
-            logger.info("审核模式不按距离筛选活动 passport=%s", self.passportId)
-        if not reviewing and (longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE):
+        if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
             return [{
                 "id": UNKNOWN_NEGATIVE_ONE,
                 "time": "YYYY-MM-DD HH:mm",
@@ -122,7 +114,7 @@ class GuanguanService(BaseService):
             }]
 
         now = datetime.datetime.now()
-        pool_limit = None if reviewing else max(limit * LIST_FETCH_POOL_FACTOR, limit)
+        pool_limit = max(limit * LIST_FETCH_POOL_FACTOR, limit)
         settle_due_meets(self.passportId)
 
         user_activities = ActivityModel.getUserAllActivities(self.passportId)
@@ -158,9 +150,7 @@ class GuanguanService(BaseService):
             minutes_until = None
             if activity.start_time:
                 minutes_until = (activity.start_time - now).total_seconds() / 60.0
-            if not should_show_guanguan_item(
-                heart_kind, distance_km, minutes_until, ignore_distance=reviewing,
-            ):
+            if not should_show_guanguan_item(heart_kind, distance_km, minutes_until):
                 continue
             ranked_items.append((
                 guanguan_list_sort_key(heart_kind, distance_km, activity.start_time, now),
@@ -172,8 +162,7 @@ class GuanguanService(BaseService):
 
         ranked_items.sort(key=lambda item: item[0])
         ranked_items = limit_solid_heart_items(ranked_items, lambda item: item[3])
-        if not reviewing:
-            ranked_items = ranked_items[:limit]
+        ranked_items = ranked_items[:limit]
 
         guanguan_list = []
         for _, activity, progress, heart_kind, address in ranked_items:
@@ -182,7 +171,7 @@ class GuanguanService(BaseService):
                 "time": activity.startTimeStr,
                 "startTime": activity.start_time.strftime("%Y-%m-%d %H:%M") if activity.start_time else "",
                 "progressStatus": progress,
-                "progressDesc": present_progress_desc(PROGRESS_DESC.get(progress, "")),
+                "progressDesc": PROGRESS_DESC.get(progress, ""),
                 "heartKind": heart_kind,
                 "hasMatch": calc_list_has_match(progress, activity.state, activity.id in matched_activity_ids),
                 "img": GuanHelper.getActivityImg(address, True),

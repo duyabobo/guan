@@ -12,7 +12,6 @@ from tornado.web import RequestHandler
 
 from ral import passport
 from util.database import SessionFactory
-from service.common.review_mode import present_client_msg
 from util.const.response import RESP_SUCCESS_CODE, RESP_SUCCESS_WITH_NOTI_MIN_CODE
 from util.ctx import LocalContext
 from util.errors import InvalidParameter
@@ -249,7 +248,7 @@ class BaseHandler(RequestHandler):
         resp = {
             'data': object_2_dict(respData),
         }
-        resp.update(present_client_msg(response.msg))
+        resp.update(response.msg)
         self.write(json.dumps(resp))
         self.finishDbOperation(response.msg)
         return resp

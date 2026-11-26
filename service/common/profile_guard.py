@@ -9,7 +9,6 @@ from service.common.profile_catalog import (
     SCOPE_INFO,
     SCOPE_REQUIREMENT,
 )
-from service.common.review_mode import client_label
 from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
 from util.const.response import RESP_EXPECT_SAME_SEX, RESP_OK, profile_conflict_msg
 
@@ -159,4 +158,4 @@ def _stated_sex_from_row(row):
 
 def _labels_of(keys):
     key_set = set(keys)
-    return [client_label(dim) for dim in ACTIVE_DIMS if dim.key in key_set]
+    return [dim.label for dim in ACTIVE_DIMS if dim.key in key_set]
