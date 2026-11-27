@@ -1,14 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""从 Geofabrik 的 OSM 数据包导入各大城市肯德基、麦当劳门店。
+"""从 Geofabrik 的 OSM 数据包导入全国肯德基、麦当劳门店。
 
 下载中国 .osm.pbf（约 1.5GB）后在本地筛选，不依赖在线 Overpass，也不要高德 Key。
-坐标从 WGS-84 转成国测局 GCJ-02，和小程序定位一致。国内 OSM 会漏店，大城市一般够用。
+默认收录全国（含三四五线）；省/市/县优先读 OSM 地址标签，bbox 仅作缺标签时定市。
+坐标从 WGS-84 转成国测局 GCJ-02，和小程序定位一致。
 
 用法（在 guan 目录，或容器内 /app）:
   python -m script.osm_store_import --download --dry-run
   python -m script.osm_store_import --download
   python -m script.osm_store_import --pbf /path/to/china-latest.osm.pbf --city 北京市
+  python -m script.osm_store_import --city 海淀区
 """
 import argparse
 import logging
@@ -27,6 +29,7 @@ if PROJECT_ROOT not in sys.path:
 import osmium
 import pymysql
 
+from script.osm_city_bbox import CITY_BBOX_ROWS
 from util.const.match import MODEL_STATUS_YES
 
 logger = logging.getLogger("osm_store_import")
@@ -49,6 +52,8 @@ CHINA_LAT_MIN = 3.0
 CHINA_LAT_MAX = 54.0
 USER_AGENT = "guan-osm-store-import/2.0"
 EXCLUDE_NAME_PARTS = ("宅急送", "外卖", "配送", "配送站")
+FALLBACK_PROVINCE = "未标注"
+FALLBACK_CITY = "未标注"
 
 KRASOVSKY_A = 6378245.0
 EE = 0.00669342162296594323
@@ -66,27 +71,26 @@ BRANDS = (
     Brand("麦当劳", "address/brand/mcdonalds.jpg", "Q38076", ("mcdonald",)),
 )
 
-# 一线 + 新一线。bbox 为 (south, west, north, east)，略放大以免漏边界店。
-MAJOR_CITIES = (
-    City("北京市", "北京市", 39.40, 115.70, 41.10, 117.50),
-    City("上海市", "上海市", 30.65, 120.80, 31.90, 122.20),
-    City("广州市", "广东省", 22.75, 113.05, 23.60, 113.80),
-    City("深圳市", "广东省", 22.40, 113.75, 22.90, 114.65),
-    City("成都市", "四川省", 30.30, 103.70, 31.05, 104.55),
-    City("重庆市", "重庆市", 29.00, 105.90, 30.20, 107.20),
-    City("杭州市", "浙江省", 29.95, 119.70, 30.60, 120.70),
-    City("西安市", "陕西省", 34.00, 108.65, 34.55, 109.30),
-    City("武汉市", "湖北省", 30.30, 114.00, 30.90, 114.70),
-    City("苏州市", "江苏省", 31.00, 120.20, 31.60, 121.10),
-    City("郑州市", "河南省", 34.50, 113.30, 34.95, 113.95),
-    City("南京市", "江苏省", 31.80, 118.50, 32.30, 119.10),
-    City("天津市", "天津市", 38.75, 116.70, 39.50, 118.10),
-    City("长沙市", "湖南省", 27.90, 112.70, 28.45, 113.40),
-    City("东莞市", "广东省", 22.70, 113.50, 23.20, 114.20),
-    City("宁波市", "浙江省", 29.60, 121.20, 30.10, 121.95),
-    City("佛山市", "广东省", 22.80, 112.80, 23.30, 113.40),
-    City("合肥市", "安徽省", 31.60, 117.00, 32.05, 117.60),
-    City("青岛市", "山东省", 35.90, 119.90, 36.50, 120.70),
+def _cities_from_rows(rows):
+    seen = set()
+    cities = []
+    for row in rows:
+        name = row[0]
+        if name in seen:
+            continue
+        seen.add(name)
+        cities.append(City(*row))
+    return tuple(cities)
+
+
+CITY_BBOXES = _cities_from_rows(CITY_BBOX_ROWS)
+TIER1_NEW_TIER1_NAMES = frozenset((
+    "北京市", "上海市", "广州市", "深圳市", "成都市", "重庆市", "杭州市",
+    "西安市", "武汉市", "苏州市", "郑州市", "南京市", "天津市", "长沙市",
+    "东莞市", "宁波市", "佛山市", "合肥市", "青岛市",
+))
+MAJOR_CITIES = tuple(
+    city for city in CITY_BBOXES if city.name in TIER1_NEW_TIER1_NAMES
 )
 
 INSERT_ADDRESS_SQL = """
@@ -174,12 +178,25 @@ def brand_of_tags(tags):
     return None
 
 
-def city_selected(city, names):
+def admin_stem(name):
+    text = name or ""
+    for suffix in ("自治州", "地区", "盟", "市", "县", "区"):
+        if text.endswith(suffix):
+            return text[:-len(suffix)]
+    return text
+
+
+def place_selected(store, names):
     if not names:
         return True
-    city_stem = city.name.rstrip("市")
+    city_stem = admin_stem(store.city)
+    area = store.area or ""
+    area_stem = admin_stem(area)
     for name in names:
-        if city.name == name or city_stem == name.rstrip("市"):
+        stem = admin_stem(name)
+        if store.city == name or city_stem == stem:
+            return True
+        if area and (area == name or area_stem == stem):
             return True
     return False
 
@@ -191,7 +208,46 @@ def city_containing(longitude, latitude, cities):
     return None
 
 
-def store_from_wgs(tags, wgs_lng, wgs_lat, city):
+def first_tag(tags, keys):
+    for key in keys:
+        value = plain_text(tags.get(key))
+        if value:
+            return value
+    return ""
+
+
+def admin_from_tags(tags):
+    province = first_tag(tags, ("addr:province", "is_in:province", "is_in:state"))
+    city = first_tag(tags, ("addr:city", "addr:municipality", "is_in:city"))
+    area = first_tag(
+        tags,
+        (
+            "addr:county",
+            "addr:district",
+            "addr:city_district",
+            "addr:suburb",
+            "addr:town",
+            "addr:village",
+        ),
+    )
+    return province, city, area
+
+
+def resolve_admin(tags, wgs_lng, wgs_lat, cities):
+    province, city, area = admin_from_tags(tags)
+    matched = city_containing(wgs_lng, wgs_lat, cities) if cities else None
+    if matched:
+        return matched.province, matched.name, area
+    if not city and province:
+        city = province
+    if not province and city:
+        province = city
+    if not province or not city:
+        return FALLBACK_PROVINCE, FALLBACK_CITY, area
+    return province, city, area
+
+
+def store_from_wgs(tags, wgs_lng, wgs_lat, cities=CITY_BBOXES):
     brand = brand_of_tags(tags)
     if brand is None:
         return None
@@ -201,20 +257,14 @@ def store_from_wgs(tags, wgs_lng, wgs_lat, city):
     if out_of_china(wgs_lng, wgs_lat):
         return None
     longitude, latitude = wgs84_to_gcj02(wgs_lng, wgs_lat)
-    area = plain_text(
-        tags.get("addr:district")
-        or tags.get("addr:suburb")
-        or tags.get("addr:city_district")
-    )
+    province, city, area = resolve_admin(tags, wgs_lng, wgs_lat, cities)
     address = plain_text(tags.get("addr:full") or tags.get("addr:street"))
-    description = address or " ".join(
-        part for part in (city.province, city.name, area) if part
-    )
+    description = address or " ".join(part for part in (province, city, area) if part)
     return Store(
         name,
         clip(description, DESCRIPTION_LIMIT),
-        city.province,
-        city.name,
+        province,
+        city,
         area,
         longitude,
         latitude,
@@ -248,21 +298,8 @@ def address_values(store, region_id):
     )
 
 
-def way_center(way):
-    if not way.nodes:
-        return None
-    lons = []
-    lats = []
-    for node in way.nodes:
-        if not node.location.valid():
-            return None
-        lons.append(node.lon)
-        lats.append(node.lat)
-    return sum(lons) / len(lons), sum(lats) / len(lats)
-
-
 class BrandHandler(osmium.SimpleHandler):
-    """扫 PBF，只留下肯德基/麦当劳的点位（WGS-84）。"""
+    """只扫 node 上的肯德基/麦当劳（WGS-84）；不开 locations 索引，避免全国包 OOM。"""
 
     def __init__(self):
         super(BrandHandler, self).__init__()
@@ -271,40 +308,30 @@ class BrandHandler(osmium.SimpleHandler):
     def node(self, node):
         if not node.location.valid():
             return
-        self._keep(node.tags, node.location.lon, node.location.lat)
-
-    def way(self, way):
-        if brand_of_tags(way.tags) is None:
+        if brand_of_tags(node.tags) is None:
             return
-        point = way_center(way)
-        if point is None:
-            return
-        longitude, latitude = point
-        self.points.append((tags_to_dict(way.tags), longitude, latitude))
-
-    def _keep(self, osm_tags, longitude, latitude):
-        if brand_of_tags(osm_tags) is None:
-            return
-        self.points.append((tags_to_dict(osm_tags), longitude, latitude))
+        self.points.append(
+            (tags_to_dict(node.tags), node.location.lon, node.location.lat)
+        )
 
 
 def collect_brand_points(pbf_path):
     handler = BrandHandler()
-    logger.info("开始扫描 PBF path=%s", pbf_path)
-    handler.apply_file(pbf_path, locations=True)
+    logger.info("开始扫描 PBF path=%s mode=node-only", pbf_path)
+    handler.apply_file(pbf_path, locations=False)
     logger.info("扫描完成 brand_points=%s", len(handler.points))
     return handler.points
 
 
-def stores_from_points(points, cities):
+def stores_from_points(points, cities=CITY_BBOXES, place_names=None):
     stores = []
     for tags, wgs_lng, wgs_lat in points:
-        city = city_containing(wgs_lng, wgs_lat, cities)
-        if city is None:
+        store = store_from_wgs(tags, wgs_lng, wgs_lat, cities)
+        if not store:
             continue
-        store = store_from_wgs(tags, wgs_lng, wgs_lat, city)
-        if store:
-            stores.append(store)
+        if place_names and not place_selected(store, place_names):
+            continue
+        stores.append(store)
     return dedup_stores(stores)
 
 
@@ -427,15 +454,20 @@ class AddressWriter(object):
         missing = []
         seen = set()
         for store in stores:
-            triple = (store.province, store.city, store.area)
-            if not all(triple) or triple in self.regions or triple in seen:
+            triple = self._region_key(store)
+            if triple is None or triple in self.regions or triple in seen:
                 continue
             seen.add(triple)
             missing.append(triple)
         return missing
 
+    def _region_key(self, store):
+        if not store.province or not store.city:
+            return None
+        return (store.province, store.city, store.area or "")
+
     def _row(self, store):
-        return address_values(store, self.regions.get((store.province, store.city, store.area), 0))
+        return address_values(store, self.regions.get(self._region_key(store), 0))
 
     def _remember_regions(self, cur, missing):
         if not missing:
@@ -454,10 +486,15 @@ class AddressWriter(object):
 
 
 def parse_args(argv):
-    parser = argparse.ArgumentParser(description="从 OSM PBF 导入各大城市肯德基、麦当劳门店")
+    parser = argparse.ArgumentParser(description="从 OSM PBF 导入全国肯德基、麦当劳门店")
     parser.add_argument("--pbf", default="", help="本地 .osm.pbf 路径，默认 script/data/china-latest.osm.pbf")
     parser.add_argument("--download", action="store_true", help="从 Geofabrik 下载中国数据包")
-    parser.add_argument("--city", action="append", default=[], help="城市名，可重复。默认一线+新一线")
+    parser.add_argument(
+        "--city",
+        action="append",
+        default=[],
+        help="只保留指定市或县/区，可重复。默认全国",
+    )
     parser.add_argument("--dry-run", action="store_true", help="只统计数量，不写数据库")
     return parser.parse_args(argv)
 
@@ -475,11 +512,18 @@ def resolve_pbf_path(args):
     return path
 
 
-def run_import(pbf_path, writer, cities):
+def run_import(pbf_path, writer, cities=CITY_BBOXES, place_names=None):
     points = collect_brand_points(pbf_path)
-    stores = stores_from_points(points, cities)
+    stores = stores_from_points(points, cities, place_names=place_names)
     for city_name, count in sorted(Counter(store.city for store in stores).items()):
         logger.info("city=%s stores=%s", city_name, count)
+    with_area = sum(1 for store in stores if store.area)
+    logger.info(
+        "行政区划 area有值=%s area空=%s fallback市=%s",
+        with_area,
+        len(stores) - with_area,
+        sum(1 for store in stores if store.city == FALLBACK_CITY),
+    )
     if writer is None:
         logger.info("dry-run 合计 stores=%s", len(stores))
         return len(stores)
@@ -491,20 +535,27 @@ def run_import(pbf_path, writer, cities):
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    cities = [city for city in MAJOR_CITIES if city_selected(city, args.city)]
-    if args.city and not cities:
-        logger.error("城市不在内置名单里：%s", "、".join(args.city))
-        return EXIT_CONFIG
     pbf_path = resolve_pbf_path(args)
     if not pbf_path:
         return EXIT_CONFIG
+    place_names = args.city or None
     brand_names = "、".join(brand.keyword for brand in BRANDS)
-    logger.info("准备导入 cities=%s brands=%s pbf=%s", len(cities), brand_names, pbf_path)
+    scope = "、".join(args.city) if args.city else "全国"
+    logger.info(
+        "准备导入 scope=%s bbox城市=%s brands=%s pbf=%s",
+        scope,
+        len(CITY_BBOXES),
+        brand_names,
+        pbf_path,
+    )
     if args.dry_run:
-        run_import(pbf_path, None, cities)
-        return 0
-    with AddressWriter.connect() as writer:
-        run_import(pbf_path, writer, cities)
+        count = run_import(pbf_path, None, CITY_BBOXES, place_names=place_names)
+    else:
+        with AddressWriter.connect() as writer:
+            count = run_import(pbf_path, writer, CITY_BBOXES, place_names=place_names)
+    if place_names and count == 0:
+        logger.error("按市/县过滤后无门店：%s", "、".join(args.city))
+        return EXIT_CONFIG
     return 0
 
 
