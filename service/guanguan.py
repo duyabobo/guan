@@ -32,6 +32,14 @@ UNKNOWN_NEGATIVE_ONE = -1
 LIST_FETCH_POOL_FACTOR = 5
 
 
+def page_guanguan_items(ranked_items, offset, limit):
+    """按 offset/limit 切一页，并判断是否还有下一页。"""
+    start = max(offset, 0)
+    page = ranked_items[start:start + limit]
+    has_more = len(ranked_items) > start + limit
+    return page, has_more
+
+
 class GuanguanService(BaseService):
 
     def __init__(self, passportId):
@@ -92,7 +100,7 @@ class GuanguanService(BaseService):
         )
 
     @timecost
-    def getGuanguanList(self, longitude, latitude, limit):
+    def getGuanguanList(self, longitude, latitude, limit, offset=0):
         """
         列表规则：
         1. 心形：实心 > 心碎 > 双心 > 单心 > 无心
@@ -101,6 +109,7 @@ class GuanguanService(BaseService):
         4. 心碎/实心/双心永久展示
         5. 还没约上的：两周内、配置最远距离内（默认 100km）、匹配通过，
            且距开场不少于「每 10km 需 1 小时」（时间不够赶路则不展示）
+        返回 (本页列表, 是否还有下一页)。
         """
         if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
             return [{
@@ -112,10 +121,11 @@ class GuanguanService(BaseService):
                 "heartKind": "empty",
                 "img": DEFAULT_ADDRESS_URL,
                 "address": "线下活动地址",
-            }]
+            }], False
 
         now = datetime.datetime.now()
-        pool_limit = max(limit * LIST_FETCH_POOL_FACTOR, limit)
+        need_count = offset + limit + 1
+        pool_limit = max(need_count * LIST_FETCH_POOL_FACTOR, need_count)
         settle_due_meets(self.passportId)
 
         user_activities = ActivityModel.getUserAllActivities(self.passportId)
@@ -163,10 +173,10 @@ class GuanguanService(BaseService):
 
         ranked_items.sort(key=lambda item: item[0])
         ranked_items = limit_solid_heart_items(ranked_items, lambda item: item[3])
-        ranked_items = ranked_items[:limit]
+        page_items, has_more = page_guanguan_items(ranked_items, offset, limit)
 
         guanguan_list = []
-        for _, activity, progress, heart_kind, address in ranked_items:
+        for _, activity, progress, heart_kind, address in page_items:
             guanguan_list.append({
                 "id": activity.id,
                 "time": activity.startTimeStr,
@@ -180,4 +190,4 @@ class GuanguanService(BaseService):
                 "longitude": address.longitude if address else 0,
                 "latitude": address.latitude if address else 0,
             })
-        return guanguan_list
+        return guanguan_list, has_more

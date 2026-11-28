@@ -5,7 +5,8 @@ from service.common.profile_board import ProfileBoardService
 from service.guanguan import GuanguanService, UNKNOWN_NEGATIVE_ONE
 from service.phone_bind import PhoneBindService
 from util.const.match import (
-    GUANGUAN_LIST_DEFAULT_LIMIT, GUANGUAN_LIST_MAX_LIMIT,
+    GUANGUAN_LIST_DEFAULT_LIMIT, GUANGUAN_LIST_DEFAULT_OFFSET,
+    GUANGUAN_LIST_MAX_LIMIT, GUANGUAN_LIST_MAX_OFFSET,
     LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN,
 )
 from util.monitor import superMonitor, Response
@@ -23,13 +24,17 @@ class GuanguanHandler(BaseHandler):
             'latitude', default=UNKNOWN_NEGATIVE_ONE, minimum=LATITUDE_MIN, maximum=LATITUDE_MAX)
         limit = self.getIntParameter(
             'limit', default=GUANGUAN_LIST_DEFAULT_LIMIT, minimum=1, maximum=GUANGUAN_LIST_MAX_LIMIT)
+        offset = self.getIntParameter(
+            'offset', default=GUANGUAN_LIST_DEFAULT_OFFSET, minimum=0, maximum=GUANGUAN_LIST_MAX_OFFSET)
 
         _remember_list_location(self.currentPassportId, latitude, longitude)
         ggs = GuanguanService(self.currentPassportId)
         config_sufficient = ProfileBoardService.info_is_filled(self.currentPassportId) if self.currentPassportId else False
+        guanguan_list, has_more = ggs.getGuanguanList(longitude, latitude, limit, offset)
 
         data = {
-            "guanguanList": ggs.getGuanguanList(longitude, latitude, limit),
+            "guanguanList": guanguan_list,
+            "hasMore": has_more,
             "configSufficient": config_sufficient,
             "copy": list_page_copy(),
         }
