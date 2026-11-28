@@ -48,9 +48,11 @@ def match_config_copy():
         "privacyBody": _PRIVACY_BODY,
         "privacyConfirm": "知道了",
         "voiceStatus": {
-            "idle": "勇敢发声",
-            "recording": "正在录音，再次点击结束",
+            "idle": "按住说话",
+            "recording": "松开发送",
+            "recordingCancel": "松开取消",
             "processing": "正在解析，完成后会自动更新",
+            "tooShort": "说话时间太短",
         },
         "micDeniedTitle": "需要麦克风",
         "micDeniedContent": "语音搜集需要使用麦克风，请在设置里允许录音。",

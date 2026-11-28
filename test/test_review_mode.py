@@ -43,7 +43,10 @@ def test_review_on_does_not_change_copy_or_labels(monkeypatch):
     detail = match_config_copy()
     assert detail["infoTitle"] == "我的信息"
     assert detail["requirementTitle"] == "我的期望"
-    assert detail["voiceStatus"]["idle"] == "勇敢发声"
+    assert detail["voiceStatus"]["idle"] == "按住说话"
+    assert detail["voiceStatus"]["recording"] == "松开发送"
+    assert detail["voiceStatus"]["recordingCancel"] == "松开取消"
+    assert detail["voiceStatus"]["tooShort"] == "说话时间太短"
     assert "手机号" in detail["privacyBody"]
     rows = build_rows([
         _Attr(SCOPE_INFO, "height", value_min=170),
