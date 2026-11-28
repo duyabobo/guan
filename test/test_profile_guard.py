@@ -88,13 +88,35 @@ def test_same_sex_expectation_rejects_the_whole_voice():
     assert outcome.requirement_values == {}
 
 
-def test_new_own_sex_matching_saved_requirement_is_rejected():
+def test_own_sex_forces_opposite_requirement_when_missing():
+    outcome = decide_profile_write(
+        [],
+        {"sex": _pack(1), "height": _pack(175)},
+        {},
+    )
+    assert outcome.rejected is False
+    assert outcome.requirement_values["sex"]["value_min"] == 2
+
+
+def test_female_own_sex_forces_male_requirement():
+    outcome = decide_profile_write(
+        [_Attr(SCOPE_INFO, "sex", value_min=2)],
+        {"weight": _pack(50)},
+        {},
+    )
+    assert outcome.rejected is False
+    assert outcome.requirement_values["sex"]["value_min"] == 1
+
+
+def test_changing_own_sex_flips_saved_requirement():
     outcome = decide_profile_write(
         [_Attr(SCOPE_REQUIREMENT, "sex", value_min=2)],
         {"sex": _pack(2)},
         {},
     )
-    assert outcome.rejected is True
+    assert outcome.rejected is False
+    assert outcome.info_values["sex"]["value_min"] == 2
+    assert outcome.requirement_values["sex"]["value_min"] == 1
 
 
 def test_changing_own_sex_with_matching_new_requirement_is_allowed():
@@ -117,6 +139,17 @@ def test_opposite_requirement_is_saved():
         [_Attr(SCOPE_INFO, "sex", value_min=1)],
         {},
         {"sex": _pack(2)},
+    )
+    assert outcome.rejected is False
+    assert outcome.requirement_values["sex"]["value_min"] == 2
+
+
+def test_wrong_opposite_from_model_is_corrected():
+    """模型若漏写或写错期望性别，只要本人性别已知就纠正为异性。"""
+    outcome = decide_profile_write(
+        [_Attr(SCOPE_INFO, "sex", value_min=1)],
+        {},
+        {},
     )
     assert outcome.rejected is False
     assert outcome.requirement_values["sex"]["value_min"] == 2
