@@ -46,7 +46,7 @@ class MatchConfigService(BaseService):
         return self.apply_extracted(extracted)
 
     def apply_extracted(self, extracted):
-        """拒绝时不写库。锁定维度冲突则保留旧值，其余照常写入。"""
+        """拒绝时不写库；通过后按维度覆盖更新。"""
         blocked = self._blocked_outcome()
         if blocked is not None:
             return blocked
@@ -68,11 +68,6 @@ class MatchConfigService(BaseService):
         )
         if not info_saved or not requirement_saved:
             return ProfileWriteOutcome(msg=RESP_IDENTITY_INCOMPLETE, rejected=True)
-        if outcome.conflict_labels:
-            logger.info(
-                "资料锁定冲突，保留旧值 passport=%s dims=%s",
-                self.passportId, outcome.conflict_labels,
-            )
         outcome.data = self.getMatchConfig()
         return outcome
 

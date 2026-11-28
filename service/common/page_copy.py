@@ -6,7 +6,7 @@ from service.common.phone_number import PHONE_CODE_LENGTH, PHONE_DIGIT_COUNT
 _PRIVACY_BODY = (
     "点按麦克风后，未验证手机号将先完成验证。"
     "录音加密保存，并整理为报名信息与参与偏好，用于帮助您找到适合的线下活动；页面不展示原始录音。"
-    "性别、身高、出生年月等关键信息一经确认，不能再用语音修改；不一致时保留原信息并转人工确认。"
+    "个人信息和期望可通过语音随时更新。"
     "已报名或确认参加后，不能再录音。"
 )
 
@@ -41,7 +41,6 @@ def match_config_copy():
         "requirementTitle": "我的期望",
         "emptyText": "说一段话后，这里会整理出个人信息和期望",
         "voiceBlockTitle": "暂时不能录音",
-        "profileConflictTitle": "已保留原资料",
         "voiceRejectTitle": "暂时不能更新",
         "privacyEntry": "隐私说明",
         "privacyTitle": "隐私说明",

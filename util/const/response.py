@@ -18,7 +18,6 @@ RESP_PHONE_CODE_TOO_SOON = {'code': 1005, 'errMsg': '请稍后再获取验证码
 RESP_SMS_UNAVAILABLE = {'code': 1005, 'errMsg': '验证码暂时发不出去'}
 RESP_PHONE_BIND_FAILED = {'code': 1005, 'errMsg': '验证码不正确'}
 RESP_PHONE_REQUIRED = {'code': 1006, 'errMsg': '请先完成手机号验证'}
-RESP_PROFILE_CONFLICT_CODE = 9002
 RESP_JOIN_ACTIVITY_FAILED = {'code': 1201, 'errMsg': '本次活动已被别人预约，请返回重新选择'}
 RESP_HAS_APPOINTMENT = {'code': 1202, 'errMsg': '已经有一场约好的活动，不能再约别的'}
 RESP_HAS_FIT_PARTNER = {'code': 1205, 'errMsg': '已经有待确认或在一起的活动，不能再约或再选合适'}
@@ -26,12 +25,3 @@ RESP_HAS_TIME_CONFLICT = {'code': 1203, 'errMsg': '您有其他活动和本次�
 RESP_MEET_RESULT_ERR = {'code': 1204, 'errMsg': '修改活动结果失败'}
 RESP_SUCCESS_WITH_NOTI_MIN_CODE = 9000
 RESP_GUAN_INFO_UPDATE_SUCCESS_WITH_NOTI = {'code': 9001, 'errMsg': '已取消'}
-
-
-def profile_conflict_msg(labels):
-    """锁定资料冲突。code 大于 9000，其它字段的写入仍会提交。"""
-    names = "、".join(labels)
-    return {
-        'code': RESP_PROFILE_CONFLICT_CODE,
-        'errMsg': '%s和已保存的不一致，已保留原来的，请等待人工客服确认' % names,
-    }

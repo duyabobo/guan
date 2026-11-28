@@ -123,9 +123,6 @@ ACTIVE_DIMS = [
 # 加入活动之前，个人信息里这些维度必须有值。顺序与上面的展示顺序一致。
 FILL_REQUIRED_INFO_KEYS = ("sex", "birth_year", "height", "weight")
 
-# 一旦有值就不能再用语音改。冲突时保留旧值，交给人工确认。
-LOCKED_INFO_KEYS = ("sex", "birth_year", "height", "home_region")
-
 
 def extraction_hint():
     """给模型的字段说明，随 ACTIVE_DIMS 变化，避免提示词和目录各写一份。"""
