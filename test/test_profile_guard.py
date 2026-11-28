@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from service.common.profile_catalog import SCOPE_INFO, SCOPE_REQUIREMENT
 from service.common.profile_guard import decide_profile_write
+from util.const.match import MODEL_SEX_FEMALE_INDEX, MODEL_SEX_MALE_INDEX
 from util.const.progress import (
     PROGRESS_AGREE,
     PROGRESS_DISAGREE,
@@ -34,18 +35,18 @@ def _pack(value_min=0, value_max=0, value_text=""):
 def test_first_voice_saves_info_fields():
     outcome = decide_profile_write(
         [],
-        {"sex": _pack(1), "height": _pack(175)},
-        {"sex": _pack(2)},
+        {"sex": _pack(MODEL_SEX_MALE_INDEX), "height": _pack(175)},
+        {"sex": _pack(MODEL_SEX_FEMALE_INDEX)},
     )
     assert outcome.rejected is False
-    assert outcome.info_values["sex"]["value_min"] == 1
+    assert outcome.info_values["sex"]["value_min"] == MODEL_SEX_MALE_INDEX
     assert outcome.info_values["height"]["value_min"] == 175
-    assert outcome.requirement_values["sex"]["value_min"] == 2
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
 
 
 def test_info_fields_can_be_overwritten():
     existing = [
-        _Attr(SCOPE_INFO, "sex", value_min=1),
+        _Attr(SCOPE_INFO, "sex", value_min=MODEL_SEX_MALE_INDEX),
         _Attr(SCOPE_INFO, "height", value_min=175),
         _Attr(SCOPE_INFO, "birth_year", value_min=1996),
         _Attr(SCOPE_INFO, "home_region", value_text="北京"),
@@ -53,21 +54,21 @@ def test_info_fields_can_be_overwritten():
     outcome = decide_profile_write(
         existing,
         {
-            "sex": _pack(2),
+            "sex": _pack(MODEL_SEX_FEMALE_INDEX),
             "height": _pack(180),
             "birth_year": _pack(1998),
             "weight": _pack(70),
             "home_region": _pack(value_text="上海"),
         },
-        {"sex": _pack(1)},
+        {"sex": _pack(MODEL_SEX_MALE_INDEX)},
     )
     assert outcome.rejected is False
-    assert outcome.info_values["sex"]["value_min"] == 2
+    assert outcome.info_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
     assert outcome.info_values["height"]["value_min"] == 180
     assert outcome.info_values["birth_year"]["value_min"] == 1998
     assert outcome.info_values["weight"]["value_min"] == 70
     assert outcome.info_values["home_region"]["value_text"] == "上海"
-    assert outcome.requirement_values["sex"]["value_min"] == 1
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_MALE_INDEX
 
 
 def test_same_info_value_is_not_rewritten():
@@ -78,9 +79,9 @@ def test_same_info_value_is_not_rewritten():
 
 def test_same_sex_expectation_rejects_the_whole_voice():
     outcome = decide_profile_write(
-        [_Attr(SCOPE_INFO, "sex", value_min=1)],
+        [_Attr(SCOPE_INFO, "sex", value_min=MODEL_SEX_MALE_INDEX)],
         {"weight": _pack(70)},
-        {"sex": _pack(1)},
+        {"sex": _pack(MODEL_SEX_MALE_INDEX)},
     )
     assert outcome.rejected is True
     assert outcome.msg == RESP_EXPECT_SAME_SEX
@@ -91,68 +92,67 @@ def test_same_sex_expectation_rejects_the_whole_voice():
 def test_own_sex_forces_opposite_requirement_when_missing():
     outcome = decide_profile_write(
         [],
-        {"sex": _pack(1), "height": _pack(175)},
+        {"sex": _pack(MODEL_SEX_MALE_INDEX), "height": _pack(175)},
         {},
     )
     assert outcome.rejected is False
-    assert outcome.requirement_values["sex"]["value_min"] == 2
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
 
 
-def test_female_own_sex_forces_male_requirement():
+def test_stored_female_forces_male_requirement():
     outcome = decide_profile_write(
-        [_Attr(SCOPE_INFO, "sex", value_min=2)],
+        [_Attr(SCOPE_INFO, "sex", value_min=MODEL_SEX_FEMALE_INDEX)],
         {"weight": _pack(50)},
         {},
     )
     assert outcome.rejected is False
-    assert outcome.requirement_values["sex"]["value_min"] == 1
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_MALE_INDEX
+
+
+def test_stored_male_forces_female_requirement():
+    outcome = decide_profile_write(
+        [_Attr(SCOPE_INFO, "sex", value_min=MODEL_SEX_MALE_INDEX)],
+        {"weight": _pack(70)},
+        {},
+    )
+    assert outcome.rejected is False
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
 
 
 def test_changing_own_sex_flips_saved_requirement():
     outcome = decide_profile_write(
-        [_Attr(SCOPE_REQUIREMENT, "sex", value_min=2)],
-        {"sex": _pack(2)},
+        [_Attr(SCOPE_REQUIREMENT, "sex", value_min=MODEL_SEX_FEMALE_INDEX)],
+        {"sex": _pack(MODEL_SEX_FEMALE_INDEX)},
         {},
     )
     assert outcome.rejected is False
-    assert outcome.info_values["sex"]["value_min"] == 2
-    assert outcome.requirement_values["sex"]["value_min"] == 1
+    assert outcome.info_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_MALE_INDEX
 
 
 def test_changing_own_sex_with_matching_new_requirement_is_allowed():
     existing = [
-        _Attr(SCOPE_INFO, "sex", value_min=1),
-        _Attr(SCOPE_REQUIREMENT, "sex", value_min=2),
+        _Attr(SCOPE_INFO, "sex", value_min=MODEL_SEX_MALE_INDEX),
+        _Attr(SCOPE_REQUIREMENT, "sex", value_min=MODEL_SEX_FEMALE_INDEX),
     ]
     outcome = decide_profile_write(
         existing,
-        {"sex": _pack(2)},
-        {"sex": _pack(1)},
+        {"sex": _pack(MODEL_SEX_FEMALE_INDEX)},
+        {"sex": _pack(MODEL_SEX_MALE_INDEX)},
     )
     assert outcome.rejected is False
-    assert outcome.info_values["sex"]["value_min"] == 2
-    assert outcome.requirement_values["sex"]["value_min"] == 1
+    assert outcome.info_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_MALE_INDEX
 
 
 def test_opposite_requirement_is_saved():
     outcome = decide_profile_write(
-        [_Attr(SCOPE_INFO, "sex", value_min=1)],
+        [_Attr(SCOPE_INFO, "sex", value_min=MODEL_SEX_MALE_INDEX)],
         {},
-        {"sex": _pack(2)},
+        {"sex": _pack(MODEL_SEX_FEMALE_INDEX)},
     )
     assert outcome.rejected is False
-    assert outcome.requirement_values["sex"]["value_min"] == 2
-
-
-def test_wrong_opposite_from_model_is_corrected():
-    """模型若漏写或写错期望性别，只要本人性别已知就纠正为异性。"""
-    outcome = decide_profile_write(
-        [_Attr(SCOPE_INFO, "sex", value_min=1)],
-        {},
-        {},
-    )
-    assert outcome.rejected is False
-    assert outcome.requirement_values["sex"]["value_min"] == 2
+    assert outcome.requirement_values["sex"]["value_min"] == MODEL_SEX_FEMALE_INDEX
 
 
 def test_voice_blocked_only_for_double_half_and_solid():

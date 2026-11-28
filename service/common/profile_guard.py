@@ -50,18 +50,13 @@ def decide_profile_write(existing_rows, info_values, requirement_values):
 
 
 def _force_opposite_requirement_sex(own_sex, requirement_values):
-    """本人性别已知时，期望性别一律取反，不依赖模型是否提到。"""
     opposite = _OPPOSITE_SEX.get(own_sex)
     if opposite is None:
         return requirement_values or {}
     forced = dict(requirement_values or {})
-    forced["sex"] = _sex_pack(opposite)
+    forced["sex"] = {"value_min": opposite, "value_max": 0, "value_text": ""}
     logger.info("期望性别按本人取反 own=%s requirement=%s", own_sex, opposite)
     return forced
-
-
-def _sex_pack(sex):
-    return {"value_min": sex, "value_max": 0, "value_text": ""}
 
 
 def _index_rows(existing_rows):
