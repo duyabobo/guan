@@ -300,19 +300,11 @@ PERMANENT_HEART_KINDS = frozenset({
     HEART_KIND_DOUBLE,
 })
 
-# 列表排序：实心 > 半实心 > 心碎 > 双心 > 单心 > 无心（再按 10km 距离档、活动时间）
-HEART_SORT_ORDER = {
-    HEART_KIND_SOLID: 0,
-    HEART_KIND_HALF: 1,
-    HEART_KIND_BROKEN: 2,
-    HEART_KIND_DOUBLE: 3,
-    HEART_KIND_SINGLE: 4,
-    HEART_KIND_EMPTY: 5,
-}
-
 DISTANCE_BUCKET_KM = 10
-LIST_WINDOW_DAYS = 14
+LIST_WINDOW_DAYS = 7
 LIST_WINDOW_MINUTES = LIST_WINDOW_DAYS * 24 * 60
+# 无坐标 / 无开场时间时排到最后
+_MISSING_SORT_ORDER = 999999.0
 # 列表未约上场次的默认最远距离（公里）。运行时可用 LIST_MAX_DISTANCE_KM 覆盖。
 MAX_LIST_DISTANCE_KM = 100
 _LIST_DISTANCE_CONF_KEY = "list_max_distance_km"
@@ -454,14 +446,11 @@ def limit_solid_heart_items(items, heart_kind_getter):
     return limited
 
 
-def guanguan_list_sort_key(heart_kind, distance_km, start_time, now):
-    bucket = distance_bucket_km(distance_km)
+def guanguan_list_sort_key(distance_km, start_time, now):
+    """列表排序：距离近优先；相同距离再按开场时间近优先。"""
+    distance_order = _MISSING_SORT_ORDER if distance_km is None else distance_km
     if start_time:
         minutes_until = (start_time - now).total_seconds() / 60.0
     else:
-        minutes_until = 999999.0
-    return (
-        HEART_SORT_ORDER.get(heart_kind, 9),
-        bucket,
-        minutes_until,
-    )
+        minutes_until = _MISSING_SORT_ORDER
+    return (distance_order, minutes_until)

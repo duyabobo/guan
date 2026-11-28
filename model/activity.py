@@ -159,7 +159,9 @@ class ActivityModel(BaseModel):
         ]
         if addressIds:
             whereParams.append(cls.address_id.in_(addressIds))
-        query = getDbSession().query(cls.id, cls.state).filter(*whereParams)
+        query = getDbSession().query(cls.id, cls.state).filter(*whereParams).order_by(
+            cls.start_time.asc(), cls.id.asc(),
+        )
         if limit is not None:
             query = query.limit(limit)
         return query.all()

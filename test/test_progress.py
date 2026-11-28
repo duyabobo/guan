@@ -565,43 +565,32 @@ class TestGuanguanHeartKind:
             PROGRESS_WAIT_MEET, 4, MODEL_ACTIVITY_STATE_INVITING, set(), MODEL_ACTIVITY_STATE_EMPTY
         ) is True
 
-    def test_hide_items_beyond_two_weeks(self):
-        from util.const.progress import LIST_WINDOW_MINUTES
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, 70) is True
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES + 1) is False
-
-    def test_guanguan_list_sort_priority(self):
-        now = datetime.datetime(2026, 1, 10, 12, 0, 0)
-        near_time = now + datetime.timedelta(hours=1)
-        far_time = now + datetime.timedelta(hours=5)
-
-        ranked = sorted([
-            (guanguan_list_sort_key(HEART_KIND_EMPTY, 5, far_time, now), 'empty'),
-            (guanguan_list_sort_key(HEART_KIND_SINGLE, 5, near_time, now), 'single'),
-            (guanguan_list_sort_key(HEART_KIND_DOUBLE, 15, far_time, now), 'double'),
-            (guanguan_list_sort_key(HEART_KIND_BROKEN, 5, far_time, now), 'broken'),
-            (guanguan_list_sort_key(HEART_KIND_HALF, 20, far_time, now), 'half'),
-            (guanguan_list_sort_key(HEART_KIND_SOLID, 25, far_time, now), 'solid'),
-            (guanguan_list_sort_key(HEART_KIND_SINGLE, 25, near_time, now), 'single_far'),
-        ], key=lambda item: item[0])
-        labels = [label for _, label in ranked]
-        assert labels.index('solid') < labels.index('half')
-        assert labels.index('half') < labels.index('broken')
-        assert labels.index('broken') < labels.index('double')
-        assert labels.index('double') < labels.index('single')
-        assert labels.index('single') < labels.index('empty')
-        assert labels.index('single') < labels.index('single_far')
-        assert labels.index('single_far') < labels.index('empty')
-
-    def test_sort_by_distance_bucket_then_time(self):
+    def test_guanguan_list_sort_by_distance_then_time(self):
         now = datetime.datetime(2026, 1, 10, 12, 0, 0)
         sooner = now + datetime.timedelta(hours=1)
         later = now + datetime.timedelta(hours=3)
-        near_key = guanguan_list_sort_key(HEART_KIND_SINGLE, 5, sooner, now)
-        far_bucket_key = guanguan_list_sort_key(HEART_KIND_SINGLE, 15, sooner, now)
-        later_time_key = guanguan_list_sort_key(HEART_KIND_SINGLE, 5, later, now)
-        assert near_key < far_bucket_key
-        assert near_key < later_time_key
+        ranked = sorted([
+            (guanguan_list_sort_key(15, sooner, now), 'far_soon'),
+            (guanguan_list_sort_key(5, later, now), 'near_later'),
+            (guanguan_list_sort_key(5, sooner, now), 'near_soon'),
+            (guanguan_list_sort_key(5, later, now), 'near_later_dup'),
+        ], key=lambda item: item[0])
+        labels = [label for _, label in ranked]
+        assert labels[0] == 'near_soon'
+        assert labels.index('near_soon') < labels.index('near_later')
+        assert labels.index('near_later') < labels.index('far_soon')
+
+    def test_sort_same_distance_prefers_sooner_time(self):
+        now = datetime.datetime(2026, 1, 10, 12, 0, 0)
+        sooner = now + datetime.timedelta(hours=1)
+        later = now + datetime.timedelta(hours=3)
+        assert guanguan_list_sort_key(5, sooner, now) < guanguan_list_sort_key(5, later, now)
+        assert guanguan_list_sort_key(5, sooner, now) < guanguan_list_sort_key(15, sooner, now)
+
+    def test_sort_missing_distance_goes_last(self):
+        now = datetime.datetime(2026, 1, 10, 12, 0, 0)
+        sooner = now + datetime.timedelta(hours=1)
+        assert guanguan_list_sort_key(5, sooner, now) < guanguan_list_sort_key(None, sooner, now)
 
     def test_only_one_solid_heart_in_list(self):
         items = [
@@ -613,10 +602,11 @@ class TestGuanguanHeartKind:
         assert [item[0] for item in limited] == ["solid", "broken"]
 
     def test_permanent_hearts_always_show(self):
-        now = datetime.datetime.now()
-        future = now + datetime.timedelta(days=30)
         for kind in (HEART_KIND_BROKEN, HEART_KIND_SOLID, HEART_KIND_HALF, HEART_KIND_DOUBLE):
             assert should_show_guanguan_item(kind, 50, 99999) is True
-            assert guanguan_list_sort_key(kind, 50, future, now)[0] < guanguan_list_sort_key(
-                HEART_KIND_EMPTY, 1, future, now
-            )[0]
+
+    def test_list_window_is_seven_days(self):
+        from util.const.progress import LIST_WINDOW_DAYS
+        assert LIST_WINDOW_DAYS == 7
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES + 1) is False

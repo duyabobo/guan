@@ -59,7 +59,8 @@ CREATE TABLE IF NOT EXISTS `activity` (
     `create_time`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    KEY `idx_state_start` (`state`, `start_time`)
+    KEY `idx_state_start` (`state`, `start_time`),
+    KEY `idx_addr_state_start` (`address_id`, `state`, `start_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动活动';
 
 -- ── activity_change_record：活动流水 ────────────────────────────────────────

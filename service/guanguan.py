@@ -12,7 +12,8 @@ from service.common.profile_match import ProfileMatchService
 from util.const.match import (
     MODEL_SEX_UNKNOWN_INDEX,
     MODEL_ACTIVITY_STATE_EMPTY, MODEL_ACTIVITY_STATE_INVITING,
-    DEFAULT_ADDRESS_URL
+    DEFAULT_ADDRESS_URL,
+    GUANGUAN_LIST_MAX_OFFSET,
 )
 from util.const.progress import (
     PROGRESS_NOT_SELECTED,
@@ -40,6 +41,15 @@ def page_guanguan_items(ranked_items, offset, limit):
     return page, has_more
 
 
+def candidate_pool_limit(page_limit):
+    """
+    分页各页共用同一候选池大小。
+    若随 offset 放大候选池，每页会在不同集合上重排，跨页就会重复、顺序错乱。
+    """
+    need_count = GUANGUAN_LIST_MAX_OFFSET + page_limit + 1
+    return max(need_count * LIST_FETCH_POOL_FACTOR, need_count)
+
+
 class GuanguanService(BaseService):
 
     def __init__(self, passportId):
@@ -64,14 +74,16 @@ class GuanguanService(BaseService):
     def getLimitMatchedActivityList(self, matchedActivityIdsSet, locationFreeActivityIdsSet, locationMatchingActivityIdsSet, sex, limit):
         matchedLocationActivityIdsSet = matchedActivityIdsSet.intersection(locationMatchingActivityIdsSet)
         if limit is None or len(matchedLocationActivityIdsSet) < limit:
-            sortedActivityIdList = list(matchedLocationActivityIdsSet)
-            sortedActivityIdList.extend(list(matchedActivityIdsSet - set(sortedActivityIdList)))
+            sortedActivityIdList = sorted(matchedLocationActivityIdsSet)
+            sortedActivityIdList.extend(sorted(matchedActivityIdsSet - set(sortedActivityIdList)))
             if sex == MODEL_SEX_UNKNOWN_INDEX:
-                sortedActivityIdList.extend(list(locationFreeActivityIdsSet.union(locationMatchingActivityIdsSet) - set(sortedActivityIdList)))
+                sortedActivityIdList.extend(sorted(
+                    locationFreeActivityIdsSet.union(locationMatchingActivityIdsSet) - set(sortedActivityIdList)
+                ))
             else:
-                sortedActivityIdList.extend(list(locationFreeActivityIdsSet - set(sortedActivityIdList)))
+                sortedActivityIdList.extend(sorted(locationFreeActivityIdsSet - set(sortedActivityIdList)))
         else:
-            sortedActivityIdList = list(matchedLocationActivityIdsSet)
+            sortedActivityIdList = sorted(matchedLocationActivityIdsSet)
         return ActivityModel.listActivity(sortedActivityIdList[:limit], exceptPassportId=self.passportId)
 
     @timecost
@@ -103,11 +115,9 @@ class GuanguanService(BaseService):
     def getGuanguanList(self, longitude, latitude, limit, offset=0):
         """
         列表规则：
-        1. 心形：实心 > 心碎 > 双心 > 单心 > 无心
-        2. 同级按距离档（每 10km 一级）由近到远
-        3. 同档按活动时间由近到远
-        4. 心碎/实心/双心永久展示
-        5. 还没约上的：两周内、配置最远距离内（默认 100km）、匹配通过，
+        1. 整体按距离由近到远；相同距离再按开场时间由近到远
+        2. 心碎/实心/半实心/双心永久展示
+        3. 还没约上的：LIST_WINDOW_DAYS 天内、配置最远距离内（默认 100km）、匹配通过，
            且距开场不少于「每 10km 需 1 小时」（时间不够赶路则不展示）
         返回 (本页列表, 是否还有下一页)。
         """
@@ -124,8 +134,7 @@ class GuanguanService(BaseService):
             }], False
 
         now = datetime.datetime.now()
-        need_count = offset + limit + 1
-        pool_limit = max(need_count * LIST_FETCH_POOL_FACTOR, need_count)
+        pool_limit = candidate_pool_limit(limit)
         settle_due_meets(self.passportId)
 
         user_activities = ActivityModel.getUserAllActivities(self.passportId)
@@ -164,7 +173,7 @@ class GuanguanService(BaseService):
             if not should_show_guanguan_item(heart_kind, distance_km, minutes_until):
                 continue
             ranked_items.append((
-                guanguan_list_sort_key(heart_kind, distance_km, activity.start_time, now),
+                guanguan_list_sort_key(distance_km, activity.start_time, now),
                 activity,
                 progress,
                 heart_kind,
