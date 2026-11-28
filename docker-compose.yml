@@ -13,15 +13,16 @@ services:
         condition: service_healthy
     volumes:
       - ./log:/app/log
-      # 宿主机证书挂进容器。容器内路径要和 SSL_CERT_FILE / SSL_KEY_FILE 一致
+      # 宿主机证书挂进容器。容器内路径要和 GUAN_HTTPS_* 一致。
+      # 不要用 SSL_CERT_FILE：OpenSSL/httpx 会把它当出站 CA 包，方舟等 HTTPS 会 SSL 失败。
       - ${SSL_CERT_HOST:-/home/guan/service.pem}:/home/guan/service.pem:ro
       - ${SSL_KEY_HOST:-/home/guan/service.key}:/home/guan/service.key:ro
     environment:
       - PORT=8888
       - TZ=Asia/Shanghai
       - SERVER_ENV=${SERVER_ENV:-offline}
-      - SSL_CERT_FILE=/home/guan/service.pem
-      - SSL_KEY_FILE=/home/guan/service.key
+      - GUAN_HTTPS_CERT_FILE=/home/guan/service.pem
+      - GUAN_HTTPS_KEY_FILE=/home/guan/service.key
       - DEBUG=${DEBUG:-false}
       - UNDER_REVIEW=${UNDER_REVIEW:-0}
       - LIST_MAX_DISTANCE_KM=${LIST_MAX_DISTANCE_KM:-100}

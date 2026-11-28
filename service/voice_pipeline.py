@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from service.common.audio_prepare import content_type_for
 from service.common.profile_guard import ProfileWriteOutcome
 from service.common.voice_gate import voice_entry_blocked
 from service.llm_extract import LlmExtractService
 from service.match_config import MatchConfigService
 from service.sensitive.vault import SensitiveVault
-from util.const.identity import KIND_VOICE, VOICE_CONTENT_TYPE
+from util.const.identity import KIND_VOICE
 from util.const.response import RESP_IDENTITY_INCOMPLETE, RESP_VOICE_IN_PROGRESS
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class VoicePipeline(object):
         if voice_entry_blocked(self.passport_id):
             return ProfileWriteOutcome(msg=RESP_VOICE_IN_PROGRESS, rejected=True)
         vault = SensitiveVault()
-        sealed = vault.seal(self.passport_id, KIND_VOICE, audio_bytes, VOICE_CONTENT_TYPE)
+        sealed = vault.seal(self.passport_id, KIND_VOICE, audio_bytes, content_type_for(audio_bytes))
         if not sealed:
             logger.warning("语音加密失败，需要重新登录 passport=%s", self.passport_id)
             return ProfileWriteOutcome(msg=RESP_IDENTITY_INCOMPLETE, rejected=True)

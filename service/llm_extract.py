@@ -5,11 +5,11 @@ import base64
 import json
 import logging
 
+from service.common.audio_prepare import prepare_ark_audio
 from service.common.profile_catalog import extraction_hint
 from util.config import get_conf
 from util.const.volc import (
     ARK_API_BASE,
-    ARK_AUDIO_FORMAT,
     ARK_AUDIO_MAX_TOKENS,
     ARK_AUDIO_TIMEOUT_SECONDS,
     ARK_MAX_TOKENS,
@@ -57,9 +57,13 @@ class LlmExtractService:
     def extract_from_audio(audio_bytes):
         if not audio_bytes:
             return None
+        prepared, audio_format = prepare_ark_audio(audio_bytes)
+        if not prepared or not audio_format:
+            logger.warning("语音无法提交方舟 bytes=%s", len(audio_bytes))
+            return None
         prompt = _EXTRACT_GUIDE.format(fields=extraction_hint())
-        messages = [{'role': 'user', 'content': audio_user_content(audio_bytes, prompt)}]
-        logger.info("提交语音提取 bytes=%s", len(audio_bytes))
+        messages = [{'role': 'user', 'content': audio_user_content(prepared, prompt, audio_format)}]
+        logger.info("提交语音提取 bytes=%s format=%s", len(prepared), audio_format)
         return _extract(messages, ARK_AUDIO_MAX_TOKENS, ARK_AUDIO_TIMEOUT_SECONDS)
 
 
@@ -104,13 +108,13 @@ def _loads_dict(text):
     return None
 
 
-def audio_user_content(audio_bytes, prompt):
+def audio_user_content(audio_bytes, prompt, audio_format):
     """同一次用户消息里放语音和提示词。data 为标准 Base64，format 在使用 data 时必填。"""
     encoded = base64.b64encode(audio_bytes).decode('ascii')
     return [
         {
             'type': 'input_audio',
-            'input_audio': {'data': encoded, 'format': ARK_AUDIO_FORMAT},
+            'input_audio': {'data': encoded, 'format': audio_format},
         },
         {'type': 'text', 'text': prompt},
     ]
@@ -146,7 +150,7 @@ def _chat(api_key, messages, max_tokens, timeout):
             extra_body={'thinking': {'type': ARK_THINKING_DISABLED}},
         )
     except Exception as exc:
-        logger.warning("资料提取请求失败 model=%s error=%s", model, type(exc).__name__)
+        logger.warning("资料提取请求失败 model=%s error=%s detail=%s", model, type(exc).__name__, exc)
         return ''
     message = response.choices[0].message.content if response.choices else ''
     return (message or '').strip()
