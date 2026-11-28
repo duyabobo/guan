@@ -22,8 +22,8 @@ from util.const.progress import (
     PROGRESS_NO_CONFIG, PROGRESS_NOT_SELECTED, PROGRESS_SELECTED,
     PROGRESS_WAIT_MEET, PROGRESS_MET, PROGRESS_AGREE, PROGRESS_DISAGREE,
     PROGRESS_DESC, PROGRESS_SORT_WEIGHT,
-    HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_HALF, HEART_KIND_SINGLE,
-    HEART_KIND_SOLID,
+    HEART_KIND_BROKEN, HEART_KIND_DOUBLE, HEART_KIND_EMPTY, HEART_KIND_HALF, HEART_KIND_MATCH,
+    HEART_KIND_SINGLE, HEART_KIND_SOLID, HEART_SORT_ORDER,
     HOLD_APPOINTMENT, HOLD_FIT, OP_CHOOSE_FIT, OP_TOWARD_MEET,
     HALF_FIT_HINT, UNFIT_SYNC_HINT,
     build_meet_share_guide, calc_activity_progress, calc_list_has_match, calc_list_heart_kind,
@@ -479,7 +479,7 @@ class TestGuanguanHeartKind:
         assert calc_list_heart_kind(PROGRESS_MET) == HEART_KIND_HALF
         assert calc_list_heart_kind(PROGRESS_WAIT_MEET) == HEART_KIND_DOUBLE
         assert calc_list_heart_kind(PROGRESS_SELECTED) == HEART_KIND_SINGLE
-        assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=True) == HEART_KIND_SINGLE
+        assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=True) == HEART_KIND_MATCH
         assert calc_list_heart_kind(PROGRESS_NOT_SELECTED, has_match=False) == HEART_KIND_EMPTY
 
     def test_list_has_match_by_activity_state(self):
@@ -503,6 +503,8 @@ class TestGuanguanHeartKind:
         assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, near_lead) is True
         assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, mid_lead - 10) is False
         assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, mid_lead + 10) is True
+        assert should_show_guanguan_item(HEART_KIND_MATCH, 15, mid_lead - 10) is False
+        assert should_show_guanguan_item(HEART_KIND_MATCH, 15, mid_lead + 10) is True
         assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, mid_lead - 1) is False
         assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, mid_lead) is True
         assert should_show_guanguan_item(HEART_KIND_DOUBLE, 5, 99999) is True
@@ -565,15 +567,39 @@ class TestGuanguanHeartKind:
             PROGRESS_WAIT_MEET, 4, MODEL_ACTIVITY_STATE_INVITING, set(), MODEL_ACTIVITY_STATE_EMPTY
         ) is True
 
+    def test_heart_sort_order(self):
+        ordered = [
+            HEART_KIND_SOLID, HEART_KIND_HALF, HEART_KIND_DOUBLE, HEART_KIND_BROKEN,
+            HEART_KIND_SINGLE, HEART_KIND_MATCH, HEART_KIND_EMPTY,
+        ]
+        weights = [HEART_SORT_ORDER[kind] for kind in ordered]
+        assert weights == sorted(weights)
+
+    def test_guanguan_list_sort_heart_before_distance(self):
+        now = datetime.datetime(2026, 1, 10, 12, 0, 0)
+        sooner = now + datetime.timedelta(hours=1)
+        ranked = sorted([
+            (guanguan_list_sort_key(HEART_KIND_EMPTY, 1, sooner, now), 'empty_near'),
+            (guanguan_list_sort_key(HEART_KIND_MATCH, 1, sooner, now), 'match_near'),
+            (guanguan_list_sort_key(HEART_KIND_SINGLE, 50, sooner, now), 'single_far'),
+            (guanguan_list_sort_key(HEART_KIND_BROKEN, 80, sooner, now), 'broken_far'),
+            (guanguan_list_sort_key(HEART_KIND_DOUBLE, 90, sooner, now), 'double_far'),
+            (guanguan_list_sort_key(HEART_KIND_SOLID, 100, sooner, now), 'solid_far'),
+        ], key=lambda item: item[0])
+        labels = [label for _, label in ranked]
+        assert labels == [
+            'solid_far', 'double_far', 'broken_far', 'single_far', 'match_near', 'empty_near',
+        ]
+
     def test_guanguan_list_sort_by_distance_then_time(self):
         now = datetime.datetime(2026, 1, 10, 12, 0, 0)
         sooner = now + datetime.timedelta(hours=1)
         later = now + datetime.timedelta(hours=3)
         ranked = sorted([
-            (guanguan_list_sort_key(15, sooner, now), 'far_soon'),
-            (guanguan_list_sort_key(5, later, now), 'near_later'),
-            (guanguan_list_sort_key(5, sooner, now), 'near_soon'),
-            (guanguan_list_sort_key(5, later, now), 'near_later_dup'),
+            (guanguan_list_sort_key(HEART_KIND_EMPTY, 15, sooner, now), 'far_soon'),
+            (guanguan_list_sort_key(HEART_KIND_EMPTY, 5, later, now), 'near_later'),
+            (guanguan_list_sort_key(HEART_KIND_EMPTY, 5, sooner, now), 'near_soon'),
+            (guanguan_list_sort_key(HEART_KIND_EMPTY, 5, later, now), 'near_later_dup'),
         ], key=lambda item: item[0])
         labels = [label for _, label in ranked]
         assert labels[0] == 'near_soon'
@@ -584,13 +610,19 @@ class TestGuanguanHeartKind:
         now = datetime.datetime(2026, 1, 10, 12, 0, 0)
         sooner = now + datetime.timedelta(hours=1)
         later = now + datetime.timedelta(hours=3)
-        assert guanguan_list_sort_key(5, sooner, now) < guanguan_list_sort_key(5, later, now)
-        assert guanguan_list_sort_key(5, sooner, now) < guanguan_list_sort_key(15, sooner, now)
+        assert guanguan_list_sort_key(HEART_KIND_EMPTY, 5, sooner, now) < guanguan_list_sort_key(
+            HEART_KIND_EMPTY, 5, later, now,
+        )
+        assert guanguan_list_sort_key(HEART_KIND_EMPTY, 5, sooner, now) < guanguan_list_sort_key(
+            HEART_KIND_EMPTY, 15, sooner, now,
+        )
 
     def test_sort_missing_distance_goes_last(self):
         now = datetime.datetime(2026, 1, 10, 12, 0, 0)
         sooner = now + datetime.timedelta(hours=1)
-        assert guanguan_list_sort_key(5, sooner, now) < guanguan_list_sort_key(None, sooner, now)
+        assert guanguan_list_sort_key(HEART_KIND_EMPTY, 5, sooner, now) < guanguan_list_sort_key(
+            HEART_KIND_EMPTY, None, sooner, now,
+        )
 
     def test_only_one_solid_heart_in_list(self):
         items = [
@@ -610,3 +642,5 @@ class TestGuanguanHeartKind:
         assert LIST_WINDOW_DAYS == 7
         assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES) is True
         assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES + 1) is False
+        assert should_show_guanguan_item(HEART_KIND_MATCH, 5, LIST_WINDOW_MINUTES) is True
+        assert should_show_guanguan_item(HEART_KIND_MATCH, 5, LIST_WINDOW_MINUTES + 1) is False

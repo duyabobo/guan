@@ -11,7 +11,7 @@ from util.const.match import (
 )
 from util.const.notice import HOME_PAGE, SCENE_REACTIVATE
 from util.const.progress import (
-    HEART_KIND_SINGLE,
+    HEART_KIND_MATCH,
     calc_distance_km,
     should_show_guanguan_item,
 )
@@ -76,7 +76,7 @@ def _fits(viewer, sex, activity, profiles, address_of, now):
         viewer.latitude, viewer.longitude, address.latitude, address.longitude,
     )
     minutes_until = (activity.start_time - now).total_seconds() / SECONDS_PER_MINUTE
-    return should_show_guanguan_item(HEART_KIND_SINGLE, distance_km, minutes_until)
+    return should_show_guanguan_item(HEART_KIND_MATCH, distance_km, minutes_until)
 
 
 def _open_inviting(activity):

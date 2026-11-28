@@ -287,11 +287,26 @@ def build_meet_share_guide(progress_status, label, viewer):
 # ── 首页列表心形标识 ──────────────────────────────────────────────────────────
 
 HEART_KIND_EMPTY = "empty"
+HEART_KIND_MATCH = "match"
 HEART_KIND_SINGLE = "single"
 HEART_KIND_DOUBLE = "double"
 HEART_KIND_HALF = "half"
 HEART_KIND_SOLID = "solid"
 HEART_KIND_BROKEN = "broken"
+
+# 列表排序：越靠前优先级越高。实心 > 半实心 > 双心 > 心碎 > 单心 > 匹配 > 空闲
+_HEART_SORT_PRIORITY = (
+    HEART_KIND_SOLID,
+    HEART_KIND_HALF,
+    HEART_KIND_DOUBLE,
+    HEART_KIND_BROKEN,
+    HEART_KIND_SINGLE,
+    HEART_KIND_MATCH,
+    HEART_KIND_EMPTY,
+)
+HEART_SORT_ORDER = {
+    kind: index for index, kind in enumerate(_HEART_SORT_PRIORITY)
+}
 
 PERMANENT_HEART_KINDS = frozenset({
     HEART_KIND_BROKEN,
@@ -300,10 +315,16 @@ PERMANENT_HEART_KINDS = frozenset({
     HEART_KIND_DOUBLE,
 })
 
+TRANSIENT_HEART_KINDS = frozenset({
+    HEART_KIND_EMPTY,
+    HEART_KIND_MATCH,
+    HEART_KIND_SINGLE,
+})
+
 DISTANCE_BUCKET_KM = 10
 LIST_WINDOW_DAYS = 7
 LIST_WINDOW_MINUTES = LIST_WINDOW_DAYS * 24 * 60
-# 无坐标 / 无开场时间时排到最后
+# 无心形 / 无坐标 / 无开场时间时排到最后
 _MISSING_SORT_ORDER = 999999.0
 # 列表未约上场次的默认最远距离（公里）。运行时可用 LIST_MAX_DISTANCE_KM 覆盖。
 MAX_LIST_DISTANCE_KM = 100
@@ -369,7 +390,8 @@ def calc_list_heart_kind(progress_status, has_match=False):
     - solid：双方都选了合适（AGREE）
     - half：只有一方选了合适（MET）
     - double：双方已约同一活动（WAIT_MEET）
-    - single：有匹配异性 / 等待对方确认（SELECTED 或候选匹配）
+    - single：自己已发起 / 等待对方确认（SELECTED）
+    - match：资料匹配上的邀请中场次
     - empty：空闲时段
     """
     if progress_status == PROGRESS_DISAGREE:
@@ -383,7 +405,7 @@ def calc_list_heart_kind(progress_status, has_match=False):
     if progress_status == PROGRESS_SELECTED:
         return HEART_KIND_SINGLE
     if progress_status == PROGRESS_NOT_SELECTED:
-        return HEART_KIND_SINGLE if has_match else HEART_KIND_EMPTY
+        return HEART_KIND_MATCH if has_match else HEART_KIND_EMPTY
     return HEART_KIND_EMPTY
 
 
@@ -400,7 +422,7 @@ def voice_blocked_by_progress(progress_status):
 
 
 def calc_list_has_match(progress_status, activity_state, in_matched_activity_ids):
-    """候选场次：空闲=无心；邀请中=单心。已参与场次沿用 Redis 匹配标记。"""
+    """候选场次：空闲=无心；邀请中=匹配。已参与场次沿用匹配标记。"""
     if progress_status != PROGRESS_NOT_SELECTED:
         return bool(in_matched_activity_ids)
     if activity_state == MODEL_ACTIVITY_STATE_EMPTY:
@@ -415,7 +437,7 @@ def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start, igno
         return True
     if minutes_until_start is None or minutes_until_start < 0:
         return False
-    if heart_kind not in (HEART_KIND_EMPTY, HEART_KIND_SINGLE):
+    if heart_kind not in TRANSIENT_HEART_KINDS:
         return False
     if ignore_distance:
         return True
@@ -446,11 +468,12 @@ def limit_solid_heart_items(items, heart_kind_getter):
     return limited
 
 
-def guanguan_list_sort_key(distance_km, start_time, now):
-    """列表排序：距离近优先；相同距离再按开场时间近优先。"""
+def guanguan_list_sort_key(heart_kind, distance_km, start_time, now):
+    """列表排序：心形优先；同级按距离近优先；再按开场时间近优先。"""
+    heart_order = HEART_SORT_ORDER.get(heart_kind, _MISSING_SORT_ORDER)
     distance_order = _MISSING_SORT_ORDER if distance_km is None else distance_km
     if start_time:
         minutes_until = (start_time - now).total_seconds() / 60.0
     else:
         minutes_until = _MISSING_SORT_ORDER
-    return (distance_order, minutes_until)
+    return (heart_order, distance_order, minutes_until)

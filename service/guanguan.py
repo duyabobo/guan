@@ -115,9 +115,10 @@ class GuanguanService(BaseService):
     def getGuanguanList(self, longitude, latitude, limit, offset=0):
         """
         列表规则：
-        1. 整体按距离由近到远；相同距离再按开场时间由近到远
-        2. 心碎/实心/半实心/双心永久展示
-        3. 还没约上的：LIST_WINDOW_DAYS 天内、配置最远距离内（默认 100km）、匹配通过，
+        1. 心形：实心 > 半实心 > 双心 > 心碎 > 单心 > 匹配 > 空闲
+        2. 同级按距离由近到远；相同距离再按开场时间由近到远
+        3. 心碎/实心/半实心/双心永久展示
+        4. 还没约上的：LIST_WINDOW_DAYS 天内、配置最远距离内（默认 100km）、匹配通过，
            且距开场不少于「每 10km 需 1 小时」（时间不够赶路则不展示）
         返回 (本页列表, 是否还有下一页)。
         """
@@ -173,7 +174,7 @@ class GuanguanService(BaseService):
             if not should_show_guanguan_item(heart_kind, distance_km, minutes_until):
                 continue
             ranked_items.append((
-                guanguan_list_sort_key(distance_km, activity.start_time, now),
+                guanguan_list_sort_key(heart_kind, distance_km, activity.start_time, now),
                 activity,
                 progress,
                 heart_kind,

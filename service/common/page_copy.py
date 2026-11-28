@@ -37,7 +37,6 @@ def phone_gate_copy():
 def match_config_copy():
     copy = {
         "pageTitle": "关关雎鸠",
-        "transcriptLabel": "刚才说的",
         "infoTitle": "我的信息",
         "requirementTitle": "我的期望",
         "emptyText": "说一段话后，这里会整理出个人信息和期望",
