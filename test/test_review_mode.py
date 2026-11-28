@@ -39,7 +39,7 @@ def test_review_on_does_not_change_copy_or_labels(monkeypatch):
     monkeypatch.setenv("UNDER_REVIEW", "1")
     assert list_page_copy()["entryTitle"] == "关关雎鸠"
     assert list_page_copy()["showHeart"] is True
-    assert guan_info_copy()["pageTitle"] == "见面详情"
+    assert guan_info_copy()["pageTitle"] == "活动详情"
     detail = match_config_copy()
     assert detail["infoTitle"] == "我的信息"
     assert detail["requirementTitle"] == "我的期望"

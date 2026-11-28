@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""订阅额度，以及把见面提醒发给已经授权的人。"""
+"""订阅额度，以及把活动提醒发给已经授权的人。"""
 import logging
 
 from model.activity import ActivityModel
@@ -67,7 +67,7 @@ class MeetNoticeService(object):
         try:
             _dispatch(jobs, record_sent)
         except Exception:
-            logger.exception("见面提醒发送失败 count=%s", len(jobs))
+            logger.exception("活动提醒发送失败 count=%s", len(jobs))
 
     @staticmethod
     def scan(now):
@@ -76,7 +76,7 @@ class MeetNoticeService(object):
             now, decide_start, now + MEET_SOON_LEAD, now + LIST_EXPIRE_LEAD, SCAN_ACTIVITY_LIMIT,
         )
         if len(rows) >= SCAN_ACTIVITY_LIMIT:
-            logger.info("见面提醒扫描达到上限 limit=%s", SCAN_ACTIVITY_LIMIT)
+            logger.info("活动提醒扫描达到上限 limit=%s", SCAN_ACTIVITY_LIMIT)
         jobs = []
         for row in rows:
             jobs.extend(scheduled_notices(row, now))
@@ -109,7 +109,7 @@ def _dispatch(jobs, record_sent):
     sent_jobs = list(recorded.values())
     if record_sent:
         NoticeSentModel.add_jobs(sent_jobs)
-    logger.info("见面提醒 sent=%s sms_sent=%s sms_try=%s", len(sent_jobs), len(sms_sent), len(sms_jobs))
+    logger.info("活动提醒 sent=%s sms_sent=%s sms_try=%s", len(sent_jobs), len(sms_sent), len(sms_jobs))
 
 
 def _try_subscribe(job, template, openids, usable, used, state):

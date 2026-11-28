@@ -5,12 +5,12 @@
 
 用法:
   python scripts/init_db.py                             # 只建表、跑迁移、补地点，不动用户数据
-  python scripts/init_db.py --reset-demo                # 仅限开发库：清空用户与见面数据，按密文重写演示数据
-  python scripts/clear_user_data.py                     # 只清空账号、资料、见面和登录态，不重写演示数据
-  python scripts/init_db.py --current-user              # 只给当前真实账号补密文资料和见面
+  python scripts/init_db.py --reset-demo                # 仅限开发库：清空用户与活动数据，按密文重写演示数据
+  python scripts/clear_user_data.py                     # 只清空账号、资料、活动和登录态，不重写演示数据
+  python scripts/init_db.py --current-user              # 只给当前真实账号补密文资料和活动
   docker-compose exec app python scripts/init_db.py    # 容器内
 
---reset-demo 会清掉登录态，再 TRUNCATE 账号、资料、见面、座位等表，SERVER_ENV=online 时拒绝执行。
+--reset-demo 会清掉登录态，再 TRUNCATE 账号、资料、活动、座位等表，SERVER_ENV=online 时拒绝执行。
 """
 import argparse
 import datetime
@@ -444,7 +444,7 @@ MOCK_PROFILE_BY_PHONE = {
 def _wx_pepper():
     secret = os.environ.get('WX_SECRET', '')
     if not secret:
-        raise RuntimeError('WX_SECRET 为空，无法计算见面盲索引')
+        raise RuntimeError('WX_SECRET 为空，无法计算活动盲索引')
     return secret
 
 
@@ -869,7 +869,7 @@ def _insert_seat(cur, union_by_passport, pepper, activity_id, passport_id, role)
     material = union_by_passport.get(passport_id)
     slot = activity_slot_key(activity_id, pepper)
     if not material or not slot:
-        raise RuntimeError('无法封存见面座位 activity=%s passport=%s' % (activity_id, passport_id))
+        raise RuntimeError('无法封存活动座位 activity=%s passport=%s' % (activity_id, passport_id))
     payload = {'activity_id': int(activity_id), 'role': int(role)}
     nonce, cipher = seal_json(material, payload)
     if open_json(material, nonce, cipher) != payload:
@@ -981,7 +981,7 @@ def _current_login_passport_id(conn):
 
 
 def ensure_login_user_demo(conn) -> list[int]:
-    """给最近一个真实登录用户补资料，并挂上各状态见面。座位用他的运行时密钥加密。"""
+    """给最近一个真实登录用户补资料，并挂上各状态活动。座位用他的运行时密钥加密。"""
     passport_id = _current_login_passport_id(conn)
     if not passport_id:
         logger.info("  [跳过] 还没有真实登录用户")
@@ -992,7 +992,7 @@ def ensure_login_user_demo(conn) -> list[int]:
         return []
     opposite_id = _passport_id_by_phones(conn, [OPPOSITE_PHONE]).get(OPPOSITE_PHONE)
     if not opposite_id:
-        logger.error("缺少对方演示账号，无法挂见面")
+        logger.error("缺少对方演示账号，无法挂活动")
         return []
     _fill_login_user_profile(conn, passport_id, material)
     extra_unions = {passport_id: material}
@@ -1030,7 +1030,7 @@ def seed_current_user(conn):
     ensure_empty_slot_activities(conn, address_ids)
     activity_ids = ensure_login_user_demo(conn)
     if not activity_ids:
-        raise RuntimeError('当前账号的演示见面没有写上')
+        raise RuntimeError('当前账号的演示活动没有写上')
     _assert_no_plaintext(conn)
 
 
@@ -1057,7 +1057,7 @@ def prepare_schema_and_places(conn):
 
 
 def reset_and_seed_demo(conn, region_ids):
-    """清空用户与见面数据，按密文重写演示数据。只在开发库上使用。"""
+    """清空用户与活动数据，按密文重写演示数据。只在开发库上使用。"""
     logger.info("=== Step 2: 清空旧用户数据并按密文重写 ===")
     wipe_user_state(conn, _redis_client())
     address_ids = ensure_addresses(conn, region_ids)

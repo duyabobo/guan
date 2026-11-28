@@ -190,7 +190,7 @@ cmd_init_db() {
     python "${SCRIPT_DIR}/scripts/init_db.py"
 }
 
-# ── 清空账号、资料、见面。地区和地点保留 ─────────────────────────────────────
+# ── 清空账号、资料、活动。地区和地点保留 ─────────────────────────────────────
 cmd_clear_db() {
     log_title "清空用户数据"
     wait_mysql
@@ -255,7 +255,7 @@ main() {
             echo "  logs     - 查看日志（默认 app，可指定服务名）"
             echo "  status   - 查看容器状态"
             echo "  init-db  - 幂等建表、迁移、补地点，不清用户数据"
-            echo "  clear-db - 清空账号、资料、见面和登录态，地区和地点保留"
+            echo "  clear-db - 清空账号、资料、活动和登录态，地区和地点保留"
             exit 1
             ;;
     esac

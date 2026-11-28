@@ -24,7 +24,7 @@ class _DbHolder(object):
 def scan_due_notices():
     got = redisConn.set(NOTICE_SCAN_LOCK_KEY, 1, nx=True, ex=SCAN_LOCK_SEC)
     if not got:
-        logger.info("见面提醒扫描跳过，上一轮还没结束")
+        logger.info("活动提醒扫描跳过，上一轮还没结束")
         return
     try:
         _scan_in_session()
@@ -51,4 +51,4 @@ def _commit_scan(scan):
 def start_notice_scan(io_loop):
     io_loop.add_callback(scan_due_notices)
     tornado.ioloop.PeriodicCallback(scan_due_notices, SCAN_INTERVAL_MS).start()
-    logger.info("见面提醒扫描已启动 interval_ms=%s", SCAN_INTERVAL_MS)
+    logger.info("活动提醒扫描已启动 interval_ms=%s", SCAN_INTERVAL_MS)

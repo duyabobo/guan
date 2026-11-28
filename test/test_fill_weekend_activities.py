@@ -76,7 +76,7 @@ class MemorySession:
         if sql.startswith("UPDATE activity act") and "meetup_name" in (params or {}):
             return self._retire(
                 params,
-                lambda address: address["name"].endswith("见面点"),
+                lambda address: address["name"].endswith("活动点"),
             )
         if sql.startswith("UPDATE activity act") and "kfc_zh" in (params or {}):
             return self._retire(
@@ -169,7 +169,7 @@ def test_fill_returns_zero_when_no_kfc_store():
 def test_fill_retires_meetup_and_non_kfc_slots():
     session = MemorySession()
     kfc_id = session.add_store(name="肯德基滨江道店")
-    meetup_id = session.add_store(name="天津见面点", img="address/meetup.png")
+    meetup_id = session.add_store(name="天津活动点", img="address/meetup.png")
     burger_id = session.add_store(name="汉堡王")
     slots = weekend_slot_times(SATURDAY_MORNING)
     for address_id in (meetup_id, burger_id):

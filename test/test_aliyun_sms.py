@@ -177,7 +177,7 @@ def test_blank_phone_is_not_sent():
 
 
 def _notice(phone):
-    return {'phone': phone, 'title': '见面时间快到了', 'when': '11月07日 10:00', 'note': '你好老板，我十点约了人'}
+    return {'phone': phone, 'title': '活动时间快到了', 'when': '11月07日 10:00', 'note': '你好老板，我十点约了人'}
 
 
 def _ok():

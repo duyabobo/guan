@@ -1,4 +1,4 @@
--- 见面定金：签到、一对一结算、记给对方的一笔。
+-- 活动定金：签到、一对一结算、记给对方的一笔。
 
 CREATE TABLE IF NOT EXISTS `meet_checkin` (
     `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `meet_checkin` (
     `update_time` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_passport_order` (`passport_id`, `order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面签到';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动签到';
 
 CREATE TABLE IF NOT EXISTS `meet_deposit_settle` (
     `id`                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

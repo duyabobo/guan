@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""见面座位的读写。库里不出现护照编号和场次编号的明文对应。"""
+"""活动座位的读写。库里不出现护照编号和场次编号的明文对应。"""
 import logging
 
 from sqlalchemy.orm.attributes import set_committed_value

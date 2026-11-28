@@ -29,7 +29,7 @@ from util.log import offline_script_logger
 KFC_IMAGE = "address/brand/kfc.png"
 KFC_NAME_ZH = "%肯德基%"
 KFC_NAME_EN = "%KFC%"
-MEETUP_POINT_NAME_SUFFIX = "%见面点"
+MEETUP_POINT_NAME_SUFFIX = "%活动点"
 DEFAULT_STORE_NAME = "肯德基门店"
 BARE_KFC_NAMES = frozenset({"肯德基", "KFC", "肯德基 KFC", "kfc", DEFAULT_STORE_NAME})
 NAME_LIMIT = 256

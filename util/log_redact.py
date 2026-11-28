@@ -15,7 +15,7 @@ def redact_uri(uri):
 
 
 def summarize_for_log(data):
-    """响应日志只留规模，不留资料、手机号、语音和见面地点。"""
+    """响应日志只留规模，不留资料、手机号、语音和活动地点。"""
     if isinstance(data, list):
         return {'count': len(data)}
     if isinstance(data, dict):

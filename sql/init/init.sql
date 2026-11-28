@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `region` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='省市区';
 
--- ── address：见面地点 ───────────────────────────────────────────────────────
+-- ── address：活动地点 ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `address` (
     `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
     `name`         VARCHAR(256)    NOT NULL DEFAULT '' COMMENT '地点名',
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `address` (
     `update_time`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_lng_lat` (`longitude`, `latitude`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面地点';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动地点';
 
 -- ── passport：账号。身份只留编号、手机号密文、unionid 查找值 ───────────────
 CREATE TABLE IF NOT EXISTS `passport` (
@@ -45,22 +45,22 @@ CREATE TABLE IF NOT EXISTS `passport` (
     UNIQUE KEY `uk_unionid` (`unionid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号';
 
--- ── activity：见面活动 ──────────────────────────────────────────────────────
+-- ── activity：活动活动 ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `activity` (
     `id`               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `address_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `start_time`       DATETIME        NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '见面时间',
+    `start_time`       DATETIME        NOT NULL DEFAULT '1970-01-01 00:00:00' COMMENT '活动时间',
     `girl_passport_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `boy_passport_id`  BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `state`            TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '状态: 0空闲 1邀请中 100已成功',
-    `girl_meet_result` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '女方见面结果: 0未知 1合适 100不合适',
+    `girl_meet_result` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '女方活动结果: 0未知 1合适 100不合适',
     `boy_meet_result`  TINYINT UNSIGNED NOT NULL DEFAULT 0,
     `status`           TINYINT UNSIGNED NOT NULL DEFAULT 1,
     `create_time`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_state_start` (`state`, `start_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面活动';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动活动';
 
 -- ── activity_change_record：活动流水 ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `activity_change_record` (
@@ -163,4 +163,4 @@ CREATE TABLE IF NOT EXISTS `activity_seat` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_passport_slot` (`passport_id`, `slot_key`),
     KEY `idx_slot` (`slot_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面座位。场次在密文里';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动座位。场次在密文里';

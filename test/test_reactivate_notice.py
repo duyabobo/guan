@@ -75,7 +75,7 @@ def _pick(viewer, activity, profiles, now):
 def test_reactivate_copy_fits_wechat_thing():
     title, note = NOTICE_TEXT[SCENE_REACTIVATE]
     assert title == '有适合的人在等'
-    assert note == '去选时间和地点见面'
+    assert note == '去选时间和地点活动'
     assert len(title) <= THING_MAX_LEN
     assert len(note) <= THING_MAX_LEN
 

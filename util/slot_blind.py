@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""见面场次的盲索引。库里能按场次找到座位，但索引本身不是场次编号。"""
+"""活动场次的盲索引。库里能按场次找到座位，但索引本身不是场次编号。"""
 import hashlib
 import hmac
 import logging
@@ -19,7 +19,7 @@ def activity_slot_key(activity_id, pepper=None):
         return ''
     secret = pepper if pepper is not None else _weixin_secret()
     if not secret:
-        logger.error("无法计算见面盲索引，微信密钥为空")
+        logger.error("无法计算活动盲索引，微信密钥为空")
         return ''
     if isinstance(secret, str):
         secret = secret.encode('utf-8')

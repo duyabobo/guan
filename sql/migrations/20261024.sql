@@ -1,4 +1,4 @@
--- 见面提醒、爽约记录、单次见面支付。已有库补索引和表。
+-- 活动提醒、爽约记录、单次活动支付。已有库补索引和表。
 
 ALTER TABLE `activity` ADD KEY `idx_state_start` (`state`, `start_time`);
 
@@ -55,4 +55,4 @@ CREATE TABLE IF NOT EXISTS `meet_fee_order` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_out_trade_no` (`out_trade_no`),
     KEY `idx_passport_activity` (`passport_id`, `activity_id`, `pay_status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='单次见面支付单';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='单次活动支付单';

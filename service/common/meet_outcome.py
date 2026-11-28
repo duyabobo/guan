@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""见面结果：到期自动双方合适，一方合适只记自己，不合适同步双方。"""
+"""活动结果：到期自动双方合适，一方合适只记自己，不合适同步双方。"""
 import logging
 
 from model.activity import ActivityModel
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def settle_due_meets(passport_id):
-    """满 7 天仍未表态的约见面，写成双方合适。一次查出再一次更新。"""
+    """满 7 天仍未表态的约活动，写成双方合适。一次查出再一次更新。"""
     if not passport_id:
         return
     rows = ActivityModel.listUnsetSuccess(passport_id)

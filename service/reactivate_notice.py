@@ -62,7 +62,7 @@ def _jobs_for(idle_ids, activities, now):
     busy = _busy_ids(seat_index, history_by_id, now)
     quiet_ids = [passport_id for passport_id in idle_ids if passport_id not in busy]
     if not quiet_ids:
-        logger.info("促活沉默用户都还在见面流程里 idle=%s", len(idle_ids))
+        logger.info("促活沉默用户都还在活动流程里 idle=%s", len(idle_ids))
         return []
     address_of = _address_of(_address_ids(activities, history))
     locations = _locations(quiet_ids, seat_index, history_by_id, address_of)

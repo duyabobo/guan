@@ -224,7 +224,7 @@ class GuanInfoService(BaseService):
         self.activityRecord = ActivityModel.getById(self.activityId, status=match.MODEL_STATUS_YES)
 
     def _hold_response(self, op):
-        """别的场次已经占着约见面、半心或全心时，拦住对应的后续操作。"""
+        """别的场次已经占着约活动、半心或全心时，拦住对应的后续操作。"""
         activities = ActivityModel.getUserAllActivities(self.passportId)
         has_appointment = False
         has_fit = False
@@ -292,7 +292,7 @@ class GuanInfoService(BaseService):
         return bool(ActivityModel.getConflictActivity(self.passportId, self.activityRecord.start_time))
 
     def _booked_by_other(self, opType):
-        """双方已约上之后，见面开始前本人仍可取消。其余操作按场次已被占处理。"""
+        """双方已约上之后，活动开始前本人仍可取消。其余操作按场次已被占处理。"""
         if opType == GUAN_INFO_OP_TYPE_QUIT:
             ready = meet_choice_ready(self.activityRecord)
             return not quit_is_allowed(self.progressStatus, ready)

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""阿里云国内短信。验证码走 SendSms，见面提醒走 SendBatchSms。日志不记号码和验证码。"""
+"""阿里云国内短信。验证码走 SendSms，活动提醒走 SendBatchSms。日志不记号码和验证码。"""
 import hashlib
 import hmac
 import json

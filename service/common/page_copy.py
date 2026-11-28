@@ -63,12 +63,12 @@ def match_config_copy():
 
 def guan_info_copy():
     copy = {
-        "pageTitle": "见面详情",
+        "pageTitle": "活动详情",
         "infoTitle": "ta的信息",
         "requirementTitle": "ta的期望",
         "emptyText": "还没有可展示的对象资料",
-        "shareLabel": "安全见面，分享亲友",
-        "shareCardTitle": "安全见面",
+        "shareLabel": "安全活动，分享亲友",
+        "shareCardTitle": "安全活动",
         "shareTitle": "关关雎鸠",
     }
     copy.update(phone_gate_copy())

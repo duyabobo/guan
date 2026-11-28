@@ -70,12 +70,12 @@ class ActivitySeatModel(BaseModel):
                 cipher_text=cipher_text,
                 status=match.MODEL_STATUS_YES,
             ))
-            logger.info("已写入见面座位 passport=%s", passport_id)
+            logger.info("已写入活动座位 passport=%s", passport_id)
             return
         row.nonce = nonce
         row.cipher_text = cipher_text
         row.status = match.MODEL_STATUS_YES
-        logger.info("已更新见面座位 passport=%s", passport_id)
+        logger.info("已更新活动座位 passport=%s", passport_id)
 
     @classmethod
     def clear_passport(cls, passport_id, slot_key):
@@ -86,4 +86,4 @@ class ActivitySeatModel(BaseModel):
             cls.slot_key == slot_key,
             cls.status == match.MODEL_STATUS_YES,
         ).update({cls.status: match.MODEL_STATUS_NO}, synchronize_session=False)
-        logger.info("已清掉见面座位 passport=%s", passport_id)
+        logger.info("已清掉活动座位 passport=%s", passport_id)

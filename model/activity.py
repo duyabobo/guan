@@ -35,8 +35,8 @@ class ActivityModel(BaseModel):
     girl_passport_id = Column(Integer, default=0)  # 女孩passport_id
     boy_passport_id = Column(Integer, default=0)  # 男孩passport_id
     state = Column(Integer, default=0)  # 活动状态：MODEL_ACTIVITY_STATE
-    girl_meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
-    boy_meet_result = Column(Integer, default=0)  # 见面结果描述文案: MODEL_MEET_RESULT_MAP
+    girl_meet_result = Column(Integer, default=0)  # 活动结果描述文案: MODEL_MEET_RESULT_MAP
+    boy_meet_result = Column(Integer, default=0)  # 活动结果描述文案: MODEL_MEET_RESULT_MAP
     status = Column(Integer, default=1)  # 逻辑删除标示: MODEL_STATUS_ENUMERATE
     update_time = Column(TIMESTAMP, default=func.now(), onupdate=func.now())  # 最新更新时间
     create_time = Column(TIMESTAMP, default=func.now())  # 创建时间
@@ -124,7 +124,7 @@ class ActivityModel(BaseModel):
 
     @classmethod
     def listUnsetSuccess(cls, passport_id):
-        """双方都还没表态、且已经约上的见面。时间是否到期由调用方判断。"""
+        """双方都还没表态、且已经约上的活动。时间是否到期由调用方判断。"""
         activity_ids = _seat_ids(passport_id)
         if not activity_ids:
             return []
@@ -200,7 +200,7 @@ class ActivityModel(BaseModel):
         ret = session.query(cls).filter(cls.id == activityId, *whereParams).update(updateParams)
         if ret and seat_changes and not apply_seat_changes(activityId, seat_changes):
             session.rollback()
-            logger.error("见面座位没有写上，活动更新已回滚 activity=%s", activityId)
+            logger.error("活动座位没有写上，活动更新已回滚 activity=%s", activityId)
             return 0
         session.commit()
         return ret
@@ -264,7 +264,7 @@ class ActivityModel(BaseModel):
     @classmethod
     @timecost
     def getUnfinishedActivities(cls, passportId):
-        """邀请尚未见面的||尚未表达意向的||意向不合适的一周内"""
+        """邀请尚未活动的||尚未表达意向的||意向不合适的一周内"""
         activity_ids = _seat_ids(passportId)
         if not activity_ids:
             return []

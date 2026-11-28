@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class ProfileBoardService(object):
-    """见面详情和个人信息页共用的资料板。值只来自 profile_attr。"""
+    """活动详情和个人信息页共用的资料板。值只来自 profile_attr。"""
 
     @staticmethod
     def rows_for(passport_id, show_all=False):

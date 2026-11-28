@@ -72,7 +72,7 @@ def _ensure_schema(conn):
             PRIMARY KEY (`id`),
             UNIQUE KEY `uk_passport_slot` (`passport_id`, `slot_key`),
             KEY `idx_slot` (`slot_key`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='见面座位。场次在密文里'
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动座位。场次在密文里'
     """)
     _ensure_column(conn, 'profile_attr', 'value_nonce',
                    "ALTER TABLE `profile_attr` ADD COLUMN `value_nonce` VARCHAR(32) NOT NULL DEFAULT ''")
@@ -144,7 +144,7 @@ def _seal_seats(conn, union_by_passport):
     if not rows:
         return
     if not activity_slot_key(rows[0][0]):
-        raise RuntimeError('微信密钥为空，无法封存见面座位')
+        raise RuntimeError('微信密钥为空，无法封存活动座位')
     inserts = []
     clears = []
     for activity_id, boy_id, girl_id in rows:
@@ -164,7 +164,7 @@ def _seal_seats(conn, union_by_passport):
     _execute_many(conn, (
         "UPDATE activity SET boy_passport_id=:boy, girl_passport_id=:girl WHERE id=:id"
     ), clears)
-    logger.info("已封存见面座位 count=%s", len(inserts))
+    logger.info("已封存活动座位 count=%s", len(inserts))
 
 
 def _clear_unkeyed_profiles(conn):
@@ -191,7 +191,7 @@ def _clear_unkeyed_activity_passports(conn, keyed_ids):
         new_boy = boy_id if boy_id in keyed_ids else 0
         new_girl = girl_id if girl_id in keyed_ids else 0
         if new_boy == boy_id and new_girl == girl_id:
-            logger.error("见面护照编号未能封存 activity=%s", activity_id)
+            logger.error("活动护照编号未能封存 activity=%s", activity_id)
             continue
         new_state = state
         if new_boy == 0 and new_girl == 0 and activity_slot_key(activity_id) not in seated:
@@ -200,7 +200,7 @@ def _clear_unkeyed_activity_passports(conn, keyed_ids):
     _execute_many(conn, (
         "UPDATE activity SET boy_passport_id=:boy, girl_passport_id=:girl, state=:state WHERE id=:id"
     ), params)
-    logger.info("已清掉无法封存的见面护照编号 count=%s", len(params))
+    logger.info("已清掉无法封存的活动护照编号 count=%s", len(params))
 
 
 def _copy_union_keys(conn):
@@ -277,11 +277,11 @@ def _backfill_slots(conn):
             "SELECT id, activity_id FROM `%s` WHERE activity_id<>0 AND slot_key=''" % table
         )).fetchall()
         if rows and not activity_slot_key(rows[0][1]):
-            raise RuntimeError('微信密钥为空，无法封存见面场次关联')
+            raise RuntimeError('微信密钥为空，无法封存活动场次关联')
         for row_id, activity_id in rows:
             slot = activity_slot_key(activity_id)
             if not slot:
-                logger.error("见面关联无法计算盲索引 table=%s id=%s", table, row_id)
+                logger.error("活动关联无法计算盲索引 table=%s id=%s", table, row_id)
                 continue
             params.append({'table': table, 'id': row_id, 'slot': slot})
         _execute_many(conn, (
@@ -290,7 +290,7 @@ def _backfill_slots(conn):
         conn.execute(text(
             "UPDATE `%s` SET slot_key=CONCAT('cleared-', id) WHERE slot_key='' AND activity_id=0" % table
         ))
-    logger.info("已补见面盲索引 count=%s", len(params))
+    logger.info("已补活动盲索引 count=%s", len(params))
 
 
 def _swap_link_indexes():
@@ -303,7 +303,7 @@ def _swap_link_indexes():
                 ))
             if item['new_index'] not in _index_names(conn, item['table']):
                 conn.execute(text("ALTER TABLE `%s` %s" % (item['table'], item['new_ddl'])))
-    logger.info("见面关联索引已改为盲索引")
+    logger.info("活动关联索引已改为盲索引")
 
 
 def _zero_link_activity_ids(conn):
@@ -311,7 +311,7 @@ def _zero_link_activity_ids(conn):
         result = conn.execute(text(
             "UPDATE `%s` SET activity_id=0 WHERE slot_key<>'' AND activity_id<>0" % table
         ))
-        logger.info("已清掉见面关联里的场次编号 table=%s count=%s", table, result.rowcount)
+        logger.info("已清掉活动关联里的场次编号 table=%s count=%s", table, result.rowcount)
 
 
 def _queue_seat(inserts, union_by_passport, passport_id, slot, activity_id, role):

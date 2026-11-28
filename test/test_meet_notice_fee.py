@@ -42,7 +42,7 @@ def test_meet_push_tells_them_what_to_say_to_the_owner():
 
 
 def test_thing_is_clipped_to_wechat_limit():
-    assert clip_thing('见面') == '见面'
+    assert clip_thing('活动') == '活动'
     assert len(clip_thing('场' * (THING_MAX_LEN + 5))) == THING_MAX_LEN
 
 

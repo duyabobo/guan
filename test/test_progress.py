@@ -126,7 +126,7 @@ class TestCalcActivityProgress:
         assert calc_activity_progress(MY_PID, activity) == PROGRESS_WAIT_MEET
 
     def test_unset_after_meet_stays_wait_meet(self):
-        """没选合适或不合适时，过了见面时间仍是约见面。"""
+        """没选合适或不合适时，过了活动时间仍是约活动。"""
         past = datetime.datetime.now() - datetime.timedelta(days=1)
         activity = make_activity(
             state=MODEL_ACTIVITY_STATE_INVITE_SUCCESS,
@@ -243,14 +243,14 @@ class TestGetBottomButtons:
     def test_not_selected_invite_shows_initiate(self):
         buttons = get_bottom_buttons(PROGRESS_NOT_SELECTED, GUAN_INFO_OP_TYPE_INVITE)
         assert len(buttons) == 1
-        assert buttons[0]['label'] == '发起见面'
+        assert buttons[0]['label'] == '发起活动'
         assert buttons[0]['action'] == 'operate'
         assert buttons[0]['needConfirm'] is False
         assert buttons[0]['askSubscribe'] is True
 
     def test_not_selected_join_shows_meet(self):
         buttons = get_bottom_buttons(PROGRESS_NOT_SELECTED, GUAN_INFO_OP_TYPE_JOIN)
-        assert buttons[0]['label'] == '见面'
+        assert buttons[0]['label'] == '活动'
         assert buttons[0]['needConfirm'] is False
         assert buttons[0]['askSubscribe'] is True
 
@@ -415,19 +415,19 @@ class TestRelationshipHold:
 class TestMeetShareGuide:
 
     def test_wait_meet_can_share(self):
-        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享亲友", viewer=False)
-        assert guide == {"enabled": True, "label": "安全见面，分享亲友"}
+        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全活动，分享亲友", viewer=False)
+        assert guide == {"enabled": True, "label": "安全活动，分享亲友"}
 
     def test_other_progress_cannot_share(self):
         for status in (
             PROGRESS_NOT_SELECTED, PROGRESS_SELECTED, PROGRESS_MET,
             PROGRESS_AGREE, PROGRESS_DISAGREE, PROGRESS_NO_CONFIG,
         ):
-            guide = build_meet_share_guide(status, "安全见面，分享亲友", viewer=False)
+            guide = build_meet_share_guide(status, "安全活动，分享亲友", viewer=False)
             assert guide == {"enabled": False, "label": ""}
 
     def test_viewer_cannot_share(self):
-        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全见面，分享亲友", viewer=True)
+        guide = build_meet_share_guide(PROGRESS_WAIT_MEET, "安全活动，分享亲友", viewer=True)
         assert guide == {"enabled": False, "label": ""}
 
 

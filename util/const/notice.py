@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""见面提醒。文案长度按微信订阅消息 thing 的上限截断。"""
+"""活动提醒。文案长度按微信订阅消息 thing 的上限截断。"""
 import datetime
 
 # 小程序里已经申请的订阅模板。字段名可在 weixin 配置里覆盖。
@@ -32,14 +32,14 @@ _CN_DIGIT = '零一二三四五六七八九'
 BOSS_GREETING = '你好老板，我%s约了人'
 
 NOTICE_TEXT = {
-    SCENE_JOINED: ('有人加入了见面', '请按时到达约定地点'),
-    SCENE_CANCELLED: ('对方取消了见面', '对方已离开，座位已退回'),
+    SCENE_JOINED: ('有人加入了活动', '请按时到达约定地点'),
+    SCENE_CANCELLED: ('对方取消了活动', '对方已离开，座位已退回'),
     SCENE_DECIDE: ('请尽快决定是否合适', '未选满7天会视为合适'),
-    SCENE_MEET_SOON: ('见面时间快到了', '和老板打个招呼'),
-    SCENE_MEET_ARRIVE: ('请到达约定地点', '见面时间已到，请准时到场'),
-    SCENE_LIST_EXPIRE: ('这场快从列表消失', '还没有人加入这场见面'),
+    SCENE_MEET_SOON: ('活动时间快到了', '和老板打个招呼'),
+    SCENE_MEET_ARRIVE: ('请到达约定地点', '活动时间已到，请准时到场'),
+    SCENE_LIST_EXPIRE: ('这场快从列表消失', '还没有人加入这场活动'),
     SCENE_UNFIT: ('对方选择了不合适', '打开详情可以查看'),
-    SCENE_REACTIVATE: ('有适合的人在等', '去选时间和地点见面'),
+    SCENE_REACTIVATE: ('有适合的人在等', '去选时间和地点活动'),
 }
 
 # 这两条不只靠订阅。订阅发完仍发短信，避免人没打开小程序。
@@ -61,7 +61,7 @@ def _cn_number(value):
 
 
 def boss_clock(start_time):
-    """见面钟点，说给店老板听。十点、十点半，或十点十五分。"""
+    """活动钟点，说给店老板听。十点、十点半，或十点十五分。"""
     hour = _cn_number(start_time.hour)
     if start_time.minute == 0:
         return '%s点' % hour

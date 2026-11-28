@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""清空账号、资料、见面，以及还留在 Redis 里的登录态。
+"""清空账号、资料、活动，以及还留在 Redis 里的登录态。
 
 地区和地点不动。SERVER_ENV=online 时直接退出。
 不会重写演示数据。要连演示数据一起重灌，用 scripts/init_db.py --reset-demo。
@@ -31,7 +31,7 @@ from util.const.notice import ONLINE_SERVER, PASSPORT_LOC_KEY
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
-# 账号和见面。地点、省市区不在这里。
+# 账号和活动。地点、省市区不在这里。
 USER_DATA_TABLES = (
     'notice_sent',
     'subscribe_grant',
@@ -70,13 +70,13 @@ USER_REDIS_GLOBS = (
 
 
 def refuse_if_online(server_env):
-    """线上库一旦清空，账号和见面都没了。"""
+    """线上库一旦清空，账号和活动都没了。"""
     if server_env == ONLINE_SERVER:
         raise SystemExit('SERVER_ENV=online，拒绝清空用户数据')
 
 
 def truncate_user_tables(conn):
-    """丢掉账号、资料、见面。表不存在就跳过。地点表不动。"""
+    """丢掉账号、资料、活动。表不存在就跳过。地点表不动。"""
     removed = 0
     with conn.cursor() as cur:
         cur.execute('SET FOREIGN_KEY_CHECKS = 0')
@@ -85,7 +85,7 @@ def truncate_user_tables(conn):
         finally:
             cur.execute('SET FOREIGN_KEY_CHECKS = 1')
     conn.commit()
-    logger.info('  [清空] 用户与见面表 %d 张', removed)
+    logger.info('  [清空] 用户与活动表 %d 张', removed)
     return removed
 
 
