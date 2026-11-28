@@ -80,9 +80,14 @@ def test_reactivate_copy_fits_wechat_thing():
     assert len(note) <= THING_MAX_LEN
 
 
+# 近距离约需提前 1 小时；测试里统一留足提前量，避免和列表规则纠缠
+_ENOUGH_LEAD = datetime.timedelta(minutes=90)
+_TOO_SOON = datetime.timedelta(minutes=30)
+
+
 def test_nearby_idle_match_gets_one_home_notice():
     start = datetime.datetime(2026, 10, 25, 11, 0, 0)
-    now = start - datetime.timedelta(minutes=30)
+    now = start - _ENOUGH_LEAD
     activity = _Activity(id=4, start_time=start)
     profiles = {7: {'info': _info(MODEL_SEX_MALE_INDEX), 'requirement': {}}}
     jobs = _pick(_viewer(), activity, profiles, now)
@@ -99,17 +104,17 @@ def test_same_sex_seat_is_not_a_match():
     activity = _Activity(start_time=start, boy_passport_id=7)
     profiles = {7: {'requirement': {}}}
     viewer = _viewer(sex=MODEL_SEX_MALE_INDEX)
-    assert _pick(viewer, activity, profiles, start - datetime.timedelta(minutes=30)) == []
+    assert _pick(viewer, activity, profiles, start - _ENOUGH_LEAD) == []
 
 
 def test_incomplete_profile_is_not_pushed():
     start = datetime.datetime(2026, 10, 25, 11, 0, 0)
     info = _info(MODEL_SEX_FEMALE_INDEX)
-    del info['home_region']
+    del info['height']
     activity = _Activity(start_time=start)
     profiles = {7: {'requirement': {}}}
     viewer = _viewer(info=info)
-    assert _pick(viewer, activity, profiles, start - datetime.timedelta(minutes=30)) == []
+    assert _pick(viewer, activity, profiles, start - _ENOUGH_LEAD) == []
 
 
 def test_requirement_miss_is_not_a_match():
@@ -119,15 +124,14 @@ def test_requirement_miss_is_not_a_match():
         'birth_year': _Attr(SCOPE_REQUIREMENT, 'birth_year', value_min=1998, value_max=2000),
     }}}
     viewer = _viewer(info=_info(MODEL_SEX_FEMALE_INDEX, year=1990))
-    assert _pick(viewer, activity, profiles, start - datetime.timedelta(minutes=30)) == []
+    assert _pick(viewer, activity, profiles, start - _ENOUGH_LEAD) == []
 
 
-def test_slot_outside_the_list_window_is_skipped():
+def test_slot_with_insufficient_lead_is_skipped():
     start = datetime.datetime(2026, 10, 25, 11, 0, 0)
     activity = _Activity(start_time=start)
     profiles = {7: {'requirement': {}}}
-    too_early = start - datetime.timedelta(hours=3)
-    assert _pick(_viewer(), activity, profiles, too_early) == []
+    assert _pick(_viewer(), activity, profiles, start - _TOO_SOON) == []
 
 
 def test_far_user_is_not_pushed():
@@ -135,12 +139,12 @@ def test_far_user_is_not_pushed():
     activity = _Activity(start_time=start)
     profiles = {7: {'requirement': {}}}
     viewer = _viewer(latitude=_FAR_LAT, longitude=_FAR_LNG)
-    assert _pick(viewer, activity, profiles, start - datetime.timedelta(minutes=30)) == []
+    assert _pick(viewer, activity, profiles, start - _ENOUGH_LEAD) == []
 
 
 def test_inviter_and_locked_seat_are_skipped():
     start = datetime.datetime(2026, 10, 25, 11, 0, 0)
-    now = start - datetime.timedelta(minutes=30)
+    now = start - _ENOUGH_LEAD
     profiles = {7: {'requirement': {}}}
     own = _Activity(id=2, start_time=start, boy_passport_id=9, girl_passport_id=0)
     assert _pick(_viewer(passport_id=9, sex=MODEL_SEX_FEMALE_INDEX), own, profiles, now) == []
@@ -150,8 +154,8 @@ def test_inviter_and_locked_seat_are_skipped():
 
 def test_soonest_visible_slot_wins():
     now = datetime.datetime(2026, 10, 25, 10, 0, 0)
-    sooner = _Activity(id=1, start_time=now + datetime.timedelta(minutes=20))
-    later = _Activity(id=2, start_time=now + datetime.timedelta(minutes=40))
+    sooner = _Activity(id=1, start_time=now + datetime.timedelta(minutes=70))
+    later = _Activity(id=2, start_time=now + datetime.timedelta(minutes=100))
     profiles = {7: {'requirement': {}}}
     address_of = {sooner.address_id: _Address()}
     jobs = pick_reactivate_jobs([_viewer()], [later, sooner], profiles, address_of, now)
@@ -162,7 +166,7 @@ def test_recently_pushed_user_is_cooled():
     start = datetime.datetime(2026, 10, 25, 11, 0, 0)
     activity = _Activity(start_time=start)
     profiles = {7: {'requirement': {}}}
-    jobs = _pick(_viewer(), activity, profiles, start - datetime.timedelta(minutes=30))
+    jobs = _pick(_viewer(), activity, profiles, start - _ENOUGH_LEAD)
     assert drop_cooled(jobs, [9]) == []
     assert len(drop_cooled(jobs, [])) == 1
 

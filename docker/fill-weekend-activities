@@ -4,5 +4,5 @@ TZ=Asia/Shanghai
 CONFNAME=app
 LOG_DIR=/app/log
 
-# 每天凌晨 3 点补一次。周六日上午的场次会在当天 9 点前写好。
+# 每天凌晨 3 点补一次「下一周六」上午场次。
 0 3 * * * root cd /app && python script/fill_weekend_activities.py >> /app/log/fill_weekend_activities.log 2>&1

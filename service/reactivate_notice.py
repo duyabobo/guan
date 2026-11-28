@@ -24,7 +24,7 @@ from util.const.notice import (
     REACTIVATE_PASSPORT_LIMIT,
     SCENE_REACTIVATE,
 )
-from util.const.progress import max_transient_lead_minutes, MEET_AUTO_FIT_WAIT
+from util.const.progress import min_lead_minutes_at_max_distance, MEET_AUTO_FIT_WAIT
 from util.redis_conn import decode_redis_value, redisConn
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class ReactivateNoticeService(object):
 
     @staticmethod
     def scan(now):
-        until = now + datetime.timedelta(minutes=max_transient_lead_minutes())
+        until = now + datetime.timedelta(minutes=min_lead_minutes_at_max_distance())
         activities = ActivityModel.list_future_inviting(now, until, REACTIVATE_ACTIVITY_LIMIT)
         if len(activities) >= REACTIVATE_ACTIVITY_LIMIT:
             logger.info("促活场次达到上限 limit=%s", REACTIVATE_ACTIVITY_LIMIT)

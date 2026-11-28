@@ -4,18 +4,20 @@ import datetime
 
 from script.major_cities import MAJOR_CITY_VENUES
 from service.weekend_activity_supply import (
+    DAYS_PER_WEEK,
+    SATURDAY as SATURDAY_WEEKDAY,
     SLOT_CLOCKS,
     SLOT_END_HOUR,
     SLOT_START_HOUR,
-    WEEKEND_DAYS,
     activities_to_add,
+    next_saturday_date,
     weekend_slot_times,
 )
 from util.const.match import LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN
 
 
 SATURDAY = datetime.date(2026, 11, 14)
-SUNDAY = datetime.date(2026, 11, 15)
+NEXT_SATURDAY = SATURDAY + datetime.timedelta(days=DAYS_PER_WEEK)
 
 
 def _at(day, hour, minute=0):
@@ -30,43 +32,54 @@ def test_clocks_cover_nine_to_noon_every_half_hour():
     )
 
 
-def test_weekday_inside_short_window_has_no_slot():
+def test_weekday_targets_coming_saturday():
     wednesday = _at(datetime.date(2026, 11, 11), 8, 0)
-    assert weekend_slot_times(wednesday, lookahead_days=2) == []
-
-
-def test_saturday_morning_includes_today_and_sunday():
-    now = _at(SATURDAY, 8, 0)
-    slots = weekend_slot_times(now, lookahead_days=2)
+    slots = weekend_slot_times(wednesday)
+    assert {slot.date() for slot in slots} == {SATURDAY}
     assert slots[0] == _at(SATURDAY, 9, 0)
-    assert slots[-1] == _at(SUNDAY, 12, 0)
-    assert {slot.date() for slot in slots} == {SATURDAY, SUNDAY}
-    assert len(slots) == len(SLOT_CLOCKS) * len(WEEKEND_DAYS)
-    assert all(slot.weekday() in WEEKEND_DAYS for slot in slots)
+    assert slots[-1] == _at(SATURDAY, 12, 0)
+    assert len(slots) == len(SLOT_CLOCKS)
 
 
-def test_slot_equal_to_now_is_left_out_and_noon_is_kept():
-    at_nine = weekend_slot_times(_at(SATURDAY, 9, 0), lookahead_days=1)
+def test_saturday_morning_only_fills_today_saturday():
+    now = _at(SATURDAY, 8, 0)
+    slots = weekend_slot_times(now)
+    assert slots[0] == _at(SATURDAY, 9, 0)
+    assert slots[-1] == _at(SATURDAY, 12, 0)
+    assert {slot.date() for slot in slots} == {SATURDAY}
+    assert len(slots) == len(SLOT_CLOCKS)
+    assert all(slot.weekday() == SATURDAY_WEEKDAY for slot in slots)
+
+
+def test_slot_equal_to_now_is_left_out_and_past_saturday_rolls_forward():
+    at_nine = weekend_slot_times(_at(SATURDAY, 9, 0))
     assert _at(SATURDAY, 9, 0) not in at_nine
     assert _at(SATURDAY, 9, 30) in at_nine
+    assert all(slot.date() == SATURDAY for slot in at_nine)
 
     before_noon = weekend_slot_times(
-        _at(SATURDAY, SLOT_END_HOUR) - datetime.timedelta(minutes=1), lookahead_days=1,
+        _at(SATURDAY, SLOT_END_HOUR) - datetime.timedelta(minutes=1),
     )
     assert _at(SATURDAY, SLOT_END_HOUR) in before_noon
 
-    at_noon = weekend_slot_times(_at(SATURDAY, SLOT_END_HOUR), lookahead_days=1)
+    at_noon = weekend_slot_times(_at(SATURDAY, SLOT_END_HOUR))
     assert _at(SATURDAY, SLOT_END_HOUR) not in at_noon
-    assert _at(SUNDAY, SLOT_START_HOUR) in at_noon
-    assert _at(SUNDAY, SLOT_END_HOUR) in at_noon
-    assert all(slot.date() != SATURDAY for slot in at_noon)
+    assert {slot.date() for slot in at_noon} == {NEXT_SATURDAY}
+    assert at_noon[0] == _at(NEXT_SATURDAY, 9, 0)
+    assert at_noon[-1] == _at(NEXT_SATURDAY, 12, 0)
 
 
-def test_slot_past_the_horizon_is_left_out():
+def test_friday_night_fills_tomorrow_saturday():
     friday_night = _at(datetime.date(2026, 11, 13), 23, 0)
-    slots = weekend_slot_times(friday_night, lookahead_days=1)
+    slots = weekend_slot_times(friday_night)
     assert _at(SATURDAY, 12, 0) in slots
     assert all(slot.date() == SATURDAY for slot in slots)
+
+
+def test_next_saturday_date_includes_today_when_saturday():
+    assert next_saturday_date(SATURDAY) == SATURDAY
+    assert next_saturday_date(datetime.date(2026, 11, 13)) == SATURDAY
+    assert next_saturday_date(datetime.date(2026, 11, 15)) == NEXT_SATURDAY
 
 
 def test_activities_skip_existing_and_fill_gaps():

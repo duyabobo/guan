@@ -1,12 +1,15 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""每天补一次全国主要城市的周末上午活动。
+"""每天补一次肯德基门店的周末上午活动。
 
-只补周六、周日 9:00 到 12:00（含 12:00），每半小时一场。
-已经有同一地点、同一开始时间的有效场次就跳过。
+每次只补「下一周六」9:00 到 12:00（含 12:00），每半小时一场。
+本周六上午已全部过点则补再下一个周六。已有同地点同时段则跳过。
+门店来自已导入的 OSM 肯德基地址（img_obj_name=address/brand/kfc.png）。
+仅用名称含「肯德基/KFC」的地址；裸名会规范成「肯德基xx店」。
 """
 import datetime
 import os
+import re
 import sys
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -14,23 +17,40 @@ sys.path.append(os.path.dirname(current_dir))
 
 from sqlalchemy import bindparam, text
 
-from script.major_cities import MAJOR_CITY_VENUES, region_key
 from service.weekend_activity_supply import (
-    SUPPLY_LOOKAHEAD_DAYS,
     activities_to_add,
     weekend_slot_times,
 )
-from util.const.base import EMPTY_STR
-from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_STATUS_YES
+from util.const.match import MODEL_ACTIVITY_STATE_EMPTY, MODEL_STATUS_NO, MODEL_STATUS_YES
 from util.database import SessionFactory
 from util.log import offline_script_logger
 
 
-VENUE_DESC = "周末上午见面"
-_REGION_ROWS = text("SELECT id, province, city, area FROM region WHERE status = :status")
-_ADDRESS_ROWS = text(
-    "SELECT id, name FROM address WHERE status = :status AND name IN :names"
-).bindparams(bindparam("names", expanding=True))
+KFC_IMAGE = "address/brand/kfc.png"
+KFC_NAME_ZH = "%肯德基%"
+KFC_NAME_EN = "%KFC%"
+MEETUP_POINT_NAME_SUFFIX = "%见面点"
+DEFAULT_STORE_NAME = "肯德基门店"
+BARE_KFC_NAMES = frozenset({"肯德基", "KFC", "肯德基 KFC", "kfc", DEFAULT_STORE_NAME})
+NAME_LIMIT = 256
+HINT_LIMIT = 32
+_STREET_HINT = re.compile(r"[路街道巷大道里园广场]")
+_ADMIN_ONLY = re.compile(r"^[\u4e00-\u9fff]+省\s*[\u4e00-\u9fff]+市$")
+_CITY_ONLY = re.compile(r"^[\u4e00-\u9fff]+市(\s*[\u4e00-\u9fff]+市)?$")
+_BAD_DERIVED_NAME = re.compile(r"未标注|市.+市店$")
+
+_BRAND_ADDRESS_ROWS = text(
+    """
+    SELECT a.id, a.name, a.description, r.city, r.area
+    FROM address a
+    LEFT JOIN region r ON r.id = a.region_id
+    WHERE a.status = :status
+      AND a.img_obj_name = :img
+      AND (a.name LIKE :kfc_zh OR UPPER(a.name) LIKE :kfc_en)
+    ORDER BY a.id
+    """
+)
+_RENAME_ADDRESS = text("UPDATE address SET name = :name WHERE id = :id AND status = :status")
 _ACTIVITY_ROWS = text(
     """
     SELECT address_id, start_time FROM activity
@@ -40,6 +60,28 @@ _ACTIVITY_ROWS = text(
       AND start_time <= :end_time
     """
 ).bindparams(bindparam("address_ids", expanding=True))
+_RETIRE_MEETUP_SLOTS = text(
+    """
+    UPDATE activity act
+    INNER JOIN address a ON a.id = act.address_id
+    SET act.status = :status_no
+    WHERE act.status = :status_yes
+      AND act.state = :empty_state
+      AND a.name LIKE :meetup_name
+    """
+)
+_RETIRE_NON_KFC_SLOTS = text(
+    """
+    UPDATE activity act
+    INNER JOIN address a ON a.id = act.address_id
+    SET act.status = :status_no
+    WHERE act.status = :status_yes
+      AND act.state = :empty_state
+      AND a.img_obj_name = :img
+      AND a.name NOT LIKE :kfc_zh
+      AND UPPER(a.name) NOT LIKE :kfc_en
+    """
+)
 
 logger = offline_script_logger("fill_weekend_activities")
 
@@ -47,88 +89,127 @@ logger = offline_script_logger("fill_weekend_activities")
 def fill_weekend_activities(session, now=None):
     now = now or datetime.datetime.now().replace(second=0, microsecond=0)
     slots = weekend_slot_times(now)
-    region_ids = _ensure_regions(session)
-    address_ids = _ensure_addresses(session, region_ids)
-    address_id_list = list(address_ids.values())
-    existing = _existing_keys(session, address_id_list, slots)
-    missing = activities_to_add(address_id_list, slots, existing)
-    _insert_activities(session, missing)
+    retired_meetup = _retire_empty(session, _RETIRE_MEETUP_SLOTS, {
+        "status_no": MODEL_STATUS_NO,
+        "status_yes": MODEL_STATUS_YES,
+        "empty_state": MODEL_ACTIVITY_STATE_EMPTY,
+        "meetup_name": MEETUP_POINT_NAME_SUFFIX,
+    })
+    retired_other = _retire_empty(session, _RETIRE_NON_KFC_SLOTS, {
+        "status_no": MODEL_STATUS_NO,
+        "status_yes": MODEL_STATUS_YES,
+        "empty_state": MODEL_ACTIVITY_STATE_EMPTY,
+        "img": KFC_IMAGE,
+        "kfc_zh": KFC_NAME_ZH,
+        "kfc_en": KFC_NAME_EN,
+    })
     logger.info(
-        "周末活动供给完成 城市=%s 时段=%s 新场次=%s 展望天数=%s",
-        len(MAJOR_CITY_VENUES), len(slots), len(missing), SUPPLY_LOOKAHEAD_DAYS,
+        "已下线空场次 meetup=%s non_kfc=%s",
+        retired_meetup, retired_other,
+    )
+    address_ids = _prepare_kfc_addresses(session)
+    if not address_ids:
+        logger.error("没有可用的肯德基门店，请先导入 OSM 门店")
+        return 0
+    existing = _existing_keys(session, address_ids, slots)
+    missing = activities_to_add(address_ids, slots, existing)
+    _insert_activities(session, missing)
+    saturday = slots[0].date() if slots else None
+    logger.info(
+        "周末活动供给完成 肯德基门店=%s 下一周六=%s 时段=%s 新场次=%s",
+        len(address_ids), saturday, len(slots), len(missing),
     )
     return len(missing)
 
 
-def _ensure_regions(session):
-    found = _region_ids(session)
-    missing = [venue for venue in MAJOR_CITY_VENUES if region_key(venue) not in found]
-    if missing:
-        session.execute(text(
-            """
-            INSERT INTO region (province, city, area, status)
-            VALUES (:province, :city, :area, :status)
-            """
-        ), [
-            {
-                "province": venue.province,
-                "city": venue.city,
-                "area": venue.area,
-                "status": MODEL_STATUS_YES,
-            }
-            for venue in missing
-        ])
-        found = _region_ids(session)
-    absent = [venue.city for venue in MAJOR_CITY_VENUES if region_key(venue) not in found]
-    if absent:
-        raise RuntimeError("省市区没有写上: %s" % "、".join(absent))
-    logger.info("省市区已齐 新增=%s 总数=%s", len(missing), len(MAJOR_CITY_VENUES))
-    return {region_key(venue): found[region_key(venue)] for venue in MAJOR_CITY_VENUES}
+def store_display_name(name, description="", city="", area=""):
+    """把裸「肯德基」或劣质派生名规范成「肯德基xx店」。"""
+    raw = (name or "").strip()
+    if _keep_existing_store_name(raw):
+        return raw[:NAME_LIMIT]
+    hint = _branch_hint(description, city, area)
+    if not hint:
+        return DEFAULT_STORE_NAME
+    return _with_kfc_store_suffix(hint)[:NAME_LIMIT]
 
 
-def _region_ids(session):
-    rows = session.execute(_REGION_ROWS, {"status": MODEL_STATUS_YES}).fetchall()
-    return {(row.province, row.city, row.area): row.id for row in rows}
+def _keep_existing_store_name(name):
+    if name in BARE_KFC_NAMES:
+        return False
+    if _BAD_DERIVED_NAME.search(name):
+        return False
+    return True
 
 
-def _ensure_addresses(session, region_ids):
-    found = _address_ids(session)
-    missing = [venue for venue in MAJOR_CITY_VENUES if venue.name not in found]
-    if missing:
-        session.execute(text(
-            """
-            INSERT INTO address
-                (name, description, region_id, longitude, latitude, img_obj_name, status)
-            VALUES
-                (:name, :description, :region_id, :longitude, :latitude, :img_obj_name, :status)
-            """
-        ), [_address_params(venue, region_ids) for venue in missing])
-        found = _address_ids(session)
-    absent = [venue.name for venue in MAJOR_CITY_VENUES if venue.name not in found]
-    if absent:
-        raise RuntimeError("见面点没有写上: %s" % "、".join(absent))
-    logger.info("见面点已齐 新增=%s 总数=%s", len(missing), len(found))
-    return found
+def _with_kfc_store_suffix(hint):
+    if hint.startswith("肯德基"):
+        return hint if hint.endswith("店") else f"{hint}店"
+    return f"肯德基{hint}" if hint.endswith("店") else f"肯德基{hint}店"
 
 
-def _address_ids(session):
-    rows = session.execute(_ADDRESS_ROWS, {
+def _prepare_kfc_addresses(session):
+    rows = session.execute(_BRAND_ADDRESS_ROWS, {
         "status": MODEL_STATUS_YES,
-        "names": [venue.name for venue in MAJOR_CITY_VENUES],
+        "img": KFC_IMAGE,
+        "kfc_zh": KFC_NAME_ZH,
+        "kfc_en": KFC_NAME_EN,
     }).fetchall()
-    return {row.name: row.id for row in rows}
+    address_ids = []
+    renames = []
+    for row in rows:
+        display = store_display_name(row.name, row.description, row.city, row.area)
+        if display != row.name:
+            renames.append({
+                "id": row.id,
+                "name": display,
+                "status": MODEL_STATUS_YES,
+            })
+        address_ids.append(row.id)
+    if renames:
+        session.execute(_RENAME_ADDRESS, renames)
+    return address_ids
 
 
-def _address_params(venue, region_ids):
-    return {
-        "name": venue.name,
-        "description": VENUE_DESC,
-        "region_id": region_ids[region_key(venue)],
-        "longitude": venue.longitude,
-        "latitude": venue.latitude,
-        "img_obj_name": EMPTY_STR,
-        "status": MODEL_STATUS_YES,
-    }
+def _branch_hint(description, city, area):
+    desc = (description or "").strip()
+    if desc and _usable_street_hint(desc):
+        return _clip_hint(desc)
+    area_text = _clean_admin(area)
+    if area_text:
+        return _clip_hint(area_text)
+    city_text = _clean_admin(city)
+    if city_text:
+        if city_text.endswith("市") and len(city_text) > 1:
+            city_text = city_text[:-1]
+        return _clip_hint(city_text)
+    return ""
+
+
+def _clean_admin(value):
+    text = (value or "").strip()
+    if not text or "未标注" in text:
+        return ""
+    return text
+
+
+def _usable_street_hint(description):
+    if not description or "未标注" in description:
+        return False
+    if _ADMIN_ONLY.match(description) or _CITY_ONLY.match(description):
+        return False
+    if _STREET_HINT.search(description):
+        return True
+    return "省" not in description and "市" not in description
+
+
+def _clip_hint(text):
+    cleaned = re.sub(r"\s+", "", text.strip())
+    return cleaned[:HINT_LIMIT]
+
+
+def _retire_empty(session, statement, params):
+    result = session.execute(statement, params)
+    return _rowcount(result)
 
 
 def _existing_keys(session, address_ids, slots):
@@ -169,6 +250,12 @@ def _insert_activities(session, missing):
 
 def _drop_seconds(moment):
     return moment.replace(second=0, microsecond=0)
+
+
+def _rowcount(result):
+    if result is None or not hasattr(result, "rowcount"):
+        return 0
+    return result.rowcount or 0
 
 
 def main():

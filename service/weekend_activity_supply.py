@@ -1,18 +1,19 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""算出各大城市在未来一段时间内要补的周末上午场次。不访问数据库。"""
+"""算出各大城市要补的周末上午场次。不访问数据库。
+
+每次只针对「下一周六」：若本周六上午还有未开始场次则用本周六，否则用再下一个周六。
+"""
 import datetime
 
-from util.const.progress import LIST_WINDOW_DAYS, MINUTES_PER_HOUR
+from util.const.progress import MINUTES_PER_HOUR
 
 
-SUPPLY_LOOKAHEAD_DAYS = LIST_WINDOW_DAYS
 SLOT_START_HOUR = 9
 SLOT_END_HOUR = 12
 SLOT_STEP_MINUTES = 30
 SATURDAY = 5
-SUNDAY = 6
-WEEKEND_DAYS = (SATURDAY, SUNDAY)
+DAYS_PER_WEEK = 7
 
 
 def slot_clocks():
@@ -29,16 +30,19 @@ def slot_clocks():
 SLOT_CLOCKS = slot_clocks()
 
 
-def weekend_slot_times(now, lookahead_days=SUPPLY_LOOKAHEAD_DAYS):
-    """还没到点、并且落在展望窗口内的周六日上午场次。"""
-    horizon = now + datetime.timedelta(days=lookahead_days)
-    slots = []
-    day = now.date()
-    while day <= horizon.date():
-        if day.weekday() in WEEKEND_DAYS:
-            slots.extend(_clocks_on_day(day, now, horizon))
-        day += datetime.timedelta(days=1)
-    return slots
+def next_saturday_date(day):
+    """day 当天或之后最近的周六（含当天若已是周六）。"""
+    return day + datetime.timedelta(days=(SATURDAY - day.weekday()) % DAYS_PER_WEEK)
+
+
+def weekend_slot_times(now):
+    """下一周六上午尚未开始的场次。"""
+    saturday = next_saturday_date(now.date())
+    slots = _future_clocks_on_day(saturday, now)
+    if slots:
+        return slots
+    saturday = saturday + datetime.timedelta(days=DAYS_PER_WEEK)
+    return _future_clocks_on_day(saturday, now)
 
 
 def activities_to_add(address_ids, slots, existing_keys):
@@ -54,10 +58,10 @@ def activities_to_add(address_ids, slots, existing_keys):
     return missing
 
 
-def _clocks_on_day(day, now, horizon):
+def _future_clocks_on_day(day, now):
     slots = []
     for hour, minute in SLOT_CLOCKS:
         slot = datetime.datetime(day.year, day.month, day.day, hour, minute)
-        if now < slot <= horizon:
+        if slot > now:
             slots.append(slot)
     return slots

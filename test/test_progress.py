@@ -487,38 +487,50 @@ class TestGuanguanHeartKind:
         assert calc_list_has_match(PROGRESS_NOT_SELECTED, MODEL_ACTIVITY_STATE_INVITING, set()) is True
         assert calc_list_has_match(PROGRESS_WAIT_MEET, MODEL_ACTIVITY_STATE_INVITE_SUCCESS, set()) is False
 
-    def test_transient_item_time_window_by_distance(self):
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 50) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, 70) is False
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 110) is True
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, 130) is False
+    def test_transient_item_requires_min_lead_by_distance(self):
+        from util.const.progress import (
+            LEAD_MINUTES_PER_DISTANCE_BUCKET,
+            min_lead_minutes_for_transient,
+        )
+
+        near_lead = min_lead_minutes_for_transient(5)
+        mid_lead = min_lead_minutes_for_transient(15)
+        assert near_lead == LEAD_MINUTES_PER_DISTANCE_BUCKET
+        assert mid_lead == 2 * LEAD_MINUTES_PER_DISTANCE_BUCKET
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, near_lead - 1) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 5, near_lead + 10) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, near_lead - 1) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, near_lead) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, mid_lead - 10) is False
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 15, mid_lead + 10) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, mid_lead - 1) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, mid_lead) is True
         assert should_show_guanguan_item(HEART_KIND_DOUBLE, 5, 99999) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, 60) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 10, 61) is False
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, 120) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, 20, 121) is False
 
     def test_hide_items_beyond_max_distance(self):
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, 30) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM + 1, 30) is False
+        from util.const.progress import min_lead_minutes_at_max_distance
+
+        min_lead = min_lead_minutes_at_max_distance()
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, min_lead) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM, min_lead - 1) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, MAX_LIST_DISTANCE_KM + 1, min_lead) is False
         assert should_show_guanguan_item(HEART_KIND_BROKEN, MAX_LIST_DISTANCE_KM + 1, 30) is True
 
     def test_list_max_distance_follows_env(self, monkeypatch):
         from util.const.progress import (
-            DISTANCE_BUCKET_KM,
-            LEAD_MINUTES_PER_DISTANCE_BUCKET,
             list_max_distance_km,
-            max_transient_lead_minutes,
+            min_lead_minutes_at_max_distance,
+            min_lead_minutes_for_transient,
         )
 
         configured_km = 50
         monkeypatch.setenv("LIST_MAX_DISTANCE_KM", str(configured_km))
         assert list_max_distance_km() == configured_km
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km, 30) is True
-        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km + 1, 30) is False
-        assert max_transient_lead_minutes() == int(
-            math.ceil(configured_km / float(DISTANCE_BUCKET_KM)) * LEAD_MINUTES_PER_DISTANCE_BUCKET
-        )
+        lead = min_lead_minutes_for_transient(configured_km)
+        assert min_lead_minutes_at_max_distance() == lead
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km, lead) is True
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km, lead - 1) is False
+        assert should_show_guanguan_item(HEART_KIND_EMPTY, configured_km + 1, lead) is False
 
         monkeypatch.setenv("LIST_MAX_DISTANCE_KM", "0")
         assert list_max_distance_km() == MAX_LIST_DISTANCE_KM
@@ -555,7 +567,7 @@ class TestGuanguanHeartKind:
 
     def test_hide_items_beyond_two_weeks(self):
         from util.const.progress import LIST_WINDOW_MINUTES
-        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, 40) is True
+        assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, 70) is True
         assert should_show_guanguan_item(HEART_KIND_SINGLE, 5, LIST_WINDOW_MINUTES + 1) is False
 
     def test_guanguan_list_sort_priority(self):

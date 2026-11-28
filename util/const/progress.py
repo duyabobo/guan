@@ -340,14 +340,6 @@ def list_max_distance_km():
     return MAX_LIST_DISTANCE_KM
 
 
-def max_transient_lead_minutes():
-    """未约上场次按距离档换算的最长提前可见分钟数，随 list_max_distance_km 变化。"""
-    return int(
-        math.ceil(list_max_distance_km() / float(DISTANCE_BUCKET_KM))
-        * LEAD_MINUTES_PER_DISTANCE_BUCKET
-    )
-
-
 def calc_distance_km(latitude_a, longitude_a, latitude_b, longitude_b):
     if not latitude_a or not longitude_a or not latitude_b or not longitude_b:
         return None
@@ -368,9 +360,14 @@ def distance_bucket_km(distance_km):
     return math.ceil(distance_km / DISTANCE_BUCKET_KM)
 
 
-def max_lead_minutes_for_transient(distance_km):
-    """还没约上的场次：每 10 公里只能再留 1 小时，超时就从列表拿掉。"""
+def min_lead_minutes_for_transient(distance_km):
+    """还没约上的场次：每 10 公里至少提前 1 小时；剩余时间不够则不展示。"""
     return distance_bucket_km(distance_km) * LEAD_MINUTES_PER_DISTANCE_BUCKET
+
+
+def min_lead_minutes_at_max_distance():
+    """最远可见距离对应的最少提前分钟数。"""
+    return min_lead_minutes_for_transient(list_max_distance_km())
 
 
 def calc_list_heart_kind(progress_status, has_match=False):
@@ -434,7 +431,7 @@ def should_show_guanguan_item(heart_kind, distance_km, minutes_until_start, igno
         return False
     if minutes_until_start > LIST_WINDOW_MINUTES:
         return False
-    return minutes_until_start <= max_lead_minutes_for_transient(distance_km)
+    return minutes_until_start >= min_lead_minutes_for_transient(distance_km)
 
 
 def should_include_activity_for_match(progress_status, activity_id, activity_state, matched_activity_ids, activity_state_empty):

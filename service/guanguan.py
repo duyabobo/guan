@@ -99,7 +99,8 @@ class GuanguanService(BaseService):
         2. 同级按距离档（每 10km 一级）由近到远
         3. 同档按见面时间由近到远
         4. 心碎/实心/双心永久展示
-        5. 还没约上的：两周内、配置最远距离内（默认 100km）、匹配通过，且每 10km 只留 1 小时
+        5. 还没约上的：两周内、配置最远距离内（默认 100km）、匹配通过，
+           且距开场不少于「每 10km 需 1 小时」（时间不够赶路则不展示）
         """
         if longitude == UNKNOWN_NEGATIVE_ONE or latitude == UNKNOWN_NEGATIVE_ONE:
             return [{
